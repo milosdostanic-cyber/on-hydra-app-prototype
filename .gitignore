@@ -3,3 +3,7 @@ dist
 .DS_Store
 *.local
 .vite
+
+# Large local BOM reference exports (keep markdown in repo)
+Documents/Bom/*.pdf
+Documents/Bom/*.zip
