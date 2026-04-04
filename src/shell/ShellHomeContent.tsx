@@ -1,5 +1,6 @@
 import { PlusOutlined, SearchOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import {
   Button,
@@ -13,61 +14,15 @@ import {
 } from '../ui/antd';
 import type { TableColumnsType, TabsProps } from '../ui/antd';
 
-type ProjectRow = {
-  key: string;
-  name: string;
-  address: string;
-  city: string;
-  state: string;
-  lastOpened: string;
-  recent: boolean;
-};
-
-const INITIAL_ROWS: ProjectRow[] = [
-  {
-    key: '1',
-    name: 'Downtown Convention Center',
-    address: '123 Main Street',
-    city: 'Phoenix',
-    state: 'AZ',
-    lastOpened: '2 hours ago',
-    recent: true,
-  },
-  {
-    key: '2',
-    name: 'Riverside Office Park',
-    address: '456 River Road',
-    city: 'Tucson',
-    state: 'AZ',
-    lastOpened: 'Yesterday',
-    recent: true,
-  },
-  {
-    key: '3',
-    name: 'Highland Retail Plaza',
-    address: '789 Highland Ave',
-    city: 'Scottsdale',
-    state: 'AZ',
-    lastOpened: '3 days ago',
-    recent: false,
-  },
-  {
-    key: '4',
-    name: 'Desert Logistics Hub',
-    address: '321 Desert Way',
-    city: 'Mesa',
-    state: 'AZ',
-    lastOpened: 'Last week',
-    recent: false,
-  },
-];
+import { PROJECT_SEED_ROWS, type ProjectRow } from './projectSeed';
 
 /** Projects shell view — spacing, color, and radii from `theme.useToken()` only. */
 export function ShellHomeContent() {
   const { token } = theme.useToken();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<string>('all');
   const [starredKeys, setStarredKeys] = useState<Set<string>>(() => new Set(['1', '3']));
-  const [rows] = useState<ProjectRow[]>(INITIAL_ROWS);
+  const [rows] = useState<ProjectRow[]>(PROJECT_SEED_ROWS);
 
   const toggleStar = (key: string) => {
     setStarredKeys((prev) => {
@@ -106,7 +61,10 @@ export function ShellHomeContent() {
               <StarOutlined style={{ color: token.colorTextSecondary }} />
             )
           }
-          onClick={() => toggleStar(record.key)}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleStar(record.key);
+          }}
           aria-label={record.starred ? 'Remove star' : 'Star project'}
         />
       ),
@@ -166,6 +124,10 @@ export function ShellHomeContent() {
         pagination={false}
         columns={columns}
         dataSource={filteredRows}
+        onRow={(record) => ({
+          onClick: () => navigate(`/projects/${record.key}`),
+          style: { cursor: 'pointer' },
+        })}
         styles={{
           header: {
             cell: {

@@ -54,6 +54,7 @@ export {
 } from 'antd';
 
 export type {
+  BreadcrumbProps,
   FormProps,
   FormInstance,
   MenuProps,

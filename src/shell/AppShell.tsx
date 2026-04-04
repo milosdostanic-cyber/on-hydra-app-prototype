@@ -1,12 +1,15 @@
 import {
   DashboardOutlined,
+  FileSearchOutlined,
   FolderOpenOutlined,
+  LeftOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   SettingOutlined,
   TeamOutlined,
 } from '@ant-design/icons';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { figmaMenuItemBorderRadius } from '../theme/figmaMenuMetrics';
 import { shellLayout } from '../theme/hydraAlias';
@@ -22,28 +25,93 @@ import {
   theme,
   Typography,
 } from '../ui/antd';
-import type { MenuProps } from '../ui/antd';
+import type { BreadcrumbProps, MenuProps } from '../ui/antd';
+
+import { projectTitleById } from './projectSeed';
 
 const { Header, Sider, Content } = Layout;
 
-const menuItems: MenuProps['items'] = [
-  { key: 'dash', icon: <DashboardOutlined />, label: 'Dashboard' },
-  { key: 'proj', icon: <FolderOpenOutlined />, label: 'Projects' },
-  {
-    key: 'team',
-    icon: <TeamOutlined />,
-    label: 'Team',
-    children: [
-      { key: 'team:m', label: 'Members' },
-      { key: 'team:r', label: 'Roles' },
-    ],
-  },
-  { key: 'set', icon: <SettingOutlined />, label: 'Settings' },
-];
+const TOP_PATHS_NO_BACK = new Set(['/dashboard', '/projects', '/catalog']);
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+function breadcrumbItemsForPath(pathname: string, projectId?: string, partId?: string): BreadcrumbProps['items'] {
+  const items: BreadcrumbProps['items'] = [{ title: 'App' }];
+
+  if (pathname.startsWith('/catalog')) {
+    items.push({ title: 'Catalog' });
+    if (pathname.includes('/results')) items.push({ title: 'Results' });
+    if (partId) items.push({ title: `Part ${partId}` });
+    return items;
+  }
+
+  if (pathname.startsWith('/projects')) {
+    items.push({ title: 'Projects' });
+    if (projectId) {
+      items.push({ title: projectTitleById(projectId) ?? 'Project' });
+      if (pathname.includes('/sales-brace')) items.push({ title: 'Sales brace' });
+      else if (pathname.includes('/submittal')) items.push({ title: 'Submittal manager' });
+      else if (pathname.includes('/content')) items.push({ title: 'Content' });
+    }
+    return items;
+  }
+
+  if (pathname.startsWith('/dashboard')) {
+    items.push({ title: 'Dashboard' });
+    return items;
+  }
+
+  return items;
+}
+
+function primarySideKey(pathname: string): string {
+  if (pathname.startsWith('/catalog')) return 'catalog';
+  if (pathname.startsWith('/projects')) return 'proj';
+  if (pathname.startsWith('/dashboard')) return 'dash';
+  return 'dash';
+}
+
+export function AppShell() {
   const [collapsed, setCollapsed] = useState(false);
   const { token } = theme.useToken();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const params = useParams();
+
+  const menuItems: MenuProps['items'] = useMemo(
+    () => [
+      { key: 'dash', icon: <DashboardOutlined />, label: 'Dashboard' },
+      { key: 'proj', icon: <FolderOpenOutlined />, label: 'Projects' },
+      { key: 'catalog', icon: <FileSearchOutlined />, label: 'Catalog' },
+      {
+        key: 'team',
+        icon: <TeamOutlined />,
+        label: 'Team',
+        children: [
+          { key: 'team:m', label: 'Members' },
+          { key: 'team:r', label: 'Roles' },
+        ],
+      },
+      { key: 'set', icon: <SettingOutlined />, label: 'Settings' },
+    ],
+    [],
+  );
+
+  const selectedMenuKeys = useMemo(() => [primarySideKey(location.pathname)], [location.pathname]);
+
+  const crumbs = useMemo(
+    () => breadcrumbItemsForPath(location.pathname, params.projectId, params.partId),
+    [location.pathname, params.projectId, params.partId],
+  );
+
+  const showBack = !TOP_PATHS_NO_BACK.has(location.pathname);
+
+  const onMenuClick: MenuProps['onClick'] = ({ key }) => {
+    const routes: Record<string, string> = {
+      dash: '/dashboard',
+      proj: '/projects',
+      catalog: '/catalog',
+    };
+    if (routes[key]) navigate(routes[key]);
+  };
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -86,9 +154,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Menu
           theme="dark"
           mode="inline"
-          defaultSelectedKeys={['dash']}
+          selectedKeys={selectedMenuKeys}
           defaultOpenKeys={['team']}
           items={menuItems}
+          onClick={onMenuClick}
           style={{ borderInlineEnd: 'none', background: 'transparent' }}
           styles={{
             item: { borderRadius: figmaMenuItemBorderRadius },
@@ -119,7 +188,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               onClick={() => setCollapsed((c) => !c)}
               aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             />
-            <Breadcrumb items={[{ title: 'App' }, { title: 'Projects' }]} />
+            {showBack ? (
+              <Button
+                type="text"
+                icon={<LeftOutlined />}
+                onClick={() => navigate(-1)}
+                aria-label="Go back"
+              >
+                Back
+              </Button>
+            ) : null}
+            <Breadcrumb items={crumbs} />
           </Space>
           <Space size="middle">
             <Input.Search
@@ -140,7 +219,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             minHeight: shellLayout.contentMinHeight,
           }}
         >
-          {children}
+          <Outlet />
         </Content>
       </Layout>
     </Layout>

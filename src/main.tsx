@@ -1,6 +1,7 @@
 import { ConfigProvider } from './ui/antd';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
 
 import { App } from './App';
 import { applyHydraBrandCssVars } from './theme/brandColors';
@@ -14,7 +15,9 @@ applyHydraBrandCssVars(document.documentElement, 'light');
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ConfigProvider theme={hydraAntdTheme}>
-      <App />
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </ConfigProvider>
   </StrictMode>,
 );
