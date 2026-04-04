@@ -5,6 +5,7 @@ import { CatalogHome } from './shell/CatalogHome';
 import { CatalogPartPage } from './shell/CatalogPartPage';
 import { CatalogResults } from './shell/CatalogResults';
 import { ContentModule, SalesBraceModule, SubmittalModule } from './shell/ProjectModuleStubs';
+import { BomRoutes } from './bom/BomRoutes';
 import { DashboardPlaceholder } from './shell/DashboardPlaceholder';
 import { ProjectWorkspaceLayout } from './shell/ProjectWorkspaceLayout';
 import { ShellHomeContent } from './shell/ShellHomeContent';
@@ -19,6 +20,7 @@ export function App() {
         <Route path="/catalog" element={<CatalogHome />} />
         <Route path="/catalog/results" element={<CatalogResults />} />
         <Route path="/catalog/parts/:partId" element={<CatalogPartPage />} />
+        <Route path="/bom/*" element={<BomRoutes />} />
 
         <Route path="/projects/:projectId" element={<ProjectWorkspaceLayout />}>
           <Route index element={<Navigate to="content" replace />} />

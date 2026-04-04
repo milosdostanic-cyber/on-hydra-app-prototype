@@ -1,7 +1,7 @@
 import { theme } from 'antd';
 
 import { bluePrimarySemantics } from './primaryPrimitiveBlue';
-import { brandFontFamily, figmaTextBaseNormal } from './figmaTypography';
+import { hydraAntdTypographyToken } from './hydraAntdTypography';
 
 /**
  * Ant Design **alias** tokens (spacing, neutrals, surfaces) merged with Hydra `theme.token` overrides.
@@ -9,9 +9,7 @@ import { brandFontFamily, figmaTextBaseNormal } from './figmaTypography';
  */
 export const hydraLightAlias = theme.getDesignToken({
   token: {
-    fontFamily: brandFontFamily,
-    fontFamilyCode: brandFontFamily,
-    fontSize: figmaTextBaseNormal.fontSize,
+    ...hydraAntdTypographyToken,
     ...bluePrimarySemantics,
   },
 });

@@ -1,6 +1,11 @@
 /**
  * Curated re-exports from `antd` for Hydra. Tree-shaking still applies to what you import.
  * Add or remove symbols here as the app grows; full API remains available via `import { X } from 'antd'`.
+ *
+ * **Typography:** Global font tokens come from `ConfigProvider` in `main.tsx` (`hydraAntdTheme` →
+ * [`hydraAntdTypographyToken`](../theme/hydraAntdTypography.ts)). Prefer `theme.useToken()` for sizes
+ * (`fontSize`, `fontSizeSM`, `fontSizeHeading*`, …) or import a named Figma style from
+ * [`figmaTypography`](../theme/figmaTypography.ts) when you need a specific text style (e.g. `figmaSmallStrong`).
  */
 export {
   Alert,

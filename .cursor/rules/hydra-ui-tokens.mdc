@@ -42,5 +42,6 @@ Do not add new color/size literals outside these (or an explicit new **figma-** 
 ## Related
 
 - `figma-repo-parity.mdc` — Figma ↔ repo authority
+- `hydra-design-to-code.mdc` — workflow for screenshot / Figma URL / mock implementation (tokens + escalation)
 - `Documentation/hydra-typography.md` — Figma text-style workflow
 - `Documentation/hydra-sidebar-figma-mapping.md` — sidebar semantics

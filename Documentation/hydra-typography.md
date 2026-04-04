@@ -3,9 +3,10 @@
 ## React / antd
 
 - **Google Font:** [Cairo](https://fonts.google.com/specimen/Cairo) loaded in [`index.html`](../index.html) (variable weight `200..1000`) — **delivery only**; sizes/line heights are not taken from the URL.
-- **Figma → code tokens:** [`src/theme/figmaTypography.ts`](../src/theme/figmaTypography.ts) — family stack, **Base/Normal** (`fontSize`, `lineHeight`, `fontWeight`). Update when Figma text styles change.
-- **Re-export:** [`src/theme/brandTypography.ts`](../src/theme/brandTypography.ts) forwards `figmaTypography` exports for compatibility.
-- **Theme:** [`src/theme/antdTheme.ts`](../src/theme/antdTheme.ts) sets `fontFamily`, `fontFamilyCode`, and `fontSize` from `figmaTypography`.
+- **Figma → code tokens:** [`src/theme/figmaTypography.ts`](../src/theme/figmaTypography.ts) mirrors **all 25** local text styles (`Title/Heading 1–5`, `Base/*`, `Small/*`, `Large/*`, `Extra Large/*`) as `figmaTitleHeading*`, `figmaBase*`, `figmaSmall*`, `figmaLarge*`, `figmaExtraLarge*`, plus `figmaTextStyleToReactCss()` for inline styles. Update when Figma text styles change.
+- **Ant Design theme bridge (official customize-theme flow):** [`src/theme/hydraAntdTypography.ts`](../src/theme/hydraAntdTypography.ts) exports **`hydraAntdTypographyToken`** for `ConfigProvider`’s **`theme.token`** and **`hydraAntdTypographyComponentConfig`** for **`theme.components.Typography`**. That feeds every antd component (`Table`, `Input`, `Modal`, `Form`, …) through the same font map, including **`fontHeight` / `fontHeightSM` / `fontHeightLG`** so control padding matches Figma line heights.
+- **Re-export:** [`src/theme/brandTypography.ts`](../src/theme/brandTypography.ts) forwards `figmaTypography` + `hydraAntdTypography` exports.
+- **App entry:** [`src/main.tsx`](../src/main.tsx) wraps the tree in `<ConfigProvider theme={hydraAntdTheme}>`. [`src/theme/antdTheme.ts`](../src/theme/antdTheme.ts) merges **`hydraAntdTypographyToken`** with Hydra colors and shell `components`.
 - **Base document:** [`src/index.css`](../src/index.css) uses `font-family: var(--hydra-font-family)`; [`applyHydraBrandCssVars`](../src/theme/brandColors.ts) sets that variable from `figmaTypography`.
 
 ## Figma (Ant Design community kit)

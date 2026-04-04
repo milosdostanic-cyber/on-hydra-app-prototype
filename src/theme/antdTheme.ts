@@ -11,7 +11,7 @@ import {
   figmaMenuItemMarginInline,
 } from './figmaMenuMetrics';
 import { figmaMenuDarkChrome } from './figmaSemanticColors';
-import { brandFontFamily, figmaTextBaseNormal } from './figmaTypography';
+import { hydraAntdTypographyComponentConfig, hydraAntdTypographyToken } from './hydraAntdTypography';
 import { hydraLightAlias, shellLayout } from './hydraAlias';
 import { bluePrimarySemantics, bluePrimarySemanticsDark } from './primaryPrimitiveBlue';
 import { sidebarSemanticsLight } from './sidebarSemantics';
@@ -50,9 +50,7 @@ const hydraShellComponents: NonNullable<ThemeConfig['components']> = {
  */
 export const hydraAntdTheme: ThemeConfig = {
   token: {
-    fontFamily: brandFontFamily,
-    fontFamilyCode: brandFontFamily,
-    fontSize: figmaTextBaseNormal.fontSize,
+    ...hydraAntdTypographyToken,
     colorLink: bluePrimarySemantics.colorLink,
     colorLinkHover: bluePrimarySemantics.colorLinkHover,
     colorLinkActive: bluePrimarySemantics.colorLinkActive,
@@ -69,6 +67,7 @@ export const hydraAntdTheme: ThemeConfig = {
   },
   components: {
     ...hydraShellComponents,
+    ...hydraAntdTypographyComponentConfig,
     Button: {
       colorPrimary: buttonPrimaryPalette.rest,
       colorPrimaryHover: buttonPrimaryPalette.hover,

@@ -1,2 +1,38 @@
-/** Re-export — typography values live in [`figmaTypography`](./figmaTypography.ts) (Figma source of truth). */
-export { brandFontFamily, figmaFontFamilyName, figmaTextBaseNormal } from './figmaTypography';
+/** Re-export — Figma metrics in [`figmaTypography`](./figmaTypography.ts); antd wiring in [`hydraAntdTypography`](./hydraAntdTypography.ts). */
+export {
+  hydraAntdTypographyComponentConfig,
+  hydraAntdTypographyToken,
+} from './hydraAntdTypography';
+export {
+  brandFontFamily,
+  figmaBaseDelete,
+  figmaBaseItalic,
+  figmaBaseNormal,
+  figmaBaseStrong,
+  figmaBaseUnderline,
+  figmaExtraLargeDelete,
+  figmaExtraLargeItalic,
+  figmaExtraLargeNormal,
+  figmaExtraLargeStrong,
+  figmaExtraLargeUnderline,
+  figmaFontFamilyName,
+  figmaLargeDelete,
+  figmaLargeItalic,
+  figmaLargeNormal,
+  figmaLargeStrong,
+  figmaLargeUnderline,
+  figmaSmallDelete,
+  figmaSmallItalic,
+  figmaSmallNormal,
+  figmaSmallStrong,
+  figmaSmallUnderline,
+  figmaTextBaseNormal,
+  figmaTextStyleToReactCss,
+  figmaTitleHeading1,
+  figmaTitleHeading2,
+  figmaTitleHeading3,
+  figmaTitleHeading4,
+  figmaTitleHeading5,
+  hydraAntdFontMapFromFigma,
+  type FigmaTextStyle,
+} from './figmaTypography';
