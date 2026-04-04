@@ -3,10 +3,9 @@ import {
   FileSearchOutlined,
   FolderOpenOutlined,
   LeftOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
   SettingOutlined,
   TeamOutlined,
+  UnorderedListOutlined,
 } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -14,24 +13,17 @@ import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { figmaMenuItemBorderRadius } from '../theme/figmaMenuMetrics';
 import { shellLayout } from '../theme/hydraAlias';
 import { sidebarSemanticsLight } from '../theme/sidebarSemantics';
-import {
-  Avatar,
-  Breadcrumb,
-  Button,
-  Input,
-  Layout,
-  Menu,
-  Space,
-  theme,
-  Typography,
-} from '../ui/antd';
+import { Breadcrumb, Button, Layout, Menu, Space, theme } from '../ui/antd';
 import type { BreadcrumbProps, MenuProps } from '../ui/antd';
 
+import { AppTopBar } from './AppTopBar';
+import { ConnectedSidebarBrand } from './ConnectedSidebarBrand';
+import { bomProjectTitleById } from '../bom/data/mockData';
 import { projectTitleById } from './projectSeed';
 
 const { Header, Sider, Content } = Layout;
 
-const TOP_PATHS_NO_BACK = new Set(['/dashboard', '/projects', '/catalog']);
+const TOP_PATHS_NO_BACK = new Set(['/dashboard', '/projects', '/catalog', '/bom']);
 
 function breadcrumbItemsForPath(pathname: string, projectId?: string, partId?: string): BreadcrumbProps['items'] {
   const items: BreadcrumbProps['items'] = [{ title: 'App' }];
@@ -59,11 +51,42 @@ function breadcrumbItemsForPath(pathname: string, projectId?: string, partId?: s
     return items;
   }
 
+  if (pathname.startsWith('/bom')) {
+    items.push({ title: 'BOM' });
+    if (pathname === '/bom') return items;
+    if (pathname === '/bom/flow') {
+      items.push({ title: 'Flow overview' });
+      return items;
+    }
+    if (pathname === '/bom/search') {
+      items.push({ title: 'Search' });
+      return items;
+    }
+    const bomProjectMatch = /^\/bom\/projects\/([^/]+)/.exec(pathname);
+    if (bomProjectMatch) {
+      const bomProjectId = bomProjectMatch[1];
+      items.push({ title: bomProjectTitleById(bomProjectId) ?? 'BOM project' });
+      const itemMatch = /\/items\/([^/]+)/.exec(pathname);
+      if (itemMatch) {
+        items.push({ title: `Line ${itemMatch[1]}` });
+      }
+      if (pathname.includes('/parsing-review')) items.push({ title: 'Parsing review' });
+      else if (pathname.includes('/matching')) items.push({ title: 'Matching results' });
+      else if (pathname.includes('/narrow')) items.push({ title: 'Guided narrowing' });
+      else if (pathname.includes('/recommend')) items.push({ title: 'Recommended result' });
+      else if (pathname.includes('/workspace')) items.push({ title: 'Workspace' });
+      else if (pathname.includes('/export')) items.push({ title: 'Export' });
+      else if (pathname.includes('/service-request')) items.push({ title: 'Service request' });
+    }
+    return items;
+  }
+
   return items;
 }
 
 function primarySideKey(pathname: string): string {
   if (pathname.startsWith('/catalog')) return 'catalog';
+  if (pathname.startsWith('/bom')) return 'bom';
   if (pathname.startsWith('/projects')) return 'proj';
   if (pathname.startsWith('/dashboard')) return 'dash';
   return 'dash';
@@ -81,6 +104,7 @@ export function AppShell() {
       { key: 'dash', icon: <DashboardOutlined />, label: 'Dashboard' },
       { key: 'proj', icon: <FolderOpenOutlined />, label: 'Projects' },
       { key: 'catalog', icon: <FileSearchOutlined />, label: 'Catalog' },
+      { key: 'bom', icon: <UnorderedListOutlined />, label: 'BOM' },
       {
         key: 'team',
         icon: <TeamOutlined />,
@@ -109,6 +133,7 @@ export function AppShell() {
       dash: '/dashboard',
       proj: '/projects',
       catalog: '/catalog',
+      bom: '/bom',
     };
     if (routes[key]) navigate(routes[key]);
   };
@@ -119,7 +144,6 @@ export function AppShell() {
         collapsible
         collapsed={collapsed}
         onCollapse={setCollapsed}
-        trigger={null}
         theme="dark"
         width={shellLayout.siderWidth}
         collapsedWidth={shellLayout.siderCollapsedWidth}
@@ -131,25 +155,17 @@ export function AppShell() {
         <div
           style={{
             height: shellLayout.headerHeight,
+            boxSizing: 'border-box',
             display: 'flex',
             alignItems: 'center',
+            paddingBlock: token.paddingSM,
             paddingInline: collapsed ? token.paddingSM : token.paddingLG,
             justifyContent: collapsed ? 'center' : 'flex-start',
             background: sidebarSemanticsLight.colorSidebarHeader,
+            borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorSplit}`,
           }}
         >
-          {collapsed ? (
-            <Typography.Text style={{ color: token.colorTextLightSolid, fontSize: token.fontSizeLG }}>
-              H
-            </Typography.Text>
-          ) : (
-            <Typography.Text
-              strong
-              style={{ color: token.colorTextLightSolid, fontSize: token.fontSizeLG }}
-            >
-              Hydra
-            </Typography.Text>
-          )}
+          <ConnectedSidebarBrand collapsed={collapsed} />
         </div>
         <Menu
           theme="dark"
@@ -166,28 +182,20 @@ export function AppShell() {
         />
       </Sider>
       <Layout style={{ background: token.colorBgLayout }}>
+        <AppTopBar />
         <Header
           style={{
-            position: 'sticky',
-            top: 0,
-            zIndex: token.zIndexBase + 1,
             background: token.colorBgContainer,
             borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
             paddingInline: token.paddingLG,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            justifyContent: 'flex-start',
             height: shellLayout.headerHeight,
             lineHeight: `${shellLayout.headerHeight}px`,
           }}
         >
           <Space size="middle" align="center">
-            <Button
-              type="text"
-              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              onClick={() => setCollapsed((c) => !c)}
-              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            />
             {showBack ? (
               <Button
                 type="text"
@@ -199,14 +207,6 @@ export function AppShell() {
               </Button>
             ) : null}
             <Breadcrumb items={crumbs} />
-          </Space>
-          <Space size="middle">
-            <Input.Search
-              placeholder="Search"
-              allowClear
-              style={{ width: shellLayout.topBarSearchWidth }}
-            />
-            <Avatar style={{ background: token.colorPrimary }}>U</Avatar>
           </Space>
         </Header>
         <Content
