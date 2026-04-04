@@ -6,7 +6,8 @@ import {
 import { useMemo } from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { Layout, Menu, Typography, theme } from '../ui/antd';
+import { useSubmittalDraft } from '../context/SubmittalDraftContext';
+import { Badge, Flex, Layout, Menu, Typography, theme } from '../ui/antd';
 import type { MenuProps } from '../ui/antd';
 
 import { figmaMenuItemBorderRadius } from '../theme/figmaMenuMetrics';
@@ -29,9 +30,11 @@ export function ProjectWorkspaceLayout() {
   const { projectId = '' } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const { countForProject } = useSubmittalDraft();
   const base = `/projects/${projectId}`;
   const title = projectTitleById(projectId) ?? 'Project';
   const selected = moduleFromPath(location.pathname);
+  const submittalCount = countForProject(projectId);
 
   const items: MenuProps['items'] = useMemo(
     () => [
@@ -43,7 +46,14 @@ export function ProjectWorkspaceLayout() {
       {
         key: 'submittal',
         icon: <FilePdfOutlined />,
-        label: 'Submittal manager',
+        label: (
+          <Flex align="center" gap={token.marginXS} style={{ width: '100%' }}>
+            <span>Submittal manager</span>
+            {submittalCount > 0 ? (
+              <Badge count={submittalCount} size="small" color={token.colorPrimary} />
+            ) : null}
+          </Flex>
+        ),
       },
       {
         key: 'content',
@@ -51,7 +61,7 @@ export function ProjectWorkspaceLayout() {
         label: 'Content',
       },
     ],
-    [],
+    [submittalCount, token.colorPrimary, token.marginXS],
   );
 
   return (

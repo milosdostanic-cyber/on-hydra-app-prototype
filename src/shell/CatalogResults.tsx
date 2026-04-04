@@ -1,24 +1,19 @@
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
+import { CATALOG_DEMO_PARTS } from '../catalog/catalogDemoData';
+import type { CatalogPartRow } from '../catalog/catalogDemoData';
 import { Space, Table, Typography, theme } from '../ui/antd';
 import type { TableColumnsType } from '../ui/antd';
-
-type PartRow = { key: string; sku: string; description: string };
-
-const DEMO_PARTS: PartRow[] = [
-  { key: 'p-100', sku: '100-A', description: 'Demo fixture — open part page' },
-  { key: 'p-200', sku: '200-B', description: 'Another demo row' },
-];
 
 export function CatalogResults() {
   const { token } = theme.useToken();
   const [params] = useSearchParams();
   const q = params.get('q') ?? '';
 
-  const title = useMemo(() => (q === 'all' || !q ? 'Sample results' : `Results for "${q}"`), [q]);
+  const title = useMemo(() => (q === 'all' || !q ? 'Sample results' : `Results for “${q}”`), [q]);
 
-  const columns: TableColumnsType<PartRow> = [
+  const columns: TableColumnsType<CatalogPartRow> = [
     {
       title: 'SKU',
       dataIndex: 'sku',
@@ -42,11 +37,11 @@ export function CatalogResults() {
       <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
         Stub listing — links open a part detail used to demo quick download vs. project-gated actions.
       </Typography.Paragraph>
-      <Table<PartRow>
+      <Table<CatalogPartRow>
         rowKey="key"
         pagination={false}
         columns={columns}
-        dataSource={DEMO_PARTS}
+        dataSource={CATALOG_DEMO_PARTS}
         styles={{
           header: {
             cell: {
