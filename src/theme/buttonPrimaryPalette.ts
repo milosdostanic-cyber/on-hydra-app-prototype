@@ -30,5 +30,11 @@ export const buttonPrimaryPaletteDark = {
   textActive: volcanoStep(8, 'dark'),
 } as const;
 
+/** Ant Design Button component token parity (`components.Button.primaryShadow`). */
+export const buttonPrimaryShadow = '0 2px 0 rgba(240, 90, 35, 0.10)' as const;
+
+/** Dark mode shadow tuned to dark primary step (`volcano-6` dark). */
+export const buttonPrimaryShadowDark = '0 2px 0 rgba(207, 80, 33, 0.16)' as const;
+
 /** Solid primary Button focus outline (`components.Button.controlOutline`) — document in Figma parity audit if not yet a variable. */
 export const buttonPrimaryControlOutline = 'rgba(240, 90, 35, 0.12)' as const;

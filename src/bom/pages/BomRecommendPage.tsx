@@ -1,6 +1,6 @@
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
-import { BomFlowStepper } from '../components/BomFlowStepper';
+import { BomCardTitle } from '../components/BomCardTitle';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { bomItemById, bomProjectTitleById, matchResultForItem } from '../data/mockData';
 import { BomRiskTag } from '../components/BomTags';
@@ -31,19 +31,15 @@ export function BomRecommendPage() {
     return (
       <Space orientation="vertical" size={token.margin}>
         <BomPageHeader title="Recommendation unavailable" description="Missing demo data for this line." />
-        <Link to={`/bom/projects/${bomProjectId}/matching`}>
-          <Button>Back to matching</Button>
-        </Link>
       </Space>
     );
   }
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <BomFlowStepper activeStep={3} projectLabel={projectTitle} />
       <BomPageHeader
         title="Recommended result"
-        description={`${projectTitle} — line ${item.rowNumber}. Review substitution risk before confirming.`}
+        description={`This is the catalog match we suggest after your answers. Review confidence and substitution risk, then send the line to your workspace. Project ${projectTitle}, line ${item.rowNumber}.`}
       />
       <Card styles={{ body: { padding: token.paddingLG } }}>
         <Descriptions title={top.partNumber} bordered column={1} size="small">
@@ -61,7 +57,11 @@ export function BomRecommendPage() {
           <Descriptions.Item label="Conversion rule">{top.conversionRule}</Descriptions.Item>
         </Descriptions>
       </Card>
-      <Card title="Attribute mapping" size="small" style={{ borderColor: token.colorBorderSecondary }}>
+      <Card
+        title={<BomCardTitle>Attribute mapping</BomCardTitle>}
+        size="small"
+        style={{ borderColor: token.colorBorderSecondary }}
+      >
         <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
           <div>
             <Typography.Text strong>Matched attributes</Typography.Text>
@@ -87,9 +87,6 @@ export function BomRecommendPage() {
         </Button>
         <Button onClick={() => navigate(`/bom/projects/${bomProjectId}/items/${itemId}/narrow`)}>
           Adjust answers
-        </Button>
-        <Button onClick={() => navigate(`/bom/projects/${bomProjectId}/matching`)}>
-          Back to matching
         </Button>
       </Space>
     </Space>

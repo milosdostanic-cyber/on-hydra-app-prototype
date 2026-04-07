@@ -7,7 +7,7 @@ import {
   CATALOG_QUICK_CATEGORIES,
   type CatalogPartRow,
 } from '../catalog/catalogDemoData';
-import { figmaBaseStrong } from '../theme/figmaTypography';
+import { hydraBaseStrong } from '../theme/hydraTypography';
 import { Button, Flex, Input, Space, Table, Tag, Typography, theme } from '../ui/antd';
 import type { TableColumnsType } from '../ui/antd';
 
@@ -99,7 +99,7 @@ export function CatalogHome() {
             header: {
               cell: {
                 color: token.colorTextDescription,
-                fontWeight: figmaBaseStrong.fontWeight,
+                fontWeight: hydraBaseStrong.fontWeight,
               },
             },
           }}

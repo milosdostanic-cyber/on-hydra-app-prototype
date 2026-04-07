@@ -6,7 +6,7 @@ import {
 } from '@ant-design/icons';
 import type { CSSProperties } from 'react';
 
-import { figmaTextStyleToReactCss, figmaTitleHeading3 } from '../theme/figmaTypography';
+import { hydraTextStyleToReactCss, hydraTitleHeading3 } from '../theme/hydraTypography';
 import { shellLayout } from '../theme/hydraAlias';
 import { Avatar, Badge, Button, Dropdown, Flex, Typography, theme } from '../ui/antd';
 import type { MenuProps } from '../ui/antd';
@@ -24,7 +24,7 @@ const shellControlBtnStyle = (color: string): CSSProperties => ({
 
 /**
  * Primary brand strip above the main shell header (design node `742:79090`). Typography and spacing from
- * `figmaTypography` + `theme.useToken()` only.
+ * `hydraTypography` + `theme.useToken()` only.
  */
 export function AppTopBar() {
   const { token } = theme.useToken();
@@ -47,7 +47,7 @@ export function AppTopBar() {
       <Flex align="center" gap={token.marginSM} wrap="wrap" style={{ minWidth: 0 }}>
         <Typography.Text
           style={{
-            ...figmaTextStyleToReactCss(figmaTitleHeading3),
+            ...hydraTextStyleToReactCss(hydraTitleHeading3),
             color: onPrimary,
             margin: 0,
           }}

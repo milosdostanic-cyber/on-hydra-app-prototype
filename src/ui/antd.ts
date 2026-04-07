@@ -4,8 +4,8 @@
  *
  * **Typography:** Global font tokens come from `ConfigProvider` in `main.tsx` (`hydraAntdTheme` →
  * [`hydraAntdTypographyToken`](../theme/hydraAntdTypography.ts)). Prefer `theme.useToken()` for sizes
- * (`fontSize`, `fontSizeSM`, `fontSizeHeading*`, …) or import a named Figma style from
- * [`figmaTypography`](../theme/figmaTypography.ts) when you need a specific text style (e.g. `figmaSmallStrong`).
+ * (`fontSize`, `fontSizeSM`, `fontSizeHeading*`, …) or import a named style from
+ * [`hydraTypography`](../theme/hydraTypography.ts) when you need a specific text style (e.g. `hydraSmallStrong`).
  */
 export {
   Alert,

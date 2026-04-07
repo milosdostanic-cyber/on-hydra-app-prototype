@@ -1,6 +1,5 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
-import { BomFlowStepper } from '../components/BomFlowStepper';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { bomProjectTitleById } from '../data/mockData';
 import { Button, Card, Form, Input, Space, theme, message } from '../../ui/antd';
@@ -20,10 +19,9 @@ export function BomServiceRequestPage() {
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <BomFlowStepper activeStep={6} projectLabel={projectTitle} />
       <BomPageHeader
         title="Service request"
-        description={`Request expert review for ${projectTitle}. Optional step after your BOM is ready.`}
+        description={`Optional: ask a specialist to double-check substitutions or odd lines. Submitting here is a demo only. Project: ${projectTitle}.`}
       />
       <Card style={{ maxWidth: token.screenSM, borderColor: token.colorBorderSecondary }}>
         <Form layout="vertical" style={{ margin: 0 }} onFinish={onFinish}>
@@ -40,7 +38,7 @@ export function BomServiceRequestPage() {
               Submit request
             </Button>
             <Button onClick={() => navigate(`/bom/projects/${bomProjectId}/workspace`)}>
-              Cancel
+              Go to workspace
             </Button>
             <Link to="/bom">
               <Button>BOM home</Button>

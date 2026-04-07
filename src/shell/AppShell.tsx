@@ -1,16 +1,16 @@
 import {
-  DashboardOutlined,
-  FileSearchOutlined,
+  BorderOuterOutlined,
+  FilePdfOutlined,
+  FileTextOutlined,
   FolderOpenOutlined,
+  HomeOutlined,
   LeftOutlined,
-  SettingOutlined,
-  TeamOutlined,
-  UnorderedListOutlined,
+  MailOutlined,
 } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { figmaMenuItemBorderRadius } from '../theme/figmaMenuMetrics';
+import { hydraMenuItemBorderRadius } from '../theme/hydraMenuMetrics';
 import { shellLayout } from '../theme/hydraAlias';
 import { sidebarSemanticsLight } from '../theme/sidebarSemantics';
 import { Breadcrumb, Button, Layout, Menu, Space, theme } from '../ui/antd';
@@ -19,11 +19,12 @@ import type { BreadcrumbProps, MenuProps } from '../ui/antd';
 import { AppTopBar } from './AppTopBar';
 import { ConnectedSidebarBrand } from './ConnectedSidebarBrand';
 import { bomProjectTitleById } from '../bom/data/mockData';
+import { getLastScopedProjectId } from './lastProjectScope';
 import { projectTitleById } from './projectSeed';
 
 const { Header, Sider, Content } = Layout;
 
-const TOP_PATHS_NO_BACK = new Set(['/dashboard', '/projects', '/catalog', '/bom']);
+const TOP_PATHS_NO_BACK = new Set(['/dashboard', '/projects', '/bom']);
 
 function breadcrumbItemsForPath(pathname: string, projectId?: string, partId?: string): BreadcrumbProps['items'] {
   const items: BreadcrumbProps['items'] = [{ title: 'App' }];
@@ -39,15 +40,15 @@ function breadcrumbItemsForPath(pathname: string, projectId?: string, partId?: s
     items.push({ title: 'Projects' });
     if (projectId) {
       items.push({ title: projectTitleById(projectId) ?? 'Project' });
-      if (pathname.includes('/sales-brace')) items.push({ title: 'Sales brace' });
-      else if (pathname.includes('/submittal')) items.push({ title: 'Submittal manager' });
+      if (pathname.includes('/sales-brace')) items.push({ title: 'Spec' });
+      else if (pathname.includes('/submittal')) items.push({ title: 'Submittal' });
       else if (pathname.includes('/content')) items.push({ title: 'Content' });
     }
     return items;
   }
 
   if (pathname.startsWith('/dashboard')) {
-    items.push({ title: 'Dashboard' });
+    items.push({ title: 'Homepage' });
     return items;
   }
 
@@ -85,11 +86,69 @@ function breadcrumbItemsForPath(pathname: string, projectId?: string, partId?: s
 }
 
 function primarySideKey(pathname: string): string {
-  if (pathname.startsWith('/catalog')) return 'catalog';
   if (pathname.startsWith('/bom')) return 'bom';
-  if (pathname.startsWith('/projects')) return 'proj';
   if (pathname.startsWith('/dashboard')) return 'dash';
+  if (pathname.startsWith('/projects')) {
+    if (/\/projects\/[^/]+\/sales-brace/.test(pathname)) return 'spec';
+    if (/\/projects\/[^/]+\/submittal/.test(pathname)) return 'submittal';
+    if (/\/projects\/[^/]+\/content/.test(pathname)) return 'content';
+    return 'proj';
+  }
   return 'dash';
+}
+
+function backTargetForPath(pathname: string, projectId?: string): { label: string; path?: string } {
+  if (pathname === '/catalog/results') return { label: 'Back to Catalog', path: '/catalog' };
+  if (/^\/catalog\/parts\/[^/]+/.test(pathname)) return { label: 'Back to Results', path: '/catalog/results' };
+
+  if (pathname === '/bom/flow' || pathname === '/bom/search') {
+    return { label: 'Back to BOM', path: '/bom' };
+  }
+  if (/^\/bom\/projects\/[^/]+\/parsing-review/.test(pathname)) {
+    return { label: 'Back to BOM', path: '/bom' };
+  }
+  if (/^\/bom\/projects\/[^/]+\/matching/.test(pathname)) {
+    return {
+      label: 'Back to Parsing',
+      path: projectId ? `/bom/projects/${projectId}/parsing-review` : undefined,
+    };
+  }
+  if (/^\/bom\/projects\/[^/]+\/items\/[^/]+\/narrow/.test(pathname)) {
+    return {
+      label: 'Back to Matching',
+      path: projectId ? `/bom/projects/${projectId}/matching` : undefined,
+    };
+  }
+  if (/^\/bom\/projects\/[^/]+\/items\/[^/]+\/recommend/.test(pathname)) {
+    return {
+      label: 'Back to Narrowing',
+      path: projectId ? `/bom/projects/${projectId}/matching` : undefined,
+    };
+  }
+  if (/^\/bom\/projects\/[^/]+\/workspace/.test(pathname)) {
+    return {
+      label: 'Back to Matching',
+      path: projectId ? `/bom/projects/${projectId}/matching` : undefined,
+    };
+  }
+  if (/^\/bom\/projects\/[^/]+\/export/.test(pathname) || /^\/bom\/projects\/[^/]+\/service-request/.test(pathname)) {
+    return {
+      label: 'Back to Workspace',
+      path: projectId ? `/bom/projects/${projectId}/workspace` : undefined,
+    };
+  }
+
+  if (/^\/projects\/[^/]+\/sales-brace/.test(pathname)) {
+    return { label: 'Back to Projects', path: '/projects' };
+  }
+  if (/^\/projects\/[^/]+\/submittal/.test(pathname) || /^\/projects\/[^/]+\/content/.test(pathname)) {
+    return {
+      label: 'Back to Spec',
+      path: projectId ? `/projects/${projectId}/sales-brace` : undefined,
+    };
+  }
+
+  return { label: 'Back to Previous' };
 }
 
 export function AppShell() {
@@ -101,20 +160,12 @@ export function AppShell() {
 
   const menuItems: MenuProps['items'] = useMemo(
     () => [
-      { key: 'dash', icon: <DashboardOutlined />, label: 'Dashboard' },
+      { key: 'dash', icon: <HomeOutlined />, label: 'Homepage' },
       { key: 'proj', icon: <FolderOpenOutlined />, label: 'Projects' },
-      { key: 'catalog', icon: <FileSearchOutlined />, label: 'Catalog' },
-      { key: 'bom', icon: <UnorderedListOutlined />, label: 'BOM' },
-      {
-        key: 'team',
-        icon: <TeamOutlined />,
-        label: 'Team',
-        children: [
-          { key: 'team:m', label: 'Members' },
-          { key: 'team:r', label: 'Roles' },
-        ],
-      },
-      { key: 'set', icon: <SettingOutlined />, label: 'Settings' },
+      { key: 'bom', icon: <FilePdfOutlined />, label: 'BOM' },
+      { key: 'spec', icon: <BorderOuterOutlined />, label: 'Spec' },
+      { key: 'submittal', icon: <FileTextOutlined />, label: 'Submittal' },
+      { key: 'content', icon: <MailOutlined />, label: 'Content' },
     ],
     [],
   );
@@ -127,19 +178,34 @@ export function AppShell() {
   );
 
   const showBack = !TOP_PATHS_NO_BACK.has(location.pathname);
+  const backTarget = useMemo(
+    () => backTargetForPath(location.pathname, params.projectId),
+    [location.pathname, params.projectId],
+  );
 
   const onMenuClick: MenuProps['onClick'] = ({ key }) => {
+    const pid = getLastScopedProjectId();
     const routes: Record<string, string> = {
       dash: '/dashboard',
       proj: '/projects',
-      catalog: '/catalog',
       bom: '/bom',
+      spec: `/projects/${pid}/sales-brace`,
+      submittal: `/projects/${pid}/submittal`,
+      content: `/projects/${pid}/content`,
     };
-    if (routes[key]) navigate(routes[key]);
+    const path = routes[key];
+    if (path) navigate(path);
   };
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout
+      style={{
+        minHeight: '100vh',
+        height: '100vh',
+        maxHeight: '100vh',
+        overflow: 'hidden',
+      }}
+    >
       <Sider
         collapsible
         collapsed={collapsed}
@@ -150,38 +216,58 @@ export function AppShell() {
         style={{
           background: sidebarSemanticsLight.colorSidebar,
           borderInlineEnd: `${token.lineWidth}px ${token.lineType} ${token.colorSplit}`,
+          alignSelf: 'stretch',
+          overflow: 'hidden',
         }}
       >
         <div
           style={{
-            height: shellLayout.headerHeight,
-            boxSizing: 'border-box',
             display: 'flex',
-            alignItems: 'center',
-            paddingBlock: token.paddingSM,
-            paddingInline: collapsed ? token.paddingSM : token.paddingLG,
-            justifyContent: collapsed ? 'center' : 'flex-start',
-            background: sidebarSemanticsLight.colorSidebarHeader,
-            borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorSplit}`,
+            flexDirection: 'column',
+            height: '100%',
+            minHeight: 0,
           }}
         >
-          <ConnectedSidebarBrand collapsed={collapsed} />
+          <div
+            style={{
+              flexShrink: 0,
+              height: shellLayout.headerHeight,
+              boxSizing: 'border-box',
+              display: 'flex',
+              alignItems: 'center',
+              paddingBlock: token.paddingSM,
+              paddingInline: collapsed ? token.paddingSM : token.paddingLG,
+              justifyContent: collapsed ? 'center' : 'flex-start',
+              background: sidebarSemanticsLight.colorSidebarHeader,
+              borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorSplit}`,
+            }}
+          >
+            <ConnectedSidebarBrand collapsed={collapsed} />
+          </div>
+          <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+            <Menu
+              theme="dark"
+              mode="inline"
+              selectedKeys={selectedMenuKeys}
+              items={menuItems}
+              onClick={onMenuClick}
+              style={{ borderInlineEnd: 'none', background: 'transparent' }}
+              styles={{
+                item: { borderRadius: hydraMenuItemBorderRadius },
+              }}
+            />
+          </div>
         </div>
-        <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={selectedMenuKeys}
-          defaultOpenKeys={['team']}
-          items={menuItems}
-          onClick={onMenuClick}
-          style={{ borderInlineEnd: 'none', background: 'transparent' }}
-          styles={{
-            item: { borderRadius: figmaMenuItemBorderRadius },
-            subMenu: { item: { borderRadius: figmaMenuItemBorderRadius } },
-          }}
-        />
       </Sider>
-      <Layout style={{ background: token.colorBgLayout }}>
+      <Layout
+        style={{
+          flex: 1,
+          minWidth: 0,
+          minHeight: 0,
+          overflow: 'hidden',
+          background: token.colorBgLayout,
+        }}
+      >
         <AppTopBar />
         <Header
           style={{
@@ -200,10 +286,13 @@ export function AppShell() {
               <Button
                 type="text"
                 icon={<LeftOutlined />}
-                onClick={() => navigate(-1)}
-                aria-label="Go back"
+                onClick={() => {
+                  if (backTarget.path) navigate(backTarget.path);
+                  else navigate(-1);
+                }}
+                aria-label={backTarget.label}
               >
-                Back
+                {backTarget.label}
               </Button>
             ) : null}
             <Breadcrumb items={crumbs} />
@@ -211,12 +300,14 @@ export function AppShell() {
         </Header>
         <Content
           style={{
+            flex: 1,
+            minHeight: 0,
+            overflow: 'auto',
             margin: token.marginLG,
             padding: token.paddingLG,
             background: token.colorBgContainer,
             borderRadius: token.borderRadiusLG,
             border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-            minHeight: shellLayout.contentMinHeight,
           }}
         >
           <Outlet />

@@ -1,14 +1,17 @@
 import { SearchOutlined } from '@ant-design/icons';
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
+import { BomCardTitle } from '../components/BomCardTitle';
 import { BomPageHeader } from '../layout/BomPageHeader';
-import { Alert, Button, Card, Flex, Input, Space, Typography, theme } from '../../ui/antd';
+import { Button, Card, Flex, Input, Space, Typography, theme } from '../../ui/antd';
 
 export function BomSearchPage() {
   const { token } = theme.useToken();
   const navigate = useNavigate();
   const [q, setQ] = useState('');
+
+  const exampleQueries = ['005 FireLock coupling 4 inch grooved', 'Victaulic grooved coupling', 'Tyco sprinkler head 155F'];
 
   const goCatalog = () => {
     const next = q.trim() || 'all';
@@ -17,51 +20,75 @@ export function BomSearchPage() {
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <Card
-        style={{
-          background: token.colorPrimaryBg,
-          borderColor: token.colorPrimaryBorder,
-        }}
-        styles={{ body: { padding: token.paddingLG } }}
-      >
-        <BomPageHeader
-          title="Search parts"
-          description="Look up catalog parts to validate descriptions while you build a BOM. Results open in the main Catalog experience."
-        />
-      </Card>
+      <BomPageHeader
+        title="Natural language search"
+        description="Search for parts using competitor part numbers, generic descriptions, or natural language."
+      />
 
-      <Card title="Catalog search">
+      <Card style={{ borderColor: token.colorBorderSecondary }}>
         <Space orientation="vertical" size={token.margin} style={{ width: '100%' }}>
-          <Flex wrap="wrap" gap={token.margin} align="flex-end">
+          <BomCardTitle>Search input</BomCardTitle>
+          <Flex gap={token.marginSM} align="center" wrap="wrap">
             <Input
               allowClear
-              placeholder="Part number, keyword, family…"
+              size="large"
+              placeholder="Example: 005 FireLock coupling 4 inch grooved"
               prefix={<SearchOutlined style={{ color: token.colorTextPlaceholder }} />}
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onPressEnter={() => goCatalog()}
-              style={{ minWidth: token.controlHeight * 10, flex: 1 }}
+              style={{ flex: '1 1 360px' }}
             />
-            <Button type="primary" onClick={() => goCatalog()}>
-              Search in catalog
+            <Button type="primary" size="large" onClick={() => goCatalog()}>
+              Search catalog
             </Button>
           </Flex>
-          <Alert
-            type="info"
-            showIcon
-            message="Leaving BOM module"
-            description="You will navigate to Catalog results. Use the app sidebar to return to BOM anytime."
-            style={{ background: token.colorFillAlter, borderColor: token.colorBorderSecondary }}
-          />
-          <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
-            Prefer browsing? <Link to="/catalog">Open catalog home</Link>
-          </Typography.Paragraph>
+          <Typography.Text type="secondary">
+            Tip: Use competitor part number first, then plain language if no direct hit.
+          </Typography.Text>
+          <Space wrap>
+            {exampleQueries.map((example) => (
+              <Button key={example} size="small" onClick={() => setQ(example)}>
+                {example}
+              </Button>
+            ))}
+          </Space>
         </Space>
       </Card>
 
-      <Link to="/bom">
-        <Button>Back to BOM home</Button>
-      </Link>
+      <Card
+        style={{ borderStyle: 'dashed', borderColor: token.colorBorderSecondary }}
+        styles={{ body: { paddingBlock: token.paddingXL, paddingInline: token.paddingLG } }}
+      >
+        <Space orientation="vertical" size={token.margin} style={{ width: '100%', textAlign: 'center' }}>
+          <SearchOutlined style={{ fontSize: token.fontSizeHeading2, color: token.colorTextQuaternary }} />
+          <Typography.Title level={3} style={{ margin: 0 }}>
+            Start your search
+          </Typography.Title>
+          <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
+            Enter a part number, description, or use natural language to find ASC equivalents.
+            Our AI helps narrow down results.
+          </Typography.Paragraph>
+          <Button type="primary" size="large" onClick={() => goCatalog()}>
+            Search catalog
+          </Button>
+        </Space>
+      </Card>
+
+      <Card style={{ background: token.colorFillAlter, borderColor: token.colorBorderSecondary }}>
+        <Space orientation="vertical" size={token.marginXS}>
+          <BomCardTitle>Search tips</BomCardTitle>
+          <Typography.Text type="secondary">Use competitor part numbers for direct conversions.</Typography.Text>
+          <Typography.Text type="secondary">
+            Describe the product in plain language (for example: &quot;4 inch grooved coupling&quot;).
+          </Typography.Text>
+          <Typography.Text type="secondary">
+            Include size, connection type, and pressure rating when known.
+          </Typography.Text>
+          <Typography.Text type="secondary">Use guided narrowing if you get too many results.</Typography.Text>
+        </Space>
+      </Card>
+
     </Space>
   );
 }

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
-import { BomFlowStepper } from '../components/BomFlowStepper';
+import { BomCardTitle } from '../components/BomCardTitle';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import {
   bomItemById,
@@ -38,9 +38,6 @@ export function BomNarrowPage() {
     return (
       <Space orientation="vertical" size={token.margin}>
         <BomPageHeader title="Line not found" description="Unknown item id in this demo." />
-        <Link to={`/bom/projects/${bomProjectId}/matching`}>
-          <Button>Back to matching</Button>
-        </Link>
       </Space>
     );
   }
@@ -54,12 +51,14 @@ export function BomNarrowPage() {
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <BomFlowStepper activeStep={2} projectLabel={projectTitle} />
       <BomPageHeader
         title="Guided narrowing"
-        description={`${projectTitle} — line ${item.rowNumber}: ${item.parsedDescription}`}
+        description={`Pick the best-fit catalog part for one line at a time. Project ${projectTitle}, line ${item.rowNumber}: ${item.parsedDescription}`}
       />
-      <Card title="Questions for this line" style={{ borderColor: token.colorBorderSecondary }}>
+      <Card
+        title={<BomCardTitle>Questions for this line</BomCardTitle>}
+        style={{ borderColor: token.colorBorderSecondary }}
+      >
         <Space orientation="vertical" size={token.margin} style={{ width: '100%' }}>
           <Steps current={step} items={stepItems} size="small" />
           {currentQ ? (
@@ -91,9 +90,6 @@ export function BomNarrowPage() {
         {step > 0 ? (
           <Button onClick={() => setStep((s) => Math.max(0, s - 1))}>Previous</Button>
         ) : null}
-        <Button onClick={() => navigate(`/bom/projects/${bomProjectId}/matching`)}>
-          Back to matching
-        </Button>
       </Space>
     </Space>
   );

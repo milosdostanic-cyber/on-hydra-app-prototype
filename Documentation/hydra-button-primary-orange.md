@@ -48,6 +48,7 @@ Single source in code: [`src/theme/primaryPrimitiveOrange.ts`](../src/theme/prim
 | `Color/ButtonPrimary/colorPrimaryText` | `colorPrimaryText` |
 | `Color/ButtonPrimary/colorPrimaryTextHover` | `colorPrimaryTextHover` |
 | `Color/ButtonPrimary/colorPrimaryTextActive` | `colorPrimaryTextActive` |
+| `Color/ButtonPrimary/primaryShadow` | `primaryShadow` |
 
 ### Figma **Colors** → **Customize Theme** (alias targets)
 
@@ -65,8 +66,9 @@ Single source in code: [`src/theme/primaryPrimitiveOrange.ts`](../src/theme/prim
 | `Color/ButtonPrimary/colorPrimaryTextActive` | `Volcano/volcano-8` |
 
 Figma uses **`BG`** in the path (community kit convention); antd tokens use **`Bg`**.
+`Color/ButtonPrimary/primaryShadow` is an effect-color token (RGBA), so it is not an alias to a primitive step.
 
-Applied in [`src/theme/antdTheme.ts`](../src/theme/antdTheme.ts). `controlOutline` on Button remains `rgba(240,90,35,0.12)` (focus ring); add a variable later if you want full Figma parity for outline.
+Applied in [`src/theme/antdTheme.ts`](../src/theme/antdTheme.ts). `primaryShadow` is `0 2px 0 rgba(240, 90, 35, 0.10)` (light) and `0 2px 0 rgba(207, 80, 33, 0.16)` (dark). `controlOutline` on Button remains `rgba(240,90,35,0.12)` (focus ring); add a variable later if you want full Figma parity for outline.
 
 ## Figma
 

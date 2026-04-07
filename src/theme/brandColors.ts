@@ -1,5 +1,5 @@
 import type { HydraColorMode } from './hydraColorMode';
-import { brandFontFamily } from './figmaTypography';
+import { brandFontFamily } from './hydraTypography';
 import {
   bluePrimarySemantics,
   bluePrimarySemanticsDark,

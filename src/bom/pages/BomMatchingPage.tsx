@@ -1,6 +1,5 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
-import { BomFlowStepper } from '../components/BomFlowStepper';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { bomProjectTitleById, mockMatchResults, mockParsedItems } from '../data/mockData';
 import { Button, Card, Progress, Space, Table, Typography, theme } from '../../ui/antd';
@@ -68,10 +67,9 @@ export function BomMatchingPage() {
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <BomFlowStepper activeStep={1} projectLabel={projectTitle} />
       <BomPageHeader
         title="Matching results"
-        description={`Suggested catalog matches for ${projectTitle}. Open a line to run guided narrowing.`}
+        description={`Each BOM line is paired with the best catalog candidates we found. Use Refine when you want to answer guided questions and lock a specific part. Project: ${projectTitle}.`}
       />
       <Card styles={{ body: { padding: 0 } }}>
         <Table<BomMatchResult>
@@ -85,9 +83,6 @@ export function BomMatchingPage() {
       <Space wrap>
         <Button type="primary" onClick={() => navigate(`/bom/projects/${bomProjectId}/workspace`)}>
           Skip to workspace
-        </Button>
-        <Button onClick={() => navigate(`/bom/projects/${bomProjectId}/parsing-review`)}>
-          Back to parsing
         </Button>
         <Link to="/bom">
           <Button>BOM home</Button>

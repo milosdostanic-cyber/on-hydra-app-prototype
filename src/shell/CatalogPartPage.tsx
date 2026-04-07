@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { catalogPartByKey } from '../catalog/catalogDemoData';
-import { figmaSmallNormal, figmaTextStyleToReactCss } from '../theme/figmaTypography';
+import { hydraSmallNormal, hydraTextStyleToReactCss } from '../theme/hydraTypography';
 import { useSubmittalDraft } from '../context/SubmittalDraftContext';
 import { PROJECT_SEED_ROWS } from './projectSeed';
 import {
@@ -83,7 +83,7 @@ export function CatalogPartPage() {
           </Button>
         </Tooltip>
       </Flex>
-      <Typography.Text type="secondary" style={figmaTextStyleToReactCss(figmaSmallNormal)}>
+      <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
         Quick download: no project. Add to submittal: requires a project; you&apos;ll land in Submittal
         manager for that project.
       </Typography.Text>

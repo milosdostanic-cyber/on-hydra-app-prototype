@@ -3,15 +3,16 @@ import {
   FilePdfOutlined,
   FolderOpenOutlined,
 } from '@ant-design/icons';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useSubmittalDraft } from '../context/SubmittalDraftContext';
 import { Badge, Flex, Layout, Menu, Typography, theme } from '../ui/antd';
 import type { MenuProps } from '../ui/antd';
 
-import { figmaMenuItemBorderRadius } from '../theme/figmaMenuMetrics';
+import { hydraMenuItemBorderRadius } from '../theme/hydraMenuMetrics';
 import { shellLayout } from '../theme/hydraAlias';
+import { setLastScopedProjectId } from './lastProjectScope';
 import { projectTitleById } from './projectSeed';
 
 const { Sider, Content } = Layout;
@@ -24,7 +25,7 @@ function moduleFromPath(pathname: string): ModuleKey {
   return 'content';
 }
 
-/** In-project module rail (Sales brace / Submittal / Content) — nested under a selected project. */
+/** In-project module rail (Spec / Submittal / Content) — nested under a selected project. */
 export function ProjectWorkspaceLayout() {
   const { token } = theme.useToken();
   const { projectId = '' } = useParams<{ projectId: string }>();
@@ -36,12 +37,16 @@ export function ProjectWorkspaceLayout() {
   const selected = moduleFromPath(location.pathname);
   const submittalCount = countForProject(projectId);
 
+  useEffect(() => {
+    if (projectId) setLastScopedProjectId(projectId);
+  }, [projectId]);
+
   const items: MenuProps['items'] = useMemo(
     () => [
       {
         key: 'sales-brace',
         icon: <AppstoreOutlined />,
-        label: 'Sales brace',
+        label: 'Spec',
       },
       {
         key: 'submittal',
@@ -88,7 +93,7 @@ export function ProjectWorkspaceLayout() {
           items={items}
           onClick={({ key }) => navigate(`${base}/${key}`)}
           styles={{
-            item: { borderRadius: figmaMenuItemBorderRadius },
+            item: { borderRadius: hydraMenuItemBorderRadius },
           }}
         />
       </Sider>

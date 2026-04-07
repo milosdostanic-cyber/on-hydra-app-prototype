@@ -14,7 +14,7 @@ import {
 } from '../ui/antd';
 import type { TableColumnsType, TabsProps } from '../ui/antd';
 
-import { figmaBaseStrong } from '../theme/figmaTypography';
+import { hydraBaseStrong } from '../theme/hydraTypography';
 import { PROJECT_SEED_ROWS, type ProjectRow } from './projectSeed';
 
 /** Projects shell view — spacing, color, and radii from `theme.useToken()` only. */
@@ -133,7 +133,7 @@ export function ShellHomeContent() {
           header: {
             cell: {
               color: token.colorTextDescription,
-              fontWeight: figmaBaseStrong.fontWeight,
+              fontWeight: hydraBaseStrong.fontWeight,
             },
           },
         }}

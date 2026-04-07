@@ -5,7 +5,7 @@ body,
   height: 100%;
 }
 
-/* Font stack from `figmaTypography` via `--hydra-font-family` (set in `applyHydraBrandCssVars`). */
+/* Font stack from `hydraTypography` via `--hydra-font-family` (set in `applyHydraBrandCssVars`). */
 body {
   font-family: var(--hydra-font-family);
   margin: 0;

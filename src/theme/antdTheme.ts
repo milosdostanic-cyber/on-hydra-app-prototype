@@ -4,13 +4,15 @@ import {
   buttonPrimaryControlOutline,
   buttonPrimaryPalette,
   buttonPrimaryPaletteDark,
+  buttonPrimaryShadow,
+  buttonPrimaryShadowDark,
 } from './buttonPrimaryPalette';
 import {
-  figmaMenuItemBorderRadius,
-  figmaMenuItemMarginBlock,
-  figmaMenuItemMarginInline,
-} from './figmaMenuMetrics';
-import { figmaMenuDarkChrome } from './figmaSemanticColors';
+  hydraMenuItemBorderRadius,
+  hydraMenuItemMarginBlock,
+  hydraMenuItemMarginInline,
+} from './hydraMenuMetrics';
+import { hydraMenuDarkChrome } from './hydraSemanticColors';
 import { hydraAntdTypographyComponentConfig, hydraAntdTypographyToken } from './hydraAntdTypography';
 import { hydraLightAlias, shellLayout } from './hydraAlias';
 import { bluePrimarySemantics, bluePrimarySemanticsDark } from './primaryPrimitiveBlue';
@@ -21,24 +23,26 @@ const hydraShellComponents: NonNullable<ThemeConfig['components']> = {
   Layout: {
     siderBg: sidebarSemanticsLight.colorSidebar,
     triggerBg: sidebarSemanticsLight.colorSidebarSubmenuBg,
-    triggerColor: figmaMenuDarkChrome.itemText,
+    triggerColor: hydraMenuDarkChrome.itemText,
     headerBg: hydraLightAlias.colorBgContainer,
     bodyBg: hydraLightAlias.colorFillAlter,
     headerHeight: shellLayout.headerHeight,
   },
   Menu: {
-    itemBorderRadius: figmaMenuItemBorderRadius,
-    subMenuItemBorderRadius: figmaMenuItemBorderRadius,
-    horizontalItemBorderRadius: figmaMenuItemBorderRadius,
-    itemMarginInline: figmaMenuItemMarginInline,
-    itemMarginBlock: figmaMenuItemMarginBlock,
+    itemBorderRadius: hydraMenuItemBorderRadius,
+    subMenuItemBorderRadius: hydraMenuItemBorderRadius,
+    horizontalItemBorderRadius: hydraMenuItemBorderRadius,
+    itemMarginInline: hydraMenuItemMarginInline,
+    itemMarginBlock: hydraMenuItemMarginBlock,
+    /** Align menu row height with global control height (Figma / antd `controlHeightLG`, typically 40px). */
+    itemHeight: hydraLightAlias.controlHeightLG,
     itemPaddingInline: hydraLightAlias.padding,
     darkItemBg: sidebarSemanticsLight.colorSidebar,
     darkSubMenuItemBg: sidebarSemanticsLight.colorSidebarSubmenuBg,
     darkItemSelectedBg: sidebarSemanticsLight.colorSidebarItemSelectedBg,
     darkItemSelectedColor: sidebarSemanticsLight.colorSidebarItemSelectedText,
-    darkItemColor: figmaMenuDarkChrome.itemText,
-    darkItemHoverBg: figmaMenuDarkChrome.itemHoverBg,
+    darkItemColor: hydraMenuDarkChrome.itemText,
+    darkItemHoverBg: hydraMenuDarkChrome.itemHoverBg,
     darkItemHoverColor: hydraLightAlias.colorWhite,
     darkPopupBg: sidebarSemanticsLight.colorSidebar,
   },
@@ -79,6 +83,7 @@ export const hydraAntdTheme: ThemeConfig = {
       colorPrimaryText: buttonPrimaryPalette.text,
       colorPrimaryTextHover: buttonPrimaryPalette.textHover,
       colorPrimaryTextActive: buttonPrimaryPalette.textActive,
+      primaryShadow: buttonPrimaryShadow,
       controlOutline: buttonPrimaryControlOutline,
     },
   },
@@ -109,6 +114,7 @@ export const hydraAntdThemeDark: ThemeConfig = {
       colorPrimaryText: buttonPrimaryPaletteDark.text,
       colorPrimaryTextHover: buttonPrimaryPaletteDark.textHover,
       colorPrimaryTextActive: buttonPrimaryPaletteDark.textActive,
+      primaryShadow: buttonPrimaryShadowDark,
     },
   },
 };

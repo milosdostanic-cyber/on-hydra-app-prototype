@@ -1,6 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 
-import { BomFlowStepper } from '../components/BomFlowStepper';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { mockParsedItems, bomProjectTitleById } from '../data/mockData';
 import type { BomItem } from '../data/types';
@@ -32,10 +31,9 @@ export function BomParsingReviewPage() {
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <BomFlowStepper activeStep={0} projectLabel={title} />
       <BomPageHeader
         title="Parsing review"
-        description={`Review extracted lines for ${title}. Demo content is the same for all projects.`}
+        description={`We split your upload into rows. Skim for typos, missing quantities, or merged cells before matching. Project: ${title} (demo uses the same sample rows for every project).`}
       />
       <Card styles={{ body: { padding: 0 } }}>
         <Table<BomItem>

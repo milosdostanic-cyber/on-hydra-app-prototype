@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import { CATALOG_DEMO_PARTS } from '../catalog/catalogDemoData';
-import { figmaBaseStrong } from '../theme/figmaTypography';
+import { hydraBaseStrong } from '../theme/hydraTypography';
 import type { CatalogPartRow } from '../catalog/catalogDemoData';
 import { Space, Table, Typography, theme } from '../ui/antd';
 import type { TableColumnsType } from '../ui/antd';
@@ -47,7 +47,7 @@ export function CatalogResults() {
           header: {
             cell: {
               color: token.colorTextDescription,
-              fontWeight: figmaBaseStrong.fontWeight,
+                fontWeight: hydraBaseStrong.fontWeight,
             },
           },
         }}

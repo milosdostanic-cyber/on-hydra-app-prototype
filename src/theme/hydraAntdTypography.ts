@@ -1,6 +1,6 @@
 /**
  * Ant Design 5 typography binding — **ConfigProvider `theme.token`** (+ optional **`theme.components`**).
- * All Figma metrics live in [`figmaTypography`](./figmaTypography.ts); this module is the documented bridge
+ * All Hydra typography metrics live in [`hydraTypography`](./hydraTypography.ts); this module is the documented bridge
  * into antd’s design token pipeline so every component (`Typography`, `Button`, `Table`, `Input`, `Modal`, …)
  * resolves sizes through the same values.
  *
@@ -10,17 +10,17 @@
 import type { ThemeConfig } from 'antd';
 import type { AliasToken } from 'antd/es/theme/interface';
 
-import { brandFontFamily, hydraAntdFontMapFromFigma } from './figmaTypography';
+import { brandFontFamily, hydraAntdFontMapFromDesign } from './hydraTypography';
 
 /**
  * Pass this object into `ConfigProvider` as **`theme.token`** (merged with colors and other seeds in
  * [`antdTheme`](./antdTheme.ts)). Do not set separate font sizes for components elsewhere unless you map
- * them to a Figma style in `figmaTypography` first.
+ * them to a named style in `hydraTypography` first.
  */
 export const hydraAntdTypographyToken = {
   fontFamily: brandFontFamily,
   fontFamilyCode: brandFontFamily,
-  ...hydraAntdFontMapFromFigma,
+  ...hydraAntdFontMapFromDesign,
 } as const satisfies Partial<AliasToken>;
 
 /**

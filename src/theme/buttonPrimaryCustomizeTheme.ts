@@ -22,6 +22,11 @@ export const buttonPrimaryCustomizeThemePaths = {
   colorPrimaryTextActive: `${BUTTON_PRIMARY_CUSTOMIZE_GROUP}/colorPrimaryTextActive`,
 } as const;
 
+/** Effect-color parity path for `components.Button.primaryShadow`. */
+export const buttonPrimaryEffectPaths = {
+  primaryShadow: `${BUTTON_PRIMARY_CUSTOMIZE_GROUP}/primaryShadow`,
+} as const;
+
 type PathKey = keyof typeof buttonPrimaryCustomizeThemePaths;
 
 const PATH_TO_PALETTE_KEY: Record<PathKey, keyof typeof buttonPrimaryPalette> = {
@@ -53,7 +58,7 @@ const PATH_TO_VOLCANO_STEP: Record<PathKey, 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 
 
 /** Ordered rows for docs / Figma MCP sync scripts. */
 export function getButtonPrimaryCustomizeThemeRows(): Array<{
-  figmaPath: string;
+  designPath: string;
   volcanoPrimitivePath: string;
   antdButtonToken: PathKey;
   hex: string;
@@ -61,7 +66,7 @@ export function getButtonPrimaryCustomizeThemeRows(): Array<{
   return (Object.keys(buttonPrimaryCustomizeThemePaths) as PathKey[]).map((antdButtonToken) => {
     const step = PATH_TO_VOLCANO_STEP[antdButtonToken];
     return {
-      figmaPath: buttonPrimaryCustomizeThemePaths[antdButtonToken],
+      designPath: buttonPrimaryCustomizeThemePaths[antdButtonToken],
       volcanoPrimitivePath: `${VOLCANO_PRIMITIVE_PREFIX}${step}`,
       antdButtonToken,
       hex: buttonPrimaryPalette[PATH_TO_PALETTE_KEY[antdButtonToken]],
