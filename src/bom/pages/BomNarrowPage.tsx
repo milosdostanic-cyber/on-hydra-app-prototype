@@ -3,11 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { BomCardTitle } from '../components/BomCardTitle';
 import { BomPageHeader } from '../layout/BomPageHeader';
-import {
-  bomItemById,
-  bomProjectTitleById,
-  mockGuidedQuestions,
-} from '../data/mockData';
+import { bomItemById, bomProjectTitleById, mockGuidedQuestions } from '../data/mockData';
 import { Button, Card, Form, Radio, Space, Steps, theme } from '../../ui/antd';
 
 export function BomNarrowPage() {
@@ -36,15 +32,30 @@ export function BomNarrowPage() {
 
   if (!item) {
     return (
-      <Space orientation="vertical" size={token.margin}>
-        <BomPageHeader title="Line not found" description="Unknown item id in this demo." />
+      <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+        <BomPageHeader
+          title="Line item not found"
+          description="This line may have been removed from the parsed BOM."
+          actions={
+            <Button type="primary" size="large" onClick={() => navigate(`/bom/projects/${bomProjectId}/matching`)}>
+              Back to matching
+            </Button>
+          }
+        />
       </Space>
     );
   }
 
+  const goRecommend = () => navigate(`/bom/projects/${bomProjectId}/items/${itemId}/recommend`);
+
   const onNext = () => {
     if (step < mockGuidedQuestions.length - 1) setStep((s) => s + 1);
-    else navigate(`/bom/projects/${bomProjectId}/items/${itemId}/recommend`);
+    else goRecommend();
+  };
+
+  const skipQuestion = () => {
+    if (step < mockGuidedQuestions.length - 1) setStep((s) => s + 1);
+    else goRecommend();
   };
 
   const canNext = currentQ ? Boolean(answers[currentQ.id]) : false;
@@ -53,7 +64,17 @@ export function BomNarrowPage() {
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <BomPageHeader
         title="Guided narrowing"
-        description={`Pick the best-fit catalog part for one line at a time. Project ${projectTitle}, line ${item.rowNumber}: ${item.parsedDescription}`}
+        description={`Project ${projectTitle}, line ${item.rowNumber}: ${item.parsedDescription}`}
+        actions={
+          <Space wrap>
+            <Button size="large" onClick={() => navigate(`/bom/projects/${bomProjectId}/matching`)}>
+              Cancel
+            </Button>
+            <Button type="primary" size="large" disabled={!canNext} onClick={onNext}>
+              {step < mockGuidedQuestions.length - 1 ? 'Next' : 'View recommendation'}
+            </Button>
+          </Space>
+        }
       />
       <Card
         title={<BomCardTitle>Questions for this line</BomCardTitle>}
@@ -63,12 +84,10 @@ export function BomNarrowPage() {
           <Steps current={step} items={stepItems} size="small" />
           {currentQ ? (
             <Form layout="vertical" style={{ maxWidth: token.screenLG }}>
-              <Form.Item label={currentQ.question} required>
+              <Form.Item label={currentQ.question}>
                 <Radio.Group
                   value={answers[currentQ.id]}
-                  onChange={(e) =>
-                    setAnswers((prev) => ({ ...prev, [currentQ.id]: e.target.value }))
-                  }
+                  onChange={(e) => setAnswers((prev) => ({ ...prev, [currentQ.id]: e.target.value }))}
                 >
                   <Space orientation="vertical" size={token.marginXS}>
                     {currentQ.options.map((opt) => (
@@ -81,16 +100,14 @@ export function BomNarrowPage() {
               </Form.Item>
             </Form>
           ) : null}
+          <Space wrap>
+            {step > 0 ? (
+              <Button onClick={() => setStep((s) => Math.max(0, s - 1))}>Previous</Button>
+            ) : null}
+            <Button onClick={skipQuestion}>Skip question</Button>
+          </Space>
         </Space>
       </Card>
-      <Space wrap>
-        <Button type="primary" disabled={!canNext} onClick={onNext}>
-          {step < mockGuidedQuestions.length - 1 ? 'Next question' : 'View recommendation'}
-        </Button>
-        {step > 0 ? (
-          <Button onClick={() => setStep((s) => Math.max(0, s - 1))}>Previous</Button>
-        ) : null}
-      </Space>
     </Space>
   );
 }

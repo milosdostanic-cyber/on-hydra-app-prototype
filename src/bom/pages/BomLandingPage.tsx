@@ -1,18 +1,35 @@
-import { FileSearchOutlined, PlusOutlined, UploadOutlined, ApartmentOutlined } from '@ant-design/icons';
-import { useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import {
+  DeleteOutlined,
+  ExclamationCircleOutlined,
+  FileSearchOutlined,
+  PlusOutlined,
+  UploadOutlined,
+} from '@ant-design/icons';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import type { Key } from 'react';
 
-import { BomCardTitle } from '../components/BomCardTitle';
+import { useActiveProject } from '../../context/ActiveProjectContext';
+import { PageBackButton } from '../../shell/PageBackButton';
+import { BomCreateProjectModal } from '../components/BomCreateProjectModal';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { mockBomProjects } from '../data/mockData';
 import { BomProjectStatusTag } from '../components/BomTags';
 import type { BomProject } from '../data/types';
+import { shellLayout } from '../../theme/hydraAlias';
 import {
+  Alert,
+  App,
+  AppSearchInput,
   Button,
   Card,
   Col,
+  Descriptions,
+  Empty,
   Flex,
+  Pagination,
   Row,
+  Select,
   Space,
   Table,
   Typography,
@@ -28,11 +45,150 @@ const VALID_UPLOAD_TYPES = new Set([
   'text/csv',
 ]);
 
+const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+
+const STATUS_OPTIONS = [
+  { value: 'all', label: 'All statuses' },
+  { value: 'draft', label: 'Draft' },
+  { value: 'in-progress', label: 'In Progress' },
+  { value: 'needs-review', label: 'Needs Review' },
+  { value: 'partial', label: 'Partial' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'failed', label: 'Failed' },
+];
+
+const SORT_OPTIONS = [
+  { value: 'desc', label: 'Last edited' },
+  { value: 'asc', label: 'Last edited: oldest' },
+];
+
 export function BomLandingPage() {
   const { token } = theme.useToken();
+  const { modal } = App.useApp();
   const navigate = useNavigate();
+  const { projectId, project } = useActiveProject();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
+
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [statusFilter, setStatusFilter] = useState<BomProject['status'] | 'all'>('all');
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [projectsPage, setProjectsPage] = useState(1);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+  const [hoveredQuickAction, setHoveredQuickAction] = useState<'upload' | 'search' | null>(null);
+
+  // Reset selection and page when switching projects
+  useEffect(() => {
+    setSelectedRowKeys([]);
+    setSearchText('');
+    setStatusFilter('all');
+    setProjectsPage(1);
+  }, [projectId]);
+
+  // BOMs scoped to the active project, excluding locally deleted ones
+  const projectBoms = useMemo(
+    () => mockBomProjects.filter((p) => p.projectId === projectId && !deletedIds.has(p.id)),
+    [projectId, deletedIds],
+  );
+
+  const filteredProjects = useMemo(() => {
+    let list = [...projectBoms];
+    if (searchText.trim()) {
+      const q = searchText.toLowerCase();
+      list = list.filter((p) => p.name.toLowerCase().includes(q));
+    }
+    if (statusFilter !== 'all') {
+      list = list.filter((p) => p.status === statusFilter);
+    }
+    list.sort((a, b) => {
+      const diff = new Date(b.lastEdited).getTime() - new Date(a.lastEdited).getTime();
+      return sortOrder === 'desc' ? diff : -diff;
+    });
+    return list;
+  }, [projectBoms, searchText, statusFilter, sortOrder]);
+
+  const paginatedProjects = useMemo(() => {
+    const start = (projectsPage - 1) * shellLayout.tablePageSizeDefault;
+    return filteredProjects.slice(start, start + shellLayout.tablePageSizeDefault);
+  }, [filteredProjects, projectsPage]);
+
+  const hasSelection = selectedRowKeys.length > 0;
+
+  const handleBulkDelete = () => {
+    const n = selectedRowKeys.length;
+    setDeletedIds((prev) => {
+      const next = new Set(prev);
+      (selectedRowKeys as string[]).forEach((k) => next.add(k));
+      return next;
+    });
+    setSelectedRowKeys([]);
+    message.success(`${n} BOM project${n > 1 ? 's' : ''} deleted.`);
+  };
+
+  const handleRowDelete = (id: string) => {
+    setDeletedIds((prev) => new Set(prev).add(id));
+    setSelectedRowKeys((prev) => prev.filter((k) => k !== id));
+    message.success('BOM project deleted.');
+  };
+
+  function openDeleteProjectModal(row: BomProject) {
+    modal.confirm({
+      title: 'Delete BOM project',
+      icon: <ExclamationCircleOutlined style={{ color: token.colorError, fontSize: token.fontSizeLG }} />,
+      width: 560,
+      centered: true,
+      okText: 'Delete project',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      content: (
+        <Space orientation="vertical" size={token.marginMD} style={{ width: '100%', marginTop: token.marginSM }}>
+          <Alert
+            type="error"
+            showIcon
+            message="This project will be removed from your list"
+            description="In this demo the project is only hidden locally until you refresh; there is no server delete."
+          />
+          <Descriptions bordered size="small" column={1}>
+            <Descriptions.Item label="Project name">{row.name}</Descriptions.Item>
+            <Descriptions.Item label="Items">{row.items}</Descriptions.Item>
+            <Descriptions.Item label="Last edited">{row.lastEdited}</Descriptions.Item>
+          </Descriptions>
+        </Space>
+      ),
+      onOk: () => {
+        handleRowDelete(row.id);
+      },
+    });
+  }
+
+  function openBulkDeleteModal() {
+    const n = selectedRowKeys.length;
+    if (n === 0) return;
+    modal.confirm({
+      title: `Delete ${n} BOM project${n > 1 ? 's' : ''}?`,
+      icon: <ExclamationCircleOutlined style={{ color: token.colorError, fontSize: token.fontSizeLG }} />,
+      width: 480,
+      centered: true,
+      okText: 'Delete all',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      content: (
+        <Alert
+          type="error"
+          showIcon
+          style={{ marginTop: token.marginSM }}
+          message="Selected projects will be removed from the list"
+          description="This demo only hides them locally. This action matches bulk delete in the toolbar."
+        />
+      ),
+      onOk: () => {
+        handleBulkDelete();
+      },
+    });
+  }
+
+  const tableLinkButtonStyle = { padding: 0, height: 'auto' as const };
 
   const columns: TableColumnsType<BomProject> = [
     {
@@ -40,30 +196,67 @@ export function BomLandingPage() {
       dataIndex: 'name',
       key: 'name',
       render: (name: string, row) => (
-        <Link to={`/bom/projects/${row.id}/workspace`}>{name}</Link>
+        <Button
+          type="link"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/bom/projects/${row.id}/workspace`);
+          }}
+          style={tableLinkButtonStyle}
+        >
+          {name}
+        </Button>
       ),
     },
     {
       title: 'Last edited',
       dataIndex: 'lastEdited',
       key: 'lastEdited',
+      sorter: (a, b) => new Date(a.lastEdited).getTime() - new Date(b.lastEdited).getTime(),
     },
     {
       title: 'Items',
       dataIndex: 'items',
       key: 'items',
+      align: 'center',
+      sorter: (a, b) => a.items - b.items,
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
+      align: 'left',
       render: (s: BomProject['status']) => <BomProjectStatusTag status={s} />,
     },
     {
       title: 'Actions',
       key: 'actions',
-      render: (_, row) => (
-        <Link to={`/bom/projects/${row.id}/workspace`}>Open</Link>
+      width: 150,
+      render: (_: unknown, row: BomProject) => (
+        <Space size={token.marginSM}>
+          <Button
+            type="link"
+            style={tableLinkButtonStyle}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/bom/projects/${row.id}/workspace`);
+            }}
+          >
+            Edit
+          </Button>
+          <Button
+            type="link"
+            danger
+            style={tableLinkButtonStyle}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              openDeleteProjectModal(row);
+            }}
+          >
+            Delete
+          </Button>
+        </Space>
       ),
     },
   ];
@@ -75,140 +268,278 @@ export function BomLandingPage() {
     e.target.value = '';
     if (!file) return;
     if (!VALID_UPLOAD_TYPES.has(file.type)) {
-      message.error('Upload an Excel (.xlsx, .xls), CSV, or PDF file.');
+      message.error('Please upload a CSV, Excel, or PDF file.');
       return;
     }
-    setUploading(true);
+    if (file.size > MAX_UPLOAD_BYTES) {
+      message.error('File size exceeds 50MB limit.');
+      return;
+    }
+    const closeLoading = message.loading('Processing your file…', 0);
     window.setTimeout(() => {
-      setUploading(false);
-      message.success('File received (demo). Opening parsing review.');
-      navigate('/bom/projects/new/parsing-review');
-    }, 1200);
+      closeLoading();
+      message.success('File received. Opening field mapping.');
+      navigate('/bom/projects/new/field-mapping', { state: { uploadFileName: file.name } });
+    }, 900);
   };
 
-  const cardIconStyle = { fontSize: token.fontSizeHeading2, color: token.colorPrimary };
+  const cardFlatStyle = {
+    background: token.colorBgContainer,
+    borderRadius: token.borderRadiusLG,
+    border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+    cursor: 'pointer' as const,
+  };
+
+  const getQuickActionStyle = (kind: 'upload' | 'search') => ({
+    ...cardFlatStyle,
+    borderColor: hoveredQuickAction === kind ? token.colorPrimaryBorderHover : token.colorBorderSecondary,
+    boxShadow: 'none',
+    transition: `border-color ${token.motionDurationMid}`,
+  });
+
+  const tableShellStyle = {
+    background: token.colorBgContainer,
+    borderRadius: token.borderRadiusLG,
+    boxShadow: token.boxShadowTertiary,
+    overflow: 'hidden' as const,
+  };
+
+  const hasNoProjects = projectBoms.length === 0;
+  const hasNoResults = !hasNoProjects && filteredProjects.length === 0;
+  const isFiltered = searchText.trim() !== '' || statusFilter !== 'all';
 
   return (
     <>
-      <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
-        <div
-          style={{
-            width: '100%',
-            background: token.colorFillAlter,
-            borderRadius: token.borderRadiusLG,
-            paddingBlock: token.paddingMD,
-            paddingInline: token.paddingLG,
-            border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-          }}
-        >
-          <Flex gap={token.marginSM} align="stretch" wrap="wrap">
-            <div
-              aria-hidden
-              style={{
-                flexShrink: 0,
-                width: token.marginXXS,
-                minWidth: token.marginXXS,
-                borderRadius: token.borderRadiusSM,
-                background: token.colorPrimary,
-              }}
-            />
-            <div style={{ flex: '1 1 0', minWidth: 0 }}>
-              <BomPageHeader
-                title="Build or Convert a Bill of Materials"
-                description="Upload files, search parts, or start from scratch to create your BOM"
-                titleLevel={3}
-              />
-              <Typography.Text type="secondary" style={{ display: 'block', marginTop: token.marginXS }}>
-                Demo data.{' '}
-                <Link to="/bom/flow">
-                  <Space size={token.marginXXS}>
-                    <ApartmentOutlined aria-hidden />
-                    <span>Flow map</span>
-                  </Space>
-                </Link>
-              </Typography.Text>
-            </div>
-          </Flex>
-        </div>
-
-        <Space orientation="vertical" size={token.marginXS} style={{ width: '100%' }}>
-          <BomCardTitle>Get started</BomCardTitle>
-
-          <Row gutter={[token.marginSM, token.marginXS]}>
-            <Col xs={24} md={8}>
-              <Card
-                hoverable
-                styles={{ body: { padding: token.paddingLG } }}
-                style={{ height: '100%', borderColor: token.colorBorderSecondary }}
-              >
-                <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
-                  <UploadOutlined style={cardIconStyle} aria-hidden />
-                  <BomCardTitle>Upload a file</BomCardTitle>
-                  <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
-                    Excel, CSV, or PDF. We&apos;ll take you to parsing review after a short simulated import.
-                  </Typography.Paragraph>
-                  <Button type="primary" icon={<UploadOutlined />} loading={uploading} block onClick={triggerUpload}>
-                    Choose file
-                  </Button>
-                </Space>
-              </Card>
-            </Col>
-            <Col xs={24} md={8}>
-              <Card
-                hoverable
-                styles={{ body: { padding: token.paddingLG } }}
-                style={{ height: '100%', borderColor: token.colorBorderSecondary }}
-              >
-                <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
-                  <FileSearchOutlined style={cardIconStyle} aria-hidden />
-                  <BomCardTitle>Search parts</BomCardTitle>
-                  <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
-                    Validate descriptions against the catalog before you commit lines to a BOM.
-                  </Typography.Paragraph>
-                  <Link to="/bom/search">
-                    <Button icon={<FileSearchOutlined />} block>
-                      Open search
-                    </Button>
-                  </Link>
-                </Space>
-              </Card>
-            </Col>
-            <Col xs={24} md={8}>
-              <Card
-                hoverable
-                styles={{ body: { padding: token.paddingLG } }}
-                style={{ height: '100%', borderColor: token.colorBorderSecondary }}
-              >
-                <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
-                  <PlusOutlined style={cardIconStyle} aria-hidden />
-                  <BomCardTitle>Start blank BOM</BomCardTitle>
-                  <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
-                    Open an empty workspace and add lines manually (demo sample rows).
-                  </Typography.Paragraph>
-                  <Button
-                    icon={<PlusOutlined />}
-                    block
-                    onClick={() => navigate('/bom/projects/new/workspace')}
-                  >
-                    Create blank
-                  </Button>
-                </Space>
-              </Card>
-            </Col>
-          </Row>
-        </Space>
-
-        <Card
-          title={<BomCardTitle>Your BOM projects</BomCardTitle>}
-          styles={{ header: { borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}` } }}
-        >
-          <Table<BomProject>
-            rowKey="id"
-            columns={columns}
-            dataSource={mockBomProjects}
-            pagination={false}
+      <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+        <PageBackButton to="/projects">Back to projects</PageBackButton>
+        {!project ? (
+          <Alert
+            type="info"
+            showIcon
+            message="Select a construction project"
+            description="Pick a project from the top bar to scope BOM runs to the right job site."
           />
-        </Card>
+        ) : null}
+        <BomPageHeader
+          title="Get started"
+          description="Upload files, search parts, or start from scratch to create your BOM."
+          actions={
+            <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setCreateModalOpen(true)}>
+              New BOM project
+            </Button>
+          }
+        />
+
+        {/* Upload + Search cards */}
+        <Row gutter={[token.marginMD, token.marginMD]}>
+          <Col xs={24} md={12}>
+            <Card
+              style={getQuickActionStyle('upload')}
+              styles={{ body: { padding: `${token.paddingMD}px ${token.paddingLG}px` } }}
+              onClick={triggerUpload}
+              onMouseEnter={() => setHoveredQuickAction('upload')}
+              onMouseLeave={() => setHoveredQuickAction(null)}
+            >
+              <Flex align="center" gap={token.marginSM} style={{ marginBottom: token.marginXXS }}>
+                <UploadOutlined style={{ fontSize: token.fontSizeXL, color: token.colorSuccess }} />
+                <Typography.Title level={4} style={{ margin: 0 }}>
+                  Upload a file
+                </Typography.Title>
+              </Flex>
+              <Typography.Text type="secondary">
+                CSV, Excel, or PDF up to 50MB. Next step maps columns, then parsing review.
+              </Typography.Text>
+            </Card>
+          </Col>
+          <Col xs={24} md={12}>
+            <Card
+              style={getQuickActionStyle('search')}
+              styles={{ body: { padding: `${token.paddingMD}px ${token.paddingLG}px` } }}
+              onClick={() => navigate('/bom/search')}
+              onMouseEnter={() => setHoveredQuickAction('search')}
+              onMouseLeave={() => setHoveredQuickAction(null)}
+            >
+              <Flex align="center" gap={token.marginSM} style={{ marginBottom: token.marginXXS }}>
+                <FileSearchOutlined style={{ fontSize: token.fontSizeXL, color: token.colorPrimary }} />
+                <Typography.Title level={4} style={{ margin: 0 }}>
+                  Search Catalogue Parts
+                </Typography.Title>
+              </Flex>
+              <Typography.Text type="secondary">
+                Validate descriptions against the catalog before you commit lines to a BOM.
+              </Typography.Text>
+            </Card>
+          </Col>
+        </Row>
+
+        <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
+          <BomPageHeader
+            title="Your BOM projects"
+            description="BOM runs scoped to the active construction project in the top bar."
+          />
+
+          <Card styles={{ body: { padding: 0 } }} style={tableShellStyle}>
+            {hasNoProjects ? (
+              /* ── Empty state: no BOMs in this project ── */
+              <Flex
+                vertical
+                align="center"
+                justify="center"
+                style={{ padding: `${token.paddingLG * 3}px ${token.paddingLG}px` }}
+              >
+                <Empty
+                  description={
+                    <Space orientation="vertical" size={token.marginXS}>
+                      <Typography.Text strong>No BOM projects yet</Typography.Text>
+                      <Typography.Text type="secondary">
+                        Create your first BOM project or upload a file to get started.
+                      </Typography.Text>
+                    </Space>
+                  }
+                >
+                  <Flex gap={token.marginSM} justify="center" wrap="wrap">
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={() => setCreateModalOpen(true)}
+                    >
+                      Create New BOM Project
+                    </Button>
+                    <Button icon={<UploadOutlined />} onClick={triggerUpload}>
+                      Upload a file
+                    </Button>
+                  </Flex>
+                </Empty>
+              </Flex>
+            ) : hasNoResults ? (
+              /* ── Empty state: filter/search returned nothing ── */
+              <Flex
+                vertical
+                align="center"
+                justify="center"
+                style={{ padding: `${token.paddingLG * 3}px ${token.paddingLG}px` }}
+              >
+                <Empty
+                  description={
+                    <Space orientation="vertical" size={token.marginXS}>
+                      <Typography.Text strong>No projects match your filters</Typography.Text>
+                      <Typography.Text type="secondary">
+                        Try adjusting the search term or status filter.
+                      </Typography.Text>
+                    </Space>
+                  }
+                >
+                  <Button
+                    onClick={() => {
+                      setSearchText('');
+                      setStatusFilter('all');
+                      setProjectsPage(1);
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                </Empty>
+              </Flex>
+            ) : (
+              <div>
+                <Flex
+                  align="center"
+                  justify="space-between"
+                  gap={token.marginSM}
+                  wrap="wrap"
+                  style={{
+                    paddingInline: token.paddingMD,
+                    paddingBlock: token.padding,
+                    borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+                  }}
+                >
+                  {hasSelection ? (
+                    <Flex align="center" justify="space-between" gap={token.marginSM} style={{ width: '100%' }} wrap="wrap">
+                      <Typography.Text type="secondary">
+                        {selectedRowKeys.length} selected
+                      </Typography.Text>
+                      <Space size={token.marginSM}>
+                        <Button danger icon={<DeleteOutlined />} onClick={openBulkDeleteModal}>
+                          Bulk Delete
+                        </Button>
+                        <Button onClick={() => setSelectedRowKeys([])}>Clear Selection</Button>
+                      </Space>
+                    </Flex>
+                  ) : (
+                    <>
+                      <AppSearchInput
+                        placeholder="Search Items..."
+                        value={searchText}
+                        onChange={(e) => {
+                          setSearchText(e.target.value);
+                          setProjectsPage(1);
+                        }}
+                        allowClear
+                        style={{ flex: '1 1 220px', maxWidth: 360, background: token.colorBgContainer }}
+                      />
+                      <Flex gap={token.marginSM} wrap="wrap">
+                        <Select
+                          value={statusFilter}
+                          onChange={(v) => {
+                            setStatusFilter(v as BomProject['status'] | 'all');
+                            setProjectsPage(1);
+                          }}
+                          options={STATUS_OPTIONS}
+                          style={{ width: 164, background: token.colorBgContainer }}
+                        />
+                        <Select
+                          value={sortOrder}
+                          onChange={(v) => {
+                            setSortOrder(v as 'desc' | 'asc');
+                            setProjectsPage(1);
+                          }}
+                          options={SORT_OPTIONS}
+                          style={{ width: 200, background: token.colorBgContainer }}
+                        />
+                      </Flex>
+                    </>
+                  )}
+                </Flex>
+                <Table<BomProject>
+                  rowKey="id"
+                  columns={columns}
+                  dataSource={paginatedProjects}
+                  pagination={false}
+                  rowSelection={{
+                    selectedRowKeys,
+                    onChange: (keys) => setSelectedRowKeys(keys),
+                    preserveSelectedRowKeys: false,
+                  }}
+                  styles={{
+                    header: { cell: { background: token.colorFillAlter, borderBottomColor: token.colorBorderSecondary, fontWeight: token.fontWeightStrong } },
+                    body: { cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM } },
+                  }}
+                />
+                <Flex
+                  justify="space-between"
+                  align="center"
+                  style={{
+                    paddingInline: token.paddingMD,
+                    paddingBlock: token.paddingSM,
+                    borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+                  }}
+                >
+                  <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+                    {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''}
+                    {isFiltered ? ' found' : ' total'}
+                  </Typography.Text>
+                  <Pagination
+                    current={projectsPage}
+                    pageSize={shellLayout.tablePageSizeDefault}
+                    total={filteredProjects.length}
+                    onChange={setProjectsPage}
+                    showSizeChanger={false}
+                  />
+                </Flex>
+              </div>
+            )}
+          </Card>
+        </Space>
       </Space>
 
       <input
@@ -217,6 +548,15 @@ export function BomLandingPage() {
         accept=".xlsx,.xls,.csv,.pdf,application/pdf,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         style={{ display: 'none' }}
         onChange={onFileChange}
+      />
+
+      <BomCreateProjectModal
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onCreate={(project) => {
+          setCreateModalOpen(false);
+          navigate(`/bom/projects/${project.id}/workspace`);
+        }}
       />
     </>
   );

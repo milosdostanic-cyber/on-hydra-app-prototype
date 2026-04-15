@@ -39,6 +39,7 @@ export {
   Popover,
   Progress,
   Radio,
+  Rate,
   Result,
   Row,
   Select,
@@ -68,3 +69,6 @@ export type {
   SelectProps,
   TabsProps,
 } from 'antd';
+
+export { AppSearchInput } from './AppSearchInput';
+export type { AppSearchInputProps } from './AppSearchInput';

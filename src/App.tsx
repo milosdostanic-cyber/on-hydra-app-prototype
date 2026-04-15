@@ -24,6 +24,7 @@ export function App() {
 
         <Route path="/projects/:projectId" element={<ProjectWorkspaceLayout />}>
           <Route index element={<Navigate to="content" replace />} />
+          <Route path="seis-brace" element={<SalesBraceModule />} />
           <Route path="sales-brace" element={<SalesBraceModule />} />
           <Route path="submittal" element={<SubmittalModule />} />
           <Route path="content" element={<ContentModule />} />

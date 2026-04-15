@@ -1,10 +1,13 @@
 /** Domain types for the BOM module (aligned with PM prototype data shapes; Hydra app uses mock data only). */
 
-export type BomProjectStatus = 'draft' | 'in-progress' | 'completed' | 'needs-review';
+export type BomProjectStatus = 'draft' | 'in-progress' | 'completed' | 'needs-review' | 'failed' | 'partial';
 
 export interface BomProject {
   id: string;
+  /** Key of the parent ProjectRow (construction project). */
+  projectId: string;
   name: string;
+  description?: string;
   lastEdited: string;
   items: number;
   status: BomProjectStatus;
@@ -58,4 +61,16 @@ export interface GuidedQuestion {
   id: string;
   question: string;
   options: string[];
+}
+
+export type BomRunStatus = 'draft' | 'parsing' | 'in-review' | 'completed';
+
+export interface BomRun {
+  id: string;
+  /** Parent BomProject id */
+  projectId: string;
+  label: string;
+  createdAt: string;
+  status: BomRunStatus;
+  itemCount: number;
 }

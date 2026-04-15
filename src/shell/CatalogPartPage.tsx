@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { catalogPartByKey } from '../catalog/catalogDemoData';
+import { PageBackButton } from './PageBackButton';
 import { hydraSmallNormal, hydraTextStyleToReactCss } from '../theme/hydraTypography';
 import { useSubmittalDraft } from '../context/SubmittalDraftContext';
 import { PROJECT_SEED_ROWS } from './projectSeed';
@@ -59,6 +60,7 @@ export function CatalogPartPage() {
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+      <PageBackButton to="/catalog/results?q=all">Back to results</PageBackButton>
       <Typography.Title level={3} style={{ margin: 0 }}>
         {partTitle}
       </Typography.Title>

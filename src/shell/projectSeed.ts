@@ -45,6 +45,15 @@ export const PROJECT_SEED_ROWS: ProjectRow[] = [
     lastOpened: 'Last week',
     recent: false,
   },
+  {
+    key: '5',
+    name: 'Metro Rail Station Fit-Out',
+    address: '100 Transit Plaza',
+    city: 'Tempe',
+    state: 'AZ',
+    lastOpened: 'Never',
+    recent: false,
+  },
 ];
 
 export function projectTitleById(projectId: string): string | undefined {

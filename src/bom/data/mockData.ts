@@ -3,12 +3,26 @@ import type {
   BomItem,
   BomMatchResult,
   BomProject,
+  BomRun,
   GuidedQuestion,
 } from './types';
+
+const bomProjectStatusCycle: BomProject['status'][] = [
+  'in-progress',
+  'completed',
+  'needs-review',
+  'draft',
+  'failed',
+  'partial',
+];
+
+/** Construction project IDs cycle for bulk seed rows. */
+const projectIdCycle: BomProject['projectId'][] = ['1', '2', '3', '4'];
 
 export const mockBomProjects: BomProject[] = [
   {
     id: '1',
+    projectId: '1',
     name: 'Hospital Wing Renovation - Phase 2',
     lastEdited: '2026-03-15',
     items: 142,
@@ -16,6 +30,7 @@ export const mockBomProjects: BomProject[] = [
   },
   {
     id: '2',
+    projectId: '2',
     name: 'Industrial Plant Fire Protection',
     lastEdited: '2026-03-14',
     items: 89,
@@ -23,6 +38,7 @@ export const mockBomProjects: BomProject[] = [
   },
   {
     id: '3',
+    projectId: '1',
     name: 'Office Complex HVAC Upgrade',
     lastEdited: '2026-03-12',
     items: 67,
@@ -30,11 +46,39 @@ export const mockBomProjects: BomProject[] = [
   },
   {
     id: '4',
+    projectId: '3',
     name: 'Warehouse Sprinkler System',
     lastEdited: '2026-03-10',
     items: 234,
     status: 'draft',
   },
+  {
+    id: '5',
+    projectId: '2',
+    name: 'School Campus Fire Alarm Upgrade',
+    lastEdited: '2026-03-05',
+    items: 178,
+    status: 'in-progress',
+  },
+  {
+    id: '6',
+    projectId: '1',
+    name: 'Parking Garage Electrical Upgrade',
+    lastEdited: '2026-03-02',
+    items: 93,
+    status: 'in-progress',
+  },
+  ...Array.from({ length: 24 }, (_, i): BomProject => {
+    const idx = i + 7;
+    return {
+      id: String(idx),
+      projectId: projectIdCycle[i % 4],
+      name: `Fire protection BOM — package ${idx}`,
+      lastEdited: `2026-02-${String(15 + (i % 12)).padStart(2, '0')}`,
+      items: 50 + (idx * 11) % 180,
+      status: bomProjectStatusCycle[i % 4],
+    };
+  }),
 ];
 
 export const mockParsedItems: BomItem[] = [
@@ -140,6 +184,7 @@ export const mockAscParts: AscCatalogPart[] = [
   },
 ];
 
+/** BOM workspace table — aligned with BOM-SPEC workspace screen (sample rows). */
 export const mockWorkspaceItems: BomItem[] = [
   {
     id: 'ws-1',
@@ -158,20 +203,6 @@ export const mockWorkspaceItems: BomItem[] = [
   {
     id: 'ws-2',
     rowNumber: 2,
-    originalInput: 'ASC-SR-155-TH',
-    parsedDescription: 'Standard Response Pendent Sprinkler',
-    size: '1/2 inch',
-    pressureClass: '175 PSI',
-    connectionType: 'Threaded',
-    quantity: 180,
-    confidence: 'high',
-    category: 'Sprinklers',
-    unit: 'EA',
-    status: 'confirmed',
-  },
-  {
-    id: 'ws-3',
-    rowNumber: 3,
     originalInput: 'ASC-GV-600-FL',
     parsedDescription: 'Gate Valve, Flanged',
     size: '6 inch',
@@ -184,14 +215,28 @@ export const mockWorkspaceItems: BomItem[] = [
     status: 'confirmed',
   },
   {
-    id: 'ws-4',
-    rowNumber: 4,
-    originalInput: 'ASC-PIPE-2.5-S40',
-    parsedDescription: 'Fire Protection Pipe Schedule 40',
-    size: '2.5 inch',
+    id: 'ws-3',
+    rowNumber: 3,
+    originalInput: 'ASC-CV-400-G',
+    parsedDescription: 'Check Valve, Grooved',
+    size: '4 inch',
     pressureClass: '300 PSI',
     connectionType: 'Grooved',
-    quantity: 450,
+    quantity: 6,
+    confidence: 'high',
+    category: 'Valves',
+    unit: 'EA',
+    status: 'confirmed',
+  },
+  {
+    id: 'ws-4',
+    rowNumber: 4,
+    originalInput: 'ASC-PIPE-4-SCH10',
+    parsedDescription: 'Galvanized Steel Pipe Schedule 10',
+    size: '4 inch',
+    pressureClass: '',
+    connectionType: 'Grooved',
+    quantity: 220,
     confidence: 'medium',
     category: 'Pipe',
     unit: 'FT',
@@ -210,6 +255,34 @@ export const mockWorkspaceItems: BomItem[] = [
     category: 'Valves',
     unit: 'EA',
     status: 'confirmed',
+  },
+  {
+    id: 'ws-6',
+    rowNumber: 6,
+    originalInput: 'ASC-BFV-300-LG',
+    parsedDescription: 'Butterfly Valve, Lug Type',
+    size: '3 inch',
+    pressureClass: '300 PSI',
+    connectionType: 'Lug',
+    quantity: 16,
+    confidence: 'medium',
+    category: 'Valves',
+    unit: 'EA',
+    status: 'needs-review',
+  },
+  {
+    id: 'ws-7',
+    rowNumber: 7,
+    originalInput: 'ASC-PIPE-4-SCH10',
+    parsedDescription: 'Galvanized Steel Pipe Schedule 10',
+    size: '4 inch',
+    pressureClass: '',
+    connectionType: 'Grooved',
+    quantity: 220,
+    confidence: 'medium',
+    category: 'Pipe',
+    unit: 'FT',
+    status: 'needs-review',
   },
 ];
 
@@ -252,10 +325,30 @@ function matchForItem(item: BomItem): BomMatchResult {
 
 export const mockMatchResults: BomMatchResult[] = mockParsedItems.map(matchForItem);
 
+export function bomProjectById(bomProjectId: string | undefined): BomProject | undefined {
+  if (!bomProjectId) return undefined;
+  return mockBomProjects.find((p) => p.id === bomProjectId);
+}
+
 export function bomProjectTitleById(bomProjectId: string | undefined): string | undefined {
   if (!bomProjectId) return undefined;
   if (bomProjectId === 'new') return 'New BOM project';
-  return mockBomProjects.find((p) => p.id === bomProjectId)?.name;
+  return bomProjectById(bomProjectId)?.name;
+}
+
+export function addBomProject(name: string, description?: string): BomProject {
+  const id = `proj-${Date.now()}`;
+  const project: BomProject = {
+    id,
+    projectId: '1',
+    name,
+    description,
+    lastEdited: new Date().toISOString().slice(0, 10),
+    items: 0,
+    status: 'draft',
+  };
+  mockBomProjects.unshift(project);
+  return project;
 }
 
 export function bomItemById(itemId: string | undefined): BomItem | undefined {
@@ -266,4 +359,30 @@ export function bomItemById(itemId: string | undefined): BomItem | undefined {
 export function matchResultForItem(itemId: string | undefined): BomMatchResult | undefined {
   if (!itemId) return undefined;
   return mockMatchResults.find((m) => m.itemId === itemId);
+}
+
+// ── BOM Runs ────────────────────────────────────────────────────────────────
+
+export const mockBomRuns: BomRun[] = [
+  { id: 'run-1', projectId: '1', label: 'BOM v1 — initial upload',  createdAt: '2026-03-10', status: 'completed', itemCount: 142 },
+  { id: 'run-2', projectId: '1', label: 'BOM v2 — revised scope',   createdAt: '2026-03-13', status: 'in-review', itemCount: 138 },
+  { id: 'run-3', projectId: '1', label: 'BOM v3 — contractor draft', createdAt: '2026-03-15', status: 'in-review', itemCount: 142 },
+  { id: 'run-1b', projectId: '3', label: 'BOM v1 — import',          createdAt: '2026-03-12', status: 'completed', itemCount: 67 },
+];
+
+export function bomRunsByProjectId(projectId: string): BomRun[] {
+  return mockBomRuns.filter((r) => r.projectId === projectId);
+}
+
+export function addBomRun(projectId: string, label: string): BomRun {
+  const run: BomRun = {
+    id: `run-${Date.now()}`,
+    projectId,
+    label,
+    createdAt: new Date().toISOString().slice(0, 10),
+    status: 'draft',
+    itemCount: 0,
+  };
+  mockBomRuns.push(run);
+  return run;
 }

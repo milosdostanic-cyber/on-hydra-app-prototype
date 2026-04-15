@@ -1,21 +1,26 @@
-import {
-  CheckCircleOutlined,
-  FileExcelOutlined,
-  FileTextOutlined,
-  SendOutlined,
-} from '@ant-design/icons';
-import { useMemo, useState } from 'react';
+import { CheckCircleOutlined, FileExcelOutlined, FileTextOutlined, SendOutlined } from '@ant-design/icons';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
+import { useBomWorkspaceRows } from '../../context/BomWorkspaceContext';
+import { isWorkspaceRowConfirmed } from '../bomWorkspaceHelpers';
+import { shellLayout } from '../../theme/hydraAlias';
 import { BomPageHeader } from '../layout/BomPageHeader';
-import { bomProjectTitleById, mockWorkspaceItems } from '../data/mockData';
+import { bomProjectById, bomProjectTitleById } from '../data/mockData';
 import type { BomItem } from '../data/types';
 import { BomCardTitle } from '../components/BomCardTitle';
+import { ExportCard } from '../../ui/ExportCard';
 import {
+  Alert,
   Button,
   Card,
   Checkbox,
   Col,
+  Flex,
+  Form,
+  Input,
+  Modal,
+  Pagination,
   Row,
   Space,
   Table,
@@ -27,6 +32,55 @@ import type { TableColumnsType } from '../../ui/antd';
 
 type ExportMode = 'excel-csv' | 'package' | 'distributor' | 'service';
 
+const EXPORT_MODE_ORDER: ExportMode[] = ['excel-csv', 'package', 'distributor', 'service'];
+
+type ExportModeMeta = {
+  title: string;
+  cardDescription: string;
+  cta: string;
+};
+
+const EXPORT_MODE_META: Record<ExportMode, ExportModeMeta> = {
+  'excel-csv': {
+    title: 'Export to Excel / CSV',
+    cardDescription: 'Excel or CSV with the columns and quantities you pick.',
+    cta: 'Download BOM',
+  },
+  package: {
+    title: 'Generate submittal package',
+    cardDescription:
+      'Create a complete package with datasheets, approvals, and formatted line summaries.',
+    cta: 'Generate package',
+  },
+  distributor: {
+    title: 'Send to distributor',
+    cardDescription: 'Share your BOM with distributors for pricing and availability confirmation.',
+    cta: 'Select distributor',
+  },
+  service: {
+    title: 'Request white glove assist',
+    cardDescription:
+      'Ask the team to review substitutions, optimize selections, and finalize your BOM.',
+    cta: 'Request service',
+  },
+};
+
+function exportModeIcon(
+  mode: ExportMode,
+  token: { colorSuccess: string; colorPrimary: string; colorInfo: string; colorWarning: string },
+): ReactNode {
+  switch (mode) {
+    case 'excel-csv':
+      return <FileExcelOutlined style={{ color: token.colorSuccess }} />;
+    case 'package':
+      return <FileTextOutlined style={{ color: token.colorPrimary }} />;
+    case 'distributor':
+      return <SendOutlined style={{ color: token.colorInfo }} />;
+    case 'service':
+      return <CheckCircleOutlined style={{ color: token.colorWarning }} />;
+  }
+}
+
 type ColumnOption = {
   key: keyof BomItem | 'approvals';
   label: string;
@@ -37,8 +91,22 @@ export function BomExportPage() {
   const { token } = theme.useToken();
   const { bomProjectId = '' } = useParams<{ bomProjectId: string }>();
   const navigate = useNavigate();
+  const { rows } = useBomWorkspaceRows(bomProjectId);
+  const projectMeta = bomProjectById(bomProjectId);
   const projectTitle = bomProjectTitleById(bomProjectId) ?? 'BOM project';
   const [mode, setMode] = useState<ExportMode>('excel-csv');
+  const [previewPage, setPreviewPage] = useState(1);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [fileName, setFileName] = useState(() => `BOM_${projectTitle.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}`);
+
+  const confirmedRows = useMemo(() => rows.filter(isWorkspaceRowConfirmed), [rows]);
+
+  const pagedExportPreview = useMemo(() => {
+    const start = (previewPage - 1) * shellLayout.tablePageSizeDefault;
+    return confirmedRows.slice(start, start + shellLayout.tablePageSizeDefault);
+  }, [confirmedRows, previewPage]);
+
   const [columnOptions, setColumnOptions] = useState<ColumnOption[]>([
     { key: 'originalInput', label: 'Part number', checked: true },
     { key: 'parsedDescription', label: 'Description', checked: true },
@@ -82,128 +150,166 @@ export function BomExportPage() {
     ];
   }, [selectedColumns]);
 
-  const modeUi = {
-    'excel-csv': {
-      title: 'Export to Excel / CSV',
-      body: 'Download your BOM as a structured spreadsheet with all selected attributes and quantities.',
-      cta: 'Download BOM',
-      ok: true,
-    },
-    package: {
-      title: 'Generate submittal package',
-      body: 'Create a complete package with datasheets, approvals, and formatted line summaries.',
-      cta: 'Generate package',
-      ok: true,
-    },
-    distributor: {
-      title: 'Send to distributor',
-      body: 'Share your BOM with distributors for pricing and availability confirmation.',
-      cta: 'Select distributor',
-      ok: true,
-    },
-    service: {
-      title: 'Request white glove assist',
-      body: 'Ask the team to review substitutions, optimize selections, and finalize your BOM.',
-      cta: 'Request service',
-      ok: false,
-    },
-  } as const;
+  const toggleAllColumns = (checked: boolean) => {
+    setColumnOptions((prev) => prev.map((c) => ({ ...c, checked })));
+  };
 
   const submit = () => {
+    if (confirmedRows.length === 0) {
+      message.warning('No confirmed items to export. Return to the workspace first.');
+      navigate(`/bom/projects/${bomProjectId}/workspace`);
+      return;
+    }
     if (mode === 'service') {
       navigate(`/bom/projects/${bomProjectId}/service-request`);
       return;
     }
-    message.success(`${modeUi[mode].title} queued (demo).`);
+    if (mode === 'distributor') {
+      setEmailOpen(true);
+      return;
+    }
+    setExporting(true);
+    window.setTimeout(() => {
+      setExporting(false);
+      message.success(`${EXPORT_MODE_META[mode].title} queued as ${fileName}.csv (demo).`);
+    }, 900);
   };
+
+  if (bomProjectId && bomProjectId !== 'new' && !projectMeta) {
+    return (
+      <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+        <BomPageHeader
+          title="BOM project not found"
+          description="Unknown project id."
+          actions={
+            <Button type="primary" size="large" onClick={() => navigate('/bom')}>
+              Go to BOM home
+            </Button>
+          }
+        />
+      </Space>
+    );
+  }
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <BomPageHeader
         title="Export"
         description={`Choose one export route, preview the output, then run a single final action. Project: ${projectTitle}.`}
+        actions={
+          <Space wrap>
+            <Link to="/bom">
+              <Button size="large">BOM home</Button>
+            </Link>
+            <Button
+              type="primary"
+              size="large"
+              onClick={submit}
+              loading={exporting}
+              disabled={confirmedRows.length === 0}
+            >
+              {EXPORT_MODE_META[mode].cta}
+            </Button>
+          </Space>
+        }
       />
 
+      {confirmedRows.length === 0 ? (
+        <Alert
+          type="warning"
+          showIcon
+          message="No items to export"
+          description="Confirm all workspace lines before exporting."
+          action={
+            <Button size="small" type="primary" onClick={() => navigate(`/bom/projects/${bomProjectId}/workspace`)}>
+              Go to workspace
+            </Button>
+          }
+        />
+      ) : null}
+
       <Row gutter={[token.marginSM, token.marginSM]}>
-        <Col xs={24} md={12}>
-          <Card
-            hoverable
-            style={{ borderColor: mode === 'excel-csv' ? token.colorPrimary : token.colorBorderSecondary }}
-            onClick={() => setMode('excel-csv')}
-          >
-            <Space orientation="vertical" size={token.marginXS}>
-              <FileExcelOutlined style={{ color: token.colorSuccess, fontSize: token.fontSizeHeading3 }} />
-              <BomCardTitle>Export to Excel / CSV</BomCardTitle>
-              <Typography.Text type="secondary">
-                Download your BOM as a structured spreadsheet with all attributes and quantities.
-              </Typography.Text>
-            </Space>
-          </Card>
-        </Col>
-        <Col xs={24} md={12}>
-          <Card
-            hoverable
-            style={{ borderColor: mode === 'package' ? token.colorPrimary : token.colorBorderSecondary }}
-            onClick={() => setMode('package')}
-          >
-            <Space orientation="vertical" size={token.marginXS}>
-              <FileTextOutlined style={{ color: token.colorPrimary, fontSize: token.fontSizeHeading3 }} />
-              <BomCardTitle>Generate submittal package</BomCardTitle>
-              <Typography.Text type="secondary">
-                Create a complete package with datasheets, approvals, and specifications.
-              </Typography.Text>
-            </Space>
-          </Card>
-        </Col>
-        <Col xs={24} md={12}>
-          <Card
-            hoverable
-            style={{ borderColor: mode === 'distributor' ? token.colorPrimary : token.colorBorderSecondary }}
-            onClick={() => setMode('distributor')}
-          >
-            <Space orientation="vertical" size={token.marginXS}>
-              <SendOutlined style={{ color: token.colorInfo, fontSize: token.fontSizeHeading3 }} />
-              <BomCardTitle>Send to distributor</BomCardTitle>
-              <Typography.Text type="secondary">
-                Share your BOM directly with distributors for pricing and availability.
-              </Typography.Text>
-            </Space>
-          </Card>
-        </Col>
-        <Col xs={24} md={12}>
-          <Card
-            hoverable
-            style={{ borderColor: mode === 'service' ? token.colorPrimary : token.colorBorderSecondary }}
-            onClick={() => setMode('service')}
-          >
-            <Space orientation="vertical" size={token.marginXS}>
-              <CheckCircleOutlined style={{ color: token.colorWarning, fontSize: token.fontSizeHeading3 }} />
-              <BomCardTitle>Request white glove assist</BomCardTitle>
-              <Typography.Text type="secondary">
-                Get expert help from the team to review, optimize, and finalize your BOM.
-              </Typography.Text>
-            </Space>
-          </Card>
-        </Col>
+        {EXPORT_MODE_ORDER.map((m) => {
+          const meta = EXPORT_MODE_META[m];
+          return (
+            <Col key={m} xs={24} sm={12} lg={6}>
+              <ExportCard
+                selected={mode === m}
+                onClick={() => setMode(m)}
+                icon={exportModeIcon(m, token)}
+                title={meta.title}
+                description={meta.cardDescription}
+              />
+            </Col>
+          );
+        })}
       </Row>
 
-      <Card title={<BomCardTitle>Export preview</BomCardTitle>} style={{ borderColor: token.colorBorderSecondary }}>
-        <Typography.Paragraph type="secondary">
-          Preview how your BOM appears for <strong>{modeUi[mode].title}</strong>.
-        </Typography.Paragraph>
+      <Card
+        title={<BomCardTitle>Export preview</BomCardTitle>}
+        style={{ borderColor: token.colorBorderSecondary }}
+        styles={{ body: { padding: 0 } }}
+      >
+        <div style={{ paddingInline: token.paddingMD, paddingTop: token.paddingSM }}>
+          <Typography.Paragraph type="secondary">
+            Preview how your BOM appears for <strong>{EXPORT_MODE_META[mode].title}</strong>.{' '}
+            {confirmedRows.length} confirmed row{confirmedRows.length !== 1 ? 's' : ''}.
+          </Typography.Paragraph>
+          <Flex gap={token.marginSM} wrap="wrap" style={{ marginBottom: token.marginSM }}>
+            <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+              File name
+            </Typography.Text>
+            <Input value={fileName} onChange={(e) => setFileName(e.target.value)} style={{ maxWidth: token.screenSM }} />
+          </Flex>
+        </div>
         <Table<BomItem>
           rowKey="id"
           columns={columns}
-          dataSource={mockWorkspaceItems}
+          dataSource={pagedExportPreview}
           pagination={false}
           scroll={{ x: 'max-content' }}
+          styles={{
+            header: {
+              cell: {
+                background: token.colorFillAlter,
+                borderBottomColor: token.colorBorderSecondary,
+                fontWeight: token.fontWeightStrong,
+              },
+            },
+            body: { cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM } },
+          }}
         />
+        <Flex
+          justify="flex-end"
+          align="center"
+          style={{
+            paddingInline: token.paddingMD,
+            paddingBlock: token.paddingSM,
+            borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+          }}
+        >
+          <Pagination
+            current={previewPage}
+            pageSize={shellLayout.tablePageSizeDefault}
+            total={confirmedRows.length}
+            onChange={setPreviewPage}
+            showSizeChanger={false}
+          />
+        </Flex>
       </Card>
 
       <Card title={<BomCardTitle>Column mapping</BomCardTitle>} style={{ borderColor: token.colorBorderSecondary }}>
         <Typography.Paragraph type="secondary">
           Customize which columns to include in your output.
         </Typography.Paragraph>
+        <Flex gap={token.marginSM} style={{ marginBottom: token.marginSM }}>
+          <Button size="small" onClick={() => toggleAllColumns(true)}>
+            Select all
+          </Button>
+          <Button size="small" onClick={() => toggleAllColumns(false)}>
+            Deselect all
+          </Button>
+        </Flex>
         <Row gutter={[token.marginSM, token.marginXS]}>
           {columnOptions.map((option) => (
             <Col key={option.key} xs={24} sm={12} md={8}>
@@ -224,14 +330,39 @@ export function BomExportPage() {
         </Row>
       </Card>
 
-      <Space wrap>
-        <Link to="/bom">
-          <Button>BOM home</Button>
-        </Link>
-        <Button type="primary" onClick={submit}>
-          {modeUi[mode].cta}
-        </Button>
-      </Space>
+      <Modal
+        title="Send email summary"
+        open={emailOpen}
+        onCancel={() => setEmailOpen(false)}
+        footer={null}
+        destroyOnClose
+      >
+        <Form
+          layout="vertical"
+          onFinish={() => {
+            message.success('Email queued (demo).');
+            setEmailOpen(false);
+          }}
+        >
+          <Form.Item label="To" name="to" rules={[{ required: true, type: 'email', message: 'Valid email required' }]}>
+            <Input placeholder="recipient@example.com" />
+          </Form.Item>
+          <Form.Item label="Subject" name="subject" initialValue={`BOM export: ${projectTitle}`}>
+            <Input />
+          </Form.Item>
+          <Form.Item label="Message" name="body" initialValue="Please find the BOM summary attached (demo).">
+            <Input.TextArea rows={4} />
+          </Form.Item>
+          <Form.Item>
+            <Space>
+              <Button type="primary" htmlType="submit">
+                Send email
+              </Button>
+              <Button onClick={() => setEmailOpen(false)}>Cancel</Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
     </Space>
   );
 }

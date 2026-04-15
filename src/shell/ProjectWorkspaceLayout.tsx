@@ -2,12 +2,13 @@ import {
   AppstoreOutlined,
   FilePdfOutlined,
   FolderOpenOutlined,
+  LeftOutlined,
 } from '@ant-design/icons';
 import { useEffect, useMemo } from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useSubmittalDraft } from '../context/SubmittalDraftContext';
-import { Badge, Flex, Layout, Menu, Typography, theme } from '../ui/antd';
+import { Badge, Button, Flex, Layout, Menu, Typography, theme } from '../ui/antd';
 import type { MenuProps } from '../ui/antd';
 
 import { hydraMenuItemBorderRadius } from '../theme/hydraMenuMetrics';
@@ -80,6 +81,15 @@ export function ProjectWorkspaceLayout() {
         }}
       >
         <div style={{ padding: token.paddingLG }}>
+          <Button
+            type="text"
+            size="small"
+            icon={<LeftOutlined />}
+            onClick={() => navigate('/projects')}
+            style={{ marginBottom: token.marginXS, padding: 0, height: 'auto' }}
+          >
+            All projects
+          </Button>
           <Typography.Text strong>{title}</Typography.Text>
           <Typography.Paragraph type="secondary" style={{ marginBottom: 0, marginTop: token.marginXXS }}>
             Modules for this project

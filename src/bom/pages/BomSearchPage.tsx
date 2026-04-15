@@ -1,48 +1,53 @@
 import { SearchOutlined } from '@ant-design/icons';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { BomCardTitle } from '../components/BomCardTitle';
 import { BomPageHeader } from '../layout/BomPageHeader';
-import { Button, Card, Flex, Input, Space, Typography, theme } from '../../ui/antd';
+import { PageBackButton } from '../../shell/PageBackButton';
+import { AppSearchInput, Button, Card, Space, Typography, message, theme } from '../../ui/antd';
 
 export function BomSearchPage() {
   const { token } = theme.useToken();
   const navigate = useNavigate();
-  const [q, setQ] = useState('');
+  const [searchParams] = useSearchParams();
+  const [q, setQ] = useState(searchParams.get('q') ?? '');
 
   const exampleQueries = ['005 FireLock coupling 4 inch grooved', 'Victaulic grooved coupling', 'Tyco sprinkler head 155F'];
 
   const goCatalog = () => {
-    const next = q.trim() || 'all';
-    navigate(`/catalog/results?q=${encodeURIComponent(next)}`);
+    if (!q.trim()) {
+      message.warning('Enter a search term');
+      return;
+    }
+    navigate(`/catalog/results?q=${encodeURIComponent(q.trim())}`);
   };
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+      <PageBackButton to="/bom">Back to BOM</PageBackButton>
       <BomPageHeader
         title="Natural language search"
         description="Search for parts using competitor part numbers, generic descriptions, or natural language."
+        actions={
+          <Button type="primary" size="large" icon={<SearchOutlined />} onClick={() => goCatalog()}>
+            Search catalog
+          </Button>
+        }
       />
 
       <Card style={{ borderColor: token.colorBorderSecondary }}>
         <Space orientation="vertical" size={token.margin} style={{ width: '100%' }}>
           <BomCardTitle>Search input</BomCardTitle>
-          <Flex gap={token.marginSM} align="center" wrap="wrap">
-            <Input
-              allowClear
-              size="large"
-              placeholder="Example: 005 FireLock coupling 4 inch grooved"
-              prefix={<SearchOutlined style={{ color: token.colorTextPlaceholder }} />}
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              onPressEnter={() => goCatalog()}
-              style={{ flex: '1 1 360px' }}
-            />
-            <Button type="primary" size="large" onClick={() => goCatalog()}>
-              Search catalog
-            </Button>
-          </Flex>
+          <AppSearchInput
+            allowClear
+            size="large"
+            placeholder="Example: 005 FireLock coupling 4 inch grooved"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onPressEnter={() => goCatalog()}
+            style={{ width: '100%', maxWidth: token.screenLG }}
+          />
           <Typography.Text type="secondary">
             Tip: Use competitor part number first, then plain language if no direct hit.
           </Typography.Text>
@@ -53,25 +58,6 @@ export function BomSearchPage() {
               </Button>
             ))}
           </Space>
-        </Space>
-      </Card>
-
-      <Card
-        style={{ borderStyle: 'dashed', borderColor: token.colorBorderSecondary }}
-        styles={{ body: { paddingBlock: token.paddingXL, paddingInline: token.paddingLG } }}
-      >
-        <Space orientation="vertical" size={token.margin} style={{ width: '100%', textAlign: 'center' }}>
-          <SearchOutlined style={{ fontSize: token.fontSizeHeading2, color: token.colorTextQuaternary }} />
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            Start your search
-          </Typography.Title>
-          <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
-            Enter a part number, description, or use natural language to find ASC equivalents.
-            Our AI helps narrow down results.
-          </Typography.Paragraph>
-          <Button type="primary" size="large" onClick={() => goCatalog()}>
-            Search catalog
-          </Button>
         </Space>
       </Card>
 

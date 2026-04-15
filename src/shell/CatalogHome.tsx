@@ -1,5 +1,4 @@
-import { SearchOutlined } from '@ant-design/icons';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import {
@@ -7,8 +6,10 @@ import {
   CATALOG_QUICK_CATEGORIES,
   type CatalogPartRow,
 } from '../catalog/catalogDemoData';
+import { PageBackButton } from './PageBackButton';
+import { shellLayout } from '../theme/hydraAlias';
 import { hydraBaseStrong } from '../theme/hydraTypography';
-import { Button, Flex, Input, Space, Table, Tag, Typography, theme } from '../ui/antd';
+import { AppSearchInput, Button, Flex, Pagination, Space, Table, Tag, Typography, theme } from '../ui/antd';
 import type { TableColumnsType } from '../ui/antd';
 
 const PREVIEW_ROWS = CATALOG_DEMO_PARTS.slice(0, 2);
@@ -18,6 +19,12 @@ export function CatalogHome() {
   const { token } = theme.useToken();
   const navigate = useNavigate();
   const [q, setQ] = useState('');
+  const [previewPage, setPreviewPage] = useState(1);
+
+  const pagedPreviewRows = useMemo(() => {
+    const start = (previewPage - 1) * shellLayout.tablePageSizeDefault;
+    return PREVIEW_ROWS.slice(start, start + shellLayout.tablePageSizeDefault);
+  }, [previewPage]);
 
   const goResults = (query?: string) => {
     const next = (query ?? q).trim() || 'all';
@@ -41,6 +48,7 @@ export function CatalogHome() {
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+      <PageBackButton to="/projects">Back to projects</PageBackButton>
       <Typography.Title level={3} style={{ margin: 0 }}>
         Catalog
       </Typography.Title>
@@ -50,10 +58,9 @@ export function CatalogHome() {
       </Typography.Paragraph>
 
       <Flex wrap="wrap" gap={token.margin} align="flex-end">
-        <Input
+        <AppSearchInput
           allowClear
           placeholder="Category, figure, keyword…"
-          prefix={<SearchOutlined style={{ color: token.colorTextPlaceholder }} />}
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onPressEnter={() => goResults()}
@@ -94,7 +101,7 @@ export function CatalogHome() {
           pagination={false}
           size="small"
           columns={previewColumns}
-          dataSource={PREVIEW_ROWS}
+          dataSource={pagedPreviewRows}
           styles={{
             header: {
               cell: {
@@ -104,6 +111,15 @@ export function CatalogHome() {
             },
           }}
         />
+        <Flex justify="flex-end" style={{ paddingTop: token.paddingMD }}>
+          <Pagination
+            current={previewPage}
+            pageSize={shellLayout.tablePageSizeDefault}
+            total={PREVIEW_ROWS.length}
+            onChange={setPreviewPage}
+            showSizeChanger={false}
+          />
+        </Flex>
       </div>
     </Space>
   );

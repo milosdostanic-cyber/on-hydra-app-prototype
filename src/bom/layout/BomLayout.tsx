@@ -1,18 +1,9 @@
 import { Outlet } from 'react-router-dom';
 
-import { theme } from '../../ui/antd';
-
-/** Centers BOM content like the Make “hub” width; keeps shell chrome unchanged. */
+/** BOM routes fill shell content rail width (`AppShell` applies min/max rail). */
 export function BomLayout() {
-  const { token } = theme.useToken();
   return (
-    <div
-      style={{
-        width: '100%',
-        maxWidth: token.screenXL,
-        marginInline: 'auto',
-      }}
-    >
+    <div style={{ width: '100%' }}>
       <Outlet />
     </div>
   );

@@ -1,12 +1,18 @@
-import { DeleteOutlined } from '@ant-design/icons';
-import { useParams } from 'react-router-dom';
+import { DeleteOutlined, FilePdfOutlined, FolderOpenOutlined, UploadOutlined } from '@ant-design/icons';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { useSubmittalDraft } from '../context/SubmittalDraftContext';
+import { PageBackButton } from './PageBackButton';
+import { projectTitleById } from './projectSeed';
 import {
   Button,
+  Card,
+  Col,
   Empty,
+  Flex,
   List,
   Popconfirm,
+  Row,
   Space,
   Typography,
   theme,
@@ -14,11 +20,15 @@ import {
 
 export function SalesBraceModule() {
   const { token } = theme.useToken();
+  const { projectId = '' } = useParams<{ projectId: string }>();
   return (
-    <Typography.Paragraph style={{ margin: 0, color: token.colorTextSecondary }}>
-      Sales brace (stub): this level will show design names and brace visuals — a different layout than
-      Submittal / Content, by product design.
-    </Typography.Paragraph>
+    <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+      <PageBackButton to={`/projects/${projectId}/content`}>Back to project workspace</PageBackButton>
+      <Typography.Paragraph style={{ margin: 0, color: token.colorTextSecondary }}>
+        Sales brace (stub): this level will show design names and brace visuals — a different layout than
+        Submittal / Content, by product design.
+      </Typography.Paragraph>
+    </Space>
   );
 }
 
@@ -30,7 +40,9 @@ export function SubmittalModule() {
 
   if (lines.length === 0) {
     return (
-      <Empty
+      <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+        <PageBackButton to={`/projects/${projectId}/content`}>Back to project workspace</PageBackButton>
+        <Empty
         description={
           <Space orientation="vertical" size={token.marginXS}>
             <Typography.Text>No PDFs in this submittal yet.</Typography.Text>
@@ -40,11 +52,13 @@ export function SubmittalModule() {
           </Space>
         }
       />
+      </Space>
     );
   }
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+      <PageBackButton to={`/projects/${projectId}/content`}>Back to project workspace</PageBackButton>
       <Typography.Title level={4} style={{ margin: 0 }}>
         Submittal manager
       </Typography.Title>
@@ -78,10 +92,74 @@ export function SubmittalModule() {
 
 export function ContentModule() {
   const { token } = theme.useToken();
+  const { projectId = '' } = useParams<{ projectId: string }>();
+  const navigate = useNavigate();
+  const title = projectTitleById(projectId) ?? 'Project';
+
   return (
-    <Typography.Paragraph style={{ margin: 0, color: token.colorTextSecondary }}>
-      Content (stub): same part listing as Submittal; actions focus on downloads. Product goal is one
-      search and one part page with all actions.
-    </Typography.Paragraph>
+    <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+      <PageBackButton to="/projects">Back to all projects</PageBackButton>
+      <Typography.Title level={3} style={{ margin: 0 }}>
+        {title}
+      </Typography.Title>
+      <Typography.Text type="secondary">
+        Client workspace · ID {projectId}
+      </Typography.Text>
+
+      <Row gutter={[token.marginMD, token.marginMD]}>
+        <Col xs={24} md={8}>
+          <Card size="small" title="BOM">
+            <Typography.Paragraph type="secondary">3 runs · 85% matched</Typography.Paragraph>
+            <Button type="link" onClick={() => navigate('/bom')} style={{ padding: 0, height: 'auto' }}>
+              Open BOM
+            </Button>
+          </Card>
+        </Col>
+        <Col xs={24} md={8}>
+          <Card size="small" title="Submittal" extra={<FilePdfOutlined />}>
+            <Typography.Paragraph type="secondary">12 docs · 2 pending</Typography.Paragraph>
+            <Button
+              type="link"
+              onClick={() => navigate(`/projects/${projectId}/submittal`)}
+              style={{ padding: 0, height: 'auto' }}
+            >
+              Open submittal
+            </Button>
+          </Card>
+        </Col>
+        <Col xs={24} md={8}>
+          <Card size="small" title="SeisBrace">
+            <Typography.Paragraph type="secondary">Setup module</Typography.Paragraph>
+            <Button
+              type="link"
+              onClick={() => navigate(`/projects/${projectId}/seis-brace`)}
+              style={{ padding: 0, height: 'auto' }}
+            >
+              Open SeisBrace
+            </Button>
+          </Card>
+        </Col>
+      </Row>
+
+      <Card title="Recent activity" size="small">
+        <Space orientation="vertical" size={token.marginSM}>
+          <Typography.Text>BOM &quot;Mechanical Piping&quot; — 85% matched</Typography.Text>
+          <Typography.Text type="secondary">Submittal Rev 2 — exported 2h ago</Typography.Text>
+          <Typography.Text type="secondary">SeisBrace layout — draft saved</Typography.Text>
+        </Space>
+      </Card>
+
+      <Card title="Quick actions" size="small">
+        <Flex gap={token.marginSM} wrap="wrap">
+          <Button icon={<UploadOutlined />} onClick={() => navigate('/bom')}>
+            Upload BOM
+          </Button>
+          <Button onClick={() => navigate('/catalog')}>Browse catalog</Button>
+          <Button icon={<FolderOpenOutlined />} onClick={() => navigate(`/projects/${projectId}/submittal`)}>
+            New submittal
+          </Button>
+        </Flex>
+      </Card>
+    </Space>
   );
 }
