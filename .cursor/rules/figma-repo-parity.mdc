@@ -1,0 +1,51 @@
+---
+description: Keep Design System parity between Figma (Ant Design kit) and this repo for every relevant change
+alwaysApply: true
+---
+
+# Figma / repository parity (Hydra design system)
+
+**Language:** This rule, and parity notes or checklists you add for it, must be written in **English** (unless the user explicitly asks for another language).
+
+Whenever the user requests a change that affects **design tokens, brand colors, typography, component visuals, or the Ant Design theme** — or anything that must **match** the Ant Design Figma community file — treat **Figma and the repository as one system**. Do **not** update only one side unless the user explicitly limits scope to **code only** or **Figma only**.
+
+## Source of truth (Figma + mirrored code)
+
+**Figma** linked **Colors** / **Customize Theme** in the community file defines primitive and semantic color hex; **this repository mirrors** those values in `primaryPrimitive*.ts`, `antdTheme.ts`, etc. When they disagree, **update the repo** to match Figma unless the task is explicitly **code-only** with documented exception.
+
+| Area | Code | Documentation |
+|------|------|----------------|
+| Global primary (blue) | `primaryPrimitiveBlue.ts` (Light/Dark ramps), `antdTheme.ts` (`hydraAntdTheme`), `hydraAntdThemeDark`, `brandColors.ts`, `applyHydraBrandCssVars` | `Documentation/hydra-primary-figma-mapping.md` |
+| Orange solid Button (Volcano primitives) | `primaryPrimitiveOrange.ts` (`volcanoPrimitiveLight` / `volcanoPrimitiveDark`, `volcanoStep`), `buttonPrimaryPalette` / `buttonPrimaryPaletteDark`, `buttonPrimaryCustomizeTheme.ts`, `antdTheme.ts` `components.Button` | `Documentation/hydra-button-primary-orange.md` |
+| Ghost primary (blue) | `index.css`, `applyHydraBrandCssVars` in `main.tsx` (`light` default; use `'dark'` with `hydraAntdThemeDark`) | Same button doc |
+| Font / text metrics (Figma text styles) | `figmaTypography.ts`, `antdTheme.ts`, `index.html` (delivery only), `index.css` uses `--hydra-font-family` | `Documentation/hydra-typography.md` |
+| Neutral / menu dark chrome literals | `figmaSemanticColors.ts` | `hydra-sidebar-figma-mapping.md` |
+| Sidebar / dark Menu | `src/theme/sidebarSemantics.ts` (`sidebarSemanticsLight`); `figmaMenuMetrics.ts` + `antdTheme` `components.Menu` (radius `0`, margins `0`, `itemPaddingInline` = `token.padding`) | `Documentation/hydra-sidebar-figma-mapping.md` |
+| Figma variables workflow | — | `Documentation/ant-design-brand-colors-figma.md` |
+
+**Naming parity:** In Figma **Customize Theme**, paths look like `Color/Primary/...` and `Color/ButtonPrimary/...` (often `BG` in the path). In Ant Design, `theme.token` and `components.*` use **camelCase** (e.g. `colorPrimaryBg`). Keep mapping tables in the docs and in `buttonPrimaryCustomizeTheme.ts` accurate.
+
+## Figma (when MCP is available)
+
+- **File:** Ant Design community file (URLs in `Documentation/*`; extract `fileKey` from the link).
+- **Collections:** Use **Customize Theme** for semantic tokens. **Solid orange Button** uses `Color/ButtonPrimary/*` → aliases **`Volcano/volcano-*`** only (no separate ButtonOrange group). **Global blue primary** uses `Color/Primary/*` → **`Primary/primary-*`**. **Ghost** primary buttons stay on `Color/Primary/*`. **Hydra sidebar / dark `Menu`** uses **`Color/Sidebar/*`** → aliases **`Primary/primary-*`** / **`Neutral/gray-12`** (see `hydra-sidebar-figma-mapping.md`, `sidebarSemantics.ts`). In **Colors**, **`Primary/primary-*`** and **`Volcano/volcano-*`** each define **Light** (`5:0`) and **Dark** (`5:4`): **Light** = hand-tuned Hydra (blue) / Hydra orange ramp; **Dark** = antd `generate(seed, { theme: 'dark', backgroundColor: '#141414' })` from `#0073A5` (blue) and `#F05A23` (orange), frozen in `primaryPrimitiveBlue.ts` / `primaryPrimitiveOrange.ts`.
+- **Automation:** Use the official Figma MCP (`use_figma`, `get_metadata`, etc.). For color variables, `setValueForMode` expects RGB `{ r, g, b, a }` **without** a `type` property.
+- **Button `COMPONENT_SET`** was `35:13238` in the community file; re-check with `get_metadata` if bindings break after kit updates.
+
+If MCP cannot run (selection / auth issues), still update the repository and add explicit **Figma manual steps** in the summary or in the relevant `Documentation/*.md` file.
+
+## Checklist before closing a design-system task
+
+1. If **hex, tokens, font, or Button styling** changed in code, reflect the same values in **Figma variables** (or document the manual Figma steps).
+2. If **Figma variables** changed, update **repository** theme files and **documentation** tables.
+3. Run **`npm run build`** after TypeScript or theme edits.
+4. Document any **intentional gap** (e.g. `controlOutline` only in code) if it cannot be mirrored in Figma yet.
+5. For full variable cross-checks against the linked community file, see **`Documentation/hydra-figma-parity-audit.md`** (update that file when running a parity pass).
+
+## Opt-out
+
+Skip updating the other side only when the user clearly asks for **Figma only** or **repository / code only** for that request.
+
+## UI implementation
+
+For **screens and components**, follow **[hydra-ui-tokens.mdc](./hydra-ui-tokens.mdc)** — no raw hex/spacing in JSX; use antd `token`, `shellLayout`, and Hydra semantic modules.

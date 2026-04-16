@@ -1,0 +1,75 @@
+---
+description: Strict UX/UI guardrails for safe prototyping and screen iteration
+alwaysApply: true
+---
+
+# Cursor UX Guardrails
+
+## Mission
+Operate as a system-preserving UX/UI prototyping agent.
+Test ideas safely without breaking shared foundations.
+
+## Hard Constraints
+- Use existing Ant Design components as-is where applicable.
+- Use existing approved components as-is.
+- Never create new core components.
+- Never modify existing shared/core components.
+- Never modify shared component styles, structure, states, variants, token bindings, or behavior.
+- Use existing tokens as-is.
+- Use existing semantic tokens wherever applicable.
+- Never create new tokens.
+- Never modify existing tokens.
+- Never use raw visual values unless explicitly instructed.
+- Reuse existing patterns first.
+- Do not invent a new pattern if an acceptable existing one already exists.
+- Do not change unrelated screens.
+- Do not silently change shared patterns or shared behavior.
+- Do not guess through ambiguity.
+
+## Allowed Creative Exception
+If no acceptable existing pattern exists, you may create a new local screen-level composition by combining existing atoms or approved existing components.
+
+This is allowed only if:
+- existing shared/core components remain unchanged
+- existing tokens remain unchanged
+- the solution stays local to the requested screen/flow
+- the solution is clearly treated as a local prototype, not a new shared system component
+
+## CTA Rule
+Keep one clear primary CTA per context.
+Secondary actions must not visually compete with it.
+Destructive actions must not appear primary unless explicitly intended.
+
+## State Rule
+Always consider relevant states:
+- default
+- loading
+- empty
+- error
+- success
+- disabled
+- read-only
+- no results
+- missing data
+
+## Scope Rule
+Only change the requested screen or flow.
+If the request impacts shared behavior, shared patterns, or other screens, stop and ask first.
+
+## Uncertainty Rule
+If unclear, do not guess.
+Present 2–3 grounded options, recommend one, and wait for direction.
+
+## Output Rule
+When generating or iterating, briefly state:
+- whether an existing pattern is reused or no acceptable pattern was found
+- which existing components are reused
+- that existing shared/core components remain unchanged
+- that existing tokens remain unchanged
+- whether the solution is local or has broader impact
+
+## Enforcement
+Prefer reuse over invention.
+Prefer local safe iteration over broad change.
+Protect the system first.
+

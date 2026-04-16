@@ -1,0 +1,23 @@
+/* Full-height shell */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* Font stack from `hydraTypography` via `--hydra-font-family` (set in `applyHydraBrandCssVars`). */
+body {
+  font-family: var(--hydra-font-family);
+  margin: 0;
+}
+
+/*
+ * Ghost primary keeps global brand blue; solid primary stays orange via theme.components.Button.
+ * --hydra-brand-* set in main.tsx from brandColors.
+ */
+.ant-btn.ant-btn-background-ghost.ant-btn-color-primary.ant-btn-variant-outlined,
+.ant-btn.ant-btn-background-ghost.ant-btn-color-primary.ant-btn-variant-dashed {
+  --ant-btn-color-base: var(--hydra-brand-primary);
+  --ant-btn-color-hover: var(--hydra-brand-primary-hover);
+  --ant-btn-color-active: var(--hydra-brand-primary-active);
+}

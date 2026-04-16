@@ -1,0 +1,100 @@
+---
+description: When implementing UI from a Figma link, screenshot, or design mock — strict token and Figma text-style mapping, curated components, and escalation when gaps exist
+alwaysApply: false
+---
+
+# Hydra design-to-code (screenshot / Figma / mock)
+
+**Language:** English (unless the user asks otherwise).
+
+This rule defines **how** to turn a design reference into code. It complements **[hydra-ui-tokens.mdc](./hydra-ui-tokens.mdc)** (what literals are allowed) and **[figma-repo-parity.mdc](./figma-repo-parity.mdc)** (Figma ↔ repo authority). Follow all three together.
+
+## When this applies (trigger)
+
+Use this workflow when the user provides any of:
+
+- A **screenshot** or image of a UI
+- A **Figma** (or other design-tool) **URL**
+- An explicit request to **build a screen or component from a design** or mock
+
+Do not invent colors, spacing, typography metrics, or radii outside the sources below.
+
+## Sources of truth (no invention)
+
+### Typography
+
+- Use only:
+  - Named text styles from [`src/theme/figmaTypography.ts`](../src/theme/figmaTypography.ts) (all Figma-local styles mirrored there), via `figmaTextStyleToReactCss(...)` or explicit fields from those objects, **and/or**
+  - Ant Design **`Typography`** plus **`theme.useToken()`** font keys (`fontSize`, `fontSizeSM`, `fontSizeLG`, `fontSizeXL`, `fontSizeHeading1`–`fontSizeHeading5`, matching `lineHeight*`), which are wired from Figma in [`src/theme/hydraAntdTypography.ts`](../src/theme/hydraAntdTypography.ts).
+- Do **not** set `fontSize`, `lineHeight`, `fontWeight`, or `fontFamily` ad hoc in JSX for design intent.
+
+### Colors, spacing, radii, motion
+
+- Use **`theme.useToken()`**, [`shellLayout`](../src/theme/hydraAlias.ts), [`sidebarSemanticsLight`](../src/theme/sidebarSemantics.ts), and other `src/theme/*` modules listed in **hydra-ui-tokens.mdc** (primitives and semantics).
+- Do **not** paste **hex / rgb / rgba** from a screenshot or eyedropper into implementation code.
+
+### Forbidden in implementation code
+
+- Ad-hoc `#hex`, `rgb`/`rgba`, and design-intent **`px`** (except the narrow structural exceptions in **hydra-ui-tokens.mdc**: e.g. `transparent`, `none`, layout `100%` / `100vh` where not a brand choice).
+
+## Mandatory workflow
+
+1. **Decompose** the reference into regions (header, sidebar, content, forms, tables, modals, footers, etc.).
+2. **Inspect the repo** before coding:
+   - Prefer imports from [`src/ui/antd.ts`](../src/ui/antd.ts) (curated barrel).
+   - Reuse existing layout/shell patterns under [`src/shell/`](../src/shell/) when they fit.
+3. **Map each text role** to the **closest Figma text style** in `figmaTypography.ts` (e.g. `figmaBaseNormal`, `figmaBaseStrong`, `figmaTitleHeading3`, `figmaSmallNormal`), or to antd `Typography` with **`level`** / props such that resolved styles still come from theme tokens tied to Figma.
+4. **Map each color** to the **closest semantic** token (e.g. `colorText`, `colorTextSecondary`, `colorTextDescription`, `colorPrimary`, `colorBgContainer`, `colorBorder`, sidebar/menu tokens from theme + `sidebarSemanticsLight` / Menu dark tokens). Prefer **meaning** (primary text, secondary, border, surface) over pixel-perfect hex match.
+5. **Map spacing and radius** to `token.padding*`, `token.margin*`, `token.borderRadius*`, `shellLayout`, and menu metrics from [`src/theme/figmaMenuMetrics.ts`](../src/theme/figmaMenuMetrics.ts) where applicable.
+
+## Figma URLs
+
+- When a link is provided and **Figma / design MCP or tools** are available, read structure, components, and variables **before** writing code.
+- If adding or changing **design tokens** in code, follow **figma-repo-parity.mdc** (repo and Figma as one system unless the user scopes to code-only or Figma-only).
+- If tools are **unavailable**, work from the screenshot and [`Documentation/`](../Documentation/) (e.g. [`hydra-typography.md`](../Documentation/hydra-typography.md)), and **note gaps** in the response.
+
+## Strict escalation (stop and ask)
+
+Do **not** guess new primitives or pull arbitrary values. **Stop and ask the user** when:
+
+1. **Component gap** — The design needs a control or pattern that is **not** reasonably built from **`src/ui/antd.ts` exports + composition**, **or** you would need to import an **`antd` component not yet re-exported** in `src/ui/antd.ts`. Ask whether to extend the barrel, wrap a primitive, use a different pattern, or defer.
+2. **Token gap** — No **reasonable semantic token** exists for a recurring color or surface (after checking theme + Hydra semantic modules). Ask whether to **add a new semantic** (and whether **Figma** should be updated per **figma-repo-parity.mdc**). Request naming, usage, and any Figma variable path the user wants before implementing.
+3. **Ambiguity** — Layout, interaction, or content is unclear from the reference. Ask **one minimal** clarifying question (or a short list of options).
+
+## Deliverable checklist
+
+Before treating the task as complete:
+
+- [ ] No new raw design literals in TSX/CSS for intent; any new literals live only in allowed **figma-** mirror modules per **hydra-ui-tokens.mdc** (and user-approved token work).
+- [ ] Imports favor **`src/ui/antd`** over deep `antd` paths unless the user approved extending the barrel.
+- [ ] Typography uses **`figmaTypography`** and/or **`theme.useToken()`** font keys only.
+- [ ] Run **`npm run build`** after theme, token, or TypeScript changes.
+- [ ] Briefly state any **intentional approximation** (e.g. “used `colorTextSecondary` for muted label”) if a perfect semantic match was missing but you did **not** add a new token.
+
+## Related
+
+- **[hydra-ui-tokens.mdc](./hydra-ui-tokens.mdc)** — registry of allowed mirror modules; no stray literals.
+- **[figma-repo-parity.mdc](./figma-repo-parity.mdc)** — Figma ↔ repo parity when tokens or visuals change.
+- **[Documentation/hydra-typography.md](../Documentation/hydra-typography.md)** — typography and antd theme bridge.
+
+## Workflow (reference)
+
+```mermaid
+flowchart TD
+  start[Design input URL or screenshot]
+  decompose[Decompose layout and UI blocks]
+  mapComp[Map blocks to ui/antd and shell patterns]
+  mapType[Map text to figmaTypography or token typography]
+  mapColor[Map colors to semantic tokens]
+  gapComp{Gap component not in barrel or unclear}
+  gapTok{Gap no semantic token}
+  askUser[Stop and ask user]
+  implement[Implement with tokens only]
+  verify[Checklist and build if needed]
+  start --> decompose --> mapComp --> mapType --> mapColor
+  mapColor --> gapComp
+  gapComp -->|yes| askUser
+  gapComp -->|no| gapTok
+  gapTok -->|yes| askUser
+  gapTok -->|no| implement --> verify
+```

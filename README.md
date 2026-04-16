@@ -1,7 +1,14 @@
 # Hydra App Prototype
 
-Hydra App Prototype is a React + Vite application for BOM (Bill of Materials) workflows in the ASC Connected context.  
-The project uses Ant Design and Hydra theme tokens to keep implementation aligned with design-system decisions.
+Hydra App Prototype is a React + Vite app for BOM (Bill of Materials) workflows in ASC Connected.
+It is optimized for fast prototyping with existing Ant Design components and Hydra theme tokens.
+
+## Who This README Is For
+
+Use this guide if you are:
+- a PM/designer reviewing or iterating on prototype flows
+- a developer implementing UI changes in Cursor
+- a stakeholder who needs to run the app locally from a GitHub link
 
 ## Figma References
 
@@ -16,44 +23,167 @@ The project uses Ant Design and Hydra theme tokens to keep implementation aligne
 - Ant Design
 - React Router
 
-## Run Locally
+## Quick Start (Step by Step)
 
-### 1) Prerequisites
+### 1) Install prerequisites
 
-- Node.js 20+ recommended
-- npm
+- Install Node.js 20+ (LTS recommended)
+- Install npm (ships with Node.js)
+- Install Cursor
 
-### 2) Install dependencies
+Check versions:
+
+```bash
+node -v
+npm -v
+```
+
+### 2) Clone the repository
+
+```bash
+git clone https://github.com/ooden-tech/on-hydra-app-prototype.git
+cd on-hydra-app-prototype
+```
+
+### 3) Install dependencies
 
 ```bash
 npm install
 ```
 
-### 3) Start development server
+### 4) Run the app
 
 ```bash
 npm run dev
 ```
 
-Open the app in your browser at:
+Open:
 
 `http://localhost:5173/`
 
-### 4) Production build
+### 5) Verify core routes
+
+After startup, quickly verify these routes:
+
+- `/projects` (entry/home)
+- `/catalog`
+- `/bom`
+
+## Working in Cursor (PM-Friendly)
+
+1. Open Cursor
+2. Select `Open Folder` and choose this repository
+3. Open `README.md` and keep it pinned
+4. Use built-in terminal in Cursor and run:
 
 ```bash
-npm run build
+npm run dev
 ```
 
-### 5) Preview production build locally
+5. Keep browser and Cursor side-by-side:
+   - browser for validating UX
+   - Cursor chat for change requests
+
+## Prototyping Workflow (PM + Cursor)
+
+Use this flow for safe, fast iteration without breaking shared UI foundations.
+
+### Golden Rules
+
+- Reuse existing patterns before creating new layout compositions
+- Do not change shared/core components unless explicitly requested
+- Do not create or modify design tokens during PM prototyping
+- Keep changes local to the target screen/flow
+
+### Suggested PM Cycle
+
+1. Choose one target screen/flow (example: BOM Matching)
+2. Write one focused change request (scope + expected behavior)
+3. Run and review locally
+4. Iterate in small steps until approved
+5. Capture screenshots/videos for stakeholder review
+
+### Recommended Prompt Template
+
+Use the template in:
+
+- `docs/prompt-templates/pm-prototyping-prompt.md`
+
+Paste it into Cursor chat and replace the screen/flow specifics.
+
+## Project Structure (High Level)
+
+- `src/shell/*` - shell pages (projects, catalog, top-level workspace)
+- `src/bom/*` - BOM-specific flows and pages
+- `src/theme/*` - Hydra/Ant theme tokens and mappings
+- `docs/prompt-templates/*` - PM prompt templates
+
+## Available App Routes (Reference)
+
+- `/projects` - projects list and project creation entry
+- `/catalog` - catalog landing
+- `/catalog/results` - catalog search/result view
+- `/catalog/parts/:partId` - part details
+- `/bom` - BOM landing
+- `/bom/search` - BOM search/import flow
+- `/bom/projects/:bomProjectId/parsing-review`
+- `/bom/projects/:bomProjectId/matching`
+- `/bom/projects/:bomProjectId/items/:itemId/narrow`
+- `/bom/projects/:bomProjectId/items/:itemId/recommend`
+- `/bom/projects/:bomProjectId/workspace`
+- `/bom/projects/:bomProjectId/asc-products`
+- `/bom/projects/:bomProjectId/translate`
+- `/bom/projects/:bomProjectId/field-mapping`
+- `/bom/projects/:bomProjectId/export`
+- `/bom/projects/:bomProjectId/service-request`
+
+## Scripts
+
+- `npm run dev` - start Vite dev server
+- `npm run build` - run TypeScript build and Vite production build
+- `npm run preview` - preview production build locally
+- `npm run tokens:dump` - dump primary token data via local script
+
+## Git Workflow (Simple)
+
+- Create a branch for each feature/fix
+- Keep commits small and clear
+- Open PR to `main`
+- Merge only after quick route sanity check (`/projects`, `/catalog`, `/bom`)
+
+## Troubleshooting
+
+### `npm install` fails
+
+- Confirm Node 20+:
 
 ```bash
-npm run preview
+node -v
 ```
 
-## Useful Scripts
+- Remove and reinstall:
 
-- `npm run dev` - starts Vite dev server
-- `npm run build` - runs TypeScript build and Vite production build
-- `npm run preview` - serves the production build locally
-- `npm run tokens:dump` - dumps primary token data via local script
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### App does not open on `5173`
+
+- Check terminal output for Vite port override
+- Open the exact URL shown in terminal
+
+### Blank page after startup
+
+- Stop server and restart:
+
+```bash
+npm run dev
+```
+
+- Check browser console errors
+
+## Notes
+
+- This repo is prototype-oriented: prioritize speed and clarity of UX validation
+- Keep design-system alignment: Ant Design + Hydra tokens first
