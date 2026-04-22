@@ -88,36 +88,6 @@ Step 8: Open the local URL shown in Terminal (usually `http://localhost:5173/`).
 
 This repository uses npm and `package-lock.json`, so `yarn` and `pnpm` are not required.
 
-Check versions:
-
-```bash
-node -v
-npm -v
-```
-
-### 2) Clone the repository
-
-```bash
-git clone https://github.com/ooden-tech/on-hydra-app-prototype.git
-cd on-hydra-app-prototype
-```
-
-### 3) Install dependencies
-
-```bash
-npm install
-```
-
-### 4) Run the app
-
-```bash
-npm run dev
-```
-
-Open:
-
-`http://localhost:5173/`
-
 ### 5) Verify core routes
 
 After startup, quickly verify these routes:
