@@ -31,40 +31,62 @@ Use this guide if you are:
 - Install npm (ships with Node.js)
 - Install Cursor
 
-#### Fresh macOS setup (terminal commands)
+#### Fresh macOS setup (simple, one step at a time)
 
-If you are setting up a brand-new Mac, run these commands in order:
+If this is your first time setting up the project on a new Mac, follow these exact steps.
+
+Step 0: Open Terminal.
+
+Step 1: Install Homebrew (skip this step if `brew -v` already works).
 
 ```bash
-# 0) Install Homebrew (skip if already installed)
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
 
-# 1) Install Node.js 20 (includes npm)
+Step 2: Install Node.js 20 (npm is included).
+
+```bash
 brew install node@20
 echo 'export PATH="/opt/homebrew/opt/node@20/bin:$PATH"' >> ~/.zshrc
 source ~/.zshrc
+```
 
-# 2) Optional: install Git if it's missing
+Step 3: Install Git (optional, only if `git --version` fails).
+
+```bash
 brew install git
+```
 
-# 3) Verify tools
+Step 4: Confirm required tools are installed.
+
+```bash
 node -v
 npm -v
 git --version
+```
 
-# 4) Clone and enter the repository
+Step 5: Clone the repository and enter the project folder.
+
+```bash
 git clone https://github.com/ooden-tech/on-hydra-app-prototype.git
 cd on-hydra-app-prototype
+```
 
-# 5) Install project dependencies
+Step 6: Install project dependencies.
+
+```bash
 npm install
+```
 
-# 6) Run the app
+Step 7: Start the app.
+
+```bash
 npm run dev
 ```
 
-Open the URL printed by Vite (usually `http://localhost:5173/`).
-This project uses npm + `package-lock.json`, so `yarn`/`pnpm` are not required.
+Step 8: Open the local URL shown in Terminal (usually `http://localhost:5173/`).
+
+This repository uses npm and `package-lock.json`, so `yarn` and `pnpm` are not required.
 
 Check versions:
 
