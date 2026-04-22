@@ -31,6 +31,41 @@ Use this guide if you are:
 - Install npm (ships with Node.js)
 - Install Cursor
 
+#### Fresh macOS setup (terminal commands)
+
+If you are setting up a brand-new Mac, run these commands in order:
+
+```bash
+# 0) Install Homebrew (skip if already installed)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# 1) Install Node.js 20 (includes npm)
+brew install node@20
+echo 'export PATH="/opt/homebrew/opt/node@20/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+
+# 2) Optional: install Git if it's missing
+brew install git
+
+# 3) Verify tools
+node -v
+npm -v
+git --version
+
+# 4) Clone and enter the repository
+git clone https://github.com/ooden-tech/on-hydra-app-prototype.git
+cd on-hydra-app-prototype
+
+# 5) Install project dependencies
+npm install
+
+# 6) Run the app
+npm run dev
+```
+
+Open the URL printed by Vite (usually `http://localhost:5173/`).
+This project uses npm + `package-lock.json`, so `yarn`/`pnpm` are not required.
+
 Check versions:
 
 ```bash
