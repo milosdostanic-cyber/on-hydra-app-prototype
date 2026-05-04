@@ -17,6 +17,12 @@ import {
   theme,
 } from '../../ui/antd';
 import type { BomItem, AscCatalogPart } from '../data/types';
+import {
+  hydraBaseNormal,
+  hydraLargeNormal,
+  hydraLargeStrong,
+  hydraTextStyleToReactCss,
+} from '../../theme/hydraTypography';
 
 interface PartTranslationModalProps {
   open: boolean;
@@ -96,7 +102,11 @@ export function PartTranslationModal({
   const fieldBlock = (label: string, value: string | number | undefined) => (
     <div>
       <Typography.Text
-        style={{ color: token.colorTextTertiary, fontSize: token.fontSizeSM, display: 'block' }}
+        style={{
+          ...hydraTextStyleToReactCss(hydraLargeNormal),
+          color: token.colorTextTertiary,
+          display: 'block',
+        }}
       >
         {label}
       </Typography.Text>
@@ -116,10 +126,7 @@ export function PartTranslationModal({
             style={{ flex: 1, margin: 0 }}
             strokeColor={token.colorPrimary}
           />
-          <Typography.Text
-            type="secondary"
-            style={{ fontSize: token.fontSizeSM, flexShrink: 0 }}
-          >
+          <Typography.Text type="secondary" style={{ ...hydraTextStyleToReactCss(hydraLargeNormal), flexShrink: 0 }}>
             {currentIndex + 1} of {total}
           </Typography.Text>
         </Flex>
@@ -138,14 +145,14 @@ export function PartTranslationModal({
               paddingBlock: token.paddingXS,
             }}
           >
-            <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
               Match confidence:
             </Typography.Text>
             <Tag color={confidenceColor(currentAscPart.matchConfidence)} style={{ margin: 0 }}>
               {currentAscPart.matchConfidence}%
             </Tag>
             <Divider type="vertical" style={{ margin: 0 }} />
-            <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
               Substitution risk:
             </Typography.Text>
             <Tag
@@ -155,9 +162,9 @@ export function PartTranslationModal({
               {currentAscPart.substitutionRisk}
             </Tag>
             <Divider type="vertical" style={{ margin: 0 }} />
-            <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
               Rule:{' '}
-              <Typography.Text style={{ fontSize: token.fontSizeSM }}>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraLargeNormal)}>
                 {currentAscPart.conversionRule}
               </Typography.Text>
             </Typography.Text>
@@ -177,10 +184,10 @@ export function PartTranslationModal({
             <Typography.Text
               strong
               style={{
+                ...hydraTextStyleToReactCss(hydraLargeStrong),
                 display: 'block',
                 marginBottom: token.marginSM,
                 color: token.colorTextSecondary,
-                fontSize: token.fontSizeSM,
               }}
             >
               PRE-TRANSLATION PART
@@ -199,7 +206,7 @@ export function PartTranslationModal({
           <Flex align="center" justify="center" style={{ flexShrink: 0 }}>
             <RightOutlined
               style={{
-                fontSize: token.fontSizeLG,
+                fontSize: hydraBaseNormal.fontSize,
                 color: token.colorPrimary,
                 background: token.colorPrimaryBg,
                 padding: token.paddingSM,
@@ -219,10 +226,10 @@ export function PartTranslationModal({
             <Typography.Text
               strong
               style={{
+                ...hydraTextStyleToReactCss(hydraLargeStrong),
                 display: 'block',
                 marginBottom: token.marginSM,
                 color: token.colorPrimary,
-                fontSize: token.fontSizeSM,
               }}
             >
               ASC PART
@@ -237,8 +244,8 @@ export function PartTranslationModal({
                 <div>
                   <Typography.Text
                     style={{
+                      ...hydraTextStyleToReactCss(hydraLargeNormal),
                       color: token.colorTextTertiary,
-                      fontSize: token.fontSizeSM,
                       display: 'block',
                     }}
                   >

@@ -18,6 +18,11 @@ import {
   theme,
 } from '../../ui/antd';
 import type { TableColumnsType, TabsProps } from '../../ui/antd';
+import {
+  hydraLargeNormal,
+  hydraLargeStrong,
+  hydraTextStyleToReactCss,
+} from '../../theme/hydraTypography';
 
 type AscProduct = AscBrowserProductRow;
 type BrowserTab = AscProduct['browserCategory'];
@@ -169,8 +174,7 @@ export function AscProductsDrawer({ open, onClose, onAddProduct, mode = 'browse'
   ];
 
   const filterLabelStyle: CSSProperties = {
-    fontSize: token.fontSizeSM,
-    fontWeight: token.fontWeightStrong,
+    ...hydraTextStyleToReactCss(hydraLargeStrong),
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
     color: token.colorTextSecondary,
@@ -220,7 +224,7 @@ export function AscProductsDrawer({ open, onClose, onAddProduct, mode = 'browse'
                   <span>{opt}</span>
                   <Typography.Text
                     type="secondary"
-                    style={{ fontSize: token.fontSizeSM, marginLeft: token.marginXXS }}
+                    style={{ ...hydraTextStyleToReactCss(hydraLargeNormal), marginLeft: token.marginXXS }}
                   >
                     {count}
                   </Typography.Text>
@@ -268,7 +272,10 @@ export function AscProductsDrawer({ open, onClose, onAddProduct, mode = 'browse'
             style={{ marginBottom: token.marginXS }}
           />
 
-          <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM, display: 'block', marginBottom: token.marginXS }}>
+          <Typography.Text
+            type="secondary"
+            style={{ ...hydraTextStyleToReactCss(hydraLargeNormal), display: 'block', marginBottom: token.marginXS }}
+          >
             {filtered.length} product{filtered.length !== 1 ? 's' : ''}
           </Typography.Text>
 
@@ -295,10 +302,7 @@ export function AscProductsDrawer({ open, onClose, onAddProduct, mode = 'browse'
           <Flex align="center" justify="space-between" style={{ marginBottom: token.marginSM }}>
             <Typography.Text strong>Filters</Typography.Text>
             {hasActiveFilters && (
-              <Typography.Link
-                onClick={clearAllFilters}
-                style={{ fontSize: token.fontSizeSM }}
-              >
+              <Typography.Link onClick={clearAllFilters} style={hydraTextStyleToReactCss(hydraLargeNormal)}>
                 Clear All Filters
               </Typography.Link>
             )}

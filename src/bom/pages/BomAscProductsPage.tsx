@@ -24,6 +24,7 @@ import {
   theme,
 } from '../../ui/antd';
 import type { TableColumnsType, TabsProps } from '../../ui/antd';
+import { hydraLargeNormal, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type AscProduct = AscBrowserProductRow;
 type BrowserTab = AscProduct['browserCategory'];
@@ -281,7 +282,10 @@ export function BomAscProductsPage() {
               {activeFilterCount > 0 ? (
                 <Button onClick={clearAppliedFilters}>Clear</Button>
               ) : null}
-              <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM, whiteSpace: 'nowrap' }}>
+              <Typography.Text
+                type="secondary"
+                style={{ ...hydraTextStyleToReactCss(hydraLargeNormal), whiteSpace: 'nowrap' }}
+              >
                 {filtered.length} product{filtered.length !== 1 ? 's' : ''}
               </Typography.Text>
             </Space>

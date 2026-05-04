@@ -12,11 +12,20 @@ import type { Key } from 'react';
 import { useActiveProject } from '../../context/ActiveProjectContext';
 import { PageBackButton } from '../../shell/PageBackButton';
 import { BomCreateProjectModal } from '../components/BomCreateProjectModal';
+import { BomUploadDestinationModal } from '../components/BomUploadDestinationModal';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { mockBomProjects } from '../data/mockData';
+import { MAX_UPLOAD_BYTES, VALID_UPLOAD_TYPES } from '../constants/uploadLimits';
 import { BomProjectStatusTag } from '../components/BomTags';
 import type { BomProject } from '../data/types';
 import { shellLayout } from '../../theme/hydraAlias';
+import {
+  hydraBaseNormal,
+  hydraSmallNormal,
+  hydraTextStyleToReactCss,
+  hydraTitleHeading3,
+  hydraTitleHeading4,
+} from '../../theme/hydraTypography';
 import {
   Alert,
   App,
@@ -37,15 +46,6 @@ import {
   theme,
 } from '../../ui/antd';
 import type { TableColumnsType } from '../../ui/antd';
-
-const VALID_UPLOAD_TYPES = new Set([
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'application/pdf',
-  'text/csv',
-]);
-
-const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All statuses' },
@@ -77,6 +77,8 @@ export function BomLandingPage() {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const [hoveredQuickAction, setHoveredQuickAction] = useState<'upload' | 'search' | null>(null);
+  const [uploadDestModalOpen, setUploadDestModalOpen] = useState(false);
+  const [pendingUpload, setPendingUpload] = useState<{ name: string; size: number } | null>(null);
 
   // Reset selection and page when switching projects
   useEffect(() => {
@@ -135,7 +137,9 @@ export function BomLandingPage() {
   function openDeleteProjectModal(row: BomProject) {
     modal.confirm({
       title: 'Delete BOM project',
-      icon: <ExclamationCircleOutlined style={{ color: token.colorError, fontSize: token.fontSizeLG }} />,
+      icon: (
+        <ExclamationCircleOutlined style={{ color: token.colorError, fontSize: hydraBaseNormal.fontSize }} />
+      ),
       width: 560,
       centered: true,
       okText: 'Delete project',
@@ -167,7 +171,9 @@ export function BomLandingPage() {
     if (n === 0) return;
     modal.confirm({
       title: `Delete ${n} BOM project${n > 1 ? 's' : ''}?`,
-      icon: <ExclamationCircleOutlined style={{ color: token.colorError, fontSize: token.fontSizeLG }} />,
+      icon: (
+        <ExclamationCircleOutlined style={{ color: token.colorError, fontSize: hydraBaseNormal.fontSize }} />
+      ),
       width: 480,
       centered: true,
       okText: 'Delete all',
@@ -275,11 +281,25 @@ export function BomLandingPage() {
       message.error('File size exceeds 50MB limit.');
       return;
     }
+    setPendingUpload({ name: file.name, size: file.size });
+    setUploadDestModalOpen(true);
+  };
+
+  const finishUploadNavigation = (state: {
+    uploadFileName: string;
+    uploadDestination: 'new' | 'append';
+    appendTargetId?: string;
+  }) => {
     const closeLoading = message.loading('Processing your file…', 0);
     window.setTimeout(() => {
       closeLoading();
       message.success('File received. Opening field mapping.');
-      navigate('/bom/projects/new/field-mapping', { state: { uploadFileName: file.name } });
+      if (state.uploadDestination === 'new') {
+        navigate('/bom/projects/new/field-mapping', { state });
+      } else if (state.appendTargetId) {
+        navigate(`/bom/projects/${state.appendTargetId}/field-mapping`, { state });
+      }
+      setPendingUpload(null);
     }, 900);
   };
 
@@ -330,44 +350,78 @@ export function BomLandingPage() {
           }
         />
 
-        {/* Upload + Search cards */}
-        <Row gutter={[token.marginMD, token.marginMD]}>
-          <Col xs={24} md={12}>
+        {/* Upload + Search cards — matched type scale + equal card height */}
+        <Row gutter={[token.marginMD, token.marginMD]} align="stretch">
+          <Col xs={24} md={12} style={{ display: 'flex' }}>
             <Card
-              style={getQuickActionStyle('upload')}
-              styles={{ body: { padding: `${token.paddingMD}px ${token.paddingLG}px` } }}
+              style={{ ...getQuickActionStyle('upload'), width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}
+              styles={{
+                body: {
+                  padding: `${token.paddingMD}px ${token.paddingLG}px`,
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                },
+              }}
               onClick={triggerUpload}
               onMouseEnter={() => setHoveredQuickAction('upload')}
               onMouseLeave={() => setHoveredQuickAction(null)}
             >
-              <Flex align="center" gap={token.marginSM} style={{ marginBottom: token.marginXXS }}>
-                <UploadOutlined style={{ fontSize: token.fontSizeXL, color: token.colorSuccess }} />
-                <Typography.Title level={4} style={{ margin: 0 }}>
-                  Upload a file
-                </Typography.Title>
+              <Flex vertical gap={token.marginXS} style={{ flex: 1 }}>
+                <Flex align="center" gap={token.marginSM}>
+                  <UploadOutlined style={{ fontSize: hydraTitleHeading3.fontSize, color: token.colorSuccess }} />
+                  <Typography.Title level={4} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading4) }}>
+                    Upload a file
+                  </Typography.Title>
+                </Flex>
+                <Typography.Paragraph
+                  type="secondary"
+                  style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
+                >
+                  After you pick a file, choose whether it starts a{' '}
+                  <Typography.Text strong>new BOM project</Typography.Text> or{' '}
+                  <Typography.Text strong>adds lines</Typography.Text> to a BOM you already have in this
+                  construction project.
+                </Typography.Paragraph>
+                <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+                  CSV, Excel, or PDF up to 50MB. Next: column mapping, then parsing review.
+                </Typography.Text>
               </Flex>
-              <Typography.Text type="secondary">
-                CSV, Excel, or PDF up to 50MB. Next step maps columns, then parsing review.
-              </Typography.Text>
             </Card>
           </Col>
-          <Col xs={24} md={12}>
+          <Col xs={24} md={12} style={{ display: 'flex' }}>
             <Card
-              style={getQuickActionStyle('search')}
-              styles={{ body: { padding: `${token.paddingMD}px ${token.paddingLG}px` } }}
+              style={{ ...getQuickActionStyle('search'), width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}
+              styles={{
+                body: {
+                  padding: `${token.paddingMD}px ${token.paddingLG}px`,
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                },
+              }}
               onClick={() => navigate('/bom/search')}
               onMouseEnter={() => setHoveredQuickAction('search')}
               onMouseLeave={() => setHoveredQuickAction(null)}
             >
-              <Flex align="center" gap={token.marginSM} style={{ marginBottom: token.marginXXS }}>
-                <FileSearchOutlined style={{ fontSize: token.fontSizeXL, color: token.colorPrimary }} />
-                <Typography.Title level={4} style={{ margin: 0 }}>
-                  Search Catalogue Parts
-                </Typography.Title>
+              <Flex vertical gap={token.marginXS} style={{ flex: 1 }}>
+                <Flex align="center" gap={token.marginSM}>
+                  <FileSearchOutlined style={{ fontSize: hydraTitleHeading3.fontSize, color: token.colorPrimary }} />
+                  <Typography.Title level={4} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading4) }}>
+                    Search Catalogue Parts
+                  </Typography.Title>
+                </Flex>
+                <Typography.Paragraph
+                  type="secondary"
+                  style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
+                >
+                  Look up <Typography.Text strong>ASC catalog</Typography.Text> parts by number or description to
+                  validate lines before you add them to a BOM in this construction project.
+                </Typography.Paragraph>
+                <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+                  Same search bar pattern as the workspace; results open in the catalog flow.
+                </Typography.Text>
               </Flex>
-              <Typography.Text type="secondary">
-                Validate descriptions against the catalog before you commit lines to a BOM.
-              </Typography.Text>
             </Card>
           </Col>
         </Row>
@@ -524,7 +578,7 @@ export function BomLandingPage() {
                     borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
                   }}
                 >
-                  <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+                  <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
                     {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''}
                     {isFiltered ? ' found' : ' total'}
                   </Typography.Text>
@@ -558,6 +612,35 @@ export function BomLandingPage() {
           navigate(`/bom/projects/${project.id}/workspace`);
         }}
       />
+
+      {pendingUpload ? (
+        <BomUploadDestinationModal
+          open={uploadDestModalOpen}
+          fileName={pendingUpload.name}
+          fileSizeBytes={pendingUpload.size}
+          projectBoms={projectBoms}
+          hasConstructionProject={Boolean(project)}
+          onCancel={() => {
+            setUploadDestModalOpen(false);
+            setPendingUpload(null);
+          }}
+          onContinue={(payload) => {
+            setUploadDestModalOpen(false);
+            if (payload.mode === 'new') {
+              finishUploadNavigation({
+                uploadFileName: pendingUpload.name,
+                uploadDestination: 'new',
+              });
+            } else {
+              finishUploadNavigation({
+                uploadFileName: pendingUpload.name,
+                uploadDestination: 'append',
+                appendTargetId: payload.projectId,
+              });
+            }
+          }}
+        />
+      ) : null}
     </>
   );
 }

@@ -19,6 +19,7 @@ import {
   theme,
 } from '../../ui/antd';
 import type { TableColumnsType } from '../../ui/antd';
+import { hydraLargeNormal, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 import type { BomMatchResult } from '../data/types';
 import { BomRiskTag } from '../components/BomTags';
 
@@ -83,7 +84,7 @@ export function BomMatchingPage() {
             <Typography.Text strong>{row.topMatch.partNumber}</Typography.Text>
             <Typography.Text type="secondary">{row.topMatch.description}</Typography.Text>
             <Progress percent={row.topMatch.matchConfidence} size="small" />
-            <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
               {row.suggestedParts.length} candidate{row.suggestedParts.length !== 1 ? 's' : ''}
             </Typography.Text>
           </Space>

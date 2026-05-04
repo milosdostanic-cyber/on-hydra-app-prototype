@@ -19,6 +19,12 @@ import {
   theme,
 } from '../../ui/antd';
 import type { AscCatalogPart, BomItem } from '../data/types';
+import {
+  hydraLargeNormal,
+  hydraLargeStrong,
+  hydraTextStyleToReactCss,
+  hydraTitleHeading1,
+} from '../../theme/hydraTypography';
 
 function confidenceColor(conf: number) {
   return conf >= 90 ? 'success' : conf >= 75 ? 'warning' : 'error';
@@ -33,8 +39,8 @@ function FieldRow({ label, value }: { label: string; value: string | number | un
     <div>
       <Typography.Text
         style={{
+          ...hydraTextStyleToReactCss(hydraLargeNormal),
           color: token.colorTextTertiary,
-          fontSize: token.fontSizeSM,
           display: 'block',
           marginBottom: token.marginXXS,
         }}
@@ -140,7 +146,7 @@ export function BomTranslatePage() {
         gap={token.marginLG}
         style={{ minHeight: 400, width: '100%' }}
       >
-        <CheckCircleOutlined style={{ fontSize: token.fontSizeHeading1, color: token.colorSuccess }} />
+        <CheckCircleOutlined style={{ fontSize: hydraTitleHeading1.fontSize, color: token.colorSuccess }} />
         <Flex vertical align="center" gap={token.marginXS}>
           <Typography.Title level={3} style={{ margin: 0 }}>
             Translation complete
@@ -183,13 +189,13 @@ export function BomTranslatePage() {
       <Card styles={{ body: { padding: `${token.paddingSM}px ${token.paddingMD}px` } }}>
         <Flex align="center" gap={token.marginMD}>
           <Flex vertical gap={token.marginXXS} style={{ flexShrink: 0 }}>
-            <Typography.Text strong style={{ fontSize: token.fontSizeSM, lineHeight: 1 }}>
+            <Typography.Text strong style={{ ...hydraTextStyleToReactCss(hydraLargeStrong), lineHeight: 1 }}>
               {currentIndex + 1}{' '}
-              <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+              <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
                 / {total}
               </Typography.Text>
             </Typography.Text>
-            <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
               {processedCount} reviewed
             </Typography.Text>
           </Flex>
@@ -222,7 +228,7 @@ export function BomTranslatePage() {
         >
           <Flex align="center" gap={token.marginSM}>
             <Typography.Text strong>Item {currentIndex + 1}</Typography.Text>
-            <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
               {currentItem.parsedDescription}
             </Typography.Text>
           </Flex>
@@ -250,21 +256,21 @@ export function BomTranslatePage() {
               borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
             }}
           >
-            <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
               Match confidence:
             </Typography.Text>
             <Tag color={confidenceColor(currentAscPart.matchConfidence)} style={{ margin: 0 }}>
               {currentAscPart.matchConfidence}%
             </Tag>
             <Divider type="vertical" style={{ margin: 0 }} />
-            <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
               Substitution risk:
             </Typography.Text>
             <Tag color={riskColor(currentAscPart.substitutionRisk)} style={{ margin: 0, textTransform: 'capitalize' }}>
               {currentAscPart.substitutionRisk}
             </Tag>
             <Divider type="vertical" style={{ margin: 0 }} />
-            <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
               Rule: {currentAscPart.conversionRule}
             </Typography.Text>
           </Flex>
@@ -281,9 +287,9 @@ export function BomTranslatePage() {
             <Typography.Text
               strong
               style={{
+                ...hydraTextStyleToReactCss(hydraLargeStrong),
                 display: 'block',
                 marginBottom: token.marginSM,
-                fontSize: token.fontSizeSM,
                 color: token.colorTextSecondary,
               }}
             >
@@ -313,7 +319,7 @@ export function BomTranslatePage() {
               <RightOutlined
                 style={{
                   color: currentAscPart ? token.colorPrimary : token.colorTextTertiary,
-                  fontSize: token.fontSizeSM,
+                  fontSize: hydraLargeNormal.fontSize,
                 }}
               />
             </Flex>
@@ -329,9 +335,9 @@ export function BomTranslatePage() {
             <Typography.Text
               strong
               style={{
+                ...hydraTextStyleToReactCss(hydraLargeStrong),
                 display: 'block',
                 marginBottom: token.marginSM,
-                fontSize: token.fontSizeSM,
                 color: currentAscPart ? token.colorPrimary : token.colorTextTertiary,
               }}
             >
@@ -347,8 +353,8 @@ export function BomTranslatePage() {
                 <div>
                   <Typography.Text
                     style={{
+                      ...hydraTextStyleToReactCss(hydraLargeNormal),
                       color: token.colorTextTertiary,
-                      fontSize: token.fontSizeSM,
                       display: 'block',
                       marginBottom: token.marginXS,
                     }}

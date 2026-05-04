@@ -12,6 +12,12 @@ import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { shellLayout } from '../theme/hydraAlias';
+import {
+  hydraLargeNormal,
+  hydraLargeStrong,
+  hydraTextStyleToReactCss,
+  hydraTitleHeading5,
+} from '../theme/hydraTypography';
 import { Button, Card, Divider, Drawer, Flex, Space, Tag, Typography, theme } from '../ui/antd';
 import type { ProjectRow } from './projectSeed';
 
@@ -129,7 +135,7 @@ export function ProjectDetailDrawer({ project, open, onClose }: Props) {
               </Flex>
               <Flex gap={token.marginXS} style={{ marginTop: token.marginSM }}>
                 <Tag color="blue">Active</Tag>
-                <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+                <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
                   Last opened {project.lastOpened}
                 </Typography.Text>
               </Flex>
@@ -148,8 +154,8 @@ export function ProjectDetailDrawer({ project, open, onClose }: Props) {
             strong
             type="secondary"
             style={{
+              ...hydraTextStyleToReactCss(hydraLargeStrong),
               textTransform: 'uppercase',
-              fontSize: token.fontSizeSM,
               letterSpacing: 0.5,
             }}
           >
@@ -183,7 +189,7 @@ export function ProjectDetailDrawer({ project, open, onClose }: Props) {
                         height: token.controlHeightLG,
                         borderRadius: token.borderRadiusSM,
                         background: token.colorFillAlter,
-                        fontSize: token.fontSizeHeading5,
+                        fontSize: hydraTitleHeading5.fontSize,
                         color: token.colorPrimary,
                         flexShrink: 0,
                       }}
@@ -193,7 +199,7 @@ export function ProjectDetailDrawer({ project, open, onClose }: Props) {
                     <div style={{ minWidth: 0 }}>
                       <Typography.Text strong>{mod.label}</Typography.Text>
                       <br />
-                      <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+                      <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
                         {mod.description}
                       </Typography.Text>
                     </div>
@@ -210,8 +216,8 @@ export function ProjectDetailDrawer({ project, open, onClose }: Props) {
             strong
             type="secondary"
             style={{
+              ...hydraTextStyleToReactCss(hydraLargeStrong),
               textTransform: 'uppercase',
-              fontSize: token.fontSizeSM,
               letterSpacing: 0.5,
             }}
           >
@@ -241,7 +247,7 @@ export function ProjectDetailDrawer({ project, open, onClose }: Props) {
                     height: token.controlHeightLG,
                     borderRadius: token.borderRadiusSM,
                     background: token.colorFillAlter,
-                    fontSize: token.fontSizeHeading5,
+                    fontSize: hydraTitleHeading5.fontSize,
                     color: token.colorTextSecondary,
                     flexShrink: 0,
                   }}
@@ -251,7 +257,7 @@ export function ProjectDetailDrawer({ project, open, onClose }: Props) {
                 <div style={{ minWidth: 0 }}>
                   <Typography.Text strong>Browse catalog</Typography.Text>
                   <br />
-                  <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+                  <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
                     Explore products without selecting a project
                   </Typography.Text>
                 </div>

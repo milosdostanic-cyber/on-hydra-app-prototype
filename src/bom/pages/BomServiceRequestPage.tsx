@@ -16,6 +16,7 @@ import {
   theme,
   message,
 } from '../../ui/antd';
+import { hydraLargeNormal, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 const { TextArea } = Input;
 
@@ -120,7 +121,7 @@ export function BomServiceRequestPage() {
               <Button>Upload files</Button>
             </Upload>
           </Form.Item>
-          <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+          <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
             <Link to="/bom">BOM home</Link>
           </Typography.Text>
         </Form>
