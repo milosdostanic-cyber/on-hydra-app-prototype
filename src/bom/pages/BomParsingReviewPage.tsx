@@ -32,6 +32,39 @@ export function BomParsingReviewPage() {
   const [rows, setRows] = useState<BomItem[]>(() => mockParsedItems.map((r) => ({ ...r })));
   const [aliasOpen, setAliasOpen] = useState(false);
 
+  const parseSizeValue = (sizeString: string): number | undefined => {
+    const match = sizeString.match(/(\d+\.?\d*|\d+\/\d+)\s*(inch|in)/i);
+    if (match) {
+      const numStr = match[1];
+      if (numStr.includes('/')) {
+        const parts = numStr.split('/').map(Number);
+        return parts[0] / parts[1];
+      }
+      return Number(numStr);
+    }
+    return undefined;
+  };
+
+  const parsePressureValue = (pressureString: string): number | undefined => {
+    const match = pressureString.match(/(\d+\.?\d*)\s*PSI/i);
+    if (match) {
+      return Number(match[1]);
+    }
+    return undefined;
+  };
+
+  const sizeValues = useMemo(() => {
+    return rows
+      .map((row) => parseSizeValue(row.size))
+      .filter((size): size is number => size !== undefined);
+  }, [rows]);
+
+  const totalSize = useMemo(() => sizeValues.reduce((sum, current) => sum + current, 0), [sizeValues]);
+  const averageSize = useMemo(() => (sizeValues.length > 0 ? totalSize / sizeValues.length : 0), [totalSize, sizeValues.length]);
+  const minSize = useMemo(() => (sizeValues.length > 0 ? Math.min(...sizeValues) : 0), [sizeValues]);
+  const maxSize = useMemo(() => (sizeValues.length > 0 ? Math.max(...sizeValues) : 0), [sizeValues]);
+
+
   const warningRows = rows.filter((r) => r.confidence === 'medium' || r.confidence === 'low').length;
   const errorRows = rows.filter((r) => r.confidence === 'low').length;
 
@@ -71,33 +104,45 @@ export function BomParsingReviewPage() {
       ),
     },
     {
-      title: 'Size',
+      title: (
+        <Flex vertical>
+          <Typography.Text>Size (in)</Typography.Text>
+        </Flex>
+      ),
       dataIndex: 'size',
       key: 'size',
       render: (v: string, record) => (
-        <Input
-          value={v}
-          onChange={(e) =>
-            setRows((prev) => prev.map((r) => (r.id === record.id ? { ...r, size: e.target.value } : r)))
+        <InputNumber
+          value={parseSizeValue(v)}
+          onChange={(n) =>
+            setRows((prev) =>
+              prev.map((r) =>
+                r.id === record.id ? { ...r, size: `${typeof n === 'number' ? n : parseSizeValue(v)} inch` } : r,
+              ),
+            )
           }
         />
       ),
     },
     {
-      title: 'Pressure',
+      title: 'Pressure (PSI)',
       dataIndex: 'pressureClass',
       key: 'pressureClass',
       render: (v: string, record) => (
-        <Input
-          value={v}
-          onChange={(e) =>
-            setRows((prev) => prev.map((r) => (r.id === record.id ? { ...r, pressureClass: e.target.value } : r)))
+        <InputNumber
+          value={parsePressureValue(v)}
+          onChange={(n) =>
+            setRows((prev) =>
+              prev.map((r) =>
+                r.id === record.id ? { ...r, pressureClass: `${typeof n === 'number' ? n : parsePressureValue(v)} PSI` } : r,
+              ),
+            )
           }
         />
       ),
     },
     {
-      title: 'Connection',
+      title: 'Connection (Type)',
       dataIndex: 'connectionType',
       key: 'connectionType',
       render: (v: string, record) => (
