@@ -7,3 +7,4 @@ dist
 # Large local BOM reference exports (keep markdown in repo)
 Documents/Bom/*.pdf
 Documents/Bom/*.zip
+.claude/

@@ -1,7 +1,8 @@
 import { ArrowRightOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { bomProjectById, bomProjectTitleById } from '../data/mockData';
 import { PageBackButton } from '../../shell/PageBackButton';
@@ -16,6 +17,11 @@ import {
   message,
   theme,
 } from '../../ui/antd';
+import {
+  hydraSmallNormal,
+  hydraSmallStrong,
+  hydraTextStyleToReactCss,
+} from '../../theme/hydraTypography';
 
 const BOM_SOURCE_FIELDS = [
   '— Skip —',
@@ -73,6 +79,7 @@ export function BomFieldMappingPage() {
   const { token } = theme.useToken();
   const { bomProjectId = '' } = useParams<{ bomProjectId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [aliasMap, setAliasMap] = useState<AliasMap>({ ...DEFAULT_ALIAS });
 
   const projectMeta = bomProjectById(bomProjectId);
@@ -111,7 +118,13 @@ export function BomFieldMappingPage() {
       return;
     }
     message.success('Field mapping saved.');
-    navigate(`/bom/projects/${bomProjectId}/parsing-review`, { state: { fieldMapping: aliasMap } });
+    const uploadBase: BomUploadFlowLocationState =
+      typeof location.state === 'object' && location.state && !Array.isArray(location.state)
+        ? { ...(location.state as BomUploadFlowLocationState) }
+        : {};
+    navigate(`/bom/projects/${bomProjectId}/parsing-review`, {
+      state: { ...uploadBase, fieldMapping: aliasMap },
+    });
   }
 
   function handleReset() {
@@ -208,13 +221,19 @@ export function BomFieldMappingPage() {
             }}
           >
             <div style={{ flex: 1 }}>
-              <Typography.Text strong style={{ fontSize: token.fontSizeSM, color: token.colorTextSecondary }}>
+              <Typography.Text
+                strong
+                style={{ ...hydraTextStyleToReactCss(hydraSmallStrong), color: token.colorTextSecondary }}
+              >
                 ASC FIELD
               </Typography.Text>
             </div>
             <div style={{ width: 36, flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
-              <Typography.Text strong style={{ fontSize: token.fontSizeSM, color: token.colorPrimary }}>
+              <Typography.Text
+                strong
+                style={{ ...hydraTextStyleToReactCss(hydraSmallStrong), color: token.colorPrimary }}
+              >
                 YOUR BOM COLUMN
               </Typography.Text>
             </div>
@@ -256,14 +275,18 @@ export function BomFieldMappingPage() {
                       <Typography.Text
                         strong={isMapped}
                         style={{
-                          fontSize: token.fontSizeSM,
+                          ...(isMapped
+                            ? hydraTextStyleToReactCss(hydraSmallStrong)
+                            : hydraTextStyleToReactCss(hydraSmallNormal)),
                           color: isMapped ? token.colorPrimary : token.colorTextTertiary,
                         }}
                       >
                         {label}
                       </Typography.Text>
                       {isMapped ? (
-                        <CheckCircleOutlined style={{ color: token.colorSuccess, fontSize: token.fontSizeSM }} />
+                        <CheckCircleOutlined
+                          style={{ color: token.colorSuccess, fontSize: hydraSmallNormal.fontSize }}
+                        />
                       ) : null}
                     </Flex>
                   </div>
@@ -290,7 +313,7 @@ export function BomFieldMappingPage() {
                       options={BOM_SOURCE_FIELDS.map((f) => ({ value: f, label: f }))}
                     />
                     {dup ? (
-                      <Typography.Text type="warning" style={{ fontSize: token.fontSizeSM }}>
+                      <Typography.Text type="warning" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
                         This BOM column is already mapped elsewhere.
                       </Typography.Text>
                     ) : null}
@@ -306,7 +329,7 @@ export function BomFieldMappingPage() {
             <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
               <Typography.Text strong>Mapping status</Typography.Text>
               <Flex justify="space-between" align="center">
-                <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+                <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
                   Fields mapped
                 </Typography.Text>
                 <Typography.Text strong>

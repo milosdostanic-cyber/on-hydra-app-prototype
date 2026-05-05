@@ -10,7 +10,13 @@ import {
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
 
-import { hydraTextStyleToReactCss, hydraBaseNormal, hydraTitleHeading3 } from '../theme/hydraTypography';
+import {
+  hydraBaseNormal,
+  hydraLargeNormal,
+  hydraTextStyleToReactCss,
+  hydraTitleHeading3,
+  hydraTitleHeading5,
+} from '../theme/hydraTypography';
 import { shellLayout } from '../theme/hydraAlias';
 import { Avatar, Button, Dropdown, Flex, List, Modal, Typography, theme } from '../ui/antd';
 import type { MenuProps } from '../ui/antd';
@@ -69,7 +75,7 @@ function SwitchProjectModal({ open, onClose }: { open: boolean; onClose: () => v
               <Flex align="center" justify="space-between" style={{ width: '100%' }}>
                 <Flex vertical gap={2}>
                   <Typography.Text strong={isActive}>{row.name}</Typography.Text>
-                  <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+                  <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
                     {row.city}, {row.state} · Last opened {row.lastOpened}
                   </Typography.Text>
                 </Flex>
@@ -158,7 +164,7 @@ export function AppTopBar() {
               >
                 {project?.name ?? 'No project'}
               </Typography.Text>
-              <SwapOutlined style={{ color: onPrimary, fontSize: token.fontSizeSM }} />
+              <SwapOutlined style={{ color: onPrimary, fontSize: hydraTitleHeading5.fontSize }} />
             </Flex>
           </Button>
 

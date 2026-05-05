@@ -2,10 +2,11 @@
  * Figma **Hydra Ant Design — DS** `ExportCard` (`node-id=826-1181`).
  *
  * Token parity (Customize Theme → `theme.useToken()`):
- * - Surface: `colorBgContainer`, `borderRadiusLG`, `paddingLG`, vertical gap `paddingXS` (via `Space` `size={paddingXS}`).
- * - Card elevation: `boxShadowTertiary` (rest, hover, active).
+ * - Surface: `colorBgContainer`, `borderRadiusLG`, `paddingLG`.
+ * - Vertical rhythm: `paddingXS` between icon and title stack; `marginXXS` between title and description (Figma `paddingXXs` gap in the text block).
+ * - Card elevation: `boxShadowTertiary` (rest + active), `boxShadowSecondary` (hover).
  * - Active chrome: `lineWidth * 2` + `lineType` + `colorPrimary`. Rest/Hover: same width, transparent border (no layout shift vs Figma rest = no stroke).
- * - Title: Figma `Title/Heading 4` → `hydraTitleHeading4`.
+ * - Title: Figma `Title/Heading 5` → `hydraTitleHeading5` + `Typography.Title` level 5.
  * - Description: Figma `Base/Normal` + `colorTextDescription` → `hydraBaseNormal` + token.
  *
  * Figma variant prop `state`: `Rest` | `Hover` | `Active` — API uses lowercase; export `figmaExportCardState` for label parity.
@@ -13,8 +14,13 @@
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { useCallback, useState } from 'react';
 
-import { hydraBaseNormal, hydraTitleHeading4, hydraTextStyleToReactCss } from '../theme/hydraTypography';
-import { Flex, Space, Typography, theme } from './antd';
+import {
+  hydraBaseNormal,
+  hydraTextStyleToReactCss,
+  hydraTitleHeading3,
+  hydraTitleHeading5,
+} from '../theme/hydraTypography';
+import { Flex, Typography, theme } from './antd';
 
 /** Figma `ExportCard` variant names (PascalCase) for docs / mapping. */
 export const figmaExportCardState = ['Rest', 'Hover', 'Active'] as const;
@@ -34,7 +40,7 @@ export type ExportCardProps = {
   selected?: boolean;
   title: ReactNode;
   description?: ReactNode;
-  /** Leading 24×24 slot (Figma `FileExcel`); size icons with `token.fontSizeHeading3`. */
+  /** Leading 24×24 slot (Figma `FileExcel`); size icons with `hydraTitleHeading3.fontSize`. */
   icon?: ReactNode;
   /** Shown in `active` state on trailing edge, vertically centered (product affordance). */
   endAffordance?: ReactNode;
@@ -67,8 +73,9 @@ export function ExportCard({
   const [hovered, setHovered] = useState(false);
   const visual = resolveVisualState(controlledState, selected, hovered);
   const isActive = visual === 'active';
+  const isHover = visual === 'hover';
 
-  const boxShadow = token.boxShadowTertiary;
+  const boxShadow = isHover ? token.boxShadowSecondary : token.boxShadowTertiary;
   const borderColor = isActive ? token.colorPrimary : 'transparent';
 
   const onKeyDown = useCallback(
@@ -82,15 +89,14 @@ export function ExportCard({
     [onClick],
   );
 
-  const body = (
-    <Space orientation="vertical" size={token.paddingXS} style={{ flex: 1, minWidth: 0 }}>
-      {icon ? <Flex style={{ flexShrink: 0, fontSize: token.fontSizeHeading3, lineHeight: 1 }}>{icon}</Flex> : null}
+  const titleDescription = (
+    <Flex vertical gap={token.marginXXS} style={{ minWidth: 0, width: '100%' }}>
       <Typography.Title
-        level={4}
+        level={5}
         style={{
           margin: 0,
           color: token.colorText,
-          ...hydraTextStyleToReactCss(hydraTitleHeading4),
+          ...hydraTextStyleToReactCss(hydraTitleHeading5),
         }}
       >
         {title}
@@ -107,7 +113,16 @@ export function ExportCard({
           {description}
         </Typography.Text>
       ) : null}
-    </Space>
+    </Flex>
+  );
+
+  const body = (
+    <Flex vertical gap={token.paddingXS} style={{ flex: 1, minWidth: 0, width: '100%' }}>
+      {icon ? (
+        <Flex style={{ flexShrink: 0, fontSize: hydraTitleHeading3.fontSize, lineHeight: 1 }}>{icon}</Flex>
+      ) : null}
+      {titleDescription}
+    </Flex>
   );
 
   return (

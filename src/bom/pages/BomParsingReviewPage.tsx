@@ -1,7 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import { useBomWorkspace } from '../../context/BomWorkspaceContext';
 import { shellLayout } from '../../theme/hydraAlias';
+import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
+import { resolveUploadDestination } from '../bomUploadFlowState';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { BomAliasConfigurator } from '../components/BomAliasConfigurator';
 import { mockParsedItems, bomProjectById, bomProjectTitleById } from '../data/mockData';
@@ -18,19 +21,53 @@ import {
   Space,
   Table,
   Typography,
+  message,
   theme,
 } from '../../ui/antd';
 import type { TableColumnsType } from '../../ui/antd';
+
+function renumberRows(list: BomItem[]): BomItem[] {
+  return list.map((row, idx) => ({ ...row, rowNumber: idx + 1 }));
+}
 
 export function BomParsingReviewPage() {
   const { token } = theme.useToken();
   const { bomProjectId = '' } = useParams<{ bomProjectId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { setWorkspaceRows } = useBomWorkspace();
+  const uploadState = (location.state ?? {}) as BomUploadFlowLocationState;
+  const { destination: uploadDestination, appendTargetId: resolvedAppendId } = resolveUploadDestination(
+    bomProjectId,
+    uploadState,
+  );
+  const uploadFileName = uploadState.uploadFileName ?? 'Your file';
   const projectMeta = bomProjectById(bomProjectId);
   const title = bomProjectTitleById(bomProjectId) ?? 'BOM project';
   const [page, setPage] = useState(1);
   const [rows, setRows] = useState<BomItem[]>(() => mockParsedItems.map((r) => ({ ...r })));
   const [aliasOpen, setAliasOpen] = useState(false);
+
+  const parseSizeValue = (sizeString: string): number | undefined => {
+    const match = sizeString.match(/(\d+\.?\d*|\d+\/\d+)\s*(inch|in)/i);
+    if (match) {
+      const numStr = match[1];
+      if (numStr.includes('/')) {
+        const parts = numStr.split('/').map(Number);
+        return parts[0] / parts[1];
+      }
+      return Number(numStr);
+    }
+    return undefined;
+  };
+
+  const parsePressureValue = (pressureString: string): number | undefined => {
+    const match = pressureString.match(/(\d+\.?\d*)\s*PSI/i);
+    if (match) {
+      return Number(match[1]);
+    }
+    return undefined;
+  };
 
   const warningRows = rows.filter((r) => r.confidence === 'medium' || r.confidence === 'low').length;
   const errorRows = rows.filter((r) => r.confidence === 'low').length;
@@ -71,33 +108,45 @@ export function BomParsingReviewPage() {
       ),
     },
     {
-      title: 'Size',
+      title: (
+        <Flex vertical>
+          <Typography.Text>Size (in)</Typography.Text>
+        </Flex>
+      ),
       dataIndex: 'size',
       key: 'size',
       render: (v: string, record) => (
-        <Input
-          value={v}
-          onChange={(e) =>
-            setRows((prev) => prev.map((r) => (r.id === record.id ? { ...r, size: e.target.value } : r)))
+        <InputNumber
+          value={parseSizeValue(v)}
+          onChange={(n) =>
+            setRows((prev) =>
+              prev.map((r) =>
+                r.id === record.id ? { ...r, size: `${typeof n === 'number' ? n : parseSizeValue(v)} inch` } : r,
+              ),
+            )
           }
         />
       ),
     },
     {
-      title: 'Pressure',
+      title: 'Pressure (PSI)',
       dataIndex: 'pressureClass',
       key: 'pressureClass',
       render: (v: string, record) => (
-        <Input
-          value={v}
-          onChange={(e) =>
-            setRows((prev) => prev.map((r) => (r.id === record.id ? { ...r, pressureClass: e.target.value } : r)))
+        <InputNumber
+          value={parsePressureValue(v)}
+          onChange={(n) =>
+            setRows((prev) =>
+              prev.map((r) =>
+                r.id === record.id ? { ...r, pressureClass: `${typeof n === 'number' ? n : parsePressureValue(v)} PSI` } : r,
+              ),
+            )
           }
         />
       ),
     },
     {
-      title: 'Connection',
+      title: 'Connection (Type)',
       dataIndex: 'connectionType',
       key: 'connectionType',
       render: (v: string, record) => (
@@ -134,6 +183,50 @@ export function BomParsingReviewPage() {
     },
   ];
 
+  const fieldMappingBackState: BomUploadFlowLocationState = {
+    ...uploadState,
+    fieldMapping: undefined,
+  };
+
+  const reviewPrimaryLabel =
+    uploadDestination === 'append' ? 'Add items to workspace' : 'Continue to matching';
+
+  function handleCommitParsingReview() {
+    if (rows.length === 0) {
+      message.warning('No parsed rows to continue.');
+      return;
+    }
+    if (uploadDestination === 'append') {
+      const targetId = resolvedAppendId ?? bomProjectId;
+      if (!bomProjectById(targetId)) {
+        message.warning('That BOM project was removed. Created a new project from your file.');
+        const stamped = rows.map((r, i) => ({
+          ...r,
+          id: `import-${Date.now()}-${i}-${r.id}`,
+          status: 'needs-review' as const,
+          confidence: 'medium' as const,
+        }));
+        setWorkspaceRows('new', () => renumberRows(stamped));
+        navigate('/bom/projects/new/matching');
+        return;
+      }
+      const stamped = rows.map((r, i) => ({
+        ...r,
+        id: `import-${Date.now()}-${i}-${r.id}`,
+        status: 'needs-review' as const,
+        confidence: 'medium' as const,
+      }));
+      setWorkspaceRows(targetId, (prev) => renumberRows([...prev, ...stamped]));
+      const projName = bomProjectTitleById(targetId) ?? 'BOM project';
+      message.success(`${rows.length} item${rows.length === 1 ? '' : 's'} added to ${projName}.`);
+      navigate(`/bom/projects/${targetId}/workspace`, {
+        state: { appendImportBanner: { fileName: uploadFileName, count: rows.length } },
+      });
+      return;
+    }
+    navigate(`/bom/projects/${bomProjectId}/matching`);
+  }
+
   if (bomProjectId && bomProjectId !== 'new' && !projectMeta) {
     return (
       <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
@@ -151,6 +244,8 @@ export function BomParsingReviewPage() {
   }
 
   if (rows.length === 0) {
+    const appendWorkspaceId = resolvedAppendId ?? bomProjectId;
+    const isAppendFlow = uploadDestination === 'append';
     return (
       <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
         <BomPageHeader
@@ -161,9 +256,23 @@ export function BomParsingReviewPage() {
               <Button size="large" onClick={() => setAliasOpen(true)}>
                 Change column mapping
               </Button>
-              <Button type="primary" size="large" onClick={() => navigate(`/bom/projects/${bomProjectId}/field-mapping`)}>
+              <Button
+                type="primary"
+                size="large"
+                onClick={() =>
+                  navigate(`/bom/projects/${bomProjectId}/field-mapping`, { state: fieldMappingBackState })
+                }
+              >
                 Open field mapping
               </Button>
+              {isAppendFlow ? (
+                <Button
+                  size="large"
+                  onClick={() => navigate(`/bom/projects/${appendWorkspaceId}/workspace`)}
+                >
+                  Cancel — keep workspace as-is
+                </Button>
+              ) : null}
               <Link to="/bom">
                 <Button size="large">BOM home</Button>
               </Link>
@@ -182,8 +291,8 @@ export function BomParsingReviewPage() {
         description={`Review parsed rows before matching. Project: ${title}.`}
         actions={
           <Space wrap>
-            <Button type="primary" size="large" onClick={() => navigate(`/bom/projects/${bomProjectId}/matching`)}>
-              Continue to matching
+            <Button type="primary" size="large" disabled={rows.length === 0} onClick={handleCommitParsingReview}>
+              {reviewPrimaryLabel}
             </Button>
             <Link to="/bom">
               <Button size="large">BOM home</Button>
@@ -217,7 +326,11 @@ export function BomParsingReviewPage() {
         >
           <Typography.Link onClick={() => setAliasOpen(true)}>Change column mapping</Typography.Link>
           <Typography.Text type="secondary">·</Typography.Text>
-          <Typography.Link onClick={() => navigate(`/bom/projects/${bomProjectId}/field-mapping`)}>
+          <Typography.Link
+            onClick={() =>
+              navigate(`/bom/projects/${bomProjectId}/field-mapping`, { state: fieldMappingBackState })
+            }
+          >
             Open full field mapping page
           </Typography.Link>
         </Flex>

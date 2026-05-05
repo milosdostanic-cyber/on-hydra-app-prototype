@@ -7,10 +7,12 @@ import {
   TranslationOutlined,
   UploadOutlined,
 } from '@ant-design/icons';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useBomWorkspaceRows } from '../../context/BomWorkspaceContext';
+import type { BomWorkspaceAppendBannerState } from '../bomUploadFlowState';
+import { MAX_UPLOAD_BYTES, VALID_UPLOAD_TYPES } from '../constants/uploadLimits';
 import { bomProjectById, bomProjectTitleById } from '../data/mockData';
 import type { BomItem } from '../data/types';
 import { AscProductsDrawer } from '../components/AscProductsDrawer';
@@ -41,7 +43,12 @@ import {
 } from '../../ui/antd';
 import type { TableColumnsType } from '../../ui/antd';
 import { shellLayout } from '../../theme/hydraAlias';
-import { hydraBaseNormal, hydraTextStyleToReactCss, hydraTitleHeading3 } from '../../theme/hydraTypography';
+import {
+  hydraBaseNormal,
+  hydraSmallNormal,
+  hydraTextStyleToReactCss,
+  hydraTitleHeading3,
+} from '../../theme/hydraTypography';
 
 
 type WorkspaceStatusFilter = 'all' | 'confirmed' | 'needs-review' | 'missing';
@@ -101,6 +108,8 @@ export function BomWorkspacePage() {
   const [statusFilter, setStatusFilter] = useState<WorkspaceStatusFilter>('all');
   const [ascDrawerOpen, setAscDrawerOpen] = useState(false);
   const [translationOpen, setTranslationOpen] = useState(false);
+  const emptyWorkspaceFileRef = useRef<HTMLInputElement>(null);
+  const [appendImportBanner, setAppendImportBanner] = useState<{ fileName: string; count: number } | null>(null);
 
   const filteredRows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -127,6 +136,14 @@ export function BomWorkspacePage() {
   const confidencePercent = confidenceSummaryPercent(rows);
   const canTranslate = reviewCount > 0;
   const hasWorkspaceRows = totalItems > 0;
+
+  useEffect(() => {
+    const st = (location.state ?? {}) as BomWorkspaceAppendBannerState;
+    if (st.appendImportBanner) {
+      setAppendImportBanner(st.appendImportBanner);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Pick up products added or swapped from the ASC Products page
   useEffect(() => {
@@ -218,9 +235,37 @@ export function BomWorkspacePage() {
       okText: 'Continue to field mapping',
       onOk: () => {
         setActionError(null);
-        navigate(`/bom/projects/${bomProjectId}/field-mapping`);
+        navigate(`/bom/projects/${bomProjectId}/field-mapping`, {
+          state: { uploadDestination: 'append', appendTargetId: bomProjectId },
+        });
       },
     });
+  }
+
+  function handleEmptyWorkspaceFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!VALID_UPLOAD_TYPES.has(file.type)) {
+      message.error('Please upload a CSV, Excel, or PDF file.');
+      return;
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      message.error('File size exceeds 50MB limit.');
+      return;
+    }
+    const closeLoading = message.loading('Processing your file…', 0);
+    window.setTimeout(() => {
+      closeLoading();
+      message.success('File received. Opening field mapping.');
+      navigate(`/bom/projects/${bomProjectId}/field-mapping`, {
+        state: {
+          uploadFileName: file.name,
+          uploadDestination: 'append',
+          appendTargetId: bomProjectId,
+        },
+      });
+    }, 900);
   }
 
   function handleRequestService() {
@@ -264,7 +309,9 @@ export function BomWorkspacePage() {
     setResolveModalRow(null);
     modal.confirm({
       title: 'Remove BOM line',
-      icon: <ExclamationCircleOutlined style={{ color: token.colorError, fontSize: token.fontSizeLG }} />,
+      icon: (
+        <ExclamationCircleOutlined style={{ color: token.colorError, fontSize: hydraBaseNormal.fontSize }} />
+      ),
       width: 720,
       centered: true,
       okText: 'Remove line',
@@ -281,7 +328,11 @@ export function BomWorkspacePage() {
           <div>
             <Typography.Text
               type="secondary"
-              style={{ fontSize: token.fontSizeSM, textTransform: 'uppercase', letterSpacing: '0.04em' }}
+              style={{
+                ...hydraTextStyleToReactCss(hydraSmallNormal),
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+              }}
             >
               Line to remove
             </Typography.Text>
@@ -482,7 +533,11 @@ export function BomWorkspacePage() {
         {resolvePhase === 'review' ? (
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
             <div>
-              <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <Typography.Text type="secondary" style={{
+                ...hydraTextStyleToReactCss(hydraSmallNormal),
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+              }}>
                 Original BOM Line
               </Typography.Text>
               <Descriptions
@@ -505,7 +560,11 @@ export function BomWorkspacePage() {
             <Divider style={{ margin: 0 }} />
 
             <div>
-              <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <Typography.Text type="secondary" style={{
+                ...hydraTextStyleToReactCss(hydraSmallNormal),
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+              }}>
                 Suggested ASC Part
               </Typography.Text>
               <Descriptions
@@ -526,7 +585,7 @@ export function BomWorkspacePage() {
               </Descriptions>
             </div>
 
-            <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
               Review the suggested ASC part and confirm or replace it before final export.
             </Typography.Text>
 
@@ -596,6 +655,13 @@ export function BomWorkspacePage() {
   if (isSeedEmptyProject && !hasWorkspaceRows) {
     return (
       <>
+        <input
+          ref={emptyWorkspaceFileRef}
+          type="file"
+          accept=".xlsx,.xls,.csv,.pdf,application/pdf,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          style={{ display: 'none' }}
+          onChange={handleEmptyWorkspaceFileChange}
+        />
         <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
           <BomPageHeader
             eyebrow="Draft"
@@ -633,7 +699,11 @@ export function BomWorkspacePage() {
                 >
                   Add item
                 </Button>
-                <Button size="large" icon={<UploadOutlined />} onClick={handleUpload}>
+                <Button
+                  size="large"
+                  icon={<UploadOutlined />}
+                  onClick={() => emptyWorkspaceFileRef.current?.click()}
+                >
                   Upload BOM file
                 </Button>
                 <Button
@@ -734,6 +804,20 @@ export function BomWorkspacePage() {
           </Space>
         }
       />
+
+      {appendImportBanner ? (
+        <Alert
+          type="info"
+          showIcon
+          closable
+          onClose={() => setAppendImportBanner(null)}
+          message={`Added from ${appendImportBanner.fileName}: ${appendImportBanner.count} item${appendImportBanner.count === 1 ? '' : 's'}.`}
+          description="They are tagged Needs Review."
+          action={
+            <Typography.Link onClick={() => setStatusFilter('needs-review')}>Filter to new lines</Typography.Link>
+          }
+        />
+      ) : null}
 
       {actionError ? (
         <Alert

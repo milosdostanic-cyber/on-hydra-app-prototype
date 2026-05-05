@@ -29,6 +29,7 @@ import {
   message,
 } from '../../ui/antd';
 import type { TableColumnsType } from '../../ui/antd';
+import { hydraLargeNormal, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type ExportMode = 'excel-csv' | 'package' | 'distributor' | 'service';
 
@@ -256,7 +257,7 @@ export function BomExportPage() {
             {confirmedRows.length} confirmed row{confirmedRows.length !== 1 ? 's' : ''}.
           </Typography.Paragraph>
           <Flex gap={token.marginSM} wrap="wrap" style={{ marginBottom: token.marginSM }}>
-            <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
               File name
             </Typography.Text>
             <Input value={fileName} onChange={(e) => setFileName(e.target.value)} style={{ maxWidth: token.screenSM }} />

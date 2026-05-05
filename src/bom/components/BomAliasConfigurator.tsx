@@ -11,6 +11,11 @@ import {
   message,
   theme,
 } from '../../ui/antd';
+import {
+  hydraLargeNormal,
+  hydraLargeStrong,
+  hydraTextStyleToReactCss,
+} from '../../theme/hydraTypography';
 
 /** All possible BOM source columns (left side — what user's BOM file may contain). */
 const BOM_SOURCE_FIELDS = [
@@ -81,6 +86,7 @@ export function BomAliasConfigurator({ open, onClose, onSave }: BomAliasConfigur
   };
 
   const fieldLabelStyle = {
+    ...hydraTextStyleToReactCss(hydraLargeStrong),
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -88,8 +94,6 @@ export function BomAliasConfigurator({ open, onClose, onSave }: BomAliasConfigur
     background: token.colorPrimaryBg,
     border: `${token.lineWidth}px ${token.lineType} ${token.colorPrimaryBorder}`,
     borderRadius: token.borderRadius,
-    fontWeight: token.fontWeightStrong,
-    fontSize: token.fontSizeSM,
     color: token.colorPrimary,
     minHeight: token.controlHeight,
     width: '100%',
@@ -115,7 +119,7 @@ export function BomAliasConfigurator({ open, onClose, onSave }: BomAliasConfigur
       }
     >
       <Space direction="vertical" size={token.marginSM} style={{ width: '100%' }}>
-        <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+        <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
           Map your BOM file columns to the corresponding ASC product fields. Select the column from
           your BOM that corresponds to each ASC field.
         </Typography.Text>
@@ -123,13 +127,16 @@ export function BomAliasConfigurator({ open, onClose, onSave }: BomAliasConfigur
         {/* Header row */}
         <Flex gap={token.marginSM} align="center">
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <Typography.Text strong style={{ fontSize: token.fontSizeSM, color: token.colorTextSecondary }}>
+            <Typography.Text
+              strong
+              style={{ ...hydraTextStyleToReactCss(hydraLargeStrong), color: token.colorTextSecondary }}
+            >
               YOUR BOM FIELD
             </Typography.Text>
           </div>
           <div style={{ width: 28 }} />
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <Typography.Text strong style={{ fontSize: token.fontSizeSM, color: token.colorPrimary }}>
+            <Typography.Text strong style={{ ...hydraTextStyleToReactCss(hydraLargeStrong), color: token.colorPrimary }}>
               ASC FIELD
             </Typography.Text>
           </div>
@@ -173,7 +180,7 @@ export function BomAliasConfigurator({ open, onClose, onSave }: BomAliasConfigur
 
         {/* Unmapped warning */}
         {Object.values(aliasMap).some((v) => !v) && (
-          <Typography.Text type="warning" style={{ fontSize: token.fontSizeSM }}>
+          <Typography.Text type="warning" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
             Some ASC fields are not mapped. Unmapped fields will be left blank during import.
           </Typography.Text>
         )}
