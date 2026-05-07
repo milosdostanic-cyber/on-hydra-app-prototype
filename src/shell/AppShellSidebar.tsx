@@ -8,6 +8,7 @@ import {
   LeftOutlined,
   ReadOutlined,
   RightOutlined,
+  SolutionOutlined,
   UnorderedListOutlined,
 } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
@@ -29,6 +30,7 @@ import { getLastScopedProjectId } from './lastProjectScope';
 const { Sider } = Layout;
 
 function primarySideKey(pathname: string): string {
+  if (pathname.startsWith('/projects/reframing-proposal')) return 'reframing';
   if (pathname.startsWith('/catalog')) return 'catalog';
   if (pathname.startsWith('/bom')) return 'bom';
   if (pathname.startsWith('/dashboard')) return 'dash';
@@ -50,7 +52,7 @@ export function AppShellSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const menuItems: MenuProps['items'] = useMemo(
+  const primaryMenuItems: MenuProps['items'] = useMemo(
     () => [
       { key: 'dash', icon: <HomeOutlined />, label: 'Homepage' },
       { key: 'proj', icon: <BarChartOutlined />, label: 'Projects' },
@@ -61,6 +63,10 @@ export function AppShellSidebar() {
       { key: 'bom', icon: <UnorderedListOutlined />, label: 'BOM' },
       { key: 'content', icon: <ReadOutlined />, label: 'Content' },
     ],
+    [],
+  );
+  const bottomMenuItems: MenuProps['items'] = useMemo(
+    () => [{ key: 'reframing', icon: <SolutionOutlined />, label: 'Project Reframing Proposal' }],
     [],
   );
 
@@ -77,6 +83,7 @@ export function AppShellSidebar() {
       catalog: '/catalog',
       bom: '/bom',
       content: `/projects/${pid}/content`,
+      reframing: '/projects/reframing-proposal',
     };
     const path = routes[key];
     if (path) navigate(path);
@@ -123,19 +130,25 @@ export function AppShellSidebar() {
         >
           <ConnectedSidebarBrand collapsed={collapsed} />
         </div>
-        <div
-          style={{
-            flex: 1,
-            minHeight: 0,
-            overflow: 'hidden',
-            paddingBlock: token.paddingXXS,
-          }}
-        >
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', paddingBlock: token.paddingXXS }}>
           <Menu
             theme="dark"
             mode="inline"
             selectedKeys={selectedMenuKeys}
-            items={menuItems}
+            items={primaryMenuItems}
+            onClick={onMenuClick}
+            style={{ borderInlineEnd: 'none', background: 'transparent' }}
+            styles={{
+              item: { borderRadius: hydraMenuItemBorderRadius },
+            }}
+          />
+        </div>
+        <div style={{ flexShrink: 0, paddingBlock: token.paddingXXS }}>
+          <Menu
+            theme="dark"
+            mode="inline"
+            selectedKeys={selectedMenuKeys}
+            items={bottomMenuItems}
             onClick={onMenuClick}
             style={{ borderInlineEnd: 'none', background: 'transparent' }}
             styles={{

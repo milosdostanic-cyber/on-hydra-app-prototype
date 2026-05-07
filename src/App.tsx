@@ -4,7 +4,12 @@ import { AppShell } from './shell/AppShell';
 import { CatalogHome } from './shell/CatalogHome';
 import { CatalogPartPage } from './shell/CatalogPartPage';
 import { CatalogResults } from './shell/CatalogResults';
-import { ContentModule, SalesBraceModule, SubmittalModule } from './shell/ProjectModuleStubs';
+import {
+  ContentModule,
+  SalesBraceModule,
+  SubmittalModule,
+} from './shell/ProjectModuleStubs';
+import { ProjectReframingProposalPage } from './shell/ProjectReframingProposalPage';
 import { BomRoutes } from './bom/BomRoutes';
 import { DashboardPlaceholder } from './shell/DashboardPlaceholder';
 import { ProjectWorkspaceLayout } from './shell/ProjectWorkspaceLayout';
@@ -17,6 +22,7 @@ export function App() {
         <Route path="/" element={<Navigate to="/projects" replace />} />
         <Route path="/dashboard" element={<DashboardPlaceholder />} />
         <Route path="/projects" element={<ShellHomeContent />} />
+        <Route path="/projects/reframing-proposal" element={<ProjectReframingProposalPage />} />
         <Route path="/catalog" element={<CatalogHome />} />
         <Route path="/catalog/results" element={<CatalogResults />} />
         <Route path="/catalog/parts/:partId" element={<CatalogPartPage />} />

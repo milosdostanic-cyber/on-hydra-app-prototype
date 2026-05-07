@@ -163,3 +163,18 @@ export function ContentModule() {
     </Space>
   );
 }
+
+export function ProjectReframingProposalModule() {
+  const { token } = theme.useToken();
+  return (
+    <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+      <PageBackButton to="/projects">Back to all projects</PageBackButton>
+      <Typography.Title level={3} style={{ margin: 0 }}>
+        Project Reframing Proposal
+      </Typography.Title>
+      <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
+        Proposal workspace (stub). Use this route for Project Reframing Proposal flow and content.
+      </Typography.Paragraph>
+    </Space>
+  );
+}

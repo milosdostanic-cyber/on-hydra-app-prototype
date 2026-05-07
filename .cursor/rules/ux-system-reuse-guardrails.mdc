@@ -1,0 +1,416 @@
+---
+description: Strict UX/UI system-reuse guardrails for safe prototyping and screen iteration
+alwaysApply: true
+---
+
+# Cursor UX/UI System Reuse Guardrails
+
+## Mission
+Operate as a system-preserving UX/UI prototyping and screen-iteration agent.
+
+Your goal is to improve UX and UI quality while protecting the existing design system, component library, token structure, and visual consistency of the product.
+
+You must not treat each new screen as a blank canvas. Before designing or coding, first understand the existing product patterns and reuse the closest applicable solution.
+
+---
+
+## Core Principle
+Reuse first. Improve carefully. Do not invent unless there is no acceptable existing option.
+
+The correct solution is usually not a new visual idea. The correct solution is usually the closest existing product pattern, improved only where necessary for clarity, hierarchy, usability, or flow.
+
+---
+
+## Mandatory Pre-Design Review
+Before designing or coding any page, screen, flow, or component-level UI, you must first inspect the existing project for similar UX patterns and reusable solutions.
+
+Look for:
+- similar pages
+- similar flows
+- similar forms
+- similar tables
+- similar cards
+- similar modals
+- similar drawers
+- similar empty states
+- similar error states
+- similar success states
+- similar CTAs
+- similar navigation or page structure
+- similar documentation or proposal pages
+- similar responsive/mobile behavior
+
+You must base the new solution on the closest existing pattern whenever possible.
+
+Do not start designing until you have identified what existing pattern, page, or component structure is the closest match.
+
+---
+
+## Screenshot / Reference Page Interpretation Rule
+If the user provides a screenshot, existing page, URL, or reference screen, use it to understand the intended outcome.
+
+Your job is to create the closest matching solution within the existing product system, while applying careful UX improvements.
+
+You may improve:
+- hierarchy
+- spacing consistency
+- section grouping
+- readability
+- CTA clarity
+- state clarity
+- flow explanation
+- content structure
+- alignment
+- scanability
+
+You must not radically change the intent, structure, or interaction model unless explicitly asked.
+
+If the screenshot contains something that should clearly be a button, input, tab, table, card, modal, drawer, alert, badge, dropdown, tooltip, or any other known UI element, use the existing Component Library equivalent.
+
+For this project, use Ant Design components wherever applicable.
+
+---
+
+## Hard Constraints
+- Use existing Ant Design components as-is where applicable.
+- Use existing approved project components as-is.
+- Use existing component library patterns before creating anything local.
+- Never create new core/shared components.
+- Never modify existing shared/core components.
+- Never modify shared component styles, structure, states, variants, token bindings, or behavior.
+- Use existing tokens as-is.
+- Use existing semantic tokens wherever applicable.
+- Never create new tokens.
+- Never modify existing tokens.
+- Never introduce new colors.
+- Never introduce new spacing values.
+- Never introduce new typography values.
+- Never introduce new radii, shadows, borders, or elevations.
+- Never use raw visual values unless explicitly instructed.
+- Never use one-off custom CSS for values that already exist as tokens.
+- Never hardcode colors, spacing, typography, radii, borders, shadows, opacity, or sizing when a token exists.
+- Never invent a new pattern if an acceptable existing one already exists.
+- Never introduce a new icon source or icon library.
+- Do not change unrelated screens.
+- Do not silently change shared patterns or shared behavior.
+- Do not guess through ambiguity.
+
+---
+
+## Component Library Rule
+When a UI element is needed, first check whether an existing Ant Design component or approved project component already solves it.
+
+For icons, always use the same icon source/library already used throughout the application. Before adding or changing any icon, inspect the project and confirm which icon library/source is currently used. Reuse that source only.
+
+Do not introduce a new icon library, SVG source, icon package, custom icon system, or one-off icon asset unless explicitly instructed.
+
+Examples:
+- Icon → use the existing project icon source/library already used in the app
+- Button → use existing Button / Ant Design Button
+- Input → use existing Input / Ant Design Input
+- Select → use existing Select / Ant Design Select
+- Table → use existing Table / Ant Design Table
+- Modal → use existing Modal / Ant Design Modal
+- Drawer → use existing Drawer / Ant Design Drawer
+- Tabs → use existing Tabs / Ant Design Tabs
+- Tooltip → use existing Tooltip / Ant Design Tooltip
+- Badge / Tag → use existing Badge or Tag
+- Alert → use existing Alert
+- Empty state → use existing Empty pattern/component
+- Form → use existing Form / Ant Design Form
+- Card → use existing Card pattern/component
+
+Do not recreate these manually with custom divs when the component library already provides the pattern.
+
+---
+
+## Token Usage Rule
+All visual styling must come from existing tokens or existing component styles.
+
+Use tokens for:
+- colors
+- background colors
+- text colors
+- border colors
+- spacing
+- gaps
+- padding
+- margins
+- typography
+- font sizes
+- font weights
+- line heights
+- border radius
+- shadows
+- elevations
+- opacity
+- sizing where tokenized
+
+For screen spacing between sections, groups, and components, always reuse spacing already used in the same or most similar existing situation.
+
+Spacing must always be applied through existing spacing/layout tokens. Never hardcode spacing values anywhere.
+
+This applies to:
+- section spacing
+- card spacing
+- component gaps
+- form spacing
+- table spacing
+- page padding
+- layout gutters
+- vertical rhythm
+- responsive spacing
+
+If a needed value does not appear to exist, do not invent it.
+
+Instead:
+1. search for the closest existing token
+2. reuse the closest acceptable semantic token
+3. if no acceptable token exists, stop and explain the gap
+4. recommend whether this should remain local or requires design-system discussion
+
+---
+
+## Code Implementation Rule
+In code, always import and use existing components, text styles, tokens, utilities, and theme references from the libraries already available in the codebase.
+
+Do not hardcode text styling, component styling, token values, or visual behavior through custom CSS when the project already exposes a component, token, theme variable, utility, or typography abstraction for it.
+
+Do not create custom UI from scratch if a component exists.
+
+Do not write custom styles that duplicate existing component behavior.
+
+Do not hardcode raw visual values or style rules such as:
+- `#ffffff`
+- `#000000`
+- `16px`
+- `24px`
+- `8px`
+- `font-size: 14px`
+- `font-weight: 600`
+- `line-height: 20px`
+- `color: ...`
+- `background: ...`
+- `border-radius: 6px`
+- `box-shadow: ...`
+- `rgba(...)`
+- custom CSS classes that duplicate existing component/token behavior
+
+Instead, use:
+- existing Ant Design components
+- existing project components
+- existing typography/text components or text styles
+- existing token references
+- existing CSS variables exposed by the system
+- existing theme variables
+- existing utility abstractions already used in the repo
+- existing component props, variants, and states
+
+Before adding custom code, verify that the same pattern does not already exist elsewhere in the repo.
+
+If a visual result requires custom CSS, first check whether the same result can be achieved by importing and composing existing components, tokens, theme variables, or utilities. Only use custom CSS for layout/composition glue when there is no existing system abstraction, and never for raw visual values.
+
+---
+
+## Existing Pattern Reuse Rule
+Before implementing, search the codebase for similar screens and patterns.
+
+Reuse:
+- layout structure
+- section structure
+- component composition
+- table patterns
+- form patterns
+- modal patterns
+- CTA patterns
+- empty/error/loading/success states
+- token usage
+- naming conventions
+- responsive behavior
+
+If a similar screen exists, use it as the starting point.
+
+If multiple similar patterns exist, choose the one that is:
+1. most recent
+2. most consistent with the current design system
+3. closest to the requested use case
+4. already used in production-like flows
+
+---
+
+## Visual Consistency Check
+After generating or updating a screen, visually inspect the result against existing product patterns.
+
+Check for:
+- inconsistent spacing
+- raw colors
+- inconsistent typography
+- wrong button hierarchy
+- custom-looking components
+- mismatched card styling
+- inconsistent borders
+- inconsistent shadows
+- inconsistent radius
+- alignment issues
+- inconsistent empty/error/success states
+- over-customized layouts
+- visual drift from Ant Design/project patterns
+
+If something visually deviates, fix it by reusing existing tokens/components/patterns, not by inventing new values.
+
+---
+
+## UX Improvement Rule
+You may improve UX, but improvements must be conservative and system-compatible.
+
+Allowed UX improvements:
+- clearer hierarchy
+- better grouping
+- clearer section labels
+- better CTA order
+- improved progressive disclosure
+- clearer state messaging
+- better empty/error/success feedback
+- reduced duplication
+- better scanability
+- better alignment with existing product flows
+
+Not allowed unless explicitly requested:
+- completely new interaction models
+- new navigation systems
+- new visual language
+- new design system concepts
+- new shared components
+- large structural changes outside the requested screen
+
+---
+
+## CTA Rule
+Keep one clear primary CTA per context.
+
+Secondary actions must not visually compete with the primary action.
+
+Destructive actions must never appear primary unless explicitly intended.
+
+If multiple CTAs exist, define:
+- primary action
+- secondary action
+- tertiary/helper action
+- destructive action, if any
+
+Use existing button variants from the component library.
+
+---
+
+## State Rule
+Always consider relevant states:
+- default
+- hover, if applicable
+- active, if applicable
+- focus, if applicable
+- loading
+- empty
+- error
+- success
+- disabled
+- read-only
+- no results
+- missing data
+- permission denied, if relevant
+- unsaved changes, if relevant
+
+Use existing project/Ant Design state patterns.
+
+Do not create new state styling manually.
+
+---
+
+## Scope Rule
+Only change the requested screen, page, or flow.
+
+If the request impacts shared behavior, shared components, global tokens, navigation, layout shell, or other screens, stop and ask first.
+
+Never modify shared/core system files unless explicitly instructed.
+
+---
+
+## Allowed Creative Exception
+If no acceptable existing pattern exists, you may create a new local screen-level composition by combining existing atoms, Ant Design components, or approved existing project components.
+
+This is allowed only if:
+- existing shared/core components remain unchanged
+- existing tokens remain unchanged
+- the solution stays local to the requested screen/flow
+- the solution is clearly treated as a local prototype
+- the solution is not promoted as a new shared system component
+- the implementation still uses existing tokens and approved components
+
+Document this clearly in the response.
+
+---
+
+## Ambiguity / Uncertainty Rule
+If requirements, component choice, token usage, spacing, layout behavior, or pattern selection are unclear, do not guess and do not implement.
+
+Ask for clarification before implementation.
+
+If useful, present 2–3 grounded options based on existing patterns, recommend one, and wait for direction.
+
+Each option should explain:
+- which existing pattern it uses
+- which components it reuses
+- what UX tradeoff it makes
+- whether it is local or has broader impact
+
+---
+
+## Output Rule
+When generating or iterating, briefly state:
+- which existing pattern/page/component was reused
+- which existing components were used
+- which existing tokens were used or preserved
+- whether any acceptable existing pattern was not found
+- whether the solution is local or has broader product impact
+- whether shared/core components remain unchanged
+- whether shared tokens remain unchanged
+- whether any raw values were avoided or found
+
+Keep this report short, but always include it.
+
+---
+
+## Review Checklist Before Finalizing
+Before finalizing any implementation, verify:
+
+- [ ] Existing similar patterns were checked first
+- [ ] Existing Ant Design/project components were used
+- [ ] Existing app icon library/source was identified and reused
+- [ ] No new icon library, SVG source, or custom icon system was introduced
+- [ ] No new core/shared components were created
+- [ ] No shared/core components were modified
+- [ ] Existing tokens were used
+- [ ] Existing spacing/layout tokens were used for all section and component spacing
+- [ ] Spacing was reused from the same or most similar existing pattern
+- [ ] Text styling was pulled from existing typography/text styles or components
+- [ ] Component styling was pulled from existing components, props, variants, tokens, or theme variables
+- [ ] No new tokens were created
+- [ ] No raw visual values were introduced
+- [ ] No hardcoded spacing values were introduced
+- [ ] No unrelated screens were changed
+- [ ] CTA hierarchy is clear
+- [ ] Relevant states were considered
+- [ ] The result visually matches the existing product system
+- [ ] Any local-only composition is clearly documented
+
+---
+
+## Enforcement
+Prefer reuse over invention.
+
+Prefer consistency over novelty.
+
+Prefer local safe iteration over broad system change.
+
+Protect the design system first.
+
+If the requested solution requires breaking these rules, stop and explain the conflict before proceeding.
