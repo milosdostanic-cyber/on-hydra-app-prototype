@@ -12,6 +12,7 @@ import {
   UnorderedListOutlined,
   UserOutlined,
 } from '@ant-design/icons';
+import { Collapse } from 'antd';
 
 import { CloseOutlined, UploadOutlined } from '@ant-design/icons';
 
@@ -484,9 +485,13 @@ export function ProjectReframingProposalPage() {
                             <Typography.Text style={{ fontSize: token.fontSize }}>
                               {item.price}
                             </Typography.Text>
-                            <Typography.Text type="secondary" style={{ fontSize: token.fontSize }}>
+                            <Button
+                              type="link"
+                              size="small"
+                              style={{ paddingInline: 0, alignSelf: 'flex-start' }}
+                            >
                               + Compare
-                            </Typography.Text>
+                            </Button>
                           </Space>
                         </Flex>
                       </Card>
@@ -1066,62 +1071,75 @@ export function ProjectReframingProposalPage() {
             </Flex>
           </Space>
 
-          {phases.map((phase) => (
-            <Card
-              key={phase.id}
-              style={{ background: phaseSurface }}
-              styles={{
-                header: { background: 'transparent' },
-                body: { background: 'transparent' },
-              }}
-              title={
-                <Flex align="center" gap={token.marginSM}>
-                  <Tag color="processing">{phase.id}</Tag>
-                  <Typography.Text
-                    strong
-                    style={{ fontSize: token.fontSizeLG, color: token.colorTextHeading }}
-                  >
-                    {phase.title}
-                  </Typography.Text>
-                </Flex>
-              }
-              extra={<Typography.Text type="secondary">{phase.description}</Typography.Text>}
-            >
-              <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
-                {phase.steps.map((step) => (
-                  <Card
-                    key={step.id}
-                    size="small"
-                    style={{ background: token.colorBgContainer }}
-                    title={
-                      <Space size={token.marginSM}>
-                        <Typography.Text strong>{step.id}</Typography.Text>
-                        <Typography.Text>{step.title}</Typography.Text>
-                      </Space>
-                    }
-                    extra={<Tag color={statusColorByType[step.status]}>{step.status}</Tag>}
-                  >
-                    <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
-                      {renderStepPreview(step.id)}
-
-                      <Row gutter={[token.marginMD, token.marginMD]}>
-                        {step.notes.map((note) => (
-                          <Col key={note.label} xs={24} md={12}>
-                            <Card size="small" style={{ background: token.colorFillAlter }}>
-                              <Space orientation="vertical" size={token.marginXS}>
-                                <Typography.Text type="secondary">{note.label}</Typography.Text>
-                                <Typography.Paragraph style={{ margin: 0 }}>{note.text}</Typography.Paragraph>
+          <Space orientation="vertical" size={token.margin} style={{ width: '100%' }}>
+            {phases.map((phase) => (
+              <Card
+                key={phase.id}
+                style={{
+                  background: phaseSurface,
+                  boxShadow: token.boxShadowTertiary,
+                  border: 'none',
+                }}
+                styles={{ body: { padding: 0 } }}
+              >
+                <Collapse
+                  defaultActiveKey={phase.id === (phases[0]?.id ?? 'PHASE 01') ? [phase.id] : []}
+                  size="large"
+                  ghost
+                  bordered={false}
+                  items={[
+                    {
+                      key: phase.id,
+                      label: (
+                        <Flex align="center" gap={token.marginSM}>
+                          <Tag color="processing">{phase.id}</Tag>
+                          <Typography.Text strong style={{ fontSize: token.fontSizeLG, color: token.colorTextHeading }}>
+                            {phase.title}
+                          </Typography.Text>
+                        </Flex>
+                      ),
+                      extra: <Typography.Text type="secondary">{phase.description}</Typography.Text>,
+                      children: (
+                        <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
+                          {phase.steps.map((step) => (
+                            <Card
+                              key={step.id}
+                              size="small"
+                              style={{ background: token.colorBgContainer }}
+                              title={
+                                <Space size={token.marginSM}>
+                                  <Typography.Text strong>{step.id}</Typography.Text>
+                                  <Typography.Text>{step.title}</Typography.Text>
+                                </Space>
+                              }
+                              extra={<Tag color={statusColorByType[step.status]}>{step.status}</Tag>}
+                            >
+                              <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
+                                {renderStepPreview(step.id)}
+                                <Row gutter={[token.marginMD, token.marginMD]}>
+                                  {step.notes.map((note) => (
+                                    <Col key={note.label} xs={24} md={12}>
+                                      <Card size="small" style={{ background: token.colorFillAlter }}>
+                                        <Space orientation="vertical" size={token.marginXS}>
+                                          <Typography.Text type="secondary">{note.label}</Typography.Text>
+                                          <Typography.Paragraph style={{ margin: 0 }}>{note.text}</Typography.Paragraph>
+                                        </Space>
+                                      </Card>
+                                    </Col>
+                                  ))}
+                                </Row>
                               </Space>
                             </Card>
-                          </Col>
-                        ))}
-                      </Row>
-                    </Space>
-                  </Card>
-                ))}
-              </Space>
-            </Card>
-          ))}
+                          ))}
+                        </Space>
+                      ),
+                    },
+                  ]}
+                  style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}
+                />
+              </Card>
+            ))}
+          </Space>
 
           <Card
             style={{ background: token.colorBgContainer }}

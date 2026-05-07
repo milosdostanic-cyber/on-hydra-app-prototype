@@ -9,6 +9,8 @@ body,
 body {
   font-family: var(--hydra-font-family);
   margin: 0;
+  /* Prevent layout jump when page starts/stops vertical scrolling (e.g. accordion expand/collapse). */
+  scrollbar-gutter: stable;
 }
 
 /*
