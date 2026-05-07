@@ -573,7 +573,7 @@ export function ProjectReframingProposalPage() {
         <Card size="small" style={previewCardStyle}>
           <Flex style={{ minHeight: previewHeight }}>
             {renderShellSidebar('bom')}
-            <Flex vertical style={{ flex: 1, paddingInline: token.paddingLG, paddingBlock: token.paddingMD }} gap={token.marginMD}>
+            <Flex vertical style={{ flex: 1 }} gap={token.marginLG}>
               <Flex
                 justify="space-between"
                 align="center"
@@ -590,36 +590,38 @@ export function ProjectReframingProposalPage() {
                   options={[{ value: 'No project selected', label: 'No project selected' }]}
                 />
               </Flex>
-              <Card size="small" style={{ borderColor: token.colorError, background: token.colorErrorBg }}>
-                <Typography.Text type="danger">This action requires a project to continue.</Typography.Text>
-              </Card>
-              <Card size="small" style={{ borderStyle: 'dashed', borderColor: token.colorErrorBorder }}>
-                <Space direction="vertical" size={token.marginSM} style={{ width: '100%', textAlign: 'center' }}>
-                  <Flex
-                    align="center"
-                    justify="center"
-                    style={{
-                      width: token.controlHeight * 1.5,
-                      height: token.controlHeight * 1.5,
-                      background: token.colorErrorBg,
-                      border: `${token.lineWidth}px ${token.lineType} ${token.colorErrorBorder}`,
-                      borderRadius: '50%',
-                      marginBlock: token.marginSM,
-                      marginInline: 'auto',
-                    }}
-                  >
-                    <UploadOutlined style={{ fontSize: token.fontSizeXL, color: token.colorError }} />
-                  </Flex>
-                  <Typography.Title level={3} style={{ margin: 0 }}>Add to BOM</Typography.Title>
-                  <Typography.Text type="secondary">BOMs, submittals, and approvals live inside a project.</Typography.Text>
-                  <Flex justify="center" gap={token.marginSM}>
-                    <Button size="small" type="primary">
-                      Continue
-                    </Button>
-                    <Button size="small">Go back</Button>
-                  </Flex>
-                </Space>
-              </Card>
+              <Flex vertical gap={token.marginMD} style={{ paddingInline: token.paddingLG }}>
+                <Card size="small" style={{ borderColor: token.colorError, background: token.colorErrorBg }}>
+                  <Typography.Text type="danger">This action requires a project to continue.</Typography.Text>
+                </Card>
+                <Card size="small" style={{ borderStyle: 'dashed', borderColor: token.colorErrorBorder }}>
+                  <Space direction="vertical" size={token.marginSM} style={{ width: '100%', textAlign: 'center' }}>
+                    <Flex
+                      align="center"
+                      justify="center"
+                      style={{
+                        width: token.controlHeight * 1.5,
+                        height: token.controlHeight * 1.5,
+                        background: token.colorErrorBg,
+                        border: `${token.lineWidth}px ${token.lineType} ${token.colorErrorBorder}`,
+                        borderRadius: '50%',
+                        marginBlock: token.marginSM,
+                        marginInline: 'auto',
+                      }}
+                    >
+                      <UploadOutlined style={{ fontSize: token.fontSizeXL, color: token.colorError }} />
+                    </Flex>
+                    <Typography.Title level={3} style={{ margin: 0 }}>Add to BOM</Typography.Title>
+                    <Typography.Text type="secondary">BOMs, submittals, and approvals live inside a project.</Typography.Text>
+                    <Flex justify="center" gap={token.marginSM}>
+                      <Button size="small" type="primary">
+                        Continue
+                      </Button>
+                      <Button size="small">Go back</Button>
+                    </Flex>
+                  </Space>
+                </Card>
+              </Flex>
             </Flex>
           </Flex>
         </Card>
@@ -797,7 +799,7 @@ export function ProjectReframingProposalPage() {
         <Card size="small" style={previewCardStyle}>
           <Flex style={{ minHeight: previewHeight }}>
             {renderShellSidebar('bom')}
-            <Flex vertical style={{ flex: 1, paddingInline: token.paddingLG, paddingBlock: token.paddingMD }} gap={token.marginMD}>
+            <Flex vertical style={{ flex: 1 }} gap={token.marginLG}>
               <Flex
                 justify="space-between"
                 align="center"
@@ -814,48 +816,50 @@ export function ProjectReframingProposalPage() {
                   options={[{ value: 'Downtown Office Tower', label: 'Downtown Office Tower' }]}
                 />
               </Flex>
-              <Card size="small" style={{ borderColor: token.colorSuccess, background: token.colorSuccessBg }}>
-                <Flex align="center" gap={token.marginXS}>
-                  <CheckCircleOutlined style={{ color: token.colorSuccess }} />
-                  <Typography.Text style={{ color: token.colorSuccessText }}>
-                    3 items from your selection moved into this project
-                  </Typography.Text>
+              <Flex vertical gap={token.marginMD} style={{ paddingInline: token.paddingLG }}>
+                <Card size="small" style={{ borderColor: token.colorSuccess, background: token.colorSuccessBg }}>
+                  <Flex align="center" gap={token.marginXS}>
+                    <CheckCircleOutlined style={{ color: token.colorSuccess }} />
+                    <Typography.Text style={{ color: token.colorSuccessText }}>
+                      3 items from your selection moved into this project
+                    </Typography.Text>
+                  </Flex>
+                </Card>
+                <Flex justify="space-between" style={{ marginBottom: token.marginXS }}>
+                  <Typography.Text strong>BOM</Typography.Text>
+                  <Typography.Text type="secondary">3 items · auto-saved</Typography.Text>
+                  <Button size="small" type="primary">
+                    + Add items
+                  </Button>
                 </Flex>
-              </Card>
-              <Flex justify="space-between" style={{ marginBottom: token.marginXS }}>
-                <Typography.Text strong>BOM</Typography.Text>
-                <Typography.Text type="secondary">3 items · auto-saved</Typography.Text>
-                <Button size="small" type="primary">
-                  + Add items
-                </Button>
+                <Table
+                  size="small"
+                  pagination={false}
+                  columns={[
+                    { title: 'Item', dataIndex: 'item', key: 'item' },
+                    { title: 'Qty', dataIndex: 'qty', key: 'qty', width: 80 },
+                    { title: 'Unit', dataIndex: 'unit', key: 'unit', width: 80 },
+                    {
+                      title: 'Code',
+                      dataIndex: 'code',
+                      key: 'code',
+                      width: 100,
+                      render: (value: string) => (
+                        <Flex align="center" gap={token.marginXXS}>
+                          <Typography.Text>{value}</Typography.Text>
+                          <CheckCircleOutlined style={{ color: token.colorSuccess }} />
+                        </Flex>
+                      ),
+                    },
+                    { title: 'Status', dataIndex: 'status', key: 'status', width: 100 },
+                  ]}
+                  dataSource={[
+                    { key: '1', item: 'ABU66Z · Adjustable Base', qty: '2', unit: 'EA', code: 'IBC', status: 'Draft' },
+                    { key: '2', item: 'ABR902 · Adjustable Brace', qty: '4', unit: 'EA', code: 'IBC', status: 'Draft' },
+                    { key: '3', item: 'HDU26 · Heavy Duty U', qty: '6', unit: 'EA', code: 'IBC', status: 'Draft' },
+                  ]}
+                />
               </Flex>
-              <Table
-                size="small"
-                pagination={false}
-                columns={[
-                  { title: 'Item', dataIndex: 'item', key: 'item' },
-                  { title: 'Qty', dataIndex: 'qty', key: 'qty', width: 80 },
-                  { title: 'Unit', dataIndex: 'unit', key: 'unit', width: 80 },
-                  {
-                    title: 'Code',
-                    dataIndex: 'code',
-                    key: 'code',
-                    width: 100,
-                    render: (value: string) => (
-                      <Flex align="center" gap={token.marginXXS}>
-                        <Typography.Text>{value}</Typography.Text>
-                        <CheckCircleOutlined style={{ color: token.colorSuccess }} />
-                      </Flex>
-                    ),
-                  },
-                  { title: 'Status', dataIndex: 'status', key: 'status', width: 100 },
-                ]}
-                dataSource={[
-                  { key: '1', item: 'ABU66Z · Adjustable Base', qty: '2', unit: 'EA', code: 'IBC', status: 'Draft' },
-                  { key: '2', item: 'ABR902 · Adjustable Brace', qty: '4', unit: 'EA', code: 'IBC', status: 'Draft' },
-                  { key: '3', item: 'HDU26 · Heavy Duty U', qty: '6', unit: 'EA', code: 'IBC', status: 'Draft' },
-                ]}
-              />
             </Flex>
           </Flex>
         </Card>
@@ -916,7 +920,7 @@ export function ProjectReframingProposalPage() {
         <Card size="small" style={previewCardStyle}>
           <Flex style={{ minHeight: previewHeight }}>
             {renderShellSidebar('bom')}
-            <Flex vertical style={{ flex: 1, paddingInline: token.paddingLG, paddingBlock: token.paddingMD }} gap={token.marginMD}>
+            <Flex vertical style={{ flex: 1 }} gap={token.marginLG}>
               <Flex
                 justify="space-between"
                 align="center"
@@ -933,7 +937,7 @@ export function ProjectReframingProposalPage() {
                   options={[{ value: 'Downtown Office Tower', label: 'Downtown Office Tower' }]}
                 />
               </Flex>
-              <Flex gap={token.marginMD} align="stretch">
+              <Flex gap={token.marginMD} align="stretch" style={{ paddingInline: token.paddingLG }}>
                 <Card size="small" style={{ width: token.controlHeightLG * 8.5, minWidth: token.controlHeight * 3 }}>
                   <Space direction="vertical" size={token.marginXXS} style={{ width: '100%' }}>
                     <Input size="small" prefix={<SearchOutlined />} placeholder="Search..." />
@@ -986,7 +990,7 @@ export function ProjectReframingProposalPage() {
       <Card size="small" style={previewCardStyle}>
         <Flex style={{ minHeight: previewHeight }}>
           {renderShellSidebar('catalog')}
-          <Flex vertical style={{ flex: 1, paddingInline: token.paddingLG, paddingBlock: token.paddingMD }} gap={token.marginMD}>
+          <Flex vertical style={{ flex: 1 }} gap={token.marginLG}>
             <Flex
               justify="space-between"
               align="center"
@@ -1003,23 +1007,25 @@ export function ProjectReframingProposalPage() {
                 options={[{ value: 'No project selected', label: 'No project selected' }]}
               />
             </Flex>
-            <Space direction="vertical" size={token.marginXXS}>
-              <Typography.Text strong style={{ fontSize: token.fontSizeLG }}>
-                Explore mode
-              </Typography.Text>
-              <Typography.Text type="secondary">User cleared the project from the switcher.</Typography.Text>
-              <Typography.Text type="secondary">
-                Catalog and other global modules stay available; project-gated modules show commit flow again if opened without a project.
-              </Typography.Text>
-            </Space>
-            <Card size="small" style={{ borderColor: token.colorSuccess, background: token.colorSuccessBg }}>
-              <Flex align="center" gap={token.marginXS}>
-                <CheckCircleOutlined style={{ color: token.colorSuccess }} />
-                <Typography.Text style={{ color: token.colorSuccessText }}>
-                  Explore-first loop closed — user can re-enter the flow whenever they add a new working set.
+            <Flex vertical gap={token.marginMD} style={{ paddingInline: token.paddingLG }}>
+              <Space direction="vertical" size={token.marginXXS}>
+                <Typography.Text strong style={{ fontSize: token.fontSizeLG }}>
+                  Explore mode
                 </Typography.Text>
-              </Flex>
-            </Card>
+                <Typography.Text type="secondary">User cleared the project from the switcher.</Typography.Text>
+                <Typography.Text type="secondary">
+                  Catalog and other global modules stay available; project-gated modules show commit flow again if opened without a project.
+                </Typography.Text>
+              </Space>
+              <Card size="small" style={{ borderColor: token.colorSuccess, background: token.colorSuccessBg }}>
+                <Flex align="center" gap={token.marginXS}>
+                  <CheckCircleOutlined style={{ color: token.colorSuccess }} />
+                  <Typography.Text style={{ color: token.colorSuccessText }}>
+                    Explore-first loop closed — user can re-enter the flow whenever they add a new working set.
+                  </Typography.Text>
+                </Flex>
+              </Card>
+            </Flex>
           </Flex>
         </Flex>
       </Card>
