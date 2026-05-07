@@ -238,6 +238,102 @@ If multiple similar patterns exist, choose the one that is:
 
 ---
 
+## Figma-to-Code Parity Verification Protocol
+
+Whenever a screen or component must be 1:1 with a Figma design — or after any substantive UI change — run this protocol in full before closing the task.
+
+### Step 1 — Read the token source files
+
+Before comparing anything, read the actual token definition files to know the real pixel value behind each token name:
+
+- `src/theme/hydraTypography.ts` — all font sizes, line heights, font weights (base, small, large, heading 1–5, XL)
+- `src/theme/hydraAntdTypography.ts` — how those map into antd token names (`fontSizeSM`, `fontSizeLG`, `fontSizeHeading4`, etc.)
+- `src/theme/hydraAlias.ts` / `src/theme/antdTheme.ts` — spacing tokens (`paddingXS`, `paddingSM`, `paddingMD`, `paddingLG`, `marginXXS`, `marginXS`, `marginSM`, `marginMD`, `marginLG`, `marginXL`) and their px values
+
+Build a mental (or inline comment) reference table, for example:
+
+| Token | px |
+|---|---|
+| `token.fontSizeSM` | 12 |
+| `token.fontSize` | 14 |
+| `token.fontSizeLG` | 16 |
+| `token.fontSizeXL` / `fontSizeHeading4` | 20 |
+| `token.fontSizeHeading5` | 16 |
+| `token.marginXXS` | 4 |
+| `token.marginXS` | 8 |
+| `token.marginSM` | 12 |
+| `token.paddingSM` | 12 |
+| `token.paddingMD` | 20 |
+| `token.paddingLG` | 24 |
+| `token.marginLG` | 24 |
+
+Never assume a token's px value from memory. Always verify against the source file.
+
+### Step 2 — Get exact Figma measurements
+
+Use the Figma MCP (`get_design_context` with `nodeId` from the Figma URL) to retrieve the CSS output for each node. The output contains exact Tailwind-style classes, for example:
+
+- `px-[24px]` → `paddingInline: 24px`
+- `gap-[4px]` → gap: 4px
+- `text-[length:var(--typography/font-size/fontsizeheading4,20px)]` → 20px heading 4
+- `border-b border-[#f0f0f0]` → bottom border using `colorBorderSecondary`
+
+If Figma MCP is unavailable, use the most recently captured design context from the existing documentation or screenshots, and document any assumption explicitly.
+
+### Step 3 — Build a per-element comparison table
+
+For every element that carries spacing, font size, or color — create a comparison:
+
+| Element | Figma value | Token equivalent | Code (current) | Match? |
+|---|---|---|---|---|
+| Topbar padding | `px-24 py-12` | `paddingInline: paddingLG, paddingBlock: paddingSM` | `padding: paddingSM` | ✗ |
+| Greeting title | `fontSizeHeading4 = 20px` | `Typography.Title level={4}` | `level={5}` | ✗ |
+| Section gap | `gap-[24px]` | `gap={token.marginLG}` | `gap={token.marginSM}` | ✗ |
+| Label font | `text-[14px]` | `token.fontSize` (no override) | `fontSizeSM` | ✗ |
+
+Do not skip any property. Spacing, font size, font weight, color, border, and gap must each be checked.
+
+### Step 4 — Fix systematically, one element at a time
+
+For every mismatch found in Step 3:
+
+1. Identify the correct token from the table built in Step 1.
+2. Replace the incorrect value in code with the correct token reference.
+3. Never introduce raw px or hex values to match Figma — always use the token.
+4. If the correct Figma value has no matching token, stop and document the gap; do not invent a new value.
+
+### Step 5 — Verify the component choice against Figma
+
+Beyond spacing and font sizes, also confirm that the correct Ant Design component is used for each element:
+
+- Figma shows an `Alert` node → use `<Alert>`, not a styled `<Card>`.
+- Figma shows a `Select` → use `<Select>`, not a custom div.
+- Figma shows a `Table` → use `<Table>`, not a manually built list.
+
+The Figma design context labels nodes by component type. Match the component, not just the visual appearance.
+
+### Step 6 — Run TypeScript check and linter
+
+After all fixes:
+
+```bash
+npx tsc --noEmit
+```
+
+And run `ReadLints` on the edited file. Zero errors required before closing the task.
+
+### When to run this protocol
+
+Run the full protocol whenever:
+- the user says "check parity", "1:1 check", or "compare with Figma"
+- a screen is created or significantly changed
+- spacing, font sizes, or component choices are questioned
+- after any pass where you have made visual changes without a prior Figma comparison
+
+Do not skip steps. A partial check is not a parity check.
+
+---
+
 ## Visual Consistency Check
 After generating or updating a screen, visually inspect the result against existing product patterns.
 
