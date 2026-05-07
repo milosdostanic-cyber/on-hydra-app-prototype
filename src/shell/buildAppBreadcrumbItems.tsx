@@ -4,6 +4,7 @@ import { bomItemById, bomProjectTitleById } from '../bom/data/mockData';
 import type { BreadcrumbProps } from '../ui/antd';
 
 import { projectTitleById } from './projectSeed';
+import { UMBRELLA_COMPANY_LABEL } from './umbrellaCompany';
 
 type BreadcrumbSeg = { label: string; to?: string };
 
@@ -27,7 +28,18 @@ function toItems(segments: BreadcrumbSeg[]): BreadcrumbProps['items'] {
 
 export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] {
   const { pathname, projectId, partId, itemId, swapRowId, swapPartNumber } = a;
+
+  const dashFlat = pathname === '/dashboard' || pathname === '/dashboard/';
+  if (dashFlat) {
+    return toItems([{ label: UMBRELLA_COMPANY_LABEL, to: '/dashboard' }, { label: 'Home' }]);
+  }
+
   const segs: BreadcrumbSeg[] = [{ label: 'App', to: '/projects' }];
+
+  if (pathname.startsWith('/projects/reframing-proposal')) {
+    segs.push({ label: 'Project Reframing Proposal' });
+    return toItems(segs);
+  }
 
   if (pathname.startsWith('/catalog')) {
     segs.push({ label: 'Catalog', to: pathname !== '/catalog' ? '/catalog' : undefined });
@@ -62,11 +74,6 @@ export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] 
     if (pathname.includes('/seis-brace')) segs.push({ label: 'SeisBrace' });
     else if (pathname.includes('/sales-brace')) segs.push({ label: 'Spec' });
     else if (pathname.includes('/submittal')) segs.push({ label: 'Submittal' });
-    return toItems(segs);
-  }
-
-  if (pathname.startsWith('/dashboard')) {
-    segs.push({ label: 'Homepage' });
     return toItems(segs);
   }
 

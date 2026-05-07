@@ -1,0 +1,747 @@
+import {
+  CalculatorOutlined,
+  FileTextOutlined,
+  GlobalOutlined,
+  InboxOutlined,
+  MoreOutlined,
+  PlusOutlined,
+  RightOutlined,
+  SearchOutlined,
+  StarFilled,
+  StarOutlined,
+  UnorderedListOutlined,
+} from '@ant-design/icons';
+import { useEffect, useMemo, useState, type Key, type ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { mockBomProjects } from '../bom/data/mockData';
+import { useActiveProject } from '../context/ActiveProjectContext';
+import { useSubmittalDraft } from '../context/SubmittalDraftContext';
+import {
+  AppSearchInput,
+  Button,
+  Card,
+  Col,
+  Dropdown,
+  Empty,
+  Flex,
+  Form,
+  Input,
+  Modal,
+  Pagination,
+  Row,
+  Space,
+  Table,
+  Tabs,
+  Typography,
+  theme,
+} from '../ui/antd';
+import type { MenuProps, TableColumnsType, TabsProps } from '../ui/antd';
+
+import { hydraBaseStrong } from '../theme/hydraTypography';
+import { CrossProjectOverview } from './CrossProjectOverview';
+import { PROJECT_SEED_ROWS, type ProjectRow } from './projectSeed';
+import {
+  UMBRELLA_COMPANY_LABEL,
+  UMBRELLA_COMPANY_SLUG,
+  flatProjectWorkspacePath,
+} from './umbrellaCompany';
+
+function hashSeed(key: string): number {
+  let h = 0;
+  for (let i = 0; i < key.length; i++) {
+    h = (h << 5) - h + key.charCodeAt(i);
+    h |= 0;
+  }
+  return Math.abs(h);
+}
+
+function takeCount(seed: number, salt: number, min: number, max: number): number {
+  const span = max - min + 1;
+  return min + (seed + salt * 17) % span;
+}
+
+const HOME_HUB_PROJECTS_PAGE_SIZE = 10;
+
+function bomCountForUmbrellaProject(projectKey: string): number {
+  return mockBomProjects.filter((p) => p.projectId === projectKey).length;
+}
+
+type ModuleRollupCardProps = {
+  title: string;
+  countLabel: string;
+  icon: ReactNode;
+  onNavigate: () => void;
+};
+
+/** Dense clickable module card — only used inside expanded project rows. */
+function ModuleRollupCard({ title, countLabel, icon, onNavigate }: ModuleRollupCardProps) {
+  const { token } = theme.useToken();
+  const label = `Open ${title} module`;
+  return (
+    <Card
+      size="small"
+      bordered
+      hoverable
+      role="button"
+      tabIndex={0}
+      aria-label={label}
+      styles={{
+        root: {
+          cursor: 'pointer',
+          borderColor: token.colorBorderSecondary,
+          transition: `box-shadow ${token.motionDurationMid}, border-color ${token.motionDurationMid}`,
+        },
+        body: { padding: token.paddingSM },
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onNavigate();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          onNavigate();
+        }
+      }}
+    >
+      <Flex vertical gap={token.marginXS}>
+        <Flex align="flex-start" gap={token.marginSM}>
+          <span
+            aria-hidden
+            style={{
+              color: token.colorPrimary,
+              fontSize: token.fontSizeHeading4,
+              lineHeight: 1,
+              flexShrink: 0,
+            }}
+          >
+            {icon}
+          </span>
+          <Flex vertical gap={token.marginXXS} style={{ flex: 1, minWidth: 0 }}>
+            <Typography.Text strong ellipsis={{ tooltip: title }}>
+              {title}
+            </Typography.Text>
+            <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }} ellipsis={{ tooltip: countLabel }}>
+              {countLabel}
+            </Typography.Text>
+          </Flex>
+        </Flex>
+        <Flex justify="flex-end" align="center" gap={token.marginXXS}>
+          <span
+            style={{
+              color: token.colorPrimary,
+              fontSize: token.fontSizeSM,
+              userSelect: 'none',
+              textDecoration: 'underline',
+              textDecorationColor: token.colorPrimaryBorder,
+              textUnderlineOffset: 3,
+            }}
+          >
+            Open module <RightOutlined style={{ fontSize: token.fontSizeSM }} aria-hidden />
+          </span>
+        </Flex>
+      </Flex>
+    </Card>
+  );
+}
+
+/** Roll-up counts as module entry cards — only rendered inside an expanded table row. */
+function ProjectModuleRollupCards({ project }: { project: ProjectRow }) {
+  const { token } = theme.useToken();
+  const navigate = useNavigate();
+  const { setProjectId } = useActiveProject();
+  const { countForProject } = useSubmittalDraft();
+  const pid = project.key;
+  const seed = hashSeed(pid);
+  const bomCount = useMemo(() => bomCountForUmbrellaProject(pid), [pid]);
+  const specCount = takeCount(seed, 2, 0, 12);
+  const seisBraceCount = takeCount(seed, 1, 1, 5);
+  const draftSubmittals = countForProject(pid);
+  const submittalPackagesCount =
+    draftSubmittals > 0 ? draftSubmittals : takeCount(seed, 3, 1, 4);
+
+  const go = (path: 'bom' | 'sales-brace' | 'seis-brace' | 'submittal') => {
+    setProjectId(pid);
+    if (path === 'bom') {
+      navigate('/bom');
+      return;
+    }
+    navigate(flatProjectWorkspacePath(pid, path));
+  };
+
+  return (
+    <Flex vertical gap={token.marginXS} style={{ width: '100%' }}>
+      <Flex vertical gap={2}>
+        <Typography.Title level={5} style={{ margin: 0, lineHeight: 1.35 }}>
+          Modules
+        </Typography.Title>
+        <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+          Open a workspace for this job site
+        </Typography.Text>
+      </Flex>
+      <Row gutter={[token.marginSM, token.marginSM]}>
+        <Col xs={24} sm={12} xl={6}>
+          <ModuleRollupCard
+            title="BOM"
+            icon={<UnorderedListOutlined />}
+            countLabel={`${bomCount} BOM${bomCount === 1 ? '' : 's'}`}
+            onNavigate={() => go('bom')}
+          />
+        </Col>
+        <Col xs={24} sm={12} xl={6}>
+          <ModuleRollupCard
+            title="Spec"
+            icon={<FileTextOutlined />}
+            countLabel={`${specCount} spec item${specCount === 1 ? '' : 's'}`}
+            onNavigate={() => go('sales-brace')}
+          />
+        </Col>
+        <Col xs={24} sm={12} xl={6}>
+          <ModuleRollupCard
+            title="SeisBrace"
+            icon={<CalculatorOutlined />}
+            countLabel={`${seisBraceCount} design${seisBraceCount === 1 ? '' : 's'}`}
+            onNavigate={() => go('seis-brace')}
+          />
+        </Col>
+        <Col xs={24} sm={12} xl={6}>
+          <ModuleRollupCard
+            title="Submittal Manager"
+            icon={<InboxOutlined />}
+            countLabel={`${submittalPackagesCount} package${submittalPackagesCount === 1 ? '' : 's'}`}
+            onNavigate={() => go('submittal')}
+          />
+        </Col>
+      </Row>
+    </Flex>
+  );
+}
+
+/** Company Home — global search + dense projects table with inline expand for roll-ups (flat routing). */
+export function HomeHubPage() {
+  const { token } = theme.useToken();
+  const navigate = useNavigate();
+  const companyLabel = UMBRELLA_COMPANY_LABEL;
+  const companySlug = UMBRELLA_COMPANY_SLUG;
+  const { setProjectId } = useActiveProject();
+  const [tab, setTab] = useState<string>('recent');
+  const [starredKeys, setStarredKeys] = useState<Set<string>>(() => new Set(['1', '3']));
+  const [rows, setRows] = useState<ProjectRow[]>(() => [...PROJECT_SEED_ROWS]);
+  const [projectsPage, setProjectsPage] = useState(1);
+  const [searchText, setSearchText] = useState('');
+  const [globalSearchText, setGlobalSearchText] = useState('');
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm] = Form.useForm();
+  const [editOpen, setEditOpen] = useState(false);
+  const [editKey, setEditKey] = useState<string | null>(null);
+  const [editForm] = Form.useForm();
+  const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>([]);
+
+  const toggleStar = (key: string) => {
+    setStarredKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const filteredRows = useMemo(() => {
+    let list = rows;
+    if (tab === 'recent') list = list.filter((r) => r.recent);
+    if (tab === 'starred') list = list.filter((r) => starredKeys.has(r.key));
+    const q = searchText.trim().toLowerCase();
+    if (q) {
+      list = list.filter(
+        (r) =>
+          r.name.toLowerCase().includes(q) ||
+          r.address.toLowerCase().includes(q) ||
+          r.city.toLowerCase().includes(q) ||
+          r.state.toLowerCase().includes(q),
+      );
+    }
+    return list.map((r) => ({ ...r, starred: starredKeys.has(r.key) }));
+  }, [rows, tab, starredKeys, searchText]);
+
+  useEffect(() => {
+    setProjectsPage(1);
+  }, [tab, searchText, filteredRows.length]);
+
+  useEffect(() => {
+    setExpandedRowKeys([]);
+  }, [projectsPage, tab, searchText]);
+
+  const pagedProjectRows = useMemo(() => {
+    const start = (projectsPage - 1) * HOME_HUB_PROJECTS_PAGE_SIZE;
+    return filteredRows.slice(start, start + HOME_HUB_PROJECTS_PAGE_SIZE);
+  }, [filteredRows, projectsPage]);
+
+  const tabItems: TabsProps['items'] = [
+    { key: 'recent', label: 'Recent' },
+    { key: 'all', label: 'All' },
+    { key: 'starred', label: 'Starred' },
+  ];
+
+  const openEdit = (key: string) => {
+    const row = rows.find((r) => r.key === key);
+    if (!row) return;
+    setEditKey(key);
+    editForm.setFieldsValue({
+      name: row.name,
+      address: row.address,
+      city: row.city,
+      state: row.state,
+    });
+    setEditOpen(true);
+  };
+
+  const columns: TableColumnsType<ProjectRow & { starred: boolean }> = [
+    {
+      key: 'star',
+      width: token.controlHeightLG,
+      align: 'center',
+      render: (_, record) => (
+        <Button
+          type="text"
+          icon={
+            record.starred ? (
+              <StarFilled style={{ color: token.colorWarning }} />
+            ) : (
+              <StarOutlined style={{ color: token.colorTextSecondary }} />
+            )
+          }
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleStar(record.key);
+          }}
+          aria-label={record.starred ? 'Remove star' : 'Star project'}
+        />
+      ),
+    },
+    {
+      title: 'Project name',
+      dataIndex: 'name',
+      key: 'name',
+      render: (name: string, record) => (
+        <Typography.Link
+          onClick={(e) => {
+            e.stopPropagation();
+            setProjectId(record.key);
+            navigate(flatProjectWorkspacePath(record.key, 'content'));
+          }}
+        >
+          {name}
+        </Typography.Link>
+      ),
+    },
+    {
+      title: 'Address',
+      dataIndex: 'address',
+      key: 'address',
+    },
+    {
+      title: 'City',
+      dataIndex: 'city',
+      key: 'city',
+    },
+    {
+      title: 'State',
+      dataIndex: 'state',
+      key: 'state',
+      width: token.controlHeightSM * 2,
+    },
+    {
+      title: 'Last opened',
+      dataIndex: 'lastOpened',
+      key: 'lastOpened',
+      align: 'right',
+    },
+    {
+      key: 'actions',
+      width: token.controlHeightLG,
+      align: 'center',
+      render: (_, record) => {
+        const menuItems: MenuProps['items'] = [
+          {
+            key: 'edit',
+            label: 'Edit project',
+            onClick: () => openEdit(record.key),
+          },
+        ];
+        return (
+          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+            <Button
+              type="text"
+              size="small"
+              icon={<MoreOutlined />}
+              aria-label="Project actions"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </Dropdown>
+        );
+      },
+    },
+  ];
+
+  /** Align expanded body with Project name column: expand + cell gutters + star (matches column widths). */
+  const expandedRollupAlignStart =
+    token.controlHeightLG + token.padding + token.controlHeightLG + token.padding;
+
+  const hasAnyProjects = rows.length > 0;
+  const showEmpty = !hasAnyProjects;
+  const showNoMatches = hasAnyProjects && filteredRows.length === 0;
+  const starredEmpty = tab === 'starred' && hasAnyProjects && filteredRows.length === 0 && searchText.trim() === '';
+  const recentEmpty = tab === 'recent' && hasAnyProjects && filteredRows.length === 0 && searchText.trim() === '';
+
+  const listPanelStyle = {
+    background: token.colorBgContainer,
+    borderRadius: token.borderRadiusLG,
+    boxShadow: token.boxShadowTertiary,
+    overflow: 'hidden' as const,
+  };
+
+  const runGlobalSearch = () => {
+    const q = globalSearchText.trim();
+    if (q) {
+      navigate(`/catalog/results?q=${encodeURIComponent(q)}`);
+    } else {
+      navigate('/catalog');
+    }
+  };
+
+  return (
+    <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
+      <Flex justify="space-between" align="flex-start" wrap="wrap" gap={token.margin}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <Typography.Text type="secondary" style={{ display: 'block', marginBottom: token.marginXXS }}>
+            {companyLabel} · unified hub
+          </Typography.Text>
+          <Typography.Title level={3} style={{ margin: 0 }}>
+            Home
+          </Typography.Title>
+          <Typography.Paragraph type="secondary" style={{ margin: `${token.marginXXS}px 0 0`, maxWidth: 720 }}>
+            Projects list below defaults to <strong>Recent</strong>. Expand a row for site details, roll-up counts, and
+            module cards (BOM, Spec, SeisBrace, Submittal Manager). Company snapshot follows the table.
+          </Typography.Paragraph>
+          <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM, display: 'block', marginTop: token.marginXS }}>
+            Home (demo): /dashboard · company {companySlug}
+          </Typography.Text>
+        </div>
+        <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
+          New project
+        </Button>
+      </Flex>
+
+      <Card
+        size="small"
+        styles={{ body: { paddingBlock: token.paddingSM, paddingInline: token.paddingMD } }}
+        title={
+          <Typography.Text strong style={{ fontSize: token.fontSize }}>
+            Global search
+          </Typography.Text>
+        }
+      >
+        <Typography.Paragraph type="secondary" style={{ margin: `0 0 ${token.marginSM}px`, fontSize: token.fontSizeSM }}>
+          Search catalog and parts. Opens results; browse catalog without a query if you prefer.
+        </Typography.Paragraph>
+        <Flex gap={token.marginSM} wrap="wrap" align="stretch">
+          <AppSearchInput
+            allowClear
+            placeholder="Search catalog, SKUs, descriptions…"
+            value={globalSearchText}
+            onChange={(e) => setGlobalSearchText(e.target.value)}
+            onPressEnter={runGlobalSearch}
+            style={{ flex: 1, minWidth: 200 }}
+          />
+          <Button type="primary" icon={<SearchOutlined />} size="large" onClick={runGlobalSearch}>
+            Search
+          </Button>
+          <Button size="large" icon={<GlobalOutlined />} onClick={() => navigate('/catalog')}>
+            Browse catalog
+          </Button>
+        </Flex>
+      </Card>
+
+      <Typography.Title level={4} style={{ marginBottom: token.marginXS }}>
+        Projects
+      </Typography.Title>
+
+      <Card styles={{ body: { padding: 0 } }} style={listPanelStyle}>
+        <div style={{ padding: token.paddingMD, paddingBottom: token.paddingSM }}>
+          <AppSearchInput
+            allowClear
+            placeholder="Filter by name, address, city, or state…"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: '100%', marginBottom: token.marginSM }}
+          />
+          <Tabs activeKey={tab} items={tabItems} onChange={setTab} />
+        </div>
+
+        {showEmpty ? (
+          <div style={{ padding: `${token.paddingLG * 2}px ${token.paddingLG}px` }}>
+            <Empty
+              description={
+                <Space orientation="vertical" size={token.marginXS}>
+                  <Typography.Text strong>No projects found</Typography.Text>
+                  <Typography.Text type="secondary">Create your first project to get started.</Typography.Text>
+                </Space>
+              }
+            >
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
+                Create project
+              </Button>
+            </Empty>
+          </div>
+        ) : showNoMatches ? (
+          <div style={{ padding: `${token.paddingLG * 2}px ${token.paddingLG}px` }}>
+            <Empty
+              description={
+                <Space orientation="vertical" size={token.marginXS}>
+                  <Typography.Text strong>
+                    {starredEmpty
+                      ? 'No starred projects yet'
+                      : recentEmpty
+                        ? 'No projects match Recent right now'
+                        : 'No projects match your filter'}
+                  </Typography.Text>
+                  <Typography.Text type="secondary">
+                    {starredEmpty
+                      ? 'Star a project from the list to pin it here.'
+                      : recentEmpty
+                        ? 'Switch to All or clear filters to see more job sites.'
+                        : 'Try another search term or clear filters.'}
+                  </Typography.Text>
+                </Space>
+              }
+            >
+              <Button
+                onClick={() => {
+                  setSearchText('');
+                  if (starredEmpty || recentEmpty) setTab('all');
+                }}
+              >
+                {starredEmpty || recentEmpty ? 'View all projects' : 'Clear filters'}
+              </Button>
+            </Empty>
+          </div>
+        ) : (
+          <>
+            <Table<ProjectRow & { starred: boolean }>
+              rowKey="key"
+              pagination={false}
+              columns={columns}
+              dataSource={pagedProjectRows}
+              expandable={{
+                columnWidth: token.controlHeightLG,
+                expandedRowRender: (record) => (
+                  <div
+                    style={{
+                      paddingBlock: token.paddingSM,
+                      paddingInline: 0,
+                      background: token.colorFillAlter,
+                      borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+                    }}
+                  >
+                    <Flex
+                      vertical
+                      gap={token.marginSM}
+                      style={{
+                        width: '100%',
+                        maxWidth: '100%',
+                        boxSizing: 'border-box',
+                        paddingInlineStart: expandedRollupAlignStart + token.marginMD,
+                        paddingInlineEnd: token.paddingMD,
+                        borderInlineStart: `${token.lineWidthFocus}px solid ${token.colorPrimary}`,
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div
+                        title={`${record.address} · ${record.city}, ${record.state} · Last opened ${record.lastOpened}`}
+                        style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          maxWidth: '100%',
+                          lineHeight: token.lineHeight,
+                        }}
+                      >
+                        <Typography.Text strong>{record.address}</Typography.Text>
+                        <Typography.Text type="secondary"> · </Typography.Text>
+                        <Typography.Text type="secondary">
+                          {record.city}, {record.state}
+                        </Typography.Text>
+                        <Typography.Text type="secondary"> · Last opened </Typography.Text>
+                        <Typography.Text>{record.lastOpened}</Typography.Text>
+                      </div>
+                      <ProjectModuleRollupCards project={record} />
+                    </Flex>
+                  </div>
+                ),
+                expandedRowKeys,
+                onExpandedRowsChange: (keys) => {
+                  const next = [...keys].map(String);
+                  const prevArr = expandedRowKeys.map(String);
+                  const opened = next.filter((k) => !prevArr.includes(k));
+                  if (opened.length > 0) {
+                    setProjectId(opened[opened.length - 1]);
+                  }
+                  setExpandedRowKeys([...keys]);
+                },
+                expandRowByClick: true,
+              }}
+              styles={{
+                header: {
+                  cell: {
+                    color: token.colorTextDescription,
+                    fontWeight: hydraBaseStrong.fontWeight,
+                  },
+                },
+              }}
+            />
+            <Flex justify="flex-end" style={{ padding: token.paddingMD, paddingTop: token.paddingSM }}>
+              <Pagination
+                current={projectsPage}
+                pageSize={HOME_HUB_PROJECTS_PAGE_SIZE}
+                total={filteredRows.length}
+                onChange={setProjectsPage}
+                showSizeChanger={false}
+              />
+            </Flex>
+          </>
+        )}
+      </Card>
+
+      <CrossProjectOverview projectCount={rows.length} />
+
+      <Modal
+        title="Create construction project"
+        open={createOpen}
+        onCancel={() => {
+          setCreateOpen(false);
+          createForm.resetFields();
+        }}
+        footer={null}
+        destroyOnClose
+      >
+        <Form
+          layout="vertical"
+          form={createForm}
+          onFinish={(values: { name: string; client?: string; city?: string; state?: string }) => {
+            const key = `p-${Date.now()}`;
+            setRows((prev) => [
+              {
+                key,
+                name: values.name,
+                address: values.client ? `${values.client} HQ` : 'TBD',
+                city: values.city || 'TBD',
+                state: values.state || '—',
+                lastOpened: 'Just now',
+                recent: true,
+              },
+              ...prev,
+            ]);
+            setCreateOpen(false);
+            createForm.resetFields();
+            navigate(flatProjectWorkspacePath(key, 'content'));
+          }}
+        >
+          <Form.Item label="Project name" name="name" rules={[{ required: true, message: 'Enter a project name' }]}>
+            <Input placeholder="Downtown Office Tower" />
+          </Form.Item>
+          <Form.Item label="Client" name="client">
+            <Input placeholder="ABC Corp" />
+          </Form.Item>
+          <Form.Item label="City" name="city">
+            <Input placeholder="Chicago" />
+          </Form.Item>
+          <Form.Item label="State / region" name="state">
+            <Input placeholder="IL" />
+          </Form.Item>
+          <Form.Item>
+            <Space>
+              <Button type="primary" htmlType="submit">
+                Create
+              </Button>
+              <Button
+                onClick={() => {
+                  setCreateOpen(false);
+                  createForm.resetFields();
+                }}
+              >
+                Cancel
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Edit project"
+        open={editOpen}
+        onCancel={() => {
+          setEditOpen(false);
+          setEditKey(null);
+          editForm.resetFields();
+        }}
+        footer={null}
+        destroyOnClose
+      >
+        <Form
+          layout="vertical"
+          form={editForm}
+          onFinish={(values: { name: string; address?: string; city?: string; state?: string }) => {
+            if (!editKey) return;
+            setRows((prev) =>
+              prev.map((r) =>
+                r.key === editKey
+                  ? {
+                      ...r,
+                      name: values.name,
+                      address: values.address?.trim() || r.address,
+                      city: values.city?.trim() || r.city,
+                      state: values.state?.trim() || r.state,
+                    }
+                  : r,
+              ),
+            );
+            setEditOpen(false);
+            setEditKey(null);
+            editForm.resetFields();
+          }}
+        >
+          <Form.Item label="Project name" name="name" rules={[{ required: true, message: 'Enter a project name' }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item label="Address" name="address">
+            <Input />
+          </Form.Item>
+          <Form.Item label="City" name="city">
+            <Input />
+          </Form.Item>
+          <Form.Item label="State / region" name="state">
+            <Input />
+          </Form.Item>
+          <Form.Item>
+            <Space>
+              <Button type="primary" htmlType="submit">
+                Save
+              </Button>
+              <Button
+                onClick={() => {
+                  setEditOpen(false);
+                  setEditKey(null);
+                  editForm.resetFields();
+                }}
+              >
+                Cancel
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </Space>
+  );
+}

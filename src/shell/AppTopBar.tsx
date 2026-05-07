@@ -9,6 +9,7 @@ import {
 } from '@ant-design/icons';
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
+import { useLocation } from 'react-router-dom';
 
 import {
   hydraBaseNormal,
@@ -33,6 +34,50 @@ const userMenuItems: MenuProps['items'] = [
 const shellControlBtnStyle = (color: string): CSSProperties => ({
   color,
 });
+
+type TopBarCopy = { title: string; subtitle: string };
+
+function topBarCopyForPath(pathname: string, activeProjectName?: string): TopBarCopy {
+  const companyDashboardFlat = pathname === '/dashboard' || pathname === '/dashboard/';
+  const companyDashboardUmbrella = /^\/[^/]+\/dashboard\/?$/.test(pathname);
+  const scopedFlat = /^\/projects\/[^/]+\//.test(pathname);
+  const scopedUmbrella = /^\/[^/]+\/projects\/[^/]+\//.test(pathname);
+
+  if (companyDashboardFlat || companyDashboardUmbrella) {
+    return {
+      title: 'ConnectED',
+      subtitle: 'Home · recent projects, overview, and job site directory',
+    };
+  }
+  if (scopedFlat || scopedUmbrella) {
+    return {
+      title: 'ConnectED',
+      subtitle: activeProjectName ? `${activeProjectName} · project workspace` : 'Project workspace',
+    };
+  }
+  if (pathname.startsWith('/catalog')) {
+    return {
+      title: 'Catalog',
+      subtitle: 'Global browse — tie items to a project when you package or download',
+    };
+  }
+  if (pathname.startsWith('/projects/reframing-proposal')) {
+    return {
+      title: 'Project Reframing Proposal',
+      subtitle: 'Progressive project commitment — proposed flow & wireframes',
+    };
+  }
+  if (pathname.startsWith('/bom')) {
+    return {
+      title: 'BOM',
+      subtitle: 'Build or convert a Bill of Materials',
+    };
+  }
+  return {
+    title: 'ConnectED',
+    subtitle: 'ASC Connected',
+  };
+}
 
 function SwitchProjectModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { token } = theme.useToken();
@@ -92,14 +137,16 @@ function SwitchProjectModal({ open, onClose }: { open: boolean; onClose: () => v
 }
 
 /**
- * Primary brand strip (BOM SPEC ASC Connected v2). Title + subtitle on primary bar; utilities match frame
- * (help, notifications, account). Typography from `hydraTypography` + `theme.useToken()` only.
+ * Primary brand strip — contextual title/subtitle on dashboard, workspace, BOM, catalog, and reframing flows.
  */
 export function AppTopBar() {
   const { token } = theme.useToken();
+  const location = useLocation();
   const { project } = useActiveProject();
   const [switchOpen, setSwitchOpen] = useState(false);
   const onPrimary = token.colorTextLightSolid;
+
+  const { title, subtitle } = topBarCopyForPath(location.pathname, project?.name);
 
   return (
     <>
@@ -124,7 +171,7 @@ export function AppTopBar() {
               margin: 0,
             }}
           >
-            BOM
+            {title}
           </Typography.Text>
           <Typography.Text
             style={{
@@ -133,12 +180,11 @@ export function AppTopBar() {
               margin: 0,
             }}
           >
-            Build or Convert a Bill of Materials
+            {subtitle}
           </Typography.Text>
         </Flex>
 
         <Flex align="center" gap={token.marginSM} style={{ flexShrink: 0 }}>
-          {/* Project switcher */}
           <Button
             type="text"
             icon={<FolderOpenOutlined />}

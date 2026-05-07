@@ -11,7 +11,7 @@ import {
 } from './shell/ProjectModuleStubs';
 import { ProjectReframingProposalPage } from './shell/ProjectReframingProposalPage';
 import { BomRoutes } from './bom/BomRoutes';
-import { DashboardPlaceholder } from './shell/DashboardPlaceholder';
+import { HomeHubPage } from './shell/HomeHubPage';
 import { ProjectWorkspaceLayout } from './shell/ProjectWorkspaceLayout';
 import { ShellHomeContent } from './shell/ShellHomeContent';
 
@@ -20,7 +20,7 @@ export function App() {
     <Routes>
       <Route element={<AppShell />}>
         <Route path="/" element={<Navigate to="/projects" replace />} />
-        <Route path="/dashboard" element={<DashboardPlaceholder />} />
+        <Route path="/dashboard" element={<HomeHubPage />} />
         <Route path="/projects" element={<ShellHomeContent />} />
         <Route path="/projects/reframing-proposal" element={<ProjectReframingProposalPage />} />
         <Route path="/catalog" element={<CatalogHome />} />
