@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+import { FeaturedParts } from '../catalog/FeaturedParts';
 import {
   CATALOG_DEMO_PARTS,
   CATALOG_QUICK_CATEGORIES,
@@ -72,6 +73,8 @@ export function CatalogHome() {
         <Button onClick={() => goResults('all')}>Browse all sample parts</Button>
       </Flex>
 
+      <FeaturedParts />
+
       <div>
         <Typography.Text type="secondary" style={{ display: 'block', marginBottom: token.marginXS }}>
           Quick browse by category
@@ -91,10 +94,11 @@ export function CatalogHome() {
 
       <div>
         <Typography.Title level={5} style={{ marginBottom: token.marginSM }}>
-          Featured sample parts
+          Catalog results preview
         </Typography.Title>
         <Typography.Paragraph type="secondary" style={{ marginTop: 0, marginBottom: token.marginSM }}>
-          Same data as full results — open a row to try quick download or add a cut sheet to a submittal.
+          Sample table rows — open a SKU to try quick download or add a cut sheet to a submittal. Full results
+          use the same data as search.
         </Typography.Paragraph>
         <Table<CatalogPartRow>
           rowKey="key"

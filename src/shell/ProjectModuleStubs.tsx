@@ -1,10 +1,14 @@
 import { DeleteOutlined, FilePdfOutlined, FolderOpenOutlined, UploadOutlined } from '@ant-design/icons';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { FeaturedParts } from '../catalog/FeaturedParts';
+import { CATALOG_QUICK_CATEGORIES } from '../catalog/catalogDemoData';
 import { useSubmittalDraft } from '../context/SubmittalDraftContext';
 import { PageBackButton } from './PageBackButton';
 import { projectTitleById } from './projectSeed';
 import {
+  AppSearchInput,
   Button,
   Card,
   Col,
@@ -14,9 +18,13 @@ import {
   Popconfirm,
   Row,
   Space,
+  Tag,
   Typography,
   theme,
 } from '../ui/antd';
+
+const CONTENT_FEATURED_NOTE =
+  'Same global featured list as the product catalog landing page (PRD: not per-project).';
 
 export function SalesBraceModule() {
   const { token } = theme.useToken();
@@ -95,6 +103,12 @@ export function ContentModule() {
   const { projectId = '' } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const title = projectTitleById(projectId) ?? 'Project';
+  const [contentSearch, setContentSearch] = useState('');
+
+  const goCatalogResults = (query?: string) => {
+    const next = (query ?? contentSearch).trim() || 'all';
+    navigate(`/catalog/results?q=${encodeURIComponent(next)}`);
+  };
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
@@ -105,6 +119,39 @@ export function ContentModule() {
       <Typography.Text type="secondary">
         Client workspace · ID {projectId}
       </Typography.Text>
+
+      <div>
+        <Flex wrap="wrap" gap={token.margin} align="flex-end" style={{ marginBottom: token.marginMD }}>
+          <AppSearchInput
+            allowClear
+            placeholder="Search ASC parts by SKU, figure, or keyword…"
+            value={contentSearch}
+            onChange={(e) => setContentSearch(e.target.value)}
+            onPressEnter={() => goCatalogResults()}
+            style={{ minWidth: token.controlHeight * 10, flex: 1 }}
+          />
+          <Button type="primary" onClick={() => goCatalogResults()}>
+            Search catalog
+          </Button>
+        </Flex>
+
+        <FeaturedParts contextNote={CONTENT_FEATURED_NOTE} />
+
+        <Typography.Text type="secondary" style={{ display: 'block', marginBottom: token.marginXS }}>
+          Quick browse by category
+        </Typography.Text>
+        <Flex wrap="wrap" gap={token.marginXS}>
+          {CATALOG_QUICK_CATEGORIES.map((cat) => (
+            <Tag
+              key={cat}
+              style={{ cursor: 'pointer', margin: 0, paddingBlock: token.paddingXXS }}
+              onClick={() => goCatalogResults(cat)}
+            >
+              {cat}
+            </Tag>
+          ))}
+        </Flex>
+      </div>
 
       <Row gutter={[token.marginMD, token.marginMD]}>
         <Col xs={24} md={8}>
