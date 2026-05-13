@@ -47,6 +47,10 @@ export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] 
       segs.push({ label: 'Projects' });
       return toItems(segs);
     }
+    if (pathname.startsWith('/projects/reframing-proposal')) {
+      segs.push({ label: 'Project Reframing Proposal' });
+      return toItems(segs);
+    }
     segs.push({ label: 'Projects', to: '/projects' });
     if (!projectId) {
       return toItems(segs);
