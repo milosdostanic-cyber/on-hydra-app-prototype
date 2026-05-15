@@ -1,14 +1,19 @@
 import { useMemo } from 'react';
 import { Outlet, useLocation, useParams } from 'react-router-dom';
 
-import { shellLayout } from '../theme/hydraAlias';
 import { Breadcrumb, Layout, theme } from '../ui/antd';
 
 import { buildAppBreadcrumbItems } from './buildAppBreadcrumbItems';
 import { AppShellSidebar } from './AppShellSidebar';
 import { AppTopBar } from './AppTopBar';
+import { shellBreadcrumbBarStyle, shellContentRailStyle } from './shellContentRail';
 
 const { Header, Content } = Layout;
+
+/** Product Catalog hero is full-bleed in the main column, flush under breadcrumbs (no shell rail / horizontal inset). */
+export function isProjectProductCatalogPath(pathname: string): boolean {
+  return /^\/projects\/[^/]+\/content$/.test(pathname);
+}
 
 export function AppShell() {
   const { token } = theme.useToken();
@@ -33,6 +38,7 @@ export function AppShell() {
   );
 
   const showBreadcrumbHeader = true;
+  const productCatalogFullBleed = isProjectProductCatalogPath(location.pathname);
 
   return (
     <Layout
@@ -61,19 +67,14 @@ export function AppShell() {
               boxShadow: token.boxShadowTertiary,
               paddingInline: token.paddingLG,
               paddingBlock: token.paddingSM,
+              minHeight: shellBreadcrumbBarStyle.minHeightPx,
               height: 'auto',
               lineHeight: 'inherit',
+              display: 'flex',
+              alignItems: 'center',
             }}
           >
-            <div
-              style={{
-                width: '100%',
-                maxWidth: shellLayout.contentRailMaxWidthPx,
-                minWidth: `min(100%, ${shellLayout.contentRailMinWidthPx}px)`,
-                marginInline: 'auto',
-                boxSizing: 'border-box',
-              }}
-            >
+            <div style={shellContentRailStyle}>
               <Breadcrumb items={crumbs} />
             </div>
           </Header>
@@ -84,24 +85,22 @@ export function AppShell() {
             minHeight: 0,
             overflow: 'auto',
             margin: 0,
-            padding: token.paddingLG,
+            paddingTop: productCatalogFullBleed ? 0 : token.paddingLG,
+            paddingBottom: token.paddingLG,
+            paddingInline: productCatalogFullBleed ? 0 : token.paddingLG,
             background: 'transparent',
             borderRadius: 0,
             border: 'none',
             boxShadow: 'none',
           }}
         >
-          <div
-            style={{
-              width: '100%',
-              maxWidth: shellLayout.contentRailMaxWidthPx,
-              minWidth: `min(100%, ${shellLayout.contentRailMinWidthPx}px)`,
-              marginInline: 'auto',
-              boxSizing: 'border-box',
-            }}
-          >
+          {productCatalogFullBleed ? (
             <Outlet />
-          </div>
+          ) : (
+            <div style={shellContentRailStyle}>
+              <Outlet />
+            </div>
+          )}
         </Content>
       </Layout>
     </Layout>

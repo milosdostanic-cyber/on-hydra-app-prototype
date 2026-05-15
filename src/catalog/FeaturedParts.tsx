@@ -1,140 +1,144 @@
-import { Link } from 'react-router-dom';
+import { useMemo, useState, useSyncExternalStore } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+
+import { catalogPartReturnFrom } from './catalogPartNavigation';
+import { featuredPartContentListingPath } from './featuredPartContentListing';
 
 import {
-  FEATURED_PARTS_FALLBACK_IMAGE_URL,
+  FEATURED_PARTS_MAX,
   FEATURED_PARTS_MIN,
-  featuredPartsListForPrototype,
 } from './catalogDemoData';
-import { Card, Empty, Flex, Space, Typography, theme } from '../ui/antd';
+import { FeaturedPartCard } from './FeaturedPartCard';
+import {
+  getPublicFeaturedRowsForSnapshot,
+  readFeaturedKeysRawSnapshot,
+  subscribeFeaturedPartsKeys,
+} from './featuredPartsConfig';
+import {
+  hydraBaseNormal,
+  hydraLargeNormal,
+  hydraTextStyleToReactCss,
+  hydraTitleHeading4,
+} from '../theme/hydraTypography';
+import { Col, Empty, Flex, Row, Space, Typography, theme } from '../ui/antd';
 
 type FeaturedPartsProps = {
-  /** Extra line under the PRD-aligned description (e.g. Content vs catalog landing). */
+  /** Appended to the intro line in the same paragraph (e.g. project vs global catalog). */
   contextNote?: string;
 };
 
 /**
- * Public featured-parts row (PRD): horizontal cards, navigation to part detail, 3–10 items when data allows.
- * Prototype: global ordered list from stub catalog; production would call the public GET API.
+ * Featured-parts grid — Figma horizontal card layout; 6 equal-size cards; content-rail width.
  */
 export function FeaturedParts({ contextNote }: FeaturedPartsProps) {
   const { token } = theme.useToken();
-  const parts = featuredPartsListForPrototype();
-  const cardSide = token.controlHeight * 7;
+  const navigate = useNavigate();
+  const location = useLocation();
+  const partReturnState = useMemo(
+    () => catalogPartReturnFrom(`${location.pathname}${location.search}`),
+    [location.pathname, location.search],
+  );
+  const { projectId } = useParams<{ projectId?: string }>();
+  const isProjectContentHome = useMemo(() => {
+    const n = location.pathname.replace(/\/+$/, '') || '/';
+    return /^\/projects\/[^/]+\/content$/.test(n);
+  }, [location.pathname]);
+  const storeRaw = useSyncExternalStore(
+    subscribeFeaturedPartsKeys,
+    readFeaturedKeysRawSnapshot,
+    readFeaturedKeysRawSnapshot,
+  );
+  const parts = useMemo(() => getPublicFeaturedRowsForSnapshot(storeRaw), [storeRaw]);
+  const [highlightedKey, setHighlightedKey] = useState<string | null>(null);
+
+  /** Figma featured grid gap 16; flush row edges (no antd `Col` gutter inset on first/last column). */
+  const featuredGridGap = token.margin;
+  const featuredGridHalfGap = featuredGridGap / 2;
+
+  const sectionHeader = (
+    <Flex vertical gap={token.marginXXS} style={{ width: '100%' }}>
+      <Flex align="baseline" justify="space-between" wrap="wrap" gap={token.marginSM}>
+        <Typography.Title level={4} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading4) }}>
+          Featured parts
+        </Typography.Title>
+        {parts.length >= FEATURED_PARTS_MIN ? (
+          <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraBaseNormal), color: token.colorTextDescription }}>
+            {parts.length} curated highlight{parts.length !== 1 ? 's' : ''}
+          </Typography.Text>
+        ) : null}
+      </Flex>
+      <Typography.Paragraph
+        style={{
+          margin: 0,
+          color: token.colorTextDescription,
+          ...hydraTextStyleToReactCss(hydraLargeNormal),
+        }}
+      >
+        Hand-picked catalog entries.{' '}
+        {isProjectContentHome
+          ? 'Open a card to jump straight to that part’s listing (variants table) in this product catalog.'
+          : 'Open a card for downloads and submittal actions on the part page.'}
+        {contextNote ? <> {contextNote}</> : null}
+      </Typography.Paragraph>
+    </Flex>
+  );
 
   if (parts.length < FEATURED_PARTS_MIN) {
     return (
-      <div>
-        <Typography.Title level={4} style={{ marginTop: 0, marginBottom: token.marginSM }}>
-          Featured parts
-        </Typography.Title>
+      <Flex vertical gap={token.marginMD} style={{ width: '100%' }}>
+        {sectionHeader}
         <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={
             <Space orientation="vertical" size={token.marginXS}>
-              <Typography.Text>Featured list is not available yet.</Typography.Text>
+              <Typography.Text>No featured parts to show</Typography.Text>
               <Typography.Text type="secondary">
-                At least {FEATURED_PARTS_MIN} curated parts are required (PRD FR-2). Add catalog rows or
-                configure the service list.
+                In production, choose {FEATURED_PARTS_MIN}–{FEATURED_PARTS_MAX} catalog parts in Hydra Admin
+                under Content → Featured parts, then save. Until then this section stays hidden for visitors.
               </Typography.Text>
             </Space>
           }
         />
-      </div>
+      </Flex>
     );
   }
 
   return (
-    <div>
-      <Typography.Title level={4} style={{ marginTop: 0, marginBottom: token.marginXS }}>
-        Featured parts
-      </Typography.Title>
-      <Typography.Paragraph type="secondary" style={{ marginTop: 0, marginBottom: token.marginSM }}>
-        Globally curated highlights (prototype: mock data). Production: ordered list from the public featured
-        API; admins manage 3–10 parts in the admin panel.
-      </Typography.Paragraph>
-      {contextNote ? (
-        <Typography.Paragraph type="secondary" style={{ marginTop: 0, marginBottom: token.marginSM }}>
-          {contextNote}
-        </Typography.Paragraph>
-      ) : null}
-      <div
+    <Flex vertical gap={token.marginMD} style={{ width: '100%' }}>
+      {sectionHeader}
+
+      <Row
         role="region"
         aria-label="Featured parts"
+        gutter={[featuredGridGap, featuredGridGap]}
         style={{
-          overflowX: 'auto',
-          width: '100%',
-          paddingBottom: token.paddingXS,
-          marginBottom: token.marginMD,
+          width: `calc(100% + ${featuredGridGap}px)`,
+          marginInline: -featuredGridHalfGap,
         }}
       >
-        <Flex gap={token.margin} wrap="nowrap" style={{ width: 'max-content' }}>
-          {parts.map((part) => (
-            <Link
-              key={part.key}
-              to={`/catalog/parts/${encodeURIComponent(part.key)}`}
-              style={{
-                display: 'block',
-                flex: '0 0 auto',
-                width: cardSide,
-                height: cardSide,
-                textDecoration: 'none',
-                color: 'inherit',
-              }}
-            >
-              <Card
-                hoverable
-                size="small"
-                style={{
-                  width: cardSide,
-                  height: cardSide,
-                  overflow: 'hidden',
-                }}
-                styles={{
-                  body: {
-                    padding: 0,
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    minHeight: 0,
-                  },
-                }}
-              >
-                <div
-                  style={{
-                    flex: 1,
-                    minHeight: 0,
-                    borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-                  }}
-                >
-                  <img
-                    src={part.featuredImageUrl ?? FEATURED_PARTS_FALLBACK_IMAGE_URL}
-                    alt={`${part.sku}, ASC product category image (asc-es.com/products)`}
-                    loading="lazy"
-                    decoding="async"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      display: 'block',
-                    }}
-                  />
-                </div>
-                <div style={{ flexShrink: 0, padding: token.paddingXS }}>
-                  <Typography.Text strong ellipsis style={{ display: 'block', marginBottom: token.marginXXS }}>
-                    {part.sku}
-                  </Typography.Text>
-                  <Typography.Paragraph
-                    type="secondary"
-                    ellipsis={{ rows: 1 }}
-                    style={{ marginBottom: 0 }}
-                  >
-                    {part.description}
-                  </Typography.Paragraph>
-                </div>
-              </Card>
-            </Link>
-          ))}
-        </Flex>
-      </div>
-    </div>
+        {parts.map((part) => {
+          const catalogPartPath = `/catalog/parts/${encodeURIComponent(part.key)}`;
+          const contentListingPath =
+            isProjectContentHome && projectId
+              ? featuredPartContentListingPath(projectId, part.key)
+              : undefined;
+          const partPath = contentListingPath ?? catalogPartPath;
+
+          return (
+            <Col key={part.key} xs={24} sm={12} lg={8} style={{ display: 'flex' }}>
+              <FeaturedPartCard
+                part={part}
+                isHighlighted={highlightedKey === part.key}
+                onOpen={() =>
+                  navigate(partPath, contentListingPath ? undefined : { state: partReturnState })
+                }
+                onHighlight={() => setHighlightedKey(part.key)}
+                onUnhighlight={() => setHighlightedKey(null)}
+              />
+            </Col>
+          );
+        })}
+      </Row>
+    </Flex>
   );
 }

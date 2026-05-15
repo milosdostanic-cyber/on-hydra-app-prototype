@@ -2,7 +2,6 @@ import {
   BarChartOutlined,
   CalculatorOutlined,
   FileTextOutlined,
-  GlobalOutlined,
   HomeOutlined,
   InboxOutlined,
   LeftOutlined,
@@ -29,7 +28,6 @@ import { getLastScopedProjectId } from './lastProjectScope';
 const { Sider } = Layout;
 
 function primarySideKey(pathname: string): string {
-  if (pathname.startsWith('/catalog')) return 'catalog';
   if (pathname.startsWith('/bom')) return 'bom';
   if (pathname.startsWith('/dashboard')) return 'dash';
   if (pathname.startsWith('/projects')) {
@@ -57,7 +55,6 @@ export function AppShellSidebar() {
       { key: 'seis', icon: <CalculatorOutlined />, label: 'SeisBrace' },
       { key: 'spec', icon: <FileTextOutlined />, label: 'Spec' },
       { key: 'submittal', icon: <InboxOutlined />, label: 'Submittal' },
-      { key: 'catalog', icon: <GlobalOutlined />, label: 'Catalog' },
       { key: 'bom', icon: <UnorderedListOutlined />, label: 'BOM' },
       { key: 'content', icon: <ReadOutlined />, label: 'Content' },
     ],
@@ -74,7 +71,6 @@ export function AppShellSidebar() {
       seis: `/projects/${pid}/seis-brace`,
       spec: `/projects/${pid}/sales-brace`,
       submittal: `/projects/${pid}/submittal`,
-      catalog: '/catalog',
       bom: '/bom',
       content: `/projects/${pid}/content`,
     };

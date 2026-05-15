@@ -1,0 +1,150 @@
+import { DownloadOutlined } from '@ant-design/icons';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+
+import { CatalogThumbnailPlaceholder } from '../../catalog/CatalogThumbnailPlaceholder';
+import { flattenLeafPartsInCategory, catalogCategoryById } from '../../catalog/productCatalogHierarchy.demo';
+import { productCatalogHomePath, productCatalogPartVariantsPath } from '../../catalog/productCatalogNavigation';
+import { shellLayout } from '../../theme/hydraAlias';
+import { PageBackButton } from '../PageBackButton';
+import { Button, Empty, Flex, Pagination, Space, Table, Tag, Typography, message, theme } from '../../ui/antd';
+import type { TableColumnsType } from '../../ui/antd';
+
+import { catalogBrowseTableHeaderStyles } from './catalogBrowseTableStyles';
+
+type Row = {
+  key: string;
+  categoryId: string;
+  subcategoryId: string;
+  productLineId: string;
+  partId: string;
+  name: string;
+  figureNumber: string;
+  description: string;
+};
+
+export function CategoryAllPartsPage() {
+  const { token } = theme.useToken();
+  const { projectId = '', categoryId = '' } = useParams<{ projectId: string; categoryId: string }>();
+  const [page, setPage] = useState(1);
+
+  const hits = useMemo(() => flattenLeafPartsInCategory(categoryId), [categoryId]);
+
+  const rows: Row[] = useMemo(
+    () =>
+      hits.map((h) => ({
+        key: h.part.id,
+        categoryId: h.categoryId,
+        subcategoryId: h.subcategoryId,
+        productLineId: h.productLineId,
+        partId: h.part.id,
+        name: h.part.name,
+        figureNumber: h.part.figureNumber,
+        description: h.part.description,
+      })),
+    [hits],
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [categoryId]);
+
+  const paged = useMemo(() => {
+    const start = (page - 1) * shellLayout.tablePageSizeDefault;
+    return rows.slice(start, start + shellLayout.tablePageSizeDefault);
+  }, [rows, page]);
+
+  const columns: TableColumnsType<Row> = [
+    {
+      title: 'Name',
+      key: 'name',
+      render: (_, row) => (
+        <Flex align="center" gap={token.marginSM}>
+          <CatalogThumbnailPlaceholder />
+          <Link
+            to={productCatalogPartVariantsPath(
+              projectId,
+              row.categoryId,
+              row.subcategoryId,
+              row.productLineId,
+              row.partId,
+            )}
+          >
+            {row.name}
+          </Link>
+        </Flex>
+      ),
+    },
+    { title: 'Figure Number', dataIndex: 'figureNumber', key: 'figureNumber' },
+    {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+      render: (v: string) => v || '—',
+    },
+  ];
+
+  const cat = catalogCategoryById(categoryId);
+  const categoryTitle = cat?.title ?? 'Category';
+
+  return (
+    <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+      <PageBackButton to={productCatalogHomePath(projectId)}>Back to Home</PageBackButton>
+      <Flex align="flex-start" justify="space-between" gap={token.margin} wrap="wrap">
+        <Typography.Title level={3} style={{ margin: 0 }}>
+          {categoryTitle}
+        </Typography.Title>
+        {cat ? (
+          <Flex align="center" gap={token.marginXS} wrap="wrap">
+            <Tag color={token.colorInfo} variant="outlined" style={{ marginInlineEnd: 0 }}>
+              {cat.totalParts} parts
+            </Tag>
+            <Button
+              type="primary"
+              size="large"
+              icon={<DownloadOutlined />}
+              onClick={() => message.info('Stub: download would start.')}
+            >
+              Download All Content
+            </Button>
+            <Button
+              size="large"
+              icon={<DownloadOutlined />}
+              onClick={() => message.info('Stub: download would start.')}
+            >
+              Download Fabrication ITM Content
+            </Button>
+          </Flex>
+        ) : null}
+      </Flex>
+      {rows.length === 0 ? (
+        <Empty
+          description={
+            <Typography.Text type="secondary">
+              No parts in this category for the prototype fixture.
+            </Typography.Text>
+          }
+        />
+      ) : (
+        <>
+          <Table<Row>
+            rowKey="key"
+            pagination={false}
+            columns={columns}
+            dataSource={paged}
+            styles={catalogBrowseTableHeaderStyles(token)}
+          />
+          <Flex justify="flex-end">
+            <Pagination
+              current={page}
+              pageSize={shellLayout.tablePageSizeDefault}
+              total={rows.length}
+              onChange={setPage}
+              showSizeChanger={false}
+            />
+          </Flex>
+        </>
+      )}
+    </Space>
+  );
+}

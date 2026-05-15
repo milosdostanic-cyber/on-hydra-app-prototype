@@ -9,6 +9,7 @@ import {
 } from '@ant-design/icons';
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
+import { useLocation } from 'react-router-dom';
 
 import {
   hydraBaseNormal,
@@ -33,6 +34,25 @@ const userMenuItems: MenuProps['items'] = [
 const shellControlBtnStyle = (color: string): CSSProperties => ({
   color,
 });
+
+function topBarTitleAndSubtitle(pathname: string): { title: string; subtitle: string } {
+  if (/^\/projects\/[^/]+\/content(\/|$)/.test(pathname)) {
+    return {
+      title: 'Content',
+      subtitle: 'Product catalog, parts, and BIM-ready content',
+    };
+  }
+  if (pathname.startsWith('/bom')) {
+    return {
+      title: 'BOM',
+      subtitle: 'Build or Convert a Bill of Materials',
+    };
+  }
+  return {
+    title: 'BOM',
+    subtitle: 'Build or Convert a Bill of Materials',
+  };
+}
 
 function SwitchProjectModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { token } = theme.useToken();
@@ -97,9 +117,11 @@ function SwitchProjectModal({ open, onClose }: { open: boolean; onClose: () => v
  */
 export function AppTopBar() {
   const { token } = theme.useToken();
+  const { pathname } = useLocation();
   const { project } = useActiveProject();
   const [switchOpen, setSwitchOpen] = useState(false);
   const onPrimary = token.colorTextLightSolid;
+  const { title: topTitle, subtitle: topSubtitle } = topBarTitleAndSubtitle(pathname);
 
   return (
     <>
@@ -124,7 +146,7 @@ export function AppTopBar() {
               margin: 0,
             }}
           >
-            BOM
+            {topTitle}
           </Typography.Text>
           <Typography.Text
             style={{
@@ -133,7 +155,7 @@ export function AppTopBar() {
               margin: 0,
             }}
           >
-            Build or Convert a Bill of Materials
+            {topSubtitle}
           </Typography.Text>
         </Flex>
 

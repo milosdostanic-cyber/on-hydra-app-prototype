@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
+import { catalogPartReturnFrom } from '../catalog/catalogPartNavigation';
 import { FeaturedParts } from '../catalog/FeaturedParts';
 import {
   CATALOG_DEMO_PARTS,
@@ -19,6 +20,8 @@ const PREVIEW_ROWS = CATALOG_DEMO_PARTS.slice(0, 2);
 export function CatalogHome() {
   const { token } = theme.useToken();
   const navigate = useNavigate();
+  const location = useLocation();
+  const partReturnState = catalogPartReturnFrom(location.pathname);
   const [q, setQ] = useState('');
   const [previewPage, setPreviewPage] = useState(1);
 
@@ -37,7 +40,9 @@ export function CatalogHome() {
       title: 'SKU',
       key: 'sku',
       render: (_, row) => (
-        <Link to={`/catalog/parts/${encodeURIComponent(row.key)}`}>{row.sku}</Link>
+        <Link to={`/catalog/parts/${encodeURIComponent(row.key)}`} state={partReturnState}>
+          {row.sku}
+        </Link>
       ),
     },
     {

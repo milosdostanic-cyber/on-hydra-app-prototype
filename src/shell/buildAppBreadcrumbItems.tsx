@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 
+import { buildProductCatalogBreadcrumbSegments } from '../catalog/productCatalogNavigation';
 import { bomItemById, bomProjectTitleById } from '../bom/data/mockData';
 import type { BreadcrumbProps } from '../ui/antd';
 
@@ -57,10 +58,9 @@ export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] 
     }
     const pTitle = projectTitleById(projectId) ?? 'Project';
     const hub = `/projects/${projectId}/content`;
-    if (pathname === hub) {
-      segs.push({ label: pTitle });
-      segs.push({ label: 'Content' });
-      return toItems(segs);
+    const catalogSegs = buildProductCatalogBreadcrumbSegments(pathname, projectId);
+    if (catalogSegs && (pathname === hub || pathname.startsWith(`${hub}/`))) {
+      return toItems(catalogSegs);
     }
     segs.push({ label: pTitle, to: hub });
     if (pathname.includes('/seis-brace')) segs.push({ label: 'SeisBrace' });

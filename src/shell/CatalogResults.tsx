@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { CATALOG_DEMO_PARTS } from '../catalog/catalogDemoData';
+import { catalogPartReturnFrom } from '../catalog/catalogPartNavigation';
 import { shellLayout } from '../theme/hydraAlias';
 import { PageBackButton } from './PageBackButton';
 import { hydraBaseStrong } from '../theme/hydraTypography';
@@ -22,6 +23,8 @@ function matchesCatalogQuery(part: CatalogPartRow, rawQuery: string): boolean {
 export function CatalogResults() {
   const { token } = theme.useToken();
   const navigate = useNavigate();
+  const location = useLocation();
+  const partReturnState = catalogPartReturnFrom(`${location.pathname}${location.search}`);
   const [params] = useSearchParams();
   const q = params.get('q') ?? '';
   const [page, setPage] = useState(1);
@@ -48,7 +51,9 @@ export function CatalogResults() {
       dataIndex: 'sku',
       key: 'sku',
       render: (_: string, row) => (
-        <Link to={`/catalog/parts/${encodeURIComponent(row.key)}`}>{row.sku}</Link>
+        <Link to={`/catalog/parts/${encodeURIComponent(row.key)}`} state={partReturnState}>
+          {row.sku}
+        </Link>
       ),
     },
     {

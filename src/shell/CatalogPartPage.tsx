@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { catalogPartByKey } from '../catalog/catalogDemoData';
+import { readCatalogPartReturnState } from '../catalog/catalogPartNavigation';
 import { PageBackButton } from './PageBackButton';
 import { hydraSmallNormal, hydraTextStyleToReactCss } from '../theme/hydraTypography';
 import { useSubmittalDraft } from '../context/SubmittalDraftContext';
@@ -26,7 +27,9 @@ export function CatalogPartPage() {
   const { token } = theme.useToken();
   const { message } = App.useApp();
   const { partId } = useParams<{ partId: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
+  const { catalogReturnTo, catalogReturnLabel } = readCatalogPartReturnState(location.state);
   const { addLine } = useSubmittalDraft();
 
   const [gateOpen, setGateOpen] = useState(false);
@@ -60,7 +63,7 @@ export function CatalogPartPage() {
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <PageBackButton to="/catalog/results?q=all">Back to results</PageBackButton>
+      <PageBackButton to={catalogReturnTo}>{catalogReturnLabel}</PageBackButton>
       <Typography.Title level={3} style={{ margin: 0 }}>
         {partTitle}
       </Typography.Title>

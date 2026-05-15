@@ -25,6 +25,7 @@ export {
   Dropdown,
   Empty,
   Flex,
+  FloatButton,
   Form,
   Input,
   InputNumber,
