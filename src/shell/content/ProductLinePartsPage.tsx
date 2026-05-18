@@ -90,19 +90,19 @@ export function ProductLinePartsPage() {
         <Flex align="center" gap={token.marginXS} wrap="wrap">
           <Tag>{line.parts.length} parts</Tag>
           <Button
-            size="large"
-            icon={<DownloadOutlined />}
-            onClick={() => message.info('Stub: download would start.')}
-          >
-            Download All Content
-          </Button>
-          <Button
             type="primary"
             size="large"
             icon={<DownloadOutlined />}
             onClick={() => message.info('Stub: download would start.')}
           >
             Download Fabrication BIM Content
+          </Button>
+          <Button
+            size="large"
+            icon={<DownloadOutlined />}
+            onClick={() => message.info('Stub: download would start.')}
+          >
+            Download All Content
           </Button>
         </Flex>
       </Flex>

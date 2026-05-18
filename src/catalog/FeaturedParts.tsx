@@ -1,4 +1,5 @@
-import { useMemo, useState, useSyncExternalStore } from 'react';
+import { LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { catalogPartReturnFrom } from './catalogPartNavigation';
@@ -20,7 +21,10 @@ import {
   hydraTextStyleToReactCss,
   hydraTitleHeading4,
 } from '../theme/hydraTypography';
-import { Col, Empty, Flex, Row, Space, Typography, theme } from '../ui/antd';
+import { Button, Col, Empty, Flex, Row, Space, Typography, theme } from '../ui/antd';
+
+/** Visible featured cards per page; extra items use the arrows below the grid. */
+const FEATURED_GRID_PAGE_SIZE = 6;
 
 type FeaturedPartsProps = {
   /** Appended to the intro line in the same paragraph (e.g. project vs global catalog). */
@@ -28,7 +32,7 @@ type FeaturedPartsProps = {
 };
 
 /**
- * Featured-parts grid — Figma horizontal card layout; 6 equal-size cards; content-rail width.
+ * Featured-parts grid — Figma horizontal card layout; up to six cards per view; arrows below when the list is longer.
  */
 export function FeaturedParts({ contextNote }: FeaturedPartsProps) {
   const { token } = theme.useToken();
@@ -50,6 +54,17 @@ export function FeaturedParts({ contextNote }: FeaturedPartsProps) {
   );
   const parts = useMemo(() => getPublicFeaturedRowsForSnapshot(storeRaw), [storeRaw]);
   const [highlightedKey, setHighlightedKey] = useState<string | null>(null);
+  const pageCount = Math.max(1, Math.ceil(parts.length / FEATURED_GRID_PAGE_SIZE));
+  const [page, setPage] = useState(0);
+
+  useEffect(() => {
+    setPage((prev) => Math.min(prev, Math.max(0, pageCount - 1)));
+  }, [pageCount, parts.length]);
+
+  const pagedParts = useMemo(() => {
+    const start = page * FEATURED_GRID_PAGE_SIZE;
+    return parts.slice(start, start + FEATURED_GRID_PAGE_SIZE);
+  }, [parts, page]);
 
   /** Figma featured grid gap 16; flush row edges (no antd `Col` gutter inset on first/last column). */
   const featuredGridGap = token.margin;
@@ -116,7 +131,7 @@ export function FeaturedParts({ contextNote }: FeaturedPartsProps) {
           marginInline: -featuredGridHalfGap,
         }}
       >
-        {parts.map((part) => {
+        {pagedParts.map((part) => {
           const catalogPartPath = `/catalog/parts/${encodeURIComponent(part.key)}`;
           const contentListingPath =
             isProjectContentHome && projectId
@@ -139,6 +154,30 @@ export function FeaturedParts({ contextNote }: FeaturedPartsProps) {
           );
         })}
       </Row>
+
+      {pageCount > 1 ? (
+        <Flex justify="center" align="center" wrap="wrap" gap={token.marginMD}>
+          <Button
+            type="default"
+            size="large"
+            icon={<LeftOutlined />}
+            disabled={page <= 0}
+            aria-label="Previous featured parts"
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+          />
+          <Typography.Text type="secondary" aria-live="polite">
+            {page + 1} / {pageCount}
+          </Typography.Text>
+          <Button
+            type="default"
+            size="large"
+            icon={<RightOutlined />}
+            disabled={page >= pageCount - 1}
+            aria-label="Next featured parts"
+            onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+          />
+        </Flex>
+      ) : null}
     </Flex>
   );
 }

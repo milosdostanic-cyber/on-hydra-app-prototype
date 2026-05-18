@@ -12,11 +12,11 @@ export type CatalogPartRow = {
 };
 
 /**
- * Featured Parts PRD (FR-2): public list length is enforced at 3–10 in product systems.
- * Prototype uses the same bounds against stub catalog rows.
+ * Featured Parts PRD (FR-2): production target is 3–10 public highlights.
+ * Prototype raises the cap so longer lists (e.g. carousel paging) can be exercised without localStorage.
  */
 export const FEATURED_PARTS_MIN = 3;
-export const FEATURED_PARTS_MAX = 10;
+export const FEATURED_PARTS_MAX = 30;
 
 /** Fallback if a row omits `featuredImageUrl` (first tile from asc-es.com/products). */
 export const FEATURED_PARTS_FALLBACK_IMAGE_URL =
@@ -89,6 +89,147 @@ export const CATALOG_DEMO_PARTS: CatalogPartRow[] = [
     sku: '1000-J',
     description: 'Waterflow switch vane type for alarm riser',
     featuredImageUrl: '/assets/catalog/featured-tiles/0700000.png',
+  },
+  // Extra stub rows (carousel / long-list demo); images cycle existing tiles under `public/assets/catalog/featured-tiles/`.
+  {
+    key: 'p-2011',
+    sku: 'PROT-011',
+    description: 'Demo catalog row — grooved reducer transition stub',
+    featuredCardSubtitle: 'Prototype row for featured carousel paging.',
+    featuredImageUrl: '/assets/catalog/featured-tiles/pipe-fittings-group.png',
+  },
+  {
+    key: 'p-2012',
+    sku: 'PROT-012',
+    description: 'Demo catalog row — flange gasket kit stub',
+    featuredCardSubtitle: 'Prototype row for featured carousel paging.',
+    featuredImageUrl: '/assets/catalog/featured-tiles/groove-group.png',
+  },
+  {
+    key: 'p-2013',
+    sku: 'PROT-013',
+    description: 'Demo catalog row — hose thread adapter stub',
+    featuredCardSubtitle: 'Prototype row for featured carousel paging.',
+    featuredImageUrl: '/assets/catalog/featured-tiles/7000-lr.png',
+  },
+  {
+    key: 'p-2014',
+    sku: 'PROT-014',
+    description: 'Demo catalog row — inspector test valve stub',
+    featuredCardSubtitle: 'Prototype row for featured carousel paging.',
+    featuredImageUrl: '/assets/catalog/featured-tiles/sf-17-thumbnail.png',
+  },
+  {
+    key: 'p-2015',
+    sku: 'PROT-015',
+    description: 'Demo catalog row — pressure gauge snubber stub',
+    featuredCardSubtitle: 'Prototype row for featured carousel paging.',
+    featuredImageUrl: '/assets/catalog/featured-tiles/ffp-flex-drop.png',
+  },
+  {
+    key: 'p-2016',
+    sku: 'PROT-016',
+    description: 'Demo catalog row — seismic sway brace fitting stub',
+    featuredCardSubtitle: 'Prototype row for featured carousel paging.',
+    featuredImageUrl: '/assets/catalog/featured-tiles/angle-hose-valve.png',
+  },
+  {
+    key: 'p-2017',
+    sku: 'PROT-017',
+    description: 'Demo catalog row — dry pipe accelerator stub',
+    featuredCardSubtitle: 'Prototype row for featured carousel paging.',
+    featuredImageUrl: '/assets/catalog/featured-tiles/0700000.png',
+  },
+  {
+    key: 'p-2018',
+    sku: 'PROT-018',
+    description: 'Demo catalog row — alarm line strainer stub',
+    featuredCardSubtitle: 'Prototype row for featured carousel paging.',
+    featuredImageUrl: '/assets/catalog/featured-tiles/pipe-fittings-group.png',
+  },
+  {
+    key: 'p-2019',
+    sku: 'PROT-019',
+    description: 'Demo catalog row — flow switch paddle kit stub',
+    featuredCardSubtitle: 'Prototype row for featured carousel paging.',
+    featuredImageUrl: '/assets/catalog/featured-tiles/groove-group.png',
+  },
+  {
+    key: 'p-2020',
+    sku: 'PROT-020',
+    description: 'Demo catalog row — cabinet trim escutcheon stub',
+    featuredCardSubtitle: 'Prototype row for featured carousel paging.',
+    featuredImageUrl: '/assets/catalog/featured-tiles/7000-lr.png',
+  },
+  {
+    key: 'p-2021',
+    sku: 'PROT-021',
+    description: 'Demo catalog row — nipple assortment pack stub',
+    featuredCardSubtitle: 'Prototype row for featured carousel paging.',
+    featuredImageUrl: '/assets/catalog/featured-tiles/sf-17-thumbnail.png',
+  },
+  {
+    key: 'p-2022',
+    sku: 'PROT-022',
+    description: 'Demo catalog row — grooved end cap stub',
+    featuredCardSubtitle: 'Prototype row for featured carousel paging.',
+    featuredImageUrl: '/assets/catalog/featured-tiles/ffp-flex-drop.png',
+  },
+  {
+    key: 'p-2023',
+    sku: 'PROT-023',
+    description: 'Demo catalog row — standpipe hose valve cover stub',
+    featuredCardSubtitle: 'Prototype row for featured carousel paging.',
+    featuredImageUrl: '/assets/catalog/featured-tiles/angle-hose-valve.png',
+  },
+  {
+    key: 'p-2024',
+    sku: 'PROT-024',
+    description: 'Demo catalog row — sprinkler wrench head stub',
+    featuredCardSubtitle: 'Prototype row for featured carousel paging.',
+    featuredImageUrl: '/assets/catalog/featured-tiles/0700000.png',
+  },
+  {
+    key: 'p-2025',
+    sku: 'PROT-025',
+    description: 'Demo catalog row — test drain ball valve stub',
+    featuredCardSubtitle: 'Prototype row for featured carousel paging.',
+    featuredImageUrl: '/assets/catalog/featured-tiles/pipe-fittings-group.png',
+  },
+  {
+    key: 'p-2026',
+    sku: 'PROT-026',
+    description: 'Demo catalog row — flexible connector guard stub',
+    featuredCardSubtitle: 'Prototype row for featured carousel paging.',
+    featuredImageUrl: '/assets/catalog/featured-tiles/groove-group.png',
+  },
+  {
+    key: 'p-2027',
+    sku: 'PROT-027',
+    description: 'Demo catalog row — riser manifold spacer stub',
+    featuredCardSubtitle: 'Prototype row for featured carousel paging.',
+    featuredImageUrl: '/assets/catalog/featured-tiles/7000-lr.png',
+  },
+  {
+    key: 'p-2028',
+    sku: 'PROT-028',
+    description: 'Demo catalog row — inspector’s gauge port stub',
+    featuredCardSubtitle: 'Prototype row for featured carousel paging.',
+    featuredImageUrl: '/assets/catalog/featured-tiles/sf-17-thumbnail.png',
+  },
+  {
+    key: 'p-2029',
+    sku: 'PROT-029',
+    description: 'Demo catalog row — trim identification tag stub',
+    featuredCardSubtitle: 'Prototype row for featured carousel paging.',
+    featuredImageUrl: '/assets/catalog/featured-tiles/ffp-flex-drop.png',
+  },
+  {
+    key: 'p-2030',
+    sku: 'PROT-030',
+    description: 'Demo catalog row — spare O-ring service pack stub',
+    featuredCardSubtitle: 'Prototype row for featured carousel paging.',
+    featuredImageUrl: '/assets/catalog/featured-tiles/angle-hose-valve.png',
   },
 ];
 

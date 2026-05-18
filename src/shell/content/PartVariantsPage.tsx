@@ -1,5 +1,5 @@
-import { DownloadOutlined } from '@ant-design/icons';
-import { Link, useParams } from 'react-router-dom';
+import { DownloadOutlined, LeftOutlined } from '@ant-design/icons';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { CatalogThumbnailPlaceholder } from '../../catalog/CatalogThumbnailPlaceholder';
 import { catalogLeafPart } from '../../catalog/productCatalogHierarchy.demo';
@@ -7,7 +7,6 @@ import {
   productCatalogLinePath,
   productCatalogVariantDetailPath,
 } from '../../catalog/productCatalogNavigation';
-import { PageBackButton } from '../PageBackButton';
 import { Button, Flex, Space, Table, Tag, Typography, message, theme } from '../../ui/antd';
 import type { TableColumnsType } from '../../ui/antd';
 
@@ -22,6 +21,7 @@ type VariantRow = {
 
 export function PartVariantsPage() {
   const { token } = theme.useToken();
+  const navigate = useNavigate();
   const { projectId = '', categoryId = '', subcategoryId = '', productLineId = '', partId = '' } =
     useParams<{
       projectId: string;
@@ -80,9 +80,24 @@ export function PartVariantsPage() {
 
   const linePath = productCatalogLinePath(projectId, categoryId, subcategoryId, productLineId);
 
+  const goBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate(linePath);
+  };
+
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <PageBackButton to={linePath}>Back to product line</PageBackButton>
+      <Button
+        type="default"
+        icon={<LeftOutlined />}
+        onClick={goBack}
+        style={{ alignSelf: 'flex-start', margin: 0 }}
+      >
+        Back
+      </Button>
       <Flex align="flex-start" justify="space-between" gap={token.margin} wrap="wrap">
         <Typography.Title level={3} style={{ margin: 0 }}>
           {part.name}
@@ -90,19 +105,19 @@ export function PartVariantsPage() {
         <Flex align="center" gap={token.marginXS} wrap="wrap">
           <Tag>{part.variants.length} parts</Tag>
           <Button
-            size="large"
-            icon={<DownloadOutlined />}
-            onClick={() => message.info('Stub: download would start.')}
-          >
-            Download All Content
-          </Button>
-          <Button
             type="primary"
             size="large"
             icon={<DownloadOutlined />}
             onClick={() => message.info('Stub: download would start.')}
           >
             Download Fabrication BIM Content
+          </Button>
+          <Button
+            size="large"
+            icon={<DownloadOutlined />}
+            onClick={() => message.info('Stub: download would start.')}
+          >
+            Download All Content
           </Button>
         </Flex>
       </Flex>
