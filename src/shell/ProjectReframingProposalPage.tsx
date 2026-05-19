@@ -1039,7 +1039,7 @@ export function ProjectReframingProposalPage() {
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <PageBackButton to="/projects">Back to home</PageBackButton>
+      <PageBackButton to="/dashboard">Back to home</PageBackButton>
 
       <Card
         style={{

@@ -98,7 +98,7 @@ export function ContentModule() {
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <PageBackButton to="/projects">Back to all projects</PageBackButton>
+      <PageBackButton to="/dashboard">Back to home</PageBackButton>
       <Typography.Title level={3} style={{ margin: 0 }}>
         {title}
       </Typography.Title>
@@ -168,7 +168,7 @@ export function ProjectReframingProposalModule() {
   const { token } = theme.useToken();
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <PageBackButton to="/projects">Back to all projects</PageBackButton>
+      <PageBackButton to="/dashboard">Back to home</PageBackButton>
       <Typography.Title level={3} style={{ margin: 0 }}>
         Project Reframing Proposal
       </Typography.Title>

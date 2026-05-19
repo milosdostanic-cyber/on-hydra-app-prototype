@@ -48,7 +48,7 @@ export function CatalogHome() {
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <PageBackButton to="/projects">Back to projects</PageBackButton>
+      <PageBackButton to="/dashboard">Back to home</PageBackButton>
       <Typography.Title level={3} style={{ margin: 0 }}>
         Catalog
       </Typography.Title>

@@ -85,10 +85,10 @@ export function ProjectWorkspaceLayout() {
             type="text"
             size="small"
             icon={<LeftOutlined />}
-            onClick={() => navigate('/projects')}
+            onClick={() => navigate('/dashboard')}
             style={{ marginBottom: token.marginXS, padding: 0, height: 'auto' }}
           >
-            All projects
+            Home
           </Button>
           <Typography.Text strong>{title}</Typography.Text>
           <Typography.Paragraph type="secondary" style={{ marginBottom: 0, marginTop: token.marginXXS }}>

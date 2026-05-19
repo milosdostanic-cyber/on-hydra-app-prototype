@@ -34,7 +34,7 @@ export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] 
     return toItems([{ label: UMBRELLA_COMPANY_LABEL, to: '/dashboard' }, { label: 'Home' }]);
   }
 
-  const segs: BreadcrumbSeg[] = [{ label: 'App', to: '/projects' }];
+  const segs: BreadcrumbSeg[] = [{ label: UMBRELLA_COMPANY_LABEL, to: '/dashboard' }];
 
   if (pathname.startsWith('/projects/reframing-proposal')) {
     segs.push({ label: 'Project Reframing Proposal' });
@@ -55,11 +55,11 @@ export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] 
   }
 
   if (pathname.startsWith('/projects')) {
-    if (pathname === '/projects') {
-      segs.push({ label: 'Projects' });
+    if (pathname === '/projects' || pathname === '/projects/') {
+      segs.push({ label: 'Home' });
       return toItems(segs);
     }
-    segs.push({ label: 'Projects', to: '/projects' });
+    segs.push({ label: 'Home', to: '/dashboard' });
     if (!projectId) {
       return toItems(segs);
     }

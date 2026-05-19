@@ -13,15 +13,14 @@ import { ProjectReframingProposalPage } from './shell/ProjectReframingProposalPa
 import { BomRoutes } from './bom/BomRoutes';
 import { HomeHubPage } from './shell/HomeHubPage';
 import { ProjectWorkspaceLayout } from './shell/ProjectWorkspaceLayout';
-import { ShellHomeContent } from './shell/ShellHomeContent';
 
 export function App() {
   return (
     <Routes>
       <Route element={<AppShell />}>
-        <Route path="/" element={<Navigate to="/projects" replace />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<HomeHubPage />} />
-        <Route path="/projects" element={<ShellHomeContent />} />
+        <Route path="/projects" element={<Navigate to="/dashboard" replace />} />
         <Route path="/projects/reframing-proposal" element={<ProjectReframingProposalPage />} />
         <Route path="/catalog" element={<CatalogHome />} />
         <Route path="/catalog/results" element={<CatalogResults />} />

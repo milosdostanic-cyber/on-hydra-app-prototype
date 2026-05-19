@@ -1,13 +1,12 @@
 import {
-  BarChartOutlined,
   CalculatorOutlined,
   FileTextOutlined,
   GlobalOutlined,
   HomeOutlined,
   InboxOutlined,
   LeftOutlined,
-  ReadOutlined,
   RightOutlined,
+  ReadOutlined,
   SolutionOutlined,
   UnorderedListOutlined,
 } from '@ant-design/icons';
@@ -35,11 +34,12 @@ function primarySideKey(pathname: string): string {
   if (pathname.startsWith('/bom')) return 'bom';
   if (pathname.startsWith('/dashboard')) return 'dash';
   if (pathname.startsWith('/projects')) {
+    if (pathname === '/projects' || pathname === '/projects/') return 'dash';
     if (/\/projects\/[^/]+\/seis-brace/.test(pathname)) return 'seis';
     if (/\/projects\/[^/]+\/sales-brace/.test(pathname)) return 'spec';
     if (/\/projects\/[^/]+\/submittal/.test(pathname)) return 'submittal';
     if (/\/projects\/[^/]+\/content/.test(pathname)) return 'content';
-    return 'proj';
+    return 'dash';
   }
   return 'dash';
 }
@@ -55,7 +55,6 @@ export function AppShellSidebar() {
   const primaryMenuItems: MenuProps['items'] = useMemo(
     () => [
       { key: 'dash', icon: <HomeOutlined />, label: 'Homepage' },
-      { key: 'proj', icon: <BarChartOutlined />, label: 'Projects' },
       { key: 'seis', icon: <CalculatorOutlined />, label: 'SeisBrace' },
       { key: 'spec', icon: <FileTextOutlined />, label: 'Spec' },
       { key: 'submittal', icon: <InboxOutlined />, label: 'Submittal' },
@@ -76,7 +75,6 @@ export function AppShellSidebar() {
     const pid = getLastScopedProjectId();
     const routes: Record<string, string> = {
       dash: '/dashboard',
-      proj: '/projects',
       seis: `/projects/${pid}/seis-brace`,
       spec: `/projects/${pid}/sales-brace`,
       submittal: `/projects/${pid}/submittal`,

@@ -331,7 +331,7 @@ export function BomLandingPage() {
   return (
     <>
       <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-        <PageBackButton to="/projects">Back to projects</PageBackButton>
+        <PageBackButton to="/dashboard">Back to home</PageBackButton>
         {!project ? (
           <Alert
             type="info"

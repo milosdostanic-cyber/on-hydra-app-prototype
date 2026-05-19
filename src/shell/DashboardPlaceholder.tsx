@@ -11,7 +11,7 @@ export function DashboardPlaceholder() {
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <PageBackButton to="/projects">Back to projects</PageBackButton>
+      <PageBackButton to="/dashboard">Back to home</PageBackButton>
       <Typography.Title level={3} style={{ margin: 0 }}>
         Dashboard
       </Typography.Title>
@@ -94,7 +94,7 @@ export function DashboardPlaceholder() {
       </Row>
 
       <Flex gap={token.marginSM} wrap="wrap">
-        <Button type="primary" onClick={() => navigate('/projects')}>
+        <Button type="primary" onClick={() => navigate('/dashboard')}>
           New project
         </Button>
         <Button onClick={() => navigate('/bom')}>Upload BOM</Button>
