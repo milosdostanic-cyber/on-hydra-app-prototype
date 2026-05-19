@@ -1,9 +1,10 @@
 import {
   CalculatorOutlined,
+  DeleteOutlined,
+  EditOutlined,
   FileTextOutlined,
   GlobalOutlined,
   InboxOutlined,
-  MoreOutlined,
   PlusOutlined,
   RightOutlined,
   SearchOutlined,
@@ -22,24 +23,25 @@ import {
   Button,
   Card,
   Col,
-  Dropdown,
   Empty,
   Flex,
   Form,
   Input,
   Modal,
   Pagination,
+  Popconfirm,
   Row,
   Space,
   Table,
   Tabs,
+  Tooltip,
   Typography,
   theme,
 } from '../ui/antd';
-import type { MenuProps, TableColumnsType, TabsProps } from '../ui/antd';
+import type { TableColumnsType, TabsProps } from '../ui/antd';
 
 import { hydraBaseStrong } from '../theme/hydraTypography';
-import { CrossProjectOverview } from './CrossProjectOverview';
+import { lastDeliverableForProject } from './projectLastDeliverable';
 import { PROJECT_SEED_ROWS, type ProjectRow } from './projectSeed';
 import {
   UMBRELLA_COMPANY_LABEL,
@@ -62,6 +64,18 @@ function takeCount(seed: number, salt: number, min: number, max: number): number
 }
 
 const HOME_HUB_PROJECTS_PAGE_SIZE = 10;
+const HOME_HUB_EXPANDED_PANEL_ROW_CLASS = 'home-hub-expanded-panel-row';
+
+function firstVisibleProjectKey(rows: ProjectRow[], page: number): string | undefined {
+  const start = (page - 1) * HOME_HUB_PROJECTS_PAGE_SIZE;
+  return rows.slice(start, start + HOME_HUB_PROJECTS_PAGE_SIZE)[0]?.key;
+}
+
+function initialExpandedRowKeys(): Key[] {
+  const recentRows = PROJECT_SEED_ROWS.filter((r) => r.recent);
+  const key = recentRows[0]?.key ?? PROJECT_SEED_ROWS[0]?.key;
+  return key ? [key] : [];
+}
 
 function bomCountForUmbrellaProject(projectKey: string): number {
   return mockBomProjects.filter((p) => p.projectId === projectKey).length;
@@ -173,14 +187,9 @@ function ProjectModuleRollupCards({ project }: { project: ProjectRow }) {
 
   return (
     <Flex vertical gap={token.marginXS} style={{ width: '100%' }}>
-      <Flex vertical gap={2}>
-        <Typography.Title level={5} style={{ margin: 0, lineHeight: 1.35 }}>
-          Modules
-        </Typography.Title>
-        <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
-          Open a workspace for this job site
-        </Typography.Text>
-      </Flex>
+      <Typography.Title level={5} style={{ margin: 0, lineHeight: 1.35 }}>
+        Modules
+      </Typography.Title>
       <Row gutter={[token.marginSM, token.marginSM]}>
         <Col xs={24} sm={12} xl={6}>
           <ModuleRollupCard
@@ -237,7 +246,7 @@ export function HomeHubPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [editKey, setEditKey] = useState<string | null>(null);
   const [editForm] = Form.useForm();
-  const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>([]);
+  const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>(initialExpandedRowKeys);
 
   const toggleStar = (key: string) => {
     setStarredKeys((prev) => {
@@ -269,9 +278,16 @@ export function HomeHubPage() {
     setProjectsPage(1);
   }, [tab, searchText, filteredRows.length]);
 
+  const firstVisibleKey = firstVisibleProjectKey(filteredRows, projectsPage);
+
   useEffect(() => {
-    setExpandedRowKeys([]);
-  }, [projectsPage, tab, searchText]);
+    if (firstVisibleKey) {
+      setExpandedRowKeys([firstVisibleKey]);
+      setProjectId(firstVisibleKey);
+    } else {
+      setExpandedRowKeys([]);
+    }
+  }, [firstVisibleKey, tab, searchText, projectsPage, setProjectId]);
 
   const pagedProjectRows = useMemo(() => {
     const start = (projectsPage - 1) * HOME_HUB_PROJECTS_PAGE_SIZE;
@@ -295,6 +311,21 @@ export function HomeHubPage() {
       state: row.state,
     });
     setEditOpen(true);
+  };
+
+  const deleteProject = (key: string) => {
+    setRows((prev) => prev.filter((r) => r.key !== key));
+    setStarredKeys((prev) => {
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
+    setExpandedRowKeys((prev) => prev.filter((k) => String(k) !== key));
+    if (editKey === key) {
+      setEditOpen(false);
+      setEditKey(null);
+      editForm.resetFields();
+    }
   };
 
   const columns: TableColumnsType<ProjectRow & { starred: boolean }> = [
@@ -324,17 +355,37 @@ export function HomeHubPage() {
       title: 'Project name',
       dataIndex: 'name',
       key: 'name',
-      render: (name: string, record) => (
-        <Typography.Link
-          onClick={(e) => {
-            e.stopPropagation();
-            setProjectId(record.key);
-            navigate(flatProjectWorkspacePath(record.key, 'content'));
-          }}
-        >
-          {name}
-        </Typography.Link>
-      ),
+      render: (name: string) => <Typography.Text>{name}</Typography.Text>,
+    },
+    {
+      title: 'Last worked on',
+      key: 'lastWorkedOn',
+      ellipsis: true,
+      render: (_, record) => {
+        const deliverable = lastDeliverableForProject(record.key);
+        if (!deliverable) {
+          return (
+            <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+              —
+            </Typography.Text>
+          );
+        }
+        return (
+          <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+            Last worked on:{' '}
+            <Typography.Link
+              title={deliverable.displayLabel}
+              onClick={(e) => {
+                e.stopPropagation();
+                setProjectId(record.key);
+                navigate(deliverable.path);
+              }}
+            >
+              {deliverable.displayLabel}
+            </Typography.Link>
+          </Typography.Text>
+        );
+      },
     },
     {
       title: 'Address',
@@ -359,29 +410,40 @@ export function HomeHubPage() {
       align: 'right',
     },
     {
+      title: 'Actions',
       key: 'actions',
-      width: token.controlHeightLG,
-      align: 'center',
-      render: (_, record) => {
-        const menuItems: MenuProps['items'] = [
-          {
-            key: 'edit',
-            label: 'Edit project',
-            onClick: () => openEdit(record.key),
-          },
-        ];
-        return (
-          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+      align: 'right',
+      width: token.controlHeightLG * 2 + token.marginSM,
+      render: (_, record) => (
+        <Flex justify="flex-end" gap={token.marginXXS} onClick={(e) => e.stopPropagation()}>
+          <Tooltip title="Edit">
             <Button
               type="text"
               size="small"
-              icon={<MoreOutlined />}
-              aria-label="Project actions"
-              onClick={(e) => e.stopPropagation()}
+              icon={<EditOutlined />}
+              aria-label="Edit project"
+              onClick={() => openEdit(record.key)}
             />
-          </Dropdown>
-        );
-      },
+          </Tooltip>
+          <Popconfirm
+            title="Delete this project?"
+            description="This removes the project from your list."
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+            onConfirm={() => deleteProject(record.key)}
+          >
+            <Tooltip title="Delete">
+              <Button
+                type="text"
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                aria-label="Delete project"
+              />
+            </Tooltip>
+          </Popconfirm>
+        </Flex>
+      ),
     },
   ];
 
@@ -401,6 +463,12 @@ export function HomeHubPage() {
     boxShadow: token.boxShadowTertiary,
     overflow: 'hidden' as const,
   };
+
+  const homeHubExpandedRowStyles = useMemo(
+    () =>
+      `.${HOME_HUB_EXPANDED_PANEL_ROW_CLASS} > td{border-bottom:${token.lineWidth}px ${token.lineType} ${token.colorPrimary}!important;background:${token.colorBgContainer}!important}`,
+    [token.colorBgContainer, token.colorPrimary, token.lineType, token.lineWidth],
+  );
 
   const runGlobalSearch = () => {
     const q = globalSearchText.trim();
@@ -423,7 +491,7 @@ export function HomeHubPage() {
           </Typography.Title>
           <Typography.Paragraph type="secondary" style={{ margin: `${token.marginXXS}px 0 0`, maxWidth: 720 }}>
             Projects list below defaults to <strong>Recent</strong>. Expand a row for site details, roll-up counts, and
-            module cards (BOM, Spec, SeisBrace, Submittal Manager). Company snapshot follows the table.
+            module cards (BOM, Spec, SeisBrace, Submittal Manager).
           </Typography.Paragraph>
           <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM, display: 'block', marginTop: token.marginXS }}>
             Home (demo): /dashboard · company {companySlug}
@@ -529,25 +597,36 @@ export function HomeHubPage() {
           </div>
         ) : (
           <>
+            <style>{homeHubExpandedRowStyles}</style>
             <Table<ProjectRow & { starred: boolean }>
               rowKey="key"
               pagination={false}
               columns={columns}
               dataSource={pagedProjectRows}
+              scroll={{ x: 'max-content' }}
+              onRow={(record) => {
+                const isExpanded = expandedRowKeys.map(String).includes(record.key);
+                return {
+                  style: isExpanded
+                    ? {
+                        boxShadow: `inset 0 ${token.lineWidth}px 0 0 ${token.colorPrimary}`,
+                      }
+                    : undefined,
+                };
+              }}
               expandable={{
                 columnWidth: token.controlHeightLG,
+                expandedRowClassName: () => HOME_HUB_EXPANDED_PANEL_ROW_CLASS,
                 expandedRowRender: (record) => (
                   <div
                     style={{
-                      paddingBlock: token.paddingSM,
+                      paddingBlock: token.paddingXS,
                       paddingInline: 0,
-                      background: token.colorFillAlter,
-                      borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
                     }}
                   >
                     <Flex
                       vertical
-                      gap={token.marginSM}
+                      gap={token.marginXS}
                       style={{
                         width: '100%',
                         maxWidth: '100%',
@@ -613,8 +692,6 @@ export function HomeHubPage() {
           </>
         )}
       </Card>
-
-      <CrossProjectOverview projectCount={rows.length} />
 
       <Modal
         title="Create construction project"
