@@ -20,8 +20,17 @@ function featuredCardSubtitle(part: CatalogPartRow): string {
   return part.featuredCardSubtitle ?? part.description;
 }
 
-function featuredCardBorderStyle(token: GlobalToken, isHighlighted: boolean): CSSProperties['border'] {
-  return `${token.lineWidth}px ${token.lineType} ${isHighlighted ? token.colorPrimary : 'transparent'}`;
+function featuredCardBorderStyle(
+  token: GlobalToken,
+  isHighlighted: boolean,
+  onLightSurface = false,
+): CSSProperties['border'] {
+  const color = isHighlighted
+    ? token.colorPrimary
+    : onLightSurface
+      ? token.colorBorderSecondary
+      : 'transparent';
+  return `${token.lineWidth}px ${token.lineType} ${color}`;
 }
 
 type FeaturedPartCardCopyProps = {
@@ -112,6 +121,8 @@ function FeaturedPartCardImage({ part, layout }: FeaturedPartCardImageProps) {
 export type FeaturedPartCardProps = {
   part: CatalogPartRow;
   isHighlighted: boolean;
+  /** Cards on a white panel need a visible edge so they do not blend into the surface. */
+  onLightSurface?: boolean;
   onOpen: () => void;
   onHighlight: () => void;
   onUnhighlight: () => void;
@@ -121,7 +132,14 @@ export type FeaturedPartCardProps = {
  * Horizontal featured catalog card (Figma `Frame 183`) — SKU, 2-line subtitle, divider, link, image.
  * Local catalog composition; reuse on Content and `/catalog` landing.
  */
-export function FeaturedPartCard({ part, isHighlighted, onOpen, onHighlight, onUnhighlight }: FeaturedPartCardProps) {
+export function FeaturedPartCard({
+  part,
+  isHighlighted,
+  onLightSurface = false,
+  onOpen,
+  onHighlight,
+  onUnhighlight,
+}: FeaturedPartCardProps) {
   const { token } = theme.useToken();
   const layout = getFeaturedPartCardLayout(token);
 
@@ -162,7 +180,7 @@ export function FeaturedPartCard({ part, isHighlighted, onOpen, onHighlight, onU
         borderRadius: token.borderRadiusLG,
         background: token.colorBgContainer,
         boxShadow: isHighlighted ? token.boxShadowSecondary : token.boxShadowTertiary,
-        border: featuredCardBorderStyle(token, isHighlighted),
+        border: featuredCardBorderStyle(token, isHighlighted, onLightSurface),
         transition: layout.cardChromeTransition,
       }}
     >

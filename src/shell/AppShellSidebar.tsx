@@ -10,7 +10,7 @@ import {
   UnorderedListOutlined,
 } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useHydraColorMode } from '../context/HydraThemeContext';
 import { shellLayout } from '../theme/hydraAlias';
@@ -40,6 +40,14 @@ function primarySideKey(pathname: string): string {
   return 'dash';
 }
 
+/** Project id from the URL when inside `/projects/:id/*`, else last opened project (demo). */
+function resolveSidebarProjectId(pathname: string, urlProjectId: string | undefined): string {
+  if (urlProjectId) return urlProjectId;
+  const match = /^\/projects\/([^/]+)/.exec(pathname);
+  if (match?.[1]) return match[1];
+  return getLastScopedProjectId();
+}
+
 export function AppShellSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const { colorMode } = useHydraColorMode();
@@ -47,6 +55,7 @@ export function AppShellSidebar() {
   const { token } = theme.useToken();
   const location = useLocation();
   const navigate = useNavigate();
+  const { projectId: urlProjectId } = useParams<{ projectId?: string }>();
 
   const menuItems: MenuProps['items'] = useMemo(
     () => [
@@ -56,7 +65,12 @@ export function AppShellSidebar() {
       { key: 'spec', icon: <FileTextOutlined />, label: 'Spec' },
       { key: 'submittal', icon: <InboxOutlined />, label: 'Submittal' },
       { key: 'bom', icon: <UnorderedListOutlined />, label: 'BOM' },
-      { key: 'content', icon: <ReadOutlined />, label: 'Content' },
+      {
+        key: 'content',
+        icon: <ReadOutlined />,
+        label: 'Content',
+        title: 'Product catalog for the current project',
+      },
     ],
     [],
   );
@@ -64,7 +78,7 @@ export function AppShellSidebar() {
   const selectedMenuKeys = useMemo(() => [primarySideKey(location.pathname)], [location.pathname]);
 
   const onMenuClick: MenuProps['onClick'] = ({ key }) => {
-    const pid = getLastScopedProjectId();
+    const pid = resolveSidebarProjectId(location.pathname, urlProjectId);
     const routes: Record<string, string> = {
       dash: '/dashboard',
       proj: '/projects',

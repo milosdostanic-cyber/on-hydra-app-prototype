@@ -7,6 +7,7 @@ import {
 import { useEffect, useMemo } from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import { useActiveProject } from '../context/ActiveProjectContext';
 import { useSubmittalDraft } from '../context/SubmittalDraftContext';
 import { Badge, Button, Flex, Layout, Tabs, Typography, theme } from '../ui/antd';
 import type { TabsProps } from '../ui/antd';
@@ -34,6 +35,7 @@ export function ProjectWorkspaceLayout() {
   const { projectId = '' } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const { setProjectId } = useActiveProject();
   const { countForProject } = useSubmittalDraft();
   const base = `/projects/${projectId}`;
   const title = projectTitleById(projectId) ?? 'Project';
@@ -41,8 +43,10 @@ export function ProjectWorkspaceLayout() {
   const submittalCount = countForProject(projectId);
 
   useEffect(() => {
-    if (projectId) setLastScopedProjectId(projectId);
-  }, [projectId]);
+    if (!projectId) return;
+    setLastScopedProjectId(projectId);
+    setProjectId(projectId);
+  }, [projectId, setProjectId]);
 
   const tabItems: TabsProps['items'] = useMemo(
     () => [

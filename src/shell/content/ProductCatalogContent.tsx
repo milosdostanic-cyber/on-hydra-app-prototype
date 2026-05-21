@@ -9,6 +9,7 @@ import {
   productCatalogSearchPath,
 } from '../../catalog/productCatalogNavigation';
 import { FeaturedParts } from '../../catalog/FeaturedParts';
+import { hydraFeaturedPartsPanelBgLight } from '../../theme/hydraSemanticColors';
 import { shellContentRailStyle } from '../shellContentRail';
 import {
   Button,
@@ -229,12 +230,30 @@ export function ProductCatalogContent() {
         }}
       >
         <div style={shellContentRailStyle}>
-          <Flex vertical gap={token.marginXL} style={{ width: '100%' }}>
+          <Flex vertical style={{ width: '100%' }}>
             {showFeaturedParts ? (
-            <FeaturedParts />
+              <Flex
+                vertical
+                style={{
+                  width: '100%',
+                  padding: token.paddingXL,
+                  background: hydraFeaturedPartsPanelBgLight,
+                  borderRadius: token.borderRadiusLG,
+                  boxShadow: token.boxShadowTertiary,
+                  border: `${token.lineWidth}px ${token.lineType} ${token.colorInfoBorder}`,
+                }}
+              >
+                <FeaturedParts emphasized />
+              </Flex>
             ) : null}
             {showFeaturedParts ? (
-              <Divider style={{ margin: 0, borderColor: token.colorSplit }} />
+              <Divider
+                style={{
+                  margin: 0,
+                  marginBlock: token.marginXXL,
+                  borderColor: token.colorSplit,
+                }}
+              />
             ) : null}
             <Flex vertical gap={token.marginMD} style={{ width: '100%' }}>
               <Flex align="center" justify="space-between" wrap="wrap" gap={token.marginXS}>

@@ -9,7 +9,7 @@ import {
 } from '@ant-design/icons';
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import {
   hydraBaseNormal,
@@ -22,6 +22,7 @@ import { shellLayout } from '../theme/hydraAlias';
 import { Avatar, Button, Dropdown, Flex, List, Modal, Typography, theme } from '../ui/antd';
 import type { MenuProps } from '../ui/antd';
 import { useActiveProject } from '../context/ActiveProjectContext';
+import { setLastScopedProjectId } from './lastProjectScope';
 import { PROJECT_SEED_ROWS, type ProjectRow } from './projectSeed';
 
 const userMenuItems: MenuProps['items'] = [
@@ -56,7 +57,10 @@ function topBarTitleAndSubtitle(pathname: string): { title: string; subtitle: st
 
 function SwitchProjectModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { token } = theme.useToken();
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
   const { projectId, setProjectId } = useActiveProject();
+  const onContentRoute = /^\/projects\/[^/]+\/content(\/|$)/.test(pathname);
 
   return (
     <Modal
@@ -75,7 +79,11 @@ function SwitchProjectModal({ open, onClose }: { open: boolean; onClose: () => v
             <List.Item
               onClick={() => {
                 setProjectId(row.key);
+                setLastScopedProjectId(row.key);
                 onClose();
+                if (onContentRoute) {
+                  navigate(`/projects/${row.key}/content`);
+                }
               }}
               style={{
                 cursor: 'pointer',
