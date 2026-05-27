@@ -1,9 +1,34 @@
+export type ProjectContact = {
+  name?: string;
+  role?: string;
+  email?: string;
+  phone?: string;
+  fax?: string;
+};
+
+export type ProjectFormValues = {
+  name: string;
+  address?: string;
+  address2?: string;
+  country?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  notes?: string;
+  contacts?: ProjectContact[];
+};
+
 export type ProjectRow = {
   key: string;
   name: string;
   address: string;
+  address2?: string;
+  country?: string;
   city: string;
   state: string;
+  zipCode?: string;
+  notes?: string;
+  contacts?: ProjectContact[];
   lastOpened: string;
   recent: boolean;
 };
@@ -13,8 +38,10 @@ export const PROJECT_SEED_ROWS: ProjectRow[] = [
     key: '1',
     name: 'Downtown Convention Center',
     address: '123 Main Street',
+    country: 'US',
     city: 'Phoenix',
     state: 'AZ',
+    zipCode: '85004',
     lastOpened: '2 hours ago',
     recent: true,
   },

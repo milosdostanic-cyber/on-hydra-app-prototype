@@ -26,7 +26,6 @@ import {
   Empty,
   Flex,
   Form,
-  Input,
   Modal,
   Pagination,
   Popconfirm,
@@ -42,7 +41,12 @@ import type { TableColumnsType, TabsProps } from '../ui/antd';
 
 import { hydraBaseStrong } from '../theme/hydraTypography';
 import { lastDeliverableForProject } from './projectLastDeliverable';
-import { PROJECT_SEED_ROWS, type ProjectRow } from './projectSeed';
+import {
+  ProjectFormFields,
+  formValuesToProjectFields,
+  projectRowToFormValues,
+} from './ProjectFormFields';
+import { PROJECT_SEED_ROWS, type ProjectFormValues, type ProjectRow } from './projectSeed';
 import {
   UMBRELLA_COMPANY_LABEL,
   UMBRELLA_COMPANY_SLUG,
@@ -304,12 +308,7 @@ export function HomeHubPage() {
     const row = rows.find((r) => r.key === key);
     if (!row) return;
     setEditKey(key);
-    editForm.setFieldsValue({
-      name: row.name,
-      address: row.address,
-      city: row.city,
-      state: row.state,
-    });
+    editForm.setFieldsValue(projectRowToFormValues(row));
     setEditOpen(true);
   };
 
@@ -696,6 +695,7 @@ export function HomeHubPage() {
       <Modal
         title="Create construction project"
         open={createOpen}
+        width={960}
         onCancel={() => {
           setCreateOpen(false);
           createForm.resetFields();
@@ -706,15 +706,13 @@ export function HomeHubPage() {
         <Form
           layout="vertical"
           form={createForm}
-          onFinish={(values: { name: string; client?: string; city?: string; state?: string }) => {
+          initialValues={{ country: 'US', contacts: [{}] }}
+          onFinish={(values: ProjectFormValues) => {
             const key = `p-${Date.now()}`;
             setRows((prev) => [
               {
                 key,
-                name: values.name,
-                address: values.client ? `${values.client} HQ` : 'TBD',
-                city: values.city || 'TBD',
-                state: values.state || '—',
+                ...formValuesToProjectFields(values),
                 lastOpened: 'Just now',
                 recent: true,
               },
@@ -725,39 +723,20 @@ export function HomeHubPage() {
             navigate(flatProjectWorkspacePath(key, 'content'));
           }}
         >
-          <Form.Item label="Project name" name="name" rules={[{ required: true, message: 'Enter a project name' }]}>
-            <Input placeholder="Downtown Office Tower" />
-          </Form.Item>
-          <Form.Item label="Client" name="client">
-            <Input placeholder="ABC Corp" />
-          </Form.Item>
-          <Form.Item label="City" name="city">
-            <Input placeholder="Chicago" />
-          </Form.Item>
-          <Form.Item label="State / region" name="state">
-            <Input placeholder="IL" />
-          </Form.Item>
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit">
-                Create
-              </Button>
-              <Button
-                onClick={() => {
-                  setCreateOpen(false);
-                  createForm.resetFields();
-                }}
-              >
-                Cancel
-              </Button>
-            </Space>
-          </Form.Item>
+          <ProjectFormFields
+            submitLabel="Create"
+            onCancel={() => {
+              setCreateOpen(false);
+              createForm.resetFields();
+            }}
+          />
         </Form>
       </Modal>
 
       <Modal
         title="Edit project"
         open={editOpen}
+        width={960}
         onCancel={() => {
           setEditOpen(false);
           setEditKey(null);
@@ -769,54 +748,24 @@ export function HomeHubPage() {
         <Form
           layout="vertical"
           form={editForm}
-          onFinish={(values: { name: string; address?: string; city?: string; state?: string }) => {
+          onFinish={(values: ProjectFormValues) => {
             if (!editKey) return;
             setRows((prev) =>
-              prev.map((r) =>
-                r.key === editKey
-                  ? {
-                      ...r,
-                      name: values.name,
-                      address: values.address?.trim() || r.address,
-                      city: values.city?.trim() || r.city,
-                      state: values.state?.trim() || r.state,
-                    }
-                  : r,
-              ),
+              prev.map((r) => (r.key === editKey ? { ...r, ...formValuesToProjectFields(values) } : r)),
             );
             setEditOpen(false);
             setEditKey(null);
             editForm.resetFields();
           }}
         >
-          <Form.Item label="Project name" name="name" rules={[{ required: true, message: 'Enter a project name' }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item label="Address" name="address">
-            <Input />
-          </Form.Item>
-          <Form.Item label="City" name="city">
-            <Input />
-          </Form.Item>
-          <Form.Item label="State / region" name="state">
-            <Input />
-          </Form.Item>
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit">
-                Save
-              </Button>
-              <Button
-                onClick={() => {
-                  setEditOpen(false);
-                  setEditKey(null);
-                  editForm.resetFields();
-                }}
-              >
-                Cancel
-              </Button>
-            </Space>
-          </Form.Item>
+          <ProjectFormFields
+            submitLabel="Save"
+            onCancel={() => {
+              setEditOpen(false);
+              setEditKey(null);
+              editForm.resetFields();
+            }}
+          />
         </Form>
       </Modal>
     </Space>
