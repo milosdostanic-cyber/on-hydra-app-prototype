@@ -69,6 +69,14 @@ function buildHydraShellComponents(mode: HydraColorMode): NonNullable<ThemeConfi
       borderColor: alias.colorBorderSecondary,
       rowHoverBg: alias.controlItemBgHover,
     },
+    /**
+     * Figma DS `Tag` defaults (`type=default, border=true`):
+     * bg `colorFillQuaternary`, border `colorBorder`, text `colorText`.
+     */
+    Tag: {
+      defaultBg: alias.colorFillQuaternary,
+      defaultColor: alias.colorText,
+    },
   };
 }
 

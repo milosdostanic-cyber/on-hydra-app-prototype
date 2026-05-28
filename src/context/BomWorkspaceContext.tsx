@@ -2,20 +2,20 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react';
 
-import { bomProjectById, mockWorkspaceItems } from '../bom/data/mockData';
+import { ensureWorkspaceRowDisplayFields } from '../bom/data/bomWorkspaceSeed';
+import {
+  initialWorkspaceRowsForBomProject,
+  syncBomProjectFromWorkspaceRows,
+} from '../bom/data/mockData';
 import type { BomItem } from '../bom/data/types';
 
-export function initialWorkspaceRowsForBomProject(bomProjectId: string): BomItem[] {
-  if (bomProjectId === 'new') return [];
-  const p = bomProjectById(bomProjectId);
-  if (p && p.items === 0) return [];
-  return mockWorkspaceItems.map((r) => ({ ...r }));
-}
+export { initialWorkspaceRowsForBomProject };
 
 type BomWorkspaceContextValue = {
   rowsByProjectId: Record<string, BomItem[] | undefined>;
@@ -31,11 +31,14 @@ export function BomWorkspaceProvider({ children }: { children: ReactNode }) {
   const setWorkspaceRows = useCallback((bomProjectId: string, updater: (prev: BomItem[]) => BomItem[]) => {
     setRowsByProjectId((prev) => {
       const current = prev[bomProjectId] ?? initialWorkspaceRowsForBomProject(bomProjectId);
-      return { ...prev, [bomProjectId]: updater(current) };
+      const nextRows = updater(current);
+      syncBomProjectFromWorkspaceRows(bomProjectId, nextRows);
+      return { ...prev, [bomProjectId]: nextRows };
     });
   }, []);
 
   const replaceWorkspaceRows = useCallback((bomProjectId: string, rows: BomItem[]) => {
+    syncBomProjectFromWorkspaceRows(bomProjectId, rows);
     setRowsByProjectId((p) => ({ ...p, [bomProjectId]: rows }));
   }, []);
 
@@ -58,12 +61,17 @@ export function useBomWorkspace() {
  * When no edits exist yet, seed matches {@link initialWorkspaceRowsForBomProject}.
  */
 export function useBomWorkspaceRows(bomProjectId: string) {
-  const { rowsByProjectId, setWorkspaceRows } = useBomWorkspace();
+  const { rowsByProjectId, setWorkspaceRows, replaceWorkspaceRows } = useBomWorkspace();
   const stored = rowsByProjectId[bomProjectId];
   const rows = useMemo(() => {
-    if (stored !== undefined) return stored;
-    return initialWorkspaceRowsForBomProject(bomProjectId);
+    const base = stored !== undefined ? stored : initialWorkspaceRowsForBomProject(bomProjectId);
+    return base.map(ensureWorkspaceRowDisplayFields);
   }, [stored, bomProjectId]);
+
+  useEffect(() => {
+    if (stored !== undefined) return;
+    replaceWorkspaceRows(bomProjectId, initialWorkspaceRowsForBomProject(bomProjectId));
+  }, [stored, bomProjectId, replaceWorkspaceRows]);
 
   const setRows = useCallback(
     (updater: BomItem[] | ((prev: BomItem[]) => BomItem[])) => {

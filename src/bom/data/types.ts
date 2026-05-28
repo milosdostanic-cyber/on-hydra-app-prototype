@@ -29,8 +29,39 @@ export interface BomItem {
   confidence: BomItemConfidence;
   category?: string;
   unit?: string;
+  figureNumber?: string;
+  sku?: string;
+  manufacturer?: string;
+  upc?: string;
   status?: BomItemMatchStatus;
 }
+
+export type BomParsingReviewColumnProfile = 'description' | 'sku-only' | 'upc';
+
+export type BomImportStep = 'map' | 'review' | 'match' | 'done';
+
+export interface BomImportProgress {
+  uploadId: string;
+  fileName: string;
+  bomProjectId: string;
+  currentStep: BomImportStep;
+  totalAscFields: number;
+  mappedAscFields: number;
+  totalRows: number;
+  parsedRows: number;
+  matchedRows: number;
+  acceptedCount: number;
+  skippedCount: number;
+  manualCount: number;
+  startedAt: string;
+  lastUpdatedAt: string;
+}
+
+export type BomMatchLineStatus = 'pending' | 'accepted' | 'skipped';
+
+export type BomMatchSource = 'auto' | 'manual';
+
+export type BomMatchScoreBand = 'high' | 'medium' | 'low' | 'processing';
 
 export type AscSubstitutionRisk = 'low' | 'medium' | 'high';
 
@@ -55,6 +86,8 @@ export interface BomMatchResult {
   originalRequest: string;
   suggestedParts: AscCatalogPart[];
   topMatch?: AscCatalogPart;
+  lineStatus: BomMatchLineStatus;
+  source: BomMatchSource;
 }
 
 export interface GuidedQuestion {

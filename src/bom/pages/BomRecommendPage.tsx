@@ -4,14 +4,15 @@ import { BomCardTitle } from '../components/BomCardTitle';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { bomItemById, bomProjectTitleById, matchResultForItem } from '../data/mockData';
 import { BomRiskTag } from '../components/BomTags';
+import { matchScoreLabel } from '../data/bomImportFlowSeed';
 import {
   Alert,
   Button,
   Card,
   Descriptions,
   List,
-  Progress,
   Space,
+  Tag,
   Typography,
   theme,
 } from '../../ui/antd';
@@ -108,8 +109,14 @@ export function BomRecommendPage() {
               <Descriptions.Item label="Dimensions">{top.dimensions}</Descriptions.Item>
               <Descriptions.Item label="Pressure">{top.pressureRating}</Descriptions.Item>
               <Descriptions.Item label="Connection">{top.connectionType}</Descriptions.Item>
-              <Descriptions.Item label="Match confidence">
-                <Progress percent={top.matchConfidence} />
+              <Descriptions.Item label="Match score">
+                {match.source === 'manual' ? (
+                  <Tag style={{ margin: 0 }}>Added manually</Tag>
+                ) : (
+                  <Tag color="success" style={{ margin: 0 }}>
+                    {matchScoreLabel(match.source, top.matchConfidence)}
+                  </Tag>
+                )}
               </Descriptions.Item>
               <Descriptions.Item label="Substitution risk">
                 <BomRiskTag risk={top.substitutionRisk} />

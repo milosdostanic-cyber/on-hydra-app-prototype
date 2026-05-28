@@ -10,8 +10,11 @@ import { useNavigate } from 'react-router-dom';
 import type { Key } from 'react';
 
 import { useActiveProject } from '../../context/ActiveProjectContext';
+import { useBomImportFlow } from '../context/BomImportFlowContext';
 import { PageBackButton } from '../../shell/PageBackButton';
+import { BomTablePaginationBar } from '../components/BomTablePaginationBar';
 import { BomCreateProjectModal } from '../components/BomCreateProjectModal';
+import { BomEditProjectModal } from '../components/BomEditProjectModal';
 import { BomUploadDestinationModal } from '../components/BomUploadDestinationModal';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { mockBomProjects } from '../data/mockData';
@@ -36,7 +39,6 @@ import {
   Descriptions,
   Empty,
   Flex,
-  Pagination,
   Row,
   Select,
   Space,
@@ -53,7 +55,7 @@ const STATUS_OPTIONS = [
   { value: 'in-progress', label: 'In Progress' },
   { value: 'needs-review', label: 'Needs Review' },
   { value: 'partial', label: 'Partial' },
-  { value: 'completed', label: 'Completed' },
+  { value: 'completed', label: 'Ready' },
   { value: 'failed', label: 'Failed' },
 ];
 
@@ -67,9 +69,12 @@ export function BomLandingPage() {
   const { modal } = App.useApp();
   const navigate = useNavigate();
   const { projectId, project } = useActiveProject();
+  const { ensureSession } = useBomImportFlow();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [editProject, setEditProject] = useState<BomProject | null>(null);
+  const [projectListRevision, setProjectListRevision] = useState(0);
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<BomProject['status'] | 'all'>('all');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
@@ -91,7 +96,7 @@ export function BomLandingPage() {
   // BOMs scoped to the active project, excluding locally deleted ones
   const projectBoms = useMemo(
     () => mockBomProjects.filter((p) => p.projectId === projectId && !deletedIds.has(p.id)),
-    [projectId, deletedIds],
+    [projectId, deletedIds, projectListRevision],
   );
 
   const filteredProjects = useMemo(() => {
@@ -245,7 +250,7 @@ export function BomLandingPage() {
             style={tableLinkButtonStyle}
             onClick={(e) => {
               e.stopPropagation();
-              navigate(`/bom/projects/${row.id}/workspace`);
+              setEditProject(row);
             }}
           >
             Edit
@@ -294,27 +299,25 @@ export function BomLandingPage() {
     window.setTimeout(() => {
       closeLoading();
       message.success('File received. Opening field mapping.');
+      const bomProjectId = state.uploadDestination === 'append' ? state.appendTargetId! : 'new';
+      const session = ensureSession(bomProjectId, state.uploadFileName);
+      const navState = { ...state, uploadId: session.uploadId };
       if (state.uploadDestination === 'new') {
-        navigate('/bom/projects/new/field-mapping', { state });
+        navigate('/bom/projects/new/field-mapping', { state: navState });
       } else if (state.appendTargetId) {
-        navigate(`/bom/projects/${state.appendTargetId}/field-mapping`, { state });
+        navigate(`/bom/projects/${state.appendTargetId}/field-mapping`, { state: navState });
       }
       setPendingUpload(null);
     }, 900);
   };
 
-  const cardFlatStyle = {
+  const getQuickActionStyle = (kind: 'upload' | 'search') => ({
     background: token.colorBgContainer,
     borderRadius: token.borderRadiusLG,
-    border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+    border: 'none',
+    boxShadow: hoveredQuickAction === kind ? token.boxShadowSecondary : token.boxShadowTertiary,
     cursor: 'pointer' as const,
-  };
-
-  const getQuickActionStyle = (kind: 'upload' | 'search') => ({
-    ...cardFlatStyle,
-    borderColor: hoveredQuickAction === kind ? token.colorPrimaryBorderHover : token.colorBorderSecondary,
-    boxShadow: 'none',
-    transition: `border-color ${token.motionDurationMid}`,
+    transition: `box-shadow ${token.motionDurationMid}`,
   });
 
   const tableShellStyle = {
@@ -350,14 +353,15 @@ export function BomLandingPage() {
           }
         />
 
-        {/* Upload + Search cards — matched type scale + equal card height */}
+        {/* Upload + Search cards — Figma BOM-SPEC Container (4859:171294) */}
         <Row gutter={[token.marginMD, token.marginMD]} align="stretch">
           <Col xs={24} md={12} style={{ display: 'flex' }}>
             <Card
+              bordered={false}
               style={{ ...getQuickActionStyle('upload'), width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}
               styles={{
                 body: {
-                  padding: `${token.paddingMD}px ${token.paddingLG}px`,
+                  padding: token.paddingMD,
                   flex: 1,
                   display: 'flex',
                   flexDirection: 'column',
@@ -367,34 +371,33 @@ export function BomLandingPage() {
               onMouseEnter={() => setHoveredQuickAction('upload')}
               onMouseLeave={() => setHoveredQuickAction(null)}
             >
-              <Flex vertical gap={token.marginXS} style={{ flex: 1 }}>
-                <Flex align="center" gap={token.marginSM}>
+              <Flex vertical gap={token.paddingXS} style={{ flex: 1 }}>
+                <Flex align="center" gap={token.paddingSM}>
                   <UploadOutlined style={{ fontSize: hydraTitleHeading3.fontSize, color: token.colorSuccess }} />
                   <Typography.Title level={4} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading4) }}>
                     Upload a file
                   </Typography.Title>
                 </Flex>
-                <Typography.Paragraph
-                  type="secondary"
-                  style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
+                <Typography.Text
+                  style={{
+                    margin: 0,
+                    display: 'block',
+                    color: token.colorTextDescription,
+                    ...hydraTextStyleToReactCss(hydraBaseNormal),
+                  }}
                 >
-                  After you pick a file, choose whether it starts a{' '}
-                  <Typography.Text strong>new BOM project</Typography.Text> or{' '}
-                  <Typography.Text strong>adds lines</Typography.Text> to a BOM you already have in this
-                  construction project.
-                </Typography.Paragraph>
-                <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-                  CSV, Excel, or PDF up to 50MB. Next: column mapping, then parsing review.
+                  Excel, CSV, or PDF. We&apos;ll take you to parsing review after a short simulated import.
                 </Typography.Text>
               </Flex>
             </Card>
           </Col>
           <Col xs={24} md={12} style={{ display: 'flex' }}>
             <Card
+              bordered={false}
               style={{ ...getQuickActionStyle('search'), width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}
               styles={{
                 body: {
-                  padding: `${token.paddingMD}px ${token.paddingLG}px`,
+                  padding: token.paddingMD,
                   flex: 1,
                   display: 'flex',
                   flexDirection: 'column',
@@ -404,22 +407,22 @@ export function BomLandingPage() {
               onMouseEnter={() => setHoveredQuickAction('search')}
               onMouseLeave={() => setHoveredQuickAction(null)}
             >
-              <Flex vertical gap={token.marginXS} style={{ flex: 1 }}>
-                <Flex align="center" gap={token.marginSM}>
+              <Flex vertical gap={token.paddingXS} style={{ flex: 1 }}>
+                <Flex align="center" gap={token.paddingSM}>
                   <FileSearchOutlined style={{ fontSize: hydraTitleHeading3.fontSize, color: token.colorPrimary }} />
                   <Typography.Title level={4} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading4) }}>
                     Search Catalogue Parts
                   </Typography.Title>
                 </Flex>
-                <Typography.Paragraph
-                  type="secondary"
-                  style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
+                <Typography.Text
+                  style={{
+                    margin: 0,
+                    display: 'block',
+                    color: token.colorTextDescription,
+                    ...hydraTextStyleToReactCss(hydraBaseNormal),
+                  }}
                 >
-                  Look up <Typography.Text strong>ASC catalog</Typography.Text> parts by number or description to
-                  validate lines before you add them to a BOM in this construction project.
-                </Typography.Paragraph>
-                <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-                  Same search bar pattern as the workspace; results open in the catalog flow.
+                  Validate descriptions against the catalog before you commit lines to a BOM.
                 </Typography.Text>
               </Flex>
             </Card>
@@ -569,27 +572,17 @@ export function BomLandingPage() {
                     body: { cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM } },
                   }}
                 />
-                <Flex
-                  justify="space-between"
-                  align="center"
-                  style={{
-                    paddingInline: token.paddingMD,
-                    paddingBlock: token.paddingSM,
-                    borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-                  }}
-                >
-                  <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-                    {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''}
-                    {isFiltered ? ' found' : ' total'}
-                  </Typography.Text>
-                  <Pagination
-                    current={projectsPage}
-                    pageSize={shellLayout.tablePageSizeDefault}
-                    total={filteredProjects.length}
-                    onChange={setProjectsPage}
-                    showSizeChanger={false}
-                  />
-                </Flex>
+                <BomTablePaginationBar
+                  current={projectsPage}
+                  total={filteredProjects.length}
+                  onChange={setProjectsPage}
+                  summary={
+                    <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
+                      {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''}
+                      {isFiltered ? ' found' : ' total'}
+                    </Typography.Text>
+                  }
+                />
               </div>
             )}
           </Card>
@@ -610,6 +603,17 @@ export function BomLandingPage() {
         onCreate={(project) => {
           setCreateModalOpen(false);
           navigate(`/bom/projects/${project.id}/workspace`);
+        }}
+      />
+
+      <BomEditProjectModal
+        open={editProject !== null}
+        project={editProject}
+        onClose={() => setEditProject(null)}
+        onSave={() => {
+          setEditProject(null);
+          setProjectListRevision((n) => n + 1);
+          message.success('BOM project name updated.');
         }}
       />
 

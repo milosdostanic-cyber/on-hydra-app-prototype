@@ -7,6 +7,8 @@ export type BomUploadFlowLocationState = {
   appendTargetId?: string;
   /** Field mapping page output */
   fieldMapping?: Record<string, string | undefined>;
+  /** Tracks in-flight import session for progress strip + matching state */
+  uploadId?: string;
 };
 
 export function resolveUploadDestination(

@@ -1,26 +1,30 @@
 import {
+  EditOutlined,
   ExclamationCircleOutlined,
   ExportOutlined,
   FileSearchOutlined,
   PlusOutlined,
-  SwapOutlined,
-  TranslationOutlined,
   UploadOutlined,
 } from '@ant-design/icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useBomWorkspaceRows } from '../../context/BomWorkspaceContext';
-import type { BomWorkspaceAppendBannerState } from '../bomUploadFlowState';
+import { useBomImportFlow } from '../context/BomImportFlowContext';
+import {
+  overallProgressPercent,
+  routeForImportStep,
+  stepIndex,
+  stepLabel,
+} from '../bomImportProgressState';
+import { PageBackButton } from '../../shell/PageBackButton';
 import { MAX_UPLOAD_BYTES, VALID_UPLOAD_TYPES } from '../constants/uploadLimits';
 import { bomProjectById, bomProjectTitleById } from '../data/mockData';
-import type { BomItem } from '../data/types';
+import { bomWorkspaceTableColumnWidths, ensureWorkspaceRowDisplayFields } from '../data/bomWorkspaceSeed';
+import type { BomItem, BomProject } from '../data/types';
 import { AscProductsDrawer } from '../components/AscProductsDrawer';
-import { PartTranslationModal } from '../components/PartTranslationModal';
-import { BomConfidenceTag, BomMatchStatusTag } from '../components/BomTags';
-import { isWorkspaceRowConfirmed, suggestedAscPartForRow } from '../bomWorkspaceHelpers';
-import { PageBackButton } from '../../shell/PageBackButton';
-import { BomPageHeader } from '../layout/BomPageHeader';
+import { BomEditProjectModal } from '../components/BomEditProjectModal';
+import { BomTablePaginationBar } from '../components/BomTablePaginationBar';
 import {
   Alert,
   App,
@@ -28,13 +32,10 @@ import {
   Button,
   Card,
   Descriptions,
-  Divider,
   Empty,
   Flex,
-  Input,
-  Modal,
+  InputNumber,
   Progress,
-  Rate,
   Space,
   Table,
   Typography,
@@ -45,43 +46,29 @@ import type { TableColumnsType } from '../../ui/antd';
 import { shellLayout } from '../../theme/hydraAlias';
 import {
   hydraBaseNormal,
-  hydraSmallNormal,
   hydraTextStyleToReactCss,
   hydraTitleHeading3,
 } from '../../theme/hydraTypography';
 
-
-type WorkspaceStatusFilter = 'all' | 'confirmed' | 'needs-review' | 'missing';
-
-type WorkspaceActionErrorType = 'upload' | 'translate' | 'export' | 'request-service';
+const WORKSPACE_HEADER_DESCRIPTION =
+  'Active project BOM review workspace. Confirm lines, resolve review items, and finalize project output.';
 
 type AddedCatalogProduct = {
   ascNumber: string;
   description: string;
+  figureNumber?: string;
   size: string;
   partType: string;
   qty?: number;
 };
 
-function confidenceSummaryPercent(rows: BomItem[]): number {
-  if (rows.length === 0) return 0;
-  const weight = (c: BomItem['confidence']) => (c === 'high' ? 1 : c === 'medium' ? 0.5 : 0);
-  const sum = rows.reduce((acc, r) => acc + weight(r.confidence), 0);
-  return Math.round((sum / rows.length) * 100);
-}
-
-function confidenceRank(confidence: BomItem['confidence']): number {
-  if (confidence === 'high') return 3;
-  if (confidence === 'medium') return 2;
-  return 1;
-}
-
-function statusRank(status: BomItem['status']): number {
-  if (status === 'confirmed') return 3;
-  if (status === 'needs-review') return 2;
-  if (status === 'matched') return 1;
-  return 0;
-}
+type ImportSummaryState = {
+  fileName?: string;
+  total: number;
+  accepted: number;
+  manual: number;
+  skipped: number;
+};
 
 function renumberRows(rows: BomItem[]): BomItem[] {
   return rows.map((row, idx) => ({ ...row, rowNumber: idx + 1 }));
@@ -98,151 +85,112 @@ export function BomWorkspacePage() {
   const isSeedEmptyProject = project != null && project.items === 0;
   const { rows, setRows } = useBomWorkspaceRows(bomProjectId);
   const [query, setQuery] = useState('');
-
-  const [isTranslating, setIsTranslating] = useState(false);
-  const [actionError, setActionError] = useState<{ type: WorkspaceActionErrorType; message: string } | null>(null);
-  const [resolveModalRow, setResolveModalRow] = useState<BomItem | null>(null);
-  const [resolvePhase, setResolvePhase] = useState<'review' | 'feedback'>('review');
-  const [feedbackText, setFeedbackText] = useState('');
-  const [feedbackRating, setFeedbackRating] = useState(0);
-  const [statusFilter, setStatusFilter] = useState<WorkspaceStatusFilter>('all');
+  const [page, setPage] = useState(1);
   const [ascDrawerOpen, setAscDrawerOpen] = useState(false);
-  const [translationOpen, setTranslationOpen] = useState(false);
-  const emptyWorkspaceFileRef = useRef<HTMLInputElement>(null);
-  const [appendImportBanner, setAppendImportBanner] = useState<{ fileName: string; count: number } | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editProject, setEditProject] = useState<BomProject | null>(project ?? null);
+  const { pendingForProject, setActiveUploadId, ensureSession } = useBomImportFlow();
+  const pendingImports = pendingForProject(bomProjectId);
+  const workspaceFileRef = useRef<HTMLInputElement>(null);
+  const [importSummary, setImportSummary] = useState<ImportSummaryState | null>(null);
+
+  const hasWorkspaceRows = rows.length > 0;
 
   const filteredRows = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return rows.filter((row) => {
-      const matchesQuery =
-        !q ||
-        [row.originalInput, row.parsedDescription, row.category ?? '', row.unit ?? '']
-          .join(' ')
-          .toLowerCase()
-          .includes(q);
-      if (!matchesQuery) return false;
-      if (statusFilter === 'confirmed') return isWorkspaceRowConfirmed(row);
-      if (statusFilter === 'needs-review') return !isWorkspaceRowConfirmed(row) && row.status === 'needs-review';
-      if (statusFilter === 'missing') return row.status === 'pending' || row.status === undefined;
-      return true;
-    });
-  }, [rows, query, statusFilter]);
+    if (!q) return rows;
+    return rows.filter((row) =>
+      [row.originalInput, row.figureNumber ?? '', row.sku ?? '', row.parsedDescription]
+        .join(' ')
+        .toLowerCase()
+        .includes(q),
+    );
+  }, [rows, query]);
 
-  const totalItems = rows.length;
-  const confirmedCount = rows.filter(isWorkspaceRowConfirmed).length;
-  const needsReviewCount = rows.filter((row) => row.status === 'needs-review').length;
-  const missingCount = rows.filter((row) => row.status === 'pending' || row.status === undefined).length;
-  const reviewCount = totalItems - confirmedCount;
-  const confidencePercent = confidenceSummaryPercent(rows);
-  const canTranslate = reviewCount > 0;
-  const hasWorkspaceRows = totalItems > 0;
+  const pagedRows = useMemo(() => {
+    const start = (page - 1) * shellLayout.tablePageSizeDefault;
+    return filteredRows.slice(start, start + shellLayout.tablePageSizeDefault);
+  }, [filteredRows, page]);
 
   useEffect(() => {
-    const st = (location.state ?? {}) as BomWorkspaceAppendBannerState;
-    if (st.appendImportBanner) {
-      setAppendImportBanner(st.appendImportBanner);
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state]);
+    setPage(1);
+  }, [query]);
 
-  // Pick up products added or swapped from the ASC Products page
+  useEffect(() => {
+    if (project) setEditProject(project);
+  }, [project]);
+
   useEffect(() => {
     const state = (location.state ?? {}) as {
       addedProduct?: AddedCatalogProduct;
       swappedProduct?: AddedCatalogProduct;
       swapRowId?: string;
+      importSummary?: ImportSummaryState;
     };
+
+    if (state.importSummary) {
+      setImportSummary(state.importSummary);
+      window.history.replaceState({}, '');
+    }
 
     if (state.swappedProduct && state.swapRowId) {
       const { swappedProduct: p, swapRowId } = state;
-      setRows((prev) => prev.map((r) =>
-        r.id === swapRowId
-          ? {
-              ...r,
-              originalInput: p.ascNumber,
-              parsedDescription: p.description,
-              size: p.size,
-              category: p.partType,
-              quantity: p.qty || r.quantity,
-              status: 'confirmed' as const,
-              confidence: 'high' as const,
-            }
-          : r,
-      ));
+      setRows((prev) =>
+        prev.map((r) =>
+          r.id === swapRowId
+            ? ensureWorkspaceRowDisplayFields({
+                ...r,
+                originalInput: p.ascNumber,
+                parsedDescription: p.description,
+                figureNumber: p.figureNumber || p.ascNumber,
+                sku: p.ascNumber,
+                size: p.size,
+                category: p.partType,
+                quantity: p.qty || r.quantity,
+                status: 'confirmed' as const,
+                confidence: 'high' as const,
+              })
+            : r,
+        ),
+      );
       window.history.replaceState({}, '');
-      message.success('Part replaced. Row is now confirmed.');
+      message.success('Part updated.');
       return;
     }
 
     if (state.addedProduct) {
       const p = state.addedProduct;
-      setRows((prev) => renumberRows([
-        ...prev,
-        {
-          id: `ws-asc-${Date.now()}`,
-          rowNumber: prev.length + 1,
-          originalInput: p.ascNumber,
-          parsedDescription: p.description,
-          size: p.size,
-          pressureClass: '',
-          connectionType: '',
-          quantity: p.qty || 1,
-          confidence: 'medium',
-          category: p.partType,
-          unit: 'EA',
-          status: 'needs-review',
-        },
-      ]));
-      window.history.replaceState({}, '');
-      message.success('ASC product added for BOM review.');
-    }
-  }, [location.state]);
-
-  async function handleTranslateParts() {
-    if (!canTranslate) return;
-    setActionError(null);
-    setIsTranslating(true);
-    try {
-      await new Promise<void>((resolve) => setTimeout(resolve, 1400));
-      const unresolvedRows = rows.filter((r) => !isWorkspaceRowConfirmed(r));
-      const updatedCount = unresolvedRows.length;
       setRows((prev) =>
-        prev.map((row) => {
-          if (isWorkspaceRowConfirmed(row)) return row;
-          return {
-            ...row,
-            status: 'confirmed' as const,
-            confidence: (row.confidence === 'low' ? 'medium' : 'high') as BomItem['confidence'],
-          };
-        }),
+        renumberRows([
+          ...prev,
+          ensureWorkspaceRowDisplayFields({
+            id: `ws-asc-${Date.now()}`,
+            rowNumber: prev.length + 1,
+            originalInput: p.ascNumber,
+            parsedDescription: p.description,
+            figureNumber: p.figureNumber || p.ascNumber,
+            sku: p.ascNumber,
+            size: p.size,
+            pressureClass: '',
+            connectionType: '',
+            quantity: p.qty || 1,
+            confidence: 'high',
+            category: p.partType,
+            unit: 'EA',
+            status: 'confirmed',
+          }),
+        ]),
       );
-      message.success(`Translation completed. ${updatedCount} item${updatedCount === 1 ? '' : 's'} confirmed.`);
-    } catch (error) {
-      setActionError({
-        type: 'translate',
-        message: error instanceof Error ? error.message : 'Translation failed.',
-      });
-    } finally {
-      setIsTranslating(false);
+      window.history.replaceState({}, '');
+      message.success('Item added to BOM.');
     }
+  }, [location.state, setRows]);
+
+  function handleExport() {
+    navigate(`/bom/projects/${bomProjectId}/export`);
   }
 
-  function handleUpload() {
-    Modal.confirm({
-      title: 'Re-upload BOM file?',
-      content:
-        'This will replace your current BOM run after you map columns again. Existing workspace rows stay until you complete a new import.',
-      okText: 'Continue to field mapping',
-      onOk: () => {
-        setActionError(null);
-        navigate(`/bom/projects/${bomProjectId}/field-mapping`, {
-          state: { uploadDestination: 'append', appendTargetId: bomProjectId },
-        });
-      },
-    });
-  }
-
-  function handleEmptyWorkspaceFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleWorkspaceFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
@@ -258,55 +206,39 @@ export function BomWorkspacePage() {
     window.setTimeout(() => {
       closeLoading();
       message.success('File received. Opening field mapping.');
+      const session = ensureSession(bomProjectId, file.name);
       navigate(`/bom/projects/${bomProjectId}/field-mapping`, {
         state: {
           uploadFileName: file.name,
           uploadDestination: 'append',
           appendTargetId: bomProjectId,
+          uploadId: session.uploadId,
         },
       });
     }, 900);
   }
 
-  function handleRequestService() {
-    setActionError(null);
-    if (reviewCount > 0) {
-      Modal.confirm({
-        title: 'Request service with unresolved rows?',
-        content: `${reviewCount} line item${reviewCount === 1 ? '' : 's'} still need review. The current workspace state will be sent for this project.`,
-        okText: 'Send request',
-        onOk: () => navigate(`/bom/projects/${bomProjectId}/service-request`),
-      });
-      return;
-    }
-    navigate(`/bom/projects/${bomProjectId}/service-request`);
+  function updateRowQuantity(rowId: string, nextQuantity: number | null) {
+    if (typeof nextQuantity !== 'number' || nextQuantity < 0) return;
+    setRows((prev) =>
+      prev.map((r) => (r.id === rowId ? { ...r, quantity: nextQuantity } : r)),
+    );
   }
 
-  function handleExport() {
-    setActionError(null);
-    navigate(`/bom/projects/${bomProjectId}/export`);
-  }
-
-  function clearSearchAndFilters() {
-    setQuery('');
-    setStatusFilter('all');
-  }
-
-  function openResolveModal(row: BomItem) {
-    setResolveModalRow(row);
-    setResolvePhase('review');
-    setFeedbackText('');
-    setFeedbackRating(0);
-  }
-
-  function closeResolveModal() {
-    setResolveModalRow(null);
-    setResolvePhase('review');
-    setFeedbackText('');
+  function handlePartClick(row: BomItem) {
+    navigate(`/bom/projects/${bomProjectId}/asc-products`, {
+      state: {
+        swapSource: {
+          partNumber: row.originalInput,
+          description: row.parsedDescription,
+          size: row.size,
+          category: row.category,
+        },
+      },
+    });
   }
 
   function openDeleteModal(row: BomItem) {
-    setResolveModalRow(null);
     modal.confirm({
       title: 'Remove BOM line',
       icon: (
@@ -325,31 +257,12 @@ export function BomWorkspacePage() {
             message="This line will be permanently removed from the workspace"
             description="Row numbers will be renumbered. You cannot undo this from the demo."
           />
-          <div>
-            <Typography.Text
-              type="secondary"
-              style={{
-                ...hydraTextStyleToReactCss(hydraSmallNormal),
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-              }}
-            >
-              Line to remove
-            </Typography.Text>
-            <Descriptions
-              bordered
-              size="small"
-              column={2}
-              style={{ marginTop: token.marginXS }}
-            >
-              <Descriptions.Item label="Part number">{row.originalInput}</Descriptions.Item>
-              <Descriptions.Item label="Description">{row.parsedDescription}</Descriptions.Item>
-              <Descriptions.Item label="Size">{row.size || '—'}</Descriptions.Item>
-              <Descriptions.Item label="Quantity">
-                {row.quantity} {row.unit || ''}
-              </Descriptions.Item>
-            </Descriptions>
-          </div>
+          <Descriptions bordered size="small" column={2} style={{ marginTop: token.marginXS }}>
+            <Descriptions.Item label="Part">{row.parsedDescription}</Descriptions.Item>
+            <Descriptions.Item label="Figure Number">{row.figureNumber || '—'}</Descriptions.Item>
+            <Descriptions.Item label="SKU">{row.sku || '—'}</Descriptions.Item>
+            <Descriptions.Item label="Quantity">{row.quantity}</Descriptions.Item>
+          </Descriptions>
         </Space>
       ),
       onOk: () => {
@@ -359,414 +272,349 @@ export function BomWorkspacePage() {
     });
   }
 
-  function handleApprove(row: BomItem) {
-    setRows((prev) => prev.map((r) => r.id === row.id ? { ...r, status: 'confirmed' } : r));
-    closeResolveModal();
-    message.success('Item confirmed successfully.');
-  }
-
-  function handleReopen(row: BomItem) {
-    setRows((prev) => prev.map((r) => r.id === row.id ? { ...r, status: 'needs-review' } : r));
-    setResolveModalRow((prev) => (
-      prev && prev.id === row.id
-        ? { ...prev, status: 'needs-review' }
-        : prev
-    ));
-    setResolvePhase('review');
-    message.info('Row moved to Needs Review. Continue with approve, feedback, or manual swap.');
-  }
-
-  function handleSubmitFeedback(row: BomItem) {
-    setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, status: 'confirmed' as const } : r)));
-    closeResolveModal();
-    message.success(
-      feedbackRating > 0
-        ? `Feedback submitted (${feedbackRating}/5). Item confirmed.`
-        : 'Feedback submitted. Item confirmed.',
-    );
-  }
-
-  function handleManualSwap(row: BomItem) {
-    closeResolveModal();
-    navigate(`/bom/projects/${bomProjectId}/asc-products`, {
-      state: {
-        swapRowId: row.id,
-        swapSource: {
-          partNumber: row.originalInput,
-          description: row.parsedDescription,
-          size: row.size,
-          category: row.category,
-        },
-      },
-    });
-  }
-
-  const statCardShell = {
-    background: token.colorBgContainer,
-    border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-    borderRadius: token.borderRadiusLG,
-    boxShadow: token.boxShadowTertiary,
-    paddingBlock: token.padding,
-    paddingInlineStart: token.paddingMD,
-    paddingInlineEnd: token.paddingMD,
-  };
-  const statCardAccentWidth = token.lineWidth * 2;
-
   const columns: TableColumnsType<BomItem> = [
-    { title: '#', dataIndex: 'rowNumber', key: 'rowNumber', width: 50 },
     {
-      title: 'Part number',
-      dataIndex: 'originalInput',
-      key: 'originalInput',
-      width: 157,
-      sorter: (a, b) => a.originalInput.localeCompare(b.originalInput),
-      render: (partNumber: string, row) => (
-        <Typography.Link onClick={() => openResolveModal(row)}>{partNumber}</Typography.Link>
+      title: '#',
+      dataIndex: 'rowNumber',
+      key: 'rowNumber',
+      width: bomWorkspaceTableColumnWidths.rowNumber,
+    },
+    {
+      title: 'Part',
+      dataIndex: 'parsedDescription',
+      key: 'part',
+      width: bomWorkspaceTableColumnWidths.part,
+      ellipsis: true,
+      sorter: (a, b) => a.parsedDescription.localeCompare(b.parsedDescription),
+      render: (partLabel: string, row) => (
+        <Typography.Link ellipsis onClick={() => handlePartClick(row)}>
+          {partLabel}
+        </Typography.Link>
       ),
     },
     {
-      title: 'Description',
-      dataIndex: 'parsedDescription',
-      key: 'parsedDescription',
+      title: 'Figure Number',
+      dataIndex: 'figureNumber',
+      key: 'figureNumber',
+      width: bomWorkspaceTableColumnWidths.figureNumber,
       ellipsis: true,
+      render: (v: string | undefined) => v || '—',
+      sorter: (a, b) => (a.figureNumber ?? '').localeCompare(b.figureNumber ?? ''),
     },
     {
-      title: 'Category',
-      dataIndex: 'category',
-      key: 'category',
-      width: 110,
-      sorter: (a, b) => (a.category ?? '').localeCompare(b.category ?? ''),
+      title: 'SKU',
+      dataIndex: 'sku',
+      key: 'sku',
+      width: bomWorkspaceTableColumnWidths.sku,
+      ellipsis: true,
+      render: (v: string | undefined) => v || '—',
+      sorter: (a, b) => (a.sku ?? '').localeCompare(b.sku ?? ''),
     },
     {
       title: 'Quantity',
       dataIndex: 'quantity',
       key: 'quantity',
-      width: 110,
+      width: bomWorkspaceTableColumnWidths.quantity,
       sorter: (a, b) => a.quantity - b.quantity,
-    },
-    { title: 'Unit', dataIndex: 'unit', key: 'unit', width: 110 },
-    {
-      title: 'Confidence',
-      dataIndex: 'confidence',
-      key: 'confidence',
-      width: 110,
-      sorter: (a, b) => confidenceRank(a.confidence) - confidenceRank(b.confidence),
-      render: (c: BomItem['confidence']) => <BomConfidenceTag confidence={c} />,
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      width: 110,
-      sorter: (a, b) => statusRank(a.status) - statusRank(b.status),
-      render: (s: BomItem['status']) => (s ? <BomMatchStatusTag status={s} /> : '—'),
+      render: (value: number, record) => (
+        <InputNumber
+          min={0}
+          value={value}
+          onChange={(n) => updateRowQuantity(record.id, n)}
+          style={{ width: '100%', maxWidth: bomWorkspaceTableColumnWidths.quantity - token.paddingSM * 2 }}
+        />
+      ),
     },
     {
       title: 'Actions',
       key: 'actions',
-      width: 150,
+      width: bomWorkspaceTableColumnWidths.actions,
       render: (_, row) => (
-        <Space size={token.margin}>
-          <Typography.Link onClick={() => openResolveModal(row)}>
-            {isWorkspaceRowConfirmed(row) ? 'Review' : 'Resolve'}
-          </Typography.Link>
-          <Typography.Link
-            type="danger"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              openDeleteModal(row);
-            }}
-          >
-            Delete
-          </Typography.Link>
-        </Space>
+        <Typography.Link
+          type="danger"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openDeleteModal(row);
+          }}
+        >
+          Delete
+        </Typography.Link>
       ),
     },
   ];
 
-  function renderTableEmptyState() {
-    if (!hasWorkspaceRows) {
-      return (
-        <Empty
-          description={
-            <Space orientation="vertical" size={token.marginXXS}>
-              <Typography.Text strong>No BOM items yet</Typography.Text>
-              <Typography.Text type="secondary">
-                Add a line manually or upload a file to create a new BOM run.
-              </Typography.Text>
-            </Space>
-          }
-        />
-      );
-    }
+  function renderWorkspaceHeader() {
+    const title = editProject?.name ?? projectTitle;
     return (
-      <Empty
-        description={
-          <Space orientation="vertical" size={token.marginXXS}>
-            <Typography.Text strong>No matching rows</Typography.Text>
-            <Typography.Text type="secondary">
-              No BOM lines match your search or status filter.
-            </Typography.Text>
-          </Space>
-        }
-      >
-        <Button onClick={clearSearchAndFilters}>Reset filters</Button>
-      </Empty>
+      <Flex align="flex-start" justify="space-between" gap={token.marginMD} wrap="wrap">
+        <Space orientation="vertical" size={token.marginXXS}>
+          <Flex align="center" gap={token.marginXXS} wrap="wrap">
+            <Typography.Title level={3} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading3) }}>
+              {title}
+            </Typography.Title>
+            {project ? (
+              <Button
+                type="text"
+                icon={<EditOutlined />}
+                aria-label="Edit project name"
+                onClick={() => setEditModalOpen(true)}
+              />
+            ) : null}
+          </Flex>
+          <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+            {WORKSPACE_HEADER_DESCRIPTION}
+          </Typography.Text>
+        </Space>
+        <Button size="large" type="primary" icon={<ExportOutlined />} onClick={handleExport}>
+          Export
+        </Button>
+      </Flex>
     );
   }
 
-  function renderResolveModal() {
-    if (!resolveModalRow) return null;
-    const isConfirmed = isWorkspaceRowConfirmed(resolveModalRow);
-    const suggestedPart = suggestedAscPartForRow(resolveModalRow);
-
+  function renderImportSummaryAlert() {
+    if (!importSummary) return null;
+    const label = importSummary.fileName ?? 'your upload';
     return (
-      <Modal
-        title={isConfirmed ? 'Review BOM Line' : 'Resolve BOM Line'}
-        open={!!resolveModalRow}
-        onCancel={closeResolveModal}
-        footer={null}
-        width={720}
-        destroyOnClose
-      >
-        {resolvePhase === 'review' ? (
-          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            <div>
-              <Typography.Text type="secondary" style={{
-                ...hydraTextStyleToReactCss(hydraSmallNormal),
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-              }}>
-                Original BOM Line
-              </Typography.Text>
-              <Descriptions
-                bordered
-                size="small"
-                column={2}
-                style={{ marginTop: token.marginXS }}
-              >
-                <Descriptions.Item label="Part number">{resolveModalRow.originalInput}</Descriptions.Item>
-                <Descriptions.Item label="Description">{resolveModalRow.parsedDescription}</Descriptions.Item>
-                <Descriptions.Item label="Size">{resolveModalRow.size || '—'}</Descriptions.Item>
-                <Descriptions.Item label="Category">{resolveModalRow.category || '—'}</Descriptions.Item>
-                <Descriptions.Item label="Quantity">{resolveModalRow.quantity} {resolveModalRow.unit || ''}</Descriptions.Item>
-                <Descriptions.Item label="Confidence">
-                  <BomConfidenceTag confidence={resolveModalRow.confidence} />
-                </Descriptions.Item>
-              </Descriptions>
-            </div>
+      <Alert
+        type="success"
+        showIcon
+        closable
+        onClose={() => setImportSummary(null)}
+        message={`Imported ${importSummary.total} items from ${label}`}
+        description={`${importSummary.accepted} accepted · ${importSummary.manual} added manually · ${importSummary.skipped} skipped.`}
+      />
+    );
+  }
 
-            <Divider style={{ margin: 0 }} />
-
-            <div>
-              <Typography.Text type="secondary" style={{
-                ...hydraTextStyleToReactCss(hydraSmallNormal),
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-              }}>
-                Suggested ASC Part
-              </Typography.Text>
-              <Descriptions
-                bordered
-                size="small"
-                column={2}
-                style={{ marginTop: token.marginXS }}
-              >
-                <Descriptions.Item label="Part number">{suggestedPart.partNumber}</Descriptions.Item>
-                <Descriptions.Item label="Description">{suggestedPart.description}</Descriptions.Item>
-                <Descriptions.Item label="Family">{suggestedPart.productFamily}</Descriptions.Item>
-                <Descriptions.Item label="Dimensions">{suggestedPart.dimensions}</Descriptions.Item>
-                <Descriptions.Item label="Pressure">{suggestedPart.pressureRating}</Descriptions.Item>
-                <Descriptions.Item label="Connection">{suggestedPart.connectionType}</Descriptions.Item>
-                <Descriptions.Item label="Match confidence" span={2}>
-                  <Progress percent={suggestedPart.matchConfidence} size="small" style={{ maxWidth: 280 }} />
-                </Descriptions.Item>
-              </Descriptions>
-            </div>
-
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-              Review the suggested ASC part and confirm or replace it before final export.
-            </Typography.Text>
-
-            <Flex justify="flex-end" gap={token.marginXS} wrap="wrap">
-              {isConfirmed ? (
-                <>
-                  <Button onClick={closeResolveModal}>Done</Button>
-                  <Button icon={<SwapOutlined />} onClick={() => handleManualSwap(resolveModalRow)}>
-                    Manual Swap
-                  </Button>
-                  <Button danger onClick={() => handleReopen(resolveModalRow)}>
-                    Reopen for Review
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button onClick={closeResolveModal}>Cancel</Button>
-                  <Button onClick={() => setResolvePhase('feedback')}>
-                    Approve with Feedback
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setTranslationOpen(true);
-                    }}
-                  >
-                    Review translation
-                  </Button>
-                  <Button icon={<SwapOutlined />} onClick={() => handleManualSwap(resolveModalRow)}>
-                    Manual Swap
-                  </Button>
-                  <Button type="primary" onClick={() => handleApprove(resolveModalRow)}>
-                    Approve
-                  </Button>
-                </>
-              )}
-            </Flex>
-          </Space>
-        ) : (
-          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            <Typography.Text>
-              Confirm this match and attach feedback for review. Your feedback helps improve future matching.
-            </Typography.Text>
-            <div>
-              <Typography.Text type="secondary" style={{ display: 'block', marginBottom: token.marginXS }}>
-                Optional rating
-              </Typography.Text>
-              <Rate value={feedbackRating} onChange={setFeedbackRating} />
-            </div>
-            <Input.TextArea
-              rows={4}
-              placeholder="Describe any issues or notes about this match..."
-              value={feedbackText}
-              onChange={(e) => setFeedbackText(e.target.value)}
+  function renderPendingUploadAlerts() {
+    if (pendingImports.length === 0) return null;
+    return (
+      <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
+        {pendingImports.map((importSession) => {
+          const { progress } = importSession;
+          const pct = overallProgressPercent(progress);
+          const stepNum = Math.min(3, stepIndex(progress.currentStep) + 1);
+          return (
+            <Alert
+              key={importSession.uploadId}
+              type="warning"
+              showIcon
+              message={`Continue file upload process for "${progress.fileName}"?`}
+              description={
+                <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
+                  <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+                    Stopped at: {stepLabel(progress.currentStep)} · {stepNum} of 3 steps complete
+                  </Typography.Text>
+                  <Progress percent={pct} size="small" showInfo strokeColor={token.colorPrimary} />
+                  <Flex justify="flex-end" style={{ marginTop: token.marginXXS }}>
+                    <Button
+                      size="large"
+                      type="primary"
+                      onClick={() => {
+                        setActiveUploadId(importSession.uploadId);
+                        navigate(routeForImportStep(bomProjectId, progress.currentStep), {
+                          state: {
+                            uploadId: importSession.uploadId,
+                            uploadFileName: progress.fileName,
+                            fieldMapping: importSession.fieldMapping,
+                            uploadDestination: 'append',
+                            appendTargetId: bomProjectId,
+                          },
+                        });
+                      }}
+                    >
+                      Continue
+                    </Button>
+                  </Flex>
+                </Space>
+              }
             />
-            <Flex justify="flex-end" gap={token.marginXS}>
-              <Button onClick={() => setResolvePhase('review')}>Back</Button>
-              <Button type="primary" onClick={() => handleSubmitFeedback(resolveModalRow)}>
-                Submit &amp; Confirm
-              </Button>
-            </Flex>
+          );
+        })}
+      </Space>
+    );
+  }
+
+  function renderWorkspaceTable() {
+    return (
+      <Card
+        style={{ borderRadius: token.borderRadiusLG, boxShadow: token.boxShadowTertiary }}
+        styles={{ body: { padding: 0 } }}
+      >
+        <Flex
+          align="center"
+          justify="space-between"
+          gap={token.marginSM}
+          wrap="wrap"
+          style={{
+            paddingInline: token.paddingMD,
+            paddingBlock: token.paddingSM,
+            borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+          }}
+        >
+          <Space wrap size={token.marginXS}>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setAscDrawerOpen(true)}>
+              Add Item
+            </Button>
+            <Button icon={<UploadOutlined />} onClick={() => workspaceFileRef.current?.click()}>
+              Upload file
+            </Button>
           </Space>
-        )}
-      </Modal>
+          <AppSearchInput
+            allowClear
+            placeholder="Search Items..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            style={{ width: 280, maxWidth: '100%' }}
+          />
+        </Flex>
+        <Table<BomItem>
+          rowKey="id"
+          columns={columns}
+          dataSource={pagedRows}
+          pagination={false}
+          scroll={{
+            x:
+              bomWorkspaceTableColumnWidths.rowNumber +
+              bomWorkspaceTableColumnWidths.part +
+              bomWorkspaceTableColumnWidths.figureNumber +
+              bomWorkspaceTableColumnWidths.sku +
+              bomWorkspaceTableColumnWidths.quantity +
+              bomWorkspaceTableColumnWidths.actions,
+          }}
+          tableLayout="fixed"
+          locale={{
+            emptyText: (
+              <Empty
+                description={
+                  <Space orientation="vertical" size={token.marginXXS}>
+                    <Typography.Text strong>
+                      {hasWorkspaceRows ? 'No matching rows' : 'No BOM items yet'}
+                    </Typography.Text>
+                    <Typography.Text type="secondary">
+                      {hasWorkspaceRows
+                        ? 'Try a different search term.'
+                        : 'Add an item or upload a file to populate this BOM.'}
+                    </Typography.Text>
+                  </Space>
+                }
+              />
+            ),
+          }}
+          styles={{
+            header: {
+              cell: {
+                background: token.colorFillAlter,
+                borderBottomColor: token.colorBorderSecondary,
+                fontWeight: token.fontWeightStrong,
+              },
+            },
+            body: {
+              cell: {
+                borderBottomColor: token.colorBorderSecondary,
+                paddingBlock: token.paddingSM,
+              },
+            },
+          }}
+        />
+        <BomTablePaginationBar current={page} total={filteredRows.length} onChange={setPage} />
+      </Card>
+    );
+  }
+
+  function renderAscDrawer() {
+    return (
+      <AscProductsDrawer
+        open={ascDrawerOpen}
+        onClose={() => setAscDrawerOpen(false)}
+        onAddProduct={(p) => {
+          setRows((prev) =>
+            renumberRows([
+              ...prev,
+              ensureWorkspaceRowDisplayFields({
+                id: `ws-asc-${Date.now()}`,
+                rowNumber: prev.length + 1,
+                originalInput: p.ascNumber,
+                parsedDescription: p.description,
+                figureNumber: p.figureNumber,
+                sku: p.ascNumber,
+                size: p.size,
+                pressureClass: '',
+                connectionType: '',
+                quantity: p.qty || 1,
+                confidence: 'high',
+                category: p.partType,
+                unit: 'EA',
+                status: 'confirmed',
+              }),
+            ]),
+          );
+          setAscDrawerOpen(false);
+          message.success('Item added to BOM.');
+        }}
+      />
+    );
+  }
+
+  function renderHiddenFileInput() {
+    return (
+      <input
+        ref={workspaceFileRef}
+        type="file"
+        accept=".xlsx,.xls,.csv,.pdf,application/pdf,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        style={{ display: 'none' }}
+        onChange={handleWorkspaceFileChange}
+      />
     );
   }
 
   if (isSeedEmptyProject && !hasWorkspaceRows) {
     return (
       <>
-        <input
-          ref={emptyWorkspaceFileRef}
-          type="file"
-          accept=".xlsx,.xls,.csv,.pdf,application/pdf,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-          style={{ display: 'none' }}
-          onChange={handleEmptyWorkspaceFileChange}
-        />
+        {renderHiddenFileInput()}
         <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-          <BomPageHeader
-            eyebrow="Draft"
-            title={projectTitle}
-            description="Upload a file to parse your BOM, browse ASC products, or use the quick picker."
-            actions={
-              <Space wrap>
-                <Button size="large" type="primary" icon={<ExportOutlined />} onClick={handleExport}>
-                  Export
-                </Button>
-                <Button size="large" onClick={handleRequestService}>
-                  Request service
-                </Button>
-              </Space>
-            }
-          />
-
+          <PageBackButton to="/bom">Back to BOM projects</PageBackButton>
+          {renderWorkspaceHeader()}
           <Card styles={{ body: { padding: `${token.paddingLG * 2}px ${token.paddingLG}px` } }}>
             <Empty
               description={
                 <Space orientation="vertical" size={token.marginXS}>
                   <Typography.Text strong>No BOM items yet</Typography.Text>
                   <Typography.Text type="secondary">
-                    Upload a file to parse your BOM, browse ASC products, or use the quick picker.
+                    Upload a file to parse your BOM or add items manually.
                   </Typography.Text>
                 </Space>
               }
             >
               <Flex gap={token.marginSM} justify="center" wrap="wrap">
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={<PlusOutlined />}
-                  onClick={() => setAscDrawerOpen(true)}
-                >
-                  Add item
+                <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setAscDrawerOpen(true)}>
+                  Add Item
                 </Button>
                 <Button
                   size="large"
                   icon={<UploadOutlined />}
-                  onClick={() => emptyWorkspaceFileRef.current?.click()}
+                  onClick={() => workspaceFileRef.current?.click()}
                 >
-                  Upload BOM file
+                  Upload file
                 </Button>
-                <Button
-                  size="large"
-                  icon={<FileSearchOutlined />}
-                  onClick={() => navigate('/bom/search')}
-                >
+                <Button size="large" icon={<FileSearchOutlined />} onClick={() => navigate('/bom/search')}>
                   Search parts
                 </Button>
               </Flex>
             </Empty>
           </Card>
         </Space>
-        <AscProductsDrawer
-          open={ascDrawerOpen}
-          onClose={() => setAscDrawerOpen(false)}
-          onAddProduct={(p) => {
-            setRows((prev) =>
-              renumberRows([
-                ...prev,
-                {
-                  id: `ws-asc-${Date.now()}`,
-                  rowNumber: prev.length + 1,
-                  originalInput: p.ascNumber,
-                  parsedDescription: p.description,
-                  size: p.size,
-                  pressureClass: '',
-                  connectionType: '',
-                  quantity: p.qty || 1,
-                  confidence: 'medium',
-                  category: p.partType,
-                  unit: 'EA',
-                  status: 'needs-review',
-                },
-              ]),
-            );
-            setAscDrawerOpen(false);
-            message.success('Product added from quick picker.');
-          }}
-        />
-        <PartTranslationModal
-          open={translationOpen}
-          onClose={() => setTranslationOpen(false)}
-          items={resolveModalRow ? [resolveModalRow] : []}
-          ascParts={resolveModalRow ? [suggestedAscPartForRow(resolveModalRow)] : []}
-          onConfirm={(itemId, ascPart) => {
-            setRows((prev) =>
-              prev.map((r) =>
-                r.id === itemId
-                  ? {
-                      ...r,
-                      status: 'confirmed' as const,
-                      confidence: 'high' as const,
-                      originalInput: ascPart.partNumber,
-                      parsedDescription: ascPart.description,
-                      size: ascPart.dimensions,
-                    }
-                  : r,
-              ),
-            );
-            setTranslationOpen(false);
-            closeResolveModal();
-            message.success('Translation reviewed and line confirmed.');
+        {renderAscDrawer()}
+        <BomEditProjectModal
+          open={editModalOpen}
+          project={editProject}
+          onClose={() => setEditModalOpen(false)}
+          onSave={(updated) => {
+            setEditProject(updated);
+            setEditModalOpen(false);
+            message.success('Project name updated.');
           }}
         />
       </>
@@ -789,295 +637,21 @@ export function BomWorkspacePage() {
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+      {renderHiddenFileInput()}
       <PageBackButton to="/bom">Back to BOM projects</PageBackButton>
-      <BomPageHeader
-        title={`${projectTitle} workspace`}
-        description="Active project BOM review workspace. Confirm lines, resolve review items, and finalize project output."
-        actions={
-          <Space wrap>
-            <Button size="large" type="primary" icon={<ExportOutlined />} onClick={handleExport}>
-              Export
-            </Button>
-            <Button size="large" onClick={handleRequestService}>
-              Request service
-            </Button>
-          </Space>
-        }
-      />
-
-      {appendImportBanner ? (
-        <Alert
-          type="info"
-          showIcon
-          closable
-          onClose={() => setAppendImportBanner(null)}
-          message={`Added from ${appendImportBanner.fileName}: ${appendImportBanner.count} item${appendImportBanner.count === 1 ? '' : 's'}.`}
-          description="They are tagged Needs Review."
-          action={
-            <Typography.Link onClick={() => setStatusFilter('needs-review')}>Filter to new lines</Typography.Link>
-          }
-        />
-      ) : null}
-
-      {actionError ? (
-        <Alert
-          type="error"
-          showIcon
-          message={
-            actionError.type === 'translate'
-              ? 'Translate Parts failed'
-              : actionError.type === 'upload'
-                ? 'Upload failed'
-                : actionError.type === 'export'
-                  ? 'Export unavailable'
-                  : 'Request Service failed'
-          }
-          description={actionError.message}
-          action={
-            actionError.type === 'translate' ? (
-              <Button size="small" onClick={handleTranslateParts}>
-                Retry
-              </Button>
-            ) : null
-          }
-          closable
-          onClose={() => setActionError(null)}
-        />
-      ) : null}
-
-      <Flex gap={token.margin} wrap="wrap" align="stretch">
-        <div
-          style={{
-            ...statCardShell,
-            flex: '1 1 160px',
-            minWidth: 0,
-            cursor: 'pointer',
-            borderInlineStartWidth: statCardAccentWidth,
-            borderInlineStartStyle: 'solid',
-            borderInlineStartColor: token.colorPrimaryBorder,
-          }}
-          onClick={() => setStatusFilter('all')}
-        >
-          <Flex align="center" justify="space-between" gap={token.marginXS}>
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-              Total items
-            </Typography.Text>
-            <Typography.Title level={3} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading3) }}>
-              {totalItems}
-            </Typography.Title>
-          </Flex>
-        </div>
-        <div
-          style={{
-            ...statCardShell,
-            flex: '1 1 160px',
-            minWidth: 0,
-            cursor: 'pointer',
-            borderInlineStartWidth: statCardAccentWidth,
-            borderInlineStartStyle: 'solid',
-            borderInlineStartColor: token.colorSuccessBorder,
-          }}
-          onClick={() => setStatusFilter('confirmed')}
-        >
-          <Flex align="center" justify="space-between" gap={token.marginXS}>
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-              Confirmed
-            </Typography.Text>
-            <Typography.Title level={3} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading3) }}>
-              {confirmedCount}
-            </Typography.Title>
-          </Flex>
-        </div>
-        <div
-          style={{
-            ...statCardShell,
-            flex: '1 1 160px',
-            minWidth: 0,
-            cursor: 'pointer',
-            borderInlineStartWidth: statCardAccentWidth,
-            borderInlineStartStyle: 'solid',
-            borderInlineStartColor: token.colorWarningBorder,
-          }}
-          onClick={() => setStatusFilter('needs-review')}
-        >
-          <Flex align="center" justify="space-between" gap={token.marginXS}>
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-              Needs Review
-            </Typography.Text>
-            <Typography.Title level={3} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading3) }}>
-              {needsReviewCount}
-            </Typography.Title>
-          </Flex>
-        </div>
-        <div
-          style={{
-            ...statCardShell,
-            flex: '1 1 160px',
-            minWidth: 0,
-            cursor: 'pointer',
-            borderInlineStartWidth: statCardAccentWidth,
-            borderInlineStartStyle: 'solid',
-            borderInlineStartColor: token.colorErrorBorder,
-          }}
-          onClick={() => setStatusFilter('missing')}
-        >
-          <Flex align="center" justify="space-between" gap={token.marginXS}>
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-              Missing
-            </Typography.Text>
-            <Typography.Title level={3} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading3) }}>
-              {missingCount}
-            </Typography.Title>
-          </Flex>
-        </div>
-        <div
-          style={{
-            ...statCardShell,
-            flex: '1 1 220px',
-            maxWidth: 368,
-            minWidth: 200,
-            borderInlineStartWidth: statCardAccentWidth,
-            borderInlineStartStyle: 'solid',
-            borderInlineStartColor: token.colorInfoBorder,
-          }}
-        >
-          <Flex vertical justify="center" gap={token.marginXXS} style={{ width: '100%', minHeight: '100%' }}>
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-              Match Confidence
-            </Typography.Text>
-            <Progress
-              percent={confidencePercent}
-              size="small"
-              strokeColor={token.colorInfo}
-              trailColor={token.colorFillSecondary}
-              style={{ margin: 0 }}
-            />
-          </Flex>
-        </div>
-      </Flex>
-
-      {isTranslating && (
-        <Alert
-          type="info"
-          showIcon
-          message="Translating unresolved BOM lines…"
-          description="Running ASC matching on lines that need review. Table will update when complete."
-        />
-      )}
-
-      <Card
-        style={{ borderRadius: token.borderRadiusLG, boxShadow: token.boxShadowTertiary }}
-        styles={{ body: { padding: 0 } }}
-      >
-        <Flex
-          align="center"
-          justify="space-between"
-          gap={token.marginSM}
-          wrap="wrap"
-          style={{
-            paddingInline: token.paddingMD,
-            paddingBlock: token.paddingSM,
-            borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-          }}
-        >
-          <Space wrap size={token.marginXS}>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setAscDrawerOpen(true)}>
-              Add Item
-            </Button>
-            <Button onClick={() => navigate(`/bom/projects/${bomProjectId}/asc-products`)}>Browse products</Button>
-            <Button icon={<UploadOutlined />} onClick={handleUpload}>
-              Upload file
-            </Button>
-            {canTranslate ? (
-              <Button icon={<TranslationOutlined />} onClick={() => navigate(`/bom/projects/${bomProjectId}/translate`)}>
-                Translate all
-              </Button>
-            ) : null}
-          </Space>
-          <Flex align="center" gap={token.marginXS} wrap="wrap">
-            <AppSearchInput
-              allowClear
-              placeholder="Search items..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              style={{ width: 240, maxWidth: '100%' }}
-            />
-          </Flex>
-        </Flex>
-        <Table<BomItem>
-          rowKey="id"
-          columns={columns}
-          dataSource={filteredRows}
-          scroll={{ x: 'max-content' }}
-          locale={{
-            emptyText: renderTableEmptyState(),
-          }}
-          pagination={{
-            pageSize: shellLayout.tablePageSizeDefault,
-            showSizeChanger: false,
-            showTotal: (total) => `${total} row${total === 1 ? '' : 's'}`,
-            position: ['bottomRight'],
-          }}
-          styles={{
-            header: { cell: { background: token.colorFillAlter, borderBottomColor: token.colorBorderSecondary, fontWeight: token.fontWeightStrong } },
-            body: { cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM } },
-          }}
-        />
-      </Card>
-
-      {renderResolveModal()}
-
-      <AscProductsDrawer
-        open={ascDrawerOpen}
-        onClose={() => setAscDrawerOpen(false)}
-        onAddProduct={(p) => {
-          setRows((prev) =>
-            renumberRows([
-              ...prev,
-              {
-                id: `ws-asc-${Date.now()}`,
-                rowNumber: prev.length + 1,
-                originalInput: p.ascNumber,
-                parsedDescription: p.description,
-                size: p.size,
-                pressureClass: '',
-                connectionType: '',
-                quantity: p.qty || 1,
-                confidence: 'medium',
-                category: p.partType,
-                unit: 'EA',
-                status: 'needs-review',
-              },
-            ]),
-          );
-          setAscDrawerOpen(false);
-          message.success('Product added from quick picker.');
-        }}
-      />
-
-      <PartTranslationModal
-        open={translationOpen}
-        onClose={() => setTranslationOpen(false)}
-        items={resolveModalRow ? [resolveModalRow] : []}
-        ascParts={resolveModalRow ? [suggestedAscPartForRow(resolveModalRow)] : []}
-        onConfirm={(itemId, ascPart) => {
-          setRows((prev) =>
-            prev.map((r) =>
-              r.id === itemId
-                ? {
-                    ...r,
-                    status: 'confirmed' as const,
-                    confidence: 'high' as const,
-                    originalInput: ascPart.partNumber,
-                    parsedDescription: ascPart.description,
-                    size: ascPart.dimensions,
-                  }
-                : r,
-            ),
-          );
-          setTranslationOpen(false);
-          closeResolveModal();
-          message.success('Translation reviewed and line confirmed.');
+      {renderWorkspaceHeader()}
+      {renderImportSummaryAlert()}
+      {renderPendingUploadAlerts()}
+      {renderWorkspaceTable()}
+      {renderAscDrawer()}
+      <BomEditProjectModal
+        open={editModalOpen}
+        project={editProject}
+        onClose={() => setEditModalOpen(false)}
+        onSave={(updated) => {
+          setEditProject(updated);
+          setEditModalOpen(false);
+          message.success('Project name updated.');
         }}
       />
     </Space>

@@ -1,3 +1,4 @@
+import { buildWorkspaceMainRows, ensureWorkspaceRowDisplayFields } from './bomWorkspaceSeed';
 import type {
   AscCatalogPart,
   BomItem,
@@ -66,17 +67,24 @@ export const mockBomProjects: BomProject[] = [
     name: 'Parking Garage Electrical Upgrade',
     lastEdited: '2026-03-02',
     items: 93,
-    status: 'in-progress',
+    status: 'completed',
   },
   ...Array.from({ length: 24 }, (_, i): BomProject => {
     const idx = i + 7;
+    const projectId = projectIdCycle[i % 4];
+    const status: BomProject['status'] =
+      projectId === '1'
+        ? idx % 3 === 0
+          ? 'needs-review'
+          : 'completed'
+        : bomProjectStatusCycle[i % 4];
     return {
       id: String(idx),
-      projectId: projectIdCycle[i % 4],
+      projectId,
       name: `Fire protection BOM — package ${idx}`,
       lastEdited: `2026-02-${String(15 + (i % 12)).padStart(2, '0')}`,
       items: 50 + (idx * 11) % 180,
-      status: bomProjectStatusCycle[i % 4],
+      status,
     };
   }),
 ];
@@ -191,6 +199,8 @@ export const mockWorkspaceItems: BomItem[] = [
     rowNumber: 1,
     originalInput: 'ASC-FL-400-G',
     parsedDescription: 'FireLock Grooved Coupling, Style 005',
+    figureNumber: 'FP7450',
+    sku: '4371000570',
     size: '4 inch',
     pressureClass: '300 PSI',
     connectionType: 'Grooved',
@@ -205,6 +215,8 @@ export const mockWorkspaceItems: BomItem[] = [
     rowNumber: 2,
     originalInput: 'ASC-GV-600-FL',
     parsedDescription: 'Gate Valve, Flanged',
+    figureNumber: 'GV-600-FL',
+    sku: '8821042193',
     size: '6 inch',
     pressureClass: '150 PSI',
     connectionType: 'Flanged',
@@ -219,6 +231,8 @@ export const mockWorkspaceItems: BomItem[] = [
     rowNumber: 3,
     originalInput: 'ASC-CV-400-G',
     parsedDescription: 'Check Valve, Grooved',
+    figureNumber: 'CV-400-GR',
+    sku: '5590182734',
     size: '4 inch',
     pressureClass: '300 PSI',
     connectionType: 'Grooved',
@@ -233,6 +247,8 @@ export const mockWorkspaceItems: BomItem[] = [
     rowNumber: 4,
     originalInput: 'ASC-PIPE-4-SCH10',
     parsedDescription: 'Galvanized Steel Pipe Schedule 10',
+    figureNumber: 'PIPE-4-SCH10',
+    sku: '6612038841',
     size: '4 inch',
     pressureClass: '',
     connectionType: 'Grooved',
@@ -247,6 +263,8 @@ export const mockWorkspaceItems: BomItem[] = [
     rowNumber: 5,
     originalInput: 'ASC-CV-400-G',
     parsedDescription: 'Check Valve, Grooved',
+    figureNumber: 'CV-400-GR',
+    sku: '9037741208',
     size: '4 inch',
     pressureClass: '300 PSI',
     connectionType: 'Grooved',
@@ -261,6 +279,8 @@ export const mockWorkspaceItems: BomItem[] = [
     rowNumber: 6,
     originalInput: 'ASC-BFV-300-LG',
     parsedDescription: 'Butterfly Valve, Lug Type',
+    figureNumber: 'BFV-300-LG',
+    sku: '7741209835',
     size: '3 inch',
     pressureClass: '300 PSI',
     connectionType: 'Lug',
@@ -275,6 +295,8 @@ export const mockWorkspaceItems: BomItem[] = [
     rowNumber: 7,
     originalInput: 'ASC-PIPE-4-SCH10',
     parsedDescription: 'Galvanized Steel Pipe Schedule 10',
+    figureNumber: 'PIPE-4-SCH10',
+    sku: '2289014456',
     size: '4 inch',
     pressureClass: '',
     connectionType: 'Grooved',
@@ -320,6 +342,8 @@ function matchForItem(item: BomItem): BomMatchResult {
     originalRequest: item.originalInput,
     suggestedParts: suggested,
     topMatch: top,
+    lineStatus: 'pending',
+    source: 'auto',
   };
 }
 
@@ -348,6 +372,121 @@ export function addBomProject(name: string, description?: string): BomProject {
     status: 'draft',
   };
   mockBomProjects.unshift(project);
+  return project;
+}
+
+export function updateBomProjectName(id: string, name: string): BomProject | undefined {
+  const project = mockBomProjects.find((p) => p.id === id);
+  if (!project) return undefined;
+  project.name = name;
+  project.lastEdited = new Date().toISOString().slice(0, 10);
+  return project;
+}
+
+/** Row is fully defined: part variant chosen and translation/review finished. */
+export function isBomItemFullyDefined(row: BomItem): boolean {
+  return row.status === 'confirmed';
+}
+
+/** Translation pipeline still open at any step (pending → matched → needs-review). */
+export function isBomTranslationUnfinished(row: BomItem): boolean {
+  return !isBomItemFullyDefined(row);
+}
+
+export function hasUnfinishedBomTranslation(rows: BomItem[]): boolean {
+  return rows.some(isBomTranslationUnfinished);
+}
+
+function cloneWorkspaceTemplate(): BomItem[] {
+  return mockWorkspaceItems.map((r) => ensureWorkspaceRowDisplayFields({ ...r }));
+}
+
+/** Ready projects: every line confirmed with a resolved ASC part variant. */
+function workspaceRowsForReadyProject(): BomItem[] {
+  return buildWorkspaceMainRows().map((row) => ({
+    ...row,
+    status: 'confirmed' as const,
+    confidence: 'high' as const,
+  }));
+}
+
+/**
+ * Needs-review projects: at least one BOM translation process unfinished (any pipeline step).
+ * Seed mixes pending (not started), matched (in progress), and needs-review (awaiting sign-off).
+ */
+function workspaceRowsForNeedsReviewProject(): BomItem[] {
+  const rows = cloneWorkspaceTemplate().map((row, index) => {
+    if (index === 0) {
+      return { ...row, status: 'confirmed' as const, confidence: 'high' as const };
+    }
+    if (index === 1) {
+      return {
+        ...row,
+        status: 'pending' as const,
+        confidence: 'low' as const,
+        originalInput: row.originalInput.replace(/^ASC-/, 'TY-'),
+      };
+    }
+    if (index === 2) {
+      return { ...row, status: 'matched' as const, confidence: 'medium' as const };
+    }
+    return { ...row, status: 'needs-review' as const };
+  });
+
+  if (hasUnfinishedBomTranslation(rows)) return rows;
+
+  return rows.map((row, index) =>
+    index === 0 ? row : { ...row, status: 'needs-review' as const },
+  );
+}
+
+/** In-progress / partial: mix of confirmed and open review lines. */
+function workspaceRowsForInProgressProject(): BomItem[] {
+  return cloneWorkspaceTemplate().map((row, index) =>
+    index % 2 === 0
+      ? { ...row, status: 'confirmed' as const, confidence: 'high' as const }
+      : { ...row, status: 'needs-review' as const, confidence: 'medium' as const },
+  );
+}
+
+/**
+ * Initial workspace rows seeded from project list status.
+ * Ready (`completed`) → all items fully defined; needs-review → open translation steps remain.
+ */
+export function initialWorkspaceRowsForBomProject(bomProjectId: string): BomItem[] {
+  if (bomProjectId === 'new') return [];
+  const project = bomProjectById(bomProjectId);
+  if (!project || project.items === 0) return [];
+
+  switch (project.status) {
+    case 'completed':
+      return workspaceRowsForReadyProject();
+    case 'needs-review':
+      return workspaceRowsForNeedsReviewProject();
+    case 'draft':
+      return [];
+    case 'in-progress':
+    case 'partial':
+      return workspaceRowsForInProgressProject();
+    default:
+      return workspaceRowsForNeedsReviewProject();
+  }
+}
+
+export function deriveBomProjectStatusFromRows(rows: BomItem[]): BomProject['status'] {
+  if (rows.length === 0) return 'draft';
+  return hasUnfinishedBomTranslation(rows) ? 'needs-review' : 'completed';
+}
+
+export function syncBomProjectFromWorkspaceRows(
+  bomProjectId: string,
+  rows: BomItem[],
+): BomProject | undefined {
+  const project = mockBomProjects.find((p) => p.id === bomProjectId);
+  if (!project) return undefined;
+  project.items = rows.length;
+  project.status = deriveBomProjectStatusFromRows(rows);
+  project.lastEdited = new Date().toISOString().slice(0, 10);
   return project;
 }
 

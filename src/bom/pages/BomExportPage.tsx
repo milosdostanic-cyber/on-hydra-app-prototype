@@ -9,6 +9,7 @@ import { BomPageHeader } from '../layout/BomPageHeader';
 import { bomProjectById, bomProjectTitleById } from '../data/mockData';
 import type { BomItem } from '../data/types';
 import { BomCardTitle } from '../components/BomCardTitle';
+import { BomTablePaginationBar } from '../components/BomTablePaginationBar';
 import { ExportCard } from '../../ui/ExportCard';
 import {
   Alert,
@@ -20,7 +21,6 @@ import {
   Form,
   Input,
   Modal,
-  Pagination,
   Row,
   Space,
   Table,
@@ -280,23 +280,11 @@ export function BomExportPage() {
             body: { cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM } },
           }}
         />
-        <Flex
-          justify="flex-end"
-          align="center"
-          style={{
-            paddingInline: token.paddingMD,
-            paddingBlock: token.paddingSM,
-            borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-          }}
-        >
-          <Pagination
-            current={previewPage}
-            pageSize={shellLayout.tablePageSizeDefault}
-            total={confirmedRows.length}
-            onChange={setPreviewPage}
-            showSizeChanger={false}
-          />
-        </Flex>
+        <BomTablePaginationBar
+          current={previewPage}
+          total={confirmedRows.length}
+          onChange={setPreviewPage}
+        />
       </Card>
 
       <Card title={<BomCardTitle>Column mapping</BomCardTitle>} style={{ borderColor: token.colorBorderSecondary }}>

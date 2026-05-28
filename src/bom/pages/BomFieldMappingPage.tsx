@@ -1,8 +1,12 @@
-import { ArrowRightOutlined, CheckCircleOutlined } from '@ant-design/icons';
-import { useMemo, useState } from 'react';
+import { ArrowRightOutlined, CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
+import { ASC_FIELD_MAPPING_TOTAL } from '../bomFieldMappingUtils';
+import { BomImportProgressStrip } from '../components/BomImportProgressStrip';
+import { useBomImportFlow } from '../context/BomImportFlowContext';
+import { useBomImportSession } from '../hooks/useBomImportSession';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { bomProjectById, bomProjectTitleById } from '../data/mockData';
 import { PageBackButton } from '../../shell/PageBackButton';
@@ -11,15 +15,18 @@ import {
   Button,
   Card,
   Flex,
+  Modal,
   Select,
   Space,
+  Tooltip,
   Typography,
   message,
   theme,
 } from '../../ui/antd';
 import {
+  hydraBaseStrong,
+  hydraLargeNormal,
   hydraSmallNormal,
-  hydraSmallStrong,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
 
@@ -36,13 +43,19 @@ const BOM_SOURCE_FIELDS = [
   'ORDER FLAG',
   'PART NUMBER',
   'QTY',
+  'SKU',
+  'UPC',
   'UNIT',
   'NOTES',
 ];
 
+const SAVE_MAPPING_DISABLED_TOOLTIP = 'Map at least Description, Figure Number, SKU, or UPC to continue.';
+
 const ASC_DEST_FIELDS = [
   { key: 'PART NUMBER', label: 'Part Number' },
   { key: 'DESCRIPTION', label: 'Description' },
+  { key: 'SKU', label: 'SKU' },
+  { key: 'UPC', label: 'UPC' },
   { key: 'QTY', label: 'Quantity' },
   { key: 'BRAND', label: 'Brand' },
   { key: 'FIGURE NUM', label: 'Figure Number' },
@@ -58,7 +71,9 @@ type AliasMap = Record<string, string | undefined>;
 
 const DEFAULT_ALIAS: AliasMap = {
   'PART NUMBER': 'PART NUMBER',
-  DESCRIPTION: 'DESCRIPTION',
+  DESCRIPTION: '— Skip —',
+  SKU: '— Skip —',
+  UPC: '— Skip —',
   QTY: 'QTY',
   BRAND: 'BRAND',
   'FIGURE NUM': 'FIGURE NUM',
@@ -80,7 +95,12 @@ export function BomFieldMappingPage() {
   const { bomProjectId = '' } = useParams<{ bomProjectId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const [aliasMap, setAliasMap] = useState<AliasMap>({ ...DEFAULT_ALIAS });
+  const { ensureSession, updateProgress, dismissSession } = useBomImportFlow();
+  const { session, uploadState, uploadId } = useBomImportSession(bomProjectId);
+  const [aliasMap, setAliasMap] = useState<AliasMap>(() => ({
+    ...DEFAULT_ALIAS,
+    ...(uploadState.fieldMapping ?? {}),
+  }));
 
   const projectMeta = bomProjectById(bomProjectId);
   const projectLabel = bomProjectTitleById(bomProjectId) ?? 'BOM project';
@@ -101,16 +121,52 @@ export function BomFieldMappingPage() {
     return new Set([...counts.entries()].filter(([, n]) => n > 1).map(([col]) => col));
   }, [mappedValues]);
 
-  const hasRequired =
-    Boolean(normalizeSkip(aliasMap['PART NUMBER'])) &&
-    Boolean(normalizeSkip(aliasMap.DESCRIPTION)) &&
-    Boolean(normalizeSkip(aliasMap.QTY));
+  const hasProceedMapping =
+    Boolean(normalizeSkip(aliasMap.DESCRIPTION)) ||
+    Boolean(normalizeSkip(aliasMap['FIGURE NUM'])) ||
+    Boolean(normalizeSkip(aliasMap.SKU)) ||
+    Boolean(normalizeSkip(aliasMap.UPC));
+
+  const canSaveMapping = hasProceedMapping && duplicateBomColumns.size === 0;
+  const saveMappingDisabledTooltip = !hasProceedMapping
+    ? SAVE_MAPPING_DISABLED_TOOLTIP
+    : duplicateBomColumns.size > 0
+      ? 'Each BOM column can map to only one ASC field. Adjust duplicate mappings.'
+      : undefined;
 
   const categoryMapped = Boolean(normalizeSkip(aliasMap['FIGURE NUM']) || normalizeSkip(aliasMap.MATERIAL));
 
+  useEffect(() => {
+    if (!uploadId) return;
+    updateProgress(uploadId, {
+      currentStep: 'map',
+      mappedAscFields: mappedCount,
+      totalAscFields: ASC_FIELD_MAPPING_TOTAL,
+      fieldMapping: aliasMap,
+    });
+  }, [uploadId, mappedCount, aliasMap, updateProgress]);
+
+  function renderSaveMappingButton() {
+    const button = (
+      <Button type="primary" size="large" onClick={handleSave} disabled={!canSaveMapping}>
+        Save mapping &amp; continue
+      </Button>
+    );
+
+    if (!canSaveMapping) {
+      return (
+        <Tooltip title={saveMappingDisabledTooltip}>
+          <span style={{ display: 'inline-block', cursor: 'not-allowed' }}>{button}</span>
+        </Tooltip>
+      );
+    }
+
+    return button;
+  }
+
   function handleSave() {
-    if (!hasRequired) {
-      message.warning('Map Part Number, Description, and Quantity before continuing.');
+    if (!hasProceedMapping) {
+      message.warning(SAVE_MAPPING_DISABLED_TOOLTIP);
       return;
     }
     if (duplicateBomColumns.size > 0) {
@@ -122,8 +178,18 @@ export function BomFieldMappingPage() {
       typeof location.state === 'object' && location.state && !Array.isArray(location.state)
         ? { ...(location.state as BomUploadFlowLocationState) }
         : {};
+    const fileName = uploadBase.uploadFileName ?? session?.progress.fileName ?? 'Uploaded file';
+    const uploadId =
+      session?.uploadId ??
+      ensureSession(bomProjectId, fileName, aliasMap).uploadId;
+    updateProgress(uploadId, {
+      currentStep: 'review',
+      mappedAscFields: mappedCount,
+      totalAscFields: ASC_FIELD_MAPPING_TOTAL,
+      fieldMapping: aliasMap,
+    });
     navigate(`/bom/projects/${bomProjectId}/parsing-review`, {
-      state: { ...uploadBase, fieldMapping: aliasMap },
+      state: { ...uploadBase, fieldMapping: aliasMap, uploadId },
     });
   }
 
@@ -132,11 +198,25 @@ export function BomFieldMappingPage() {
   }
 
   function handleCancel() {
-    if (bomProjectId && bomProjectId !== 'new' && projectMeta) {
-      navigate(`/bom/projects/${bomProjectId}/workspace`);
-      return;
-    }
-    navigate('/bom');
+    Modal.confirm({
+      title: 'Cancel upload and lose mapping progress?',
+      icon: <ExclamationCircleOutlined style={{ color: token.colorWarning }} />,
+      centered: true,
+      okText: 'Cancel upload',
+      okType: 'danger',
+      cancelText: 'Keep editing',
+      content:
+        'You are about to cancel the current translation/upload flow request. All unsaved field-mapping progress will be lost.',
+      onOk: () => {
+        const id = uploadId ?? session?.uploadId;
+        if (id) dismissSession(id);
+        if (bomProjectId && bomProjectId !== 'new' && projectMeta) {
+          navigate(`/bom/projects/${bomProjectId}/workspace`);
+          return;
+        }
+        navigate('/bom');
+      },
+    });
   }
 
   if (bomProjectId && bomProjectId !== 'new' && !projectMeta) {
@@ -158,32 +238,26 @@ export function BomFieldMappingPage() {
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to="/bom">Back to BOM</PageBackButton>
+      <BomImportProgressStrip progress={session.progress} />
       <BomPageHeader
         title="Field mapping"
         description={`Map columns from your uploaded BOM to ASC fields before parsing. ${projectLabel}.`}
         actions={
           <Space wrap>
             <Button size="large" onClick={handleCancel}>
-              Cancel
+              Cancel upload
             </Button>
-            <Button
-              type="primary"
-              size="large"
-              onClick={handleSave}
-              disabled={!hasRequired || duplicateBomColumns.size > 0}
-            >
-              Save mapping &amp; continue
-            </Button>
+            {renderSaveMappingButton()}
           </Space>
         }
       />
 
-      {!hasRequired ? (
+      {!hasProceedMapping ? (
         <Alert
           type="warning"
           showIcon
           message="Required mappings"
-          description="Map at least Part Number, Description, and Quantity to continue."
+          description="Map at least one of: Description, Figure Number, SKU, or UPC to continue to parsing."
         />
       ) : null}
 
@@ -223,7 +297,7 @@ export function BomFieldMappingPage() {
             <div style={{ flex: 1 }}>
               <Typography.Text
                 strong
-                style={{ ...hydraTextStyleToReactCss(hydraSmallStrong), color: token.colorTextSecondary }}
+                style={{ ...hydraTextStyleToReactCss(hydraBaseStrong), color: token.colorTextSecondary }}
               >
                 ASC FIELD
               </Typography.Text>
@@ -232,7 +306,7 @@ export function BomFieldMappingPage() {
             <div style={{ flex: 1 }}>
               <Typography.Text
                 strong
-                style={{ ...hydraTextStyleToReactCss(hydraSmallStrong), color: token.colorPrimary }}
+                style={{ ...hydraTextStyleToReactCss(hydraBaseStrong), color: token.colorPrimary }}
               >
                 YOUR BOM COLUMN
               </Typography.Text>
@@ -273,19 +347,16 @@ export function BomFieldMappingPage() {
                       }}
                     >
                       <Typography.Text
-                        strong={isMapped}
                         style={{
-                          ...(isMapped
-                            ? hydraTextStyleToReactCss(hydraSmallStrong)
-                            : hydraTextStyleToReactCss(hydraSmallNormal)),
-                          color: isMapped ? token.colorPrimary : token.colorTextTertiary,
+                          ...hydraTextStyleToReactCss(hydraLargeNormal),
+                          color: isMapped ? token.colorText : token.colorTextPlaceholder,
                         }}
                       >
                         {label}
                       </Typography.Text>
                       {isMapped ? (
                         <CheckCircleOutlined
-                          style={{ color: token.colorSuccess, fontSize: hydraSmallNormal.fontSize }}
+                          style={{ color: token.colorSuccess, fontSize: token.fontSizeLG }}
                         />
                       ) : null}
                     </Flex>
@@ -305,6 +376,7 @@ export function BomFieldMappingPage() {
 
                   <div style={{ flex: 1 }}>
                     <Select
+                      size="large"
                       value={raw ?? undefined}
                       onChange={(val) => setAliasMap((prev) => ({ ...prev, [key]: val }))}
                       placeholder="Select BOM column…"

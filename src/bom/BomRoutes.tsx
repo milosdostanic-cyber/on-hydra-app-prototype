@@ -6,6 +6,8 @@ import { BomExportPage } from './pages/BomExportPage';
 import { BomFieldMappingPage } from './pages/BomFieldMappingPage';
 import { BomLandingPage } from './pages/BomLandingPage';
 import { BomMatchingPage } from './pages/BomMatchingPage';
+import { BomProgressiveMatchingPage } from './pages/BomProgressiveMatchingPage';
+import { BomReplacementPickerPage } from './pages/BomReplacementPickerPage';
 import { BomNarrowPage } from './pages/BomNarrowPage';
 import { BomParsingReviewPage } from './pages/BomParsingReviewPage';
 import { BomRecommendPage } from './pages/BomRecommendPage';
@@ -25,6 +27,11 @@ export function BomRoutes() {
         <Route path="search" element={<BomSearchPage />} />
         <Route path="projects/:bomProjectId/parsing-review" element={<BomParsingReviewPage />} />
         <Route path="projects/:bomProjectId/matching" element={<BomMatchingPage />} />
+        <Route path="projects/:bomProjectId/matching/progressive" element={<BomProgressiveMatchingPage />} />
+        <Route
+          path="projects/:bomProjectId/matching/items/:itemId/replacement"
+          element={<BomReplacementPickerPage />}
+        />
         <Route path="projects/:bomProjectId/items/:itemId/narrow" element={<BomNarrowPage />} />
         <Route path="projects/:bomProjectId/items/:itemId/recommend" element={<BomRecommendPage />} />
         <Route path="projects/:bomProjectId/workspace" element={<BomWorkspacePage />} />
