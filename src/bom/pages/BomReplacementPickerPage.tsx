@@ -6,9 +6,10 @@ import {
   type AscBrowserProductRow,
 } from '../data/ascBrowserProducts';
 import { mockAscParts } from '../data/mockData';
-import { matchScoreBand, matchScoreLabel } from '../data/bomImportFlowSeed';
+import { matchScoreBand } from '../data/bomImportFlowSeed';
 import { useBomMatchingData } from '../hooks/useBomMatchingData';
 import { BomTablePaginationBar } from '../components/BomTablePaginationBar';
+import { BomConfidenceTag, BomManualTag } from '../components/BomTags';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import type { AscCatalogPart, BomMatchResult } from '../data/types';
 import { PageBackButton } from '../../shell/PageBackButton';
@@ -19,7 +20,6 @@ import {
   Checkbox,
   Space,
   Table,
-  Tag,
   Typography,
   message,
   theme,
@@ -143,16 +143,12 @@ export function BomReplacementPickerPage() {
       width: PICKER_WIDTHS.matchScore,
       render: (_, record) => {
         if (selectedKey === record.key) {
-          return <Tag style={{ margin: 0 }}>Added manually</Tag>;
+          return <BomManualTag />;
         }
         const conf = 88;
         const band = matchScoreBand(conf);
-        const color = band === 'high' ? 'success' : band === 'medium' ? 'warning' : 'error';
-        return (
-          <Tag color={color} style={{ margin: 0 }}>
-            {matchScoreLabel('auto', conf)}
-          </Tag>
-        );
+        const confidence = band === 'high' ? 'high' : band === 'medium' ? 'medium' : 'low';
+        return <BomConfidenceTag confidence={confidence} />;
       },
     },
   ];

@@ -1,0 +1,173 @@
+---
+description: Pin English Figma comments (What + Why) on new/changed layout via Console MCP — skip empty screens and pre-existing buttons
+alwaysApply: false
+---
+
+# Figma layout change comments (Console MCP)
+
+**Language:** English for all comment bodies (unless the user explicitly asks for another language).
+
+Use this workflow when you **add or change** UI in a Figma file (especially after **[figma-repo-to-screen-parity.mdc](./figma-repo-to-screen-parity.mdc)** or any layout sync from repo) and the user wants **designer-facing notes** left **in Figma** on the correct nodes.
+
+All automation uses **[figma-console-mcp.mdc](./figma-console-mcp.mdc)** only (`CallMcpTool` → **`server`: `user-figma-console`**). Read tool schemas before calling.
+
+| Task | Tool |
+|------|------|
+| Post a pinned comment | `figma_post_comment` |
+| List existing comments (dedupe) | `figma_get_comments` |
+| Resolve pin coordinates | `figma_execute` (node `absoluteBoundingBox` / `absoluteRenderBounds`) |
+
+Do **not** use `plugin-figma-figma` for comments.
+
+## When this applies (trigger)
+
+- User asks to **document**, **annotate**, or **comment** Figma changes after a sync or edit session.
+- You **finished** (or paused) a Figma edit pass where you **inserted** new layout nodes or **meaningfully changed** existing ones inside an agreed scope (section, selection, or named screen list).
+
+Do **not** run this rule for read-only audits, screenshots only, or code-only work with no Figma writes.
+
+## Where to start (screens and order)
+
+1. **Confirm scope** with the user when possible:
+   - Figma **section** or **file URL** (e.g. BOM Flow V3 `node-id=5022-23065`).
+   - Explicit **list of screen frame names** to annotate (preferred when provided).
+2. **Build the comment list before posting:**
+   - Walk only screens in scope.
+   - For each screen, list **pin-worthy nodes** from the session **change log** (see below).
+3. **Screen order** in the written plan / MD deliverable:
+   - Use the **order the user gave**, or
+   - Otherwise **left → right** by canvas `x` on the section (`figma_execute` on section children, sort by `x` then `y`).
+4. **Write the plan MD first** when the user asks for a plan or batch annotate (e.g. [`Documents/Bom/figma-bom-flow-v3-layout-comments-plan.md`](../Documents/Bom/figma-bom-flow-v3-layout-comments-plan.md)): screen → node ID → comment text → pin `x`/`y` (filled at execution).
+5. **Post comments** only for rows in that plan (or an equivalent approved list).
+
+## Skip entire screens (required)
+
+**If a screen has no qualifying new/changed layout to annotate, omit it completely.**
+
+- Do **not** add a section for that screen in the MD plan.
+- Do **not** post “skip”, “N/A”, or placeholder comments on that frame.
+- Do **not** pin on the screen root “just to document” that nothing changed.
+
+Re-scan at execution only if the user added new scope; otherwise leave those frames untouched.
+
+## What gets a comment (node scope)
+
+Comment **only** nodes that match **at least one** of:
+
+| Qualifies | Examples |
+|-----------|----------|
+| **New in layout** | New frame, section, stat strip, table column region, instantiated DS component |
+| **Added content** | New column, new alert body, new filter, new tag row |
+| **Meaningful change** | Replaced detached frame with DS instance; new alert description; variant/prop that changes meaning |
+
+Do **not** comment when:
+
+- The node was **untouched** (including unchanged DS instances on the same screen).
+- The change is **purely visual parity** with no new behavior **unless** the user asked to document it.
+- Only a **parent** resized but **content** is identical — pin the **smallest** explaining node (column header, alert instance, strip), not the full screen.
+- The area is **shell chrome** (sidebar, global header) **unless** you changed it in this session.
+
+### Do not comment pre-existing buttons (required)
+
+Do **not** pin comments on **buttons or links that already existed** in Figma before the work being documented — even if repo wiring changed.
+
+Typical exclusions: **Back**, **Save and import**, **Cancel upload**, **Approve**, **Choose different part**, **Continue**, **Save mapping & continue**, **Continue to matching**, per-row **Refine**, pagination chevrons.
+
+Pin **new regions** instead: stat strip, new columns, filters, alerts with new role/copy, import progress **container** (not its CTA buttons), table/column headers as one note.
+
+When unsure whether a control is new: **skip the pin** rather than annotate an existing button.
+
+Keep a **session change log** while editing: `{ nodeId, nodeName, changeKind: 'added' | 'modified', oneLineSummary }`. Comment from that log at the end; do not guess nodes you did not touch.
+
+## Comment content (required style)
+
+Write in **plain English**. Describe the **current** UI only — not a before/after diff.
+
+### Format: **What** + **Why** only (default)
+
+Each comment uses **two labeled parts** — no **Does** line unless the user explicitly asks for a three-part format.
+
+1. **What** — What is this element (type + label, e.g. “KPI stat strip”, “Match Score column”, “Manual swap alert”).
+2. **Why** — Why it is on this screen / in this flow. You may include **essential behavior** here in plain language; do not add a separate **Does** paragraph.
+
+**Do:**
+
+- Use present tense.
+- Tie **Why** to product intent when known (BOM import, matching, replacement picker, etc.).
+- Keep **one short paragraph** or two lines: `**What:** … **Why:** …`
+
+**Do not:**
+
+- Use a **Does:** label (default).
+- Write “Changed from…”, “Updated…”, “Previously…”, “Old/New”, “Diff”, or delta bullet lists.
+- Paste raw `node-id` unless the user asked for traceability.
+- Use `@mentions` expecting notifications (Console renders `@name` as plain text per tool schema).
+
+### Length
+
+- About **2–4 sentences** total, or two labeled lines (**What** / **Why**).
+- One comment per **logical** new/changed block; merge tiny related tweaks on the same node.
+
+### Example (good)
+
+> **What:** Info alert above the replacement table. **Why:** Identifies which part is being swapped on this BOM line and tells the reviewer to select a catalog row before approving the manual pick.
+
+### Example (bad)
+
+> Changed alert from title-only to title + description. Was missing description before.
+
+## Pin placement (required)
+
+Comments must pin where a designer **expects** the note — on the **changed node**, at a readable anchor.
+
+### Steps per comment
+
+1. **`figma_execute`** — load the target node by `nodeId` (from the plan or change log).
+2. Read **`absoluteBoundingBox`** (prefer) or **`absoluteRenderBounds`** for canvas coordinates.
+3. Compute **`x`** and **`y`** for `figma_post_comment`:
+   - Default: **top-left inside the node** — `x = bounds.x + 8`, `y = bounds.y + 8` (~8px inset).
+   - **Wide frames** (tables, full-width alerts): pin on the **header / title sublayer** if it exists; otherwise top-left of the **content** subframe.
+   - **Small controls** (checkbox, tag): center — `x = bounds.x + bounds.width / 2`, `y = bounds.y + bounds.height / 2`.
+   - **Text-only edits:** pin on the **TEXT** node or its wrapper, not the page root.
+4. Pass **`node_id`**, **`x`**, and **`y`** together to `figma_post_comment` (absolute canvas coords per tool schema).
+5. **`figma_capture_screenshot`** on the parent frame (optional) to verify the pin is not on empty canvas.
+
+If bounds are unavailable, use the **nearest visible ancestor** and name the intended child in **What**.
+
+### Avoid bad pins
+
+- Do not pin at `(0,0)` unless that is the node’s real position.
+- Do not pin on a **parent** when a **child** is what changed.
+- Do not stack multiple comments on the **same coordinates** — offset ~24px vertically for a second note on the same node.
+
+## Workflow (plan → post)
+
+```mermaid
+flowchart TD
+  scope[Confirm section and screen list]
+  log[Finalize change log per screen]
+  plan[Write MD plan: only screens with pins]
+  dedupe[figma_get_comments]
+  bounds[figma_execute bounds per node]
+  post[figma_post_comment per plan row]
+  verify[Optional screenshot spot-check]
+  scope --> log --> plan --> dedupe --> bounds --> post --> verify
+```
+
+1. Confirm **section / screens**; drop screens with **zero** qualifying pins from the plan entirely.
+2. Finish layout edits per **[figma-repo-to-screen-parity.mdc](./figma-repo-to-screen-parity.mdc)** (or user scope); maintain the **change log**.
+3. Write or update the **comment plan MD** (screen → node ID → **What** / **Why** → `x`/`y` at execution).
+4. **`figma_get_comments`** — skip posting if an active comment on the same `node_id` already matches intent.
+5. For each plan row only: compute bounds → **`figma_post_comment`** with `message`, `node_id`, `x`, `y`, and `fileUrl` if needed.
+6. Summarize for the user: **how many** comments posted and **which screens** (not a full diff dump).
+
+## Prerequisites
+
+Same as **figma-console-mcp.mdc**: Figma Desktop, target file open, **Desktop Bridge** running. Confirm with `figma_list_open_files` if posts fail.
+
+## Related
+
+- **[figma-console-mcp.mdc](./figma-console-mcp.mdc)** — MCP server and tool mapping
+- **[figma-repo-to-screen-parity.mdc](./figma-repo-to-screen-parity.mdc)** — repo → Figma sync (typical source of changes to annotate)
+- **[figma-repo-parity.mdc](./figma-repo-parity.mdc)** — token/component authority (comments do not replace parity docs)
+- **[Documents/Bom/figma-bom-flow-v3-layout-comments-plan.md](../Documents/Bom/figma-bom-flow-v3-layout-comments-plan.md)** — example batch comment plan (BOM Flow V3)

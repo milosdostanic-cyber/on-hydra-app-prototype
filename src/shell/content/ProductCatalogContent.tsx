@@ -18,11 +18,11 @@ import {
   Flex,
   Input,
   Space,
-  Tag,
   Typography,
   message,
   theme,
 } from '../../ui/antd';
+import { HydraTag } from '../../ui/HydraTag';
 
 import {
   ProductCatalogHeroMultiplyGradient,
@@ -153,12 +153,9 @@ export function ProductCatalogContent() {
   const heroContentMaxWidth = token.sizeUnit * 175;
   /** Figma hero horizontal inset (`48` = `paddingLG` × 2). */
   const heroPaddingInline = token.paddingLG + token.paddingLG;
-  const heroRibbonTagStyles = {
-    root: {
-      marginInlineEnd: 0,
-      paddingBlock: token.paddingXXS,
-      paddingInline: token.paddingSM,
-    },
+  const heroRibbonTagStyle = {
+    paddingBlock: token.paddingXXS,
+    paddingInline: token.paddingSM,
   } as const;
   return (
     <Space orientation="vertical" size={0} style={{ width: '100%' }}>
@@ -211,9 +208,9 @@ export function ProductCatalogContent() {
           </Flex>
           <Flex gap={token.marginXS} wrap="wrap" justify="center">
             {RIBBON_LABELS.map((text) => (
-              <Tag key={text} color={token.colorInfo} variant="outlined" styles={heroRibbonTagStyles}>
+              <HydraTag key={text} tone="processing" style={heroRibbonTagStyle}>
                 {text}
-              </Tag>
+              </HydraTag>
             ))}
           </Flex>
         </Flex>

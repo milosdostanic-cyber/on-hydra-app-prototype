@@ -13,11 +13,11 @@ import {
   InputNumber,
   Progress,
   Space,
-  Tag,
   Typography,
   message,
   theme,
 } from '../../ui/antd';
+import { HydraTag } from '../../ui/HydraTag';
 import type { AscCatalogPart, BomItem } from '../data/types';
 import {
   hydraLargeNormal,
@@ -26,10 +26,10 @@ import {
   hydraTitleHeading1,
 } from '../../theme/hydraTypography';
 
-function confidenceColor(conf: number) {
+function confidenceTone(conf: number) {
   return conf >= 90 ? 'success' : conf >= 75 ? 'warning' : 'error';
 }
-function riskColor(risk: string) {
+function riskTone(risk: string) {
   return risk === 'low' ? 'success' : risk === 'medium' ? 'warning' : 'error';
 }
 
@@ -206,12 +206,12 @@ export function BomTranslatePage() {
             style={{ flex: 1, margin: 0 }}
           />
           <Flex gap={token.marginXXS} style={{ flexShrink: 0 }}>
-            <Tag color="success" style={{ margin: 0 }}>
+            <HydraTag tone="success">
               {confirmed.size} confirmed
-            </Tag>
-            <Tag color="default" style={{ margin: 0 }}>
+            </HydraTag>
+            <HydraTag>
               {skipped.size} skipped
-            </Tag>
+            </HydraTag>
           </Flex>
         </Flex>
       </Card>
@@ -233,14 +233,14 @@ export function BomTranslatePage() {
             </Typography.Text>
           </Flex>
           {isItemConfirmed ? (
-            <Tag color="success" style={{ margin: 0 }}>
+            <HydraTag tone="success">
               Confirmed
-            </Tag>
+            </HydraTag>
           ) : null}
           {isSkipped ? (
-            <Tag color="default" style={{ margin: 0 }}>
+            <HydraTag>
               Skipped
-            </Tag>
+            </HydraTag>
           ) : null}
         </Flex>
 
@@ -259,16 +259,16 @@ export function BomTranslatePage() {
             <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
               Match confidence:
             </Typography.Text>
-            <Tag color={confidenceColor(currentAscPart.matchConfidence)} style={{ margin: 0 }}>
+            <HydraTag tone={confidenceTone(currentAscPart.matchConfidence)}>
               {currentAscPart.matchConfidence}%
-            </Tag>
+            </HydraTag>
             <Divider type="vertical" style={{ margin: 0 }} />
             <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
               Substitution risk:
             </Typography.Text>
-            <Tag color={riskColor(currentAscPart.substitutionRisk)} style={{ margin: 0, textTransform: 'capitalize' }}>
+            <HydraTag tone={riskTone(currentAscPart.substitutionRisk)} style={{ textTransform: 'capitalize' }}>
               {currentAscPart.substitutionRisk}
-            </Tag>
+            </HydraTag>
             <Divider type="vertical" style={{ margin: 0 }} />
             <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
               Rule: {currentAscPart.conversionRule}

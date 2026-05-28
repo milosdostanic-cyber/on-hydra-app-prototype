@@ -7,12 +7,13 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { matchScoreBand, matchScoreLabel } from '../data/bomImportFlowSeed';
+import { matchScoreBand } from '../data/bomImportFlowSeed';
 import { useBomMatchingData } from '../hooks/useBomMatchingData';
 import { useBomImportFlow } from '../context/BomImportFlowContext';
 import { useBomWorkspace } from '../../context/BomWorkspaceContext';
 import { ensureWorkspaceRowDisplayFields } from '../data/bomWorkspaceSeed';
 import { BomImportProgressStrip } from '../components/BomImportProgressStrip';
+import { BomConfidenceTag, BomManualTag } from '../components/BomTags';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { bomItemById } from '../data/mockData';
 import type { BomItem, BomItemConfidence, BomMatchResult } from '../data/types';
@@ -25,7 +26,6 @@ import {
   Flex,
   Progress,
   Space,
-  Tag,
   Typography,
   message,
   theme,
@@ -66,11 +66,6 @@ import {
   hydraTextStyleToReactCss,
   hydraTitleHeading1,
 } from '../../theme/hydraTypography';
-
-function confidenceTagColor(conf: number) {
-  const band = matchScoreBand(conf);
-  return band === 'high' ? 'success' : band === 'medium' ? 'warning' : 'error';
-}
 
 export function BomProgressiveMatchingPage() {
   const { token } = theme.useToken();
@@ -277,11 +272,9 @@ export function BomProgressiveMatchingPage() {
             Match score:
           </Typography.Text>
           {current.source === 'manual' ? (
-            <Tag style={{ margin: 0 }}>Added manually</Tag>
+            <BomManualTag />
           ) : (
-            <Tag color={confidenceTagColor(conf)} style={{ margin: 0 }}>
-              {matchScoreLabel(current.source, conf)}
-            </Tag>
+            <BomConfidenceTag confidence={matchScoreBand(conf) === 'high' ? 'high' : matchScoreBand(conf) === 'medium' ? 'medium' : 'low'} />
           )}
         </Flex>
       ) : null}

@@ -5,8 +5,9 @@ import { catalogSubcategory } from '../../catalog/productCatalogHierarchy.demo';
 import { productCatalogHomePath, productCatalogLinePath } from '../../catalog/productCatalogNavigation';
 import { shellLayout } from '../../theme/hydraAlias';
 import { PageBackButton } from '../PageBackButton';
-import { Button, Flex, Space, Table, Tag, Typography, message, theme } from '../../ui/antd';
+import { Button, Flex, Space, Table, Typography, message, theme } from '../../ui/antd';
 import type { TableColumnsType } from '../../ui/antd';
+import { HydraTag } from '../../ui/HydraTag';
 
 import { catalogBrowseTableHeaderStyles } from './catalogBrowseTableStyles';
 
@@ -54,9 +55,9 @@ export function SubcategoryHubPage() {
       key: 'count',
       width: token.controlHeight * 4,
       render: (_, row) => (
-        <Tag>
+        <HydraTag>
           {row.partCount} part{row.partCount !== 1 ? 's' : ''}
-        </Tag>
+        </HydraTag>
       ),
     },
   ];

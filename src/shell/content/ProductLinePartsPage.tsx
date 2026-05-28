@@ -8,8 +8,9 @@ import {
   productCatalogPartVariantsPath,
 } from '../../catalog/productCatalogNavigation';
 import { PageBackButton } from '../PageBackButton';
-import { Button, Flex, Space, Table, Tag, Typography, message, theme } from '../../ui/antd';
+import { Button, Flex, Space, Table, Typography, message, theme } from '../../ui/antd';
 import type { TableColumnsType } from '../../ui/antd';
+import { HydraTag } from '../../ui/HydraTag';
 
 import { catalogBrowseTableHeaderStyles } from './catalogBrowseTableStyles';
 
@@ -88,7 +89,7 @@ export function ProductLinePartsPage() {
           {line.name}
         </Typography.Title>
         <Flex align="center" gap={token.marginXS} wrap="wrap">
-          <Tag>{line.parts.length} parts</Tag>
+          <HydraTag>{line.parts.length} parts</HydraTag>
           <Button
             type="primary"
             size="large"

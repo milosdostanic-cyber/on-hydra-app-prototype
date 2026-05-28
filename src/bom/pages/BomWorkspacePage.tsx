@@ -1,5 +1,6 @@
 import {
   EditOutlined,
+  ExclamationCircleFilled,
   ExclamationCircleOutlined,
   ExportOutlined,
   FileSearchOutlined,
@@ -46,6 +47,7 @@ import type { TableColumnsType } from '../../ui/antd';
 import { shellLayout } from '../../theme/hydraAlias';
 import {
   hydraBaseNormal,
+  hydraLargeStrong,
   hydraTextStyleToReactCss,
   hydraTitleHeading3,
 } from '../../theme/hydraTypography';
@@ -396,41 +398,94 @@ export function BomWorkspacePage() {
           const { progress } = importSession;
           const pct = overallProgressPercent(progress);
           const stepNum = Math.min(3, stepIndex(progress.currentStep) + 1);
+          const progressLabel = `${pct}%`;
           return (
-            <Alert
+            <Card
               key={importSession.uploadId}
-              type="warning"
-              showIcon
-              message={`Continue file upload process for "${progress.fileName}"?`}
-              description={
-                <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
-                  <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-                    Stopped at: {stepLabel(progress.currentStep)} · {stepNum} of 3 steps complete
-                  </Typography.Text>
-                  <Progress percent={pct} size="small" showInfo strokeColor={token.colorPrimary} />
-                  <Flex justify="flex-end" style={{ marginTop: token.marginXXS }}>
-                    <Button
-                      size="large"
-                      type="primary"
-                      onClick={() => {
-                        setActiveUploadId(importSession.uploadId);
-                        navigate(routeForImportStep(bomProjectId, progress.currentStep), {
-                          state: {
-                            uploadId: importSession.uploadId,
-                            uploadFileName: progress.fileName,
-                            fieldMapping: importSession.fieldMapping,
-                            uploadDestination: 'append',
-                            appendTargetId: bomProjectId,
-                          },
-                        });
+              style={{
+                background: token.colorWarningBg,
+                borderColor: token.colorWarningBorder,
+              }}
+              styles={{
+                body: {
+                  paddingInline: token.paddingLG,
+                  paddingBlock: token.paddingMD,
+                },
+              }}
+            >
+              <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
+                <Flex align="flex-start" justify="space-between" gap={token.marginSM}>
+                  <Flex align="flex-start" gap={token.marginSM} style={{ minWidth: 0, flex: 1 }}>
+                    <Flex
+                      align="center"
+                      justify="center"
+                      style={{
+                        width: token.controlHeightSM,
+                        height: token.controlHeightSM,
+                        flexShrink: 0,
                       }}
                     >
-                      Continue
-                    </Button>
+                      <ExclamationCircleFilled
+                        style={{
+                          color: token.colorWarning,
+                          fontSize: token.fontSize,
+                          lineHeight: `${token.fontSize * token.lineHeight}px`,
+                        }}
+                      />
+                    </Flex>
+                    <Space orientation="vertical" size={token.marginXXS} style={{ minWidth: 0, flex: 1 }}>
+                      <Typography.Text
+                        strong
+                        style={{
+                          ...hydraTextStyleToReactCss(hydraLargeStrong),
+                          color: token.colorText,
+                        }}
+                      >
+                        {`Continue file upload process for "${progress.fileName}"?`}
+                      </Typography.Text>
+                      <Typography.Text
+                        type="secondary"
+                        style={{
+                          ...hydraTextStyleToReactCss(hydraBaseNormal),
+                          color: token.colorTextDescription,
+                        }}
+                      >
+                        Stopped at: {stepLabel(progress.currentStep)} · {stepNum} of 3 steps complete
+                      </Typography.Text>
+                    </Space>
                   </Flex>
-                </Space>
-              }
-            />
+                  <Button
+                    type="primary"
+                    onClick={() => {
+                      setActiveUploadId(importSession.uploadId);
+                      navigate(routeForImportStep(bomProjectId, progress.currentStep), {
+                        state: {
+                          uploadId: importSession.uploadId,
+                          uploadFileName: progress.fileName,
+                          fieldMapping: importSession.fieldMapping,
+                          uploadDestination: 'append',
+                          appendTargetId: bomProjectId,
+                        },
+                      });
+                    }}
+                  >
+                    Continue
+                  </Button>
+                </Flex>
+                <Flex align="center" gap={token.marginXS}>
+                  <Progress
+                    percent={pct}
+                    size="small"
+                    showInfo={false}
+                    strokeColor={token.colorPrimary}
+                    style={{ flex: 1, margin: 0 }}
+                  />
+                  <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraBaseNormal), color: token.colorText }}>
+                    {progressLabel}
+                  </Typography.Text>
+                </Flex>
+              </Space>
+            </Card>
           );
         })}
       </Space>
@@ -636,8 +691,9 @@ export function BomWorkspacePage() {
   }
 
   return (
-    <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+    <>
       {renderHiddenFileInput()}
+      <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to="/bom">Back to BOM projects</PageBackButton>
       {renderWorkspaceHeader()}
       {renderImportSummaryAlert()}
@@ -654,6 +710,7 @@ export function BomWorkspacePage() {
           message.success('Project name updated.');
         }}
       />
-    </Space>
+      </Space>
+    </>
   );
 }

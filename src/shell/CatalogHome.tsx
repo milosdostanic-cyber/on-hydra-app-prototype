@@ -11,8 +11,9 @@ import {
 import { PageBackButton } from './PageBackButton';
 import { shellLayout } from '../theme/hydraAlias';
 import { hydraBaseStrong } from '../theme/hydraTypography';
-import { AppSearchInput, Button, Flex, Pagination, Space, Table, Tag, Typography, theme } from '../ui/antd';
+import { AppSearchInput, Button, Flex, Pagination, Space, Table, Typography, theme } from '../ui/antd';
 import type { TableColumnsType } from '../ui/antd';
+import { HydraTag } from '../ui/HydraTag';
 
 const PREVIEW_ROWS = CATALOG_DEMO_PARTS.slice(0, 2);
 
@@ -86,13 +87,13 @@ export function CatalogHome() {
         </Typography.Text>
         <Flex wrap="wrap" gap={token.marginXS}>
           {CATALOG_QUICK_CATEGORIES.map((cat) => (
-            <Tag
+            <HydraTag
               key={cat}
-              style={{ cursor: 'pointer', margin: 0, paddingBlock: token.paddingXXS }}
+              style={{ cursor: 'pointer', paddingBlock: token.paddingXXS }}
               onClick={() => goResults(cat)}
             >
               {cat}
-            </Tag>
+            </HydraTag>
           ))}
         </Flex>
       </div>

@@ -18,7 +18,8 @@ import {
   hydraTextStyleToReactCss,
   hydraTitleHeading5,
 } from '../theme/hydraTypography';
-import { Button, Card, Divider, Drawer, Flex, Space, Tag, Typography, theme } from '../ui/antd';
+import { Button, Card, Divider, Drawer, Flex, Space, Typography, theme } from '../ui/antd';
+import { HydraTag } from '../ui/HydraTag';
 import type { ProjectRow } from './projectSeed';
 
 type Props = {
@@ -134,7 +135,7 @@ export function ProjectDetailDrawer({ project, open, onClose }: Props) {
                 </Typography.Text>
               </Flex>
               <Flex gap={token.marginXS} style={{ marginTop: token.marginSM }}>
-                <Tag color="blue">Active</Tag>
+                <HydraTag tone="processing">Active</HydraTag>
                 <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
                   Last opened {project.lastOpened}
                 </Typography.Text>

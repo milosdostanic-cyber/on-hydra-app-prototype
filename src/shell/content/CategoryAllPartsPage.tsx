@@ -7,8 +7,9 @@ import { flattenLeafPartsInCategory, catalogCategoryById } from '../../catalog/p
 import { productCatalogHomePath, productCatalogPartVariantsPath } from '../../catalog/productCatalogNavigation';
 import { shellLayout } from '../../theme/hydraAlias';
 import { PageBackButton } from '../PageBackButton';
-import { Button, Empty, Flex, Pagination, Space, Table, Tag, Typography, message, theme } from '../../ui/antd';
+import { Button, Empty, Flex, Pagination, Space, Table, Typography, message, theme } from '../../ui/antd';
 import type { TableColumnsType } from '../../ui/antd';
+import { HydraTag } from '../../ui/HydraTag';
 
 import { catalogBrowseTableHeaderStyles } from './catalogBrowseTableStyles';
 
@@ -96,9 +97,9 @@ export function CategoryAllPartsPage() {
         </Typography.Title>
         {cat ? (
           <Flex align="center" gap={token.marginXS} wrap="wrap">
-            <Tag color={token.colorInfo} variant="outlined" style={{ marginInlineEnd: 0 }}>
+            <HydraTag tone="processing">
               {cat.totalParts} parts
-            </Tag>
+            </HydraTag>
             <Button
               type="primary"
               size="large"

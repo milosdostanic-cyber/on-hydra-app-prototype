@@ -3,8 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { BomCardTitle } from '../components/BomCardTitle';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { bomItemById, bomProjectTitleById, matchResultForItem } from '../data/mockData';
-import { BomRiskTag } from '../components/BomTags';
-import { matchScoreLabel } from '../data/bomImportFlowSeed';
+import { BomConfidenceTag, BomManualTag, BomRiskTag } from '../components/BomTags';
 import {
   Alert,
   Button,
@@ -12,7 +11,6 @@ import {
   Descriptions,
   List,
   Space,
-  Tag,
   Typography,
   theme,
 } from '../../ui/antd';
@@ -111,11 +109,9 @@ export function BomRecommendPage() {
               <Descriptions.Item label="Connection">{top.connectionType}</Descriptions.Item>
               <Descriptions.Item label="Match score">
                 {match.source === 'manual' ? (
-                  <Tag style={{ margin: 0 }}>Added manually</Tag>
+                  <BomManualTag />
                 ) : (
-                  <Tag color="success" style={{ margin: 0 }}>
-                    {matchScoreLabel(match.source, top.matchConfidence)}
-                  </Tag>
+                  <BomConfidenceTag confidence={top.matchConfidence >= 90 ? 'high' : top.matchConfidence >= 70 ? 'medium' : 'low'} />
                 )}
               </Descriptions.Item>
               <Descriptions.Item label="Substitution risk">
