@@ -236,9 +236,10 @@ export function BomFieldMappingPage() {
   }
 
   return (
-    <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+    <>
+      <BomImportProgressStrip placement="shell-flush" progress={session.progress} />
+      <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to="/bom">Back to BOM</PageBackButton>
-      <BomImportProgressStrip progress={session.progress} />
       <BomPageHeader
         title="Field mapping"
         description={`Map columns from your uploaded BOM to ASC fields before parsing. ${projectLabel}.`}
@@ -417,5 +418,6 @@ export function BomFieldMappingPage() {
         </Flex>
       </Flex>
     </Space>
+    </>
   );
 }

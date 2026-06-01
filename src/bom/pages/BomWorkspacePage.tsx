@@ -1,6 +1,5 @@
 import {
   EditOutlined,
-  ExclamationCircleFilled,
   ExclamationCircleOutlined,
   ExportOutlined,
   FileSearchOutlined,
@@ -12,12 +11,8 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useBomWorkspaceRows } from '../../context/BomWorkspaceContext';
 import { useBomImportFlow } from '../context/BomImportFlowContext';
-import {
-  overallProgressPercent,
-  routeForImportStep,
-  stepIndex,
-  stepLabel,
-} from '../bomImportProgressState';
+import { routeForImportStep } from '../bomImportProgressState';
+import { BomPendingUploadsRegion } from '../components/BomPendingUploadsRegion';
 import { PageBackButton } from '../../shell/PageBackButton';
 import { MAX_UPLOAD_BYTES, VALID_UPLOAD_TYPES } from '../constants/uploadLimits';
 import { bomProjectById, bomProjectTitleById } from '../data/mockData';
@@ -36,7 +31,6 @@ import {
   Empty,
   Flex,
   InputNumber,
-  Progress,
   Space,
   Table,
   Typography,
@@ -47,7 +41,6 @@ import type { TableColumnsType } from '../../ui/antd';
 import { shellLayout } from '../../theme/hydraAlias';
 import {
   hydraBaseNormal,
-  hydraLargeStrong,
   hydraTextStyleToReactCss,
   hydraTitleHeading3,
 } from '../../theme/hydraTypography';
@@ -391,104 +384,23 @@ export function BomWorkspacePage() {
   }
 
   function renderPendingUploadAlerts() {
-    if (pendingImports.length === 0) return null;
     return (
-      <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
-        {pendingImports.map((importSession) => {
+      <BomPendingUploadsRegion
+        sessions={pendingImports}
+        onContinue={(importSession) => {
           const { progress } = importSession;
-          const pct = overallProgressPercent(progress);
-          const stepNum = Math.min(3, stepIndex(progress.currentStep) + 1);
-          const progressLabel = `${pct}%`;
-          return (
-            <Card
-              key={importSession.uploadId}
-              style={{
-                background: token.colorWarningBg,
-                borderColor: token.colorWarningBorder,
-              }}
-              styles={{
-                body: {
-                  paddingInline: token.paddingLG,
-                  paddingBlock: token.paddingMD,
-                },
-              }}
-            >
-              <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
-                <Flex align="flex-start" justify="space-between" gap={token.marginSM}>
-                  <Flex align="flex-start" gap={token.marginSM} style={{ minWidth: 0, flex: 1 }}>
-                    <Flex
-                      align="center"
-                      justify="center"
-                      style={{
-                        width: token.controlHeightSM,
-                        height: token.controlHeightSM,
-                        flexShrink: 0,
-                      }}
-                    >
-                      <ExclamationCircleFilled
-                        style={{
-                          color: token.colorWarning,
-                          fontSize: token.fontSize,
-                          lineHeight: `${token.fontSize * token.lineHeight}px`,
-                        }}
-                      />
-                    </Flex>
-                    <Space orientation="vertical" size={token.marginXXS} style={{ minWidth: 0, flex: 1 }}>
-                      <Typography.Text
-                        strong
-                        style={{
-                          ...hydraTextStyleToReactCss(hydraLargeStrong),
-                          color: token.colorText,
-                        }}
-                      >
-                        {`Continue file upload process for "${progress.fileName}"?`}
-                      </Typography.Text>
-                      <Typography.Text
-                        type="secondary"
-                        style={{
-                          ...hydraTextStyleToReactCss(hydraBaseNormal),
-                          color: token.colorTextDescription,
-                        }}
-                      >
-                        Stopped at: {stepLabel(progress.currentStep)} · {stepNum} of 3 steps complete
-                      </Typography.Text>
-                    </Space>
-                  </Flex>
-                  <Button
-                    type="primary"
-                    onClick={() => {
-                      setActiveUploadId(importSession.uploadId);
-                      navigate(routeForImportStep(bomProjectId, progress.currentStep), {
-                        state: {
-                          uploadId: importSession.uploadId,
-                          uploadFileName: progress.fileName,
-                          fieldMapping: importSession.fieldMapping,
-                          uploadDestination: 'append',
-                          appendTargetId: bomProjectId,
-                        },
-                      });
-                    }}
-                  >
-                    Continue
-                  </Button>
-                </Flex>
-                <Flex align="center" gap={token.marginXS}>
-                  <Progress
-                    percent={pct}
-                    size="small"
-                    showInfo={false}
-                    strokeColor={token.colorPrimary}
-                    style={{ flex: 1, margin: 0 }}
-                  />
-                  <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraBaseNormal), color: token.colorText }}>
-                    {progressLabel}
-                  </Typography.Text>
-                </Flex>
-              </Space>
-            </Card>
-          );
-        })}
-      </Space>
+          setActiveUploadId(importSession.uploadId);
+          navigate(routeForImportStep(bomProjectId, progress.currentStep), {
+            state: {
+              uploadId: importSession.uploadId,
+              uploadFileName: progress.fileName,
+              fieldMapping: importSession.fieldMapping,
+              uploadDestination: 'append',
+              appendTargetId: bomProjectId,
+            },
+          });
+        }}
+      />
     );
   }
 
@@ -693,11 +605,11 @@ export function BomWorkspacePage() {
   return (
     <>
       {renderHiddenFileInput()}
+      {renderPendingUploadAlerts()}
       <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to="/bom">Back to BOM projects</PageBackButton>
       {renderWorkspaceHeader()}
       {renderImportSummaryAlert()}
-      {renderPendingUploadAlerts()}
       {renderWorkspaceTable()}
       {renderAscDrawer()}
       <BomEditProjectModal

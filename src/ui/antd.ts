@@ -17,6 +17,7 @@ export {
   Card,
   Checkbox,
   Col,
+  Collapse,
   ConfigProvider,
   DatePicker,
   Descriptions,

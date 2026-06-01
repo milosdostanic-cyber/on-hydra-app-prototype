@@ -242,16 +242,42 @@ export function dismissImportSession(uploadId: string): void {
   saveToStorage();
 }
 
-export function ensureDemoPendingImports(bomProjectId: string): void {
-  if ((uploadIdsByProjectId.get(bomProjectId) ?? []).length > 0) return;
+const DEMO_PENDING_SEED_VERSION = 2;
+const demoPendingSeedKey = (bomProjectId: string) =>
+  `hydra_bom_demo_pending_seed_v${DEMO_PENDING_SEED_VERSION}_${bomProjectId}`;
 
-  const files = ['BOM-ExLine.xlsx', 'BOM-ExLine2.xlsx'];
+function seedDemoPendingImports(bomProjectId: string): void {
+  const files = ['BOM-ExLine.xlsx', 'BOM-ExLine2.xlsx', 'BOM-ExLine3.xlsx'] as const;
+  const steps: BomImportStep[] = ['review', 'map', 'match'];
   files.forEach((fileName, i) => {
     const session = createImportSession(bomProjectId, fileName);
     updateImportSession(session.uploadId, {
-      currentStep: i === 0 ? 'review' : 'map',
-      mappedAscFields: i === 0 ? 11 : 4,
-      parsedRows: i === 0 ? session.parsedItems.length : 0,
+      currentStep: steps[i],
+      mappedAscFields: i === 0 ? 11 : i === 1 ? 4 : 8,
+      parsedRows: i === 0 ? session.parsedItems.length : i === 2 ? Math.floor(session.parsedItems.length / 2) : 0,
+      acceptedCount: i === 2 ? 2 : 0,
+      skippedCount: i === 2 ? 1 : 0,
     });
   });
+}
+
+export function ensureDemoPendingImports(bomProjectId: string): void {
+  try {
+    const seeded = localStorage.getItem(demoPendingSeedKey(bomProjectId));
+    const pending = listPendingImportsForProject(bomProjectId);
+    if (seeded === '1' && pending.length === 3) return;
+
+    if (bomProjectId === '1') {
+      pending.forEach((s) => dismissImportSession(s.uploadId));
+      uploadIdsByProjectId.set(bomProjectId, []);
+    } else if ((uploadIdsByProjectId.get(bomProjectId) ?? []).length > 0) {
+      return;
+    }
+
+    seedDemoPendingImports(bomProjectId);
+    localStorage.setItem(demoPendingSeedKey(bomProjectId), '1');
+  } catch {
+    if ((uploadIdsByProjectId.get(bomProjectId) ?? []).length > 0) return;
+    seedDemoPendingImports(bomProjectId);
+  }
 }

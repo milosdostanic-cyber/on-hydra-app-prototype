@@ -411,9 +411,10 @@ export function BomMatchingPage() {
   }
 
   return (
-    <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+    <>
+      <BomImportProgressStrip placement="shell-flush" progress={session.progress} />
+      <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to="/bom">Back to BOM</PageBackButton>
-      <BomImportProgressStrip progress={session.progress} />
 
       <BomPageHeader
         title="Matching results"
@@ -574,5 +575,6 @@ export function BomMatchingPage() {
         />
       </Card>
     </Space>
+    </>
   );
 }
