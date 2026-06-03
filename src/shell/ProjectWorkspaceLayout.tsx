@@ -7,7 +7,7 @@ import {
 import { useEffect, useMemo } from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { useSubmittalDraft } from '../context/SubmittalDraftContext';
+import { useSubmittalPackages } from '../context/SubmittalPackagesContext';
 import { Badge, Button, Flex, Layout, Menu, Typography, theme } from '../ui/antd';
 import type { MenuProps } from '../ui/antd';
 
@@ -32,11 +32,11 @@ export function ProjectWorkspaceLayout() {
   const { projectId = '' } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { countForProject } = useSubmittalDraft();
+  const { packageCountForProject } = useSubmittalPackages();
   const base = `/projects/${projectId}`;
   const title = projectTitleById(projectId) ?? 'Project';
   const selected = moduleFromPath(location.pathname);
-  const submittalCount = countForProject(projectId);
+  const submittalCount = packageCountForProject(projectId);
 
   useEffect(() => {
     if (projectId) setLastScopedProjectId(projectId);

@@ -28,11 +28,57 @@ Browser opens /
 ### `/projects/:projectId/content` — Project Hub (`ContentModule`)
 🟡 Stub placeholder — "Content (stub)" paragraph only. No actions.
 
-### `/projects/:projectId/seis-brace` — SeisBrace (`SalesBraceModule`)
-🟡 Stub paragraph. No actions.
+### `/projects/:projectId/seis-brace` → redirect to `/seisbrace` (`SeisBraceStubRedirect`)
+The legacy project-scoped SeisBrace stub now scopes the active construction project from the URL and redirects to the top-level **`/seisbrace`** module (BOM model). Sidebar "SeisBrace" and the Home rollup card keep working unchanged.
 
-### `/projects/:projectId/submittal` — Submittal (`SubmittalModule`)
-Shows items from `SubmittalDraftContext` if any, otherwise an empty state with guidance text. No primary CTA; items are added here via Catalog Part → "Add to Submittal" flow.
+### `/seisbrace` — SeisBrace landing (`SeisBraceLandingPage`)
+Seismic designs + brace configurations for the active construction project (ported from the SeisBrace ZIP `ProjectDetailPage`, reframed to Hydra). Backed by `SeisBraceContext` (sessionStorage, scoped by construction `projectId`); construction project comes from `useActiveProject()` (top bar owns selection — no in-module project picker). The ZIP construction project list/create/edit and `ProjectDetailHeader` project title are intentionally skipped (shell owns them).
+
+| UI Element | Action | Destination / Result |
+|---|---|---|
+| **New design** button (header + empty state) | Reset wizard draft, start a new design | `/seisbrace/wizard/seismic-design` |
+| Designs list row (left rail) | Select design | Loads that design's brace table |
+| Design row hover: Edit / Copy / Delete | Edit → wizard step 1; Copy → `copyDesign`; Delete → confirm + `deleteDesign` | — |
+| Search designs / Sort (date, name) | Filter / sort the designs rail | local state |
+| **Get DWG file** | Stub download | message only |
+| **Report & Submittal** (disabled until braces selected) | Opens `SubmittalOptionsModal` | Stub report/submittal generation |
+| Brace name link / Edit | Edit brace | `/seisbrace/wizard/seismic-coefficient` (loads brace into draft) |
+| Brace row Copy / Delete | `copyBrace` / confirm + `deleteBraces` | — |
+| Brace Move up / down (▲▼) | Reorder braces in the design | `moveBrace` (no DnD lib in repo) |
+| Brace checkbox (COMPLETE only) | Select braces for Report & Submittal | local state |
+| **New brace configuration** (dashed CTA) | Add a brace to the selected design | `/seisbrace/wizard/seismic-coefficient` |
+| Submittals/reports + uploaded files | Download (stub) / Remove (uploaded) | `FileListSection` |
+| **Upload fastener calculations** | Opens `FastenerUploadModal` | Stub upload → adds to uploaded files |
+
+### `/seisbrace/wizard/:step` — Brace setup wizard (`WizardPage`)
+Five-step brace setup (ZIP `WizardPage`): stepper rail (compact `WizardSteps`) + step content + shared `WizardFooter` (Back / Save & exit / Next|Finish). Wizard state lives in `SeisBraceWizardContext` (replaces the ZIP Redux `wizardSlice`); steps commit progressively to `SeisBraceContext`. Engineering math (Cp, weights, capacities) is representative static output — no real seismic engine is ported.
+
+| Step | Slug | Content |
+|---|---|---|
+| 1 | `seismic-design` | Seismic Design Setup form (name, date, code, unit, load type, notes). Next creates/updates the design. |
+| 2 | `seismic-coefficient` | Brace info (name, drawing ref, qty) + Cp method (`Radio.Group`, methods by code) + method-specific `CpCalculationInput` (A–H) + calculated Cp. Next creates/updates the brace. |
+| 3 | `brace-type` | Brace orientation selector + zone-of-influence main line segment table (editable rows, add/remove/reorder) + Fpw summary. |
+| 4 | `structure-sway-brace` | Structure/substrate (+ user-defined), fastener (+ user-defined), orientation/size, brace angles, L/R max, brace member, summary. |
+| 5 | `parts-selection` | Swivel fitting cards, structural attachments table (single-select), pipe attachment cards. **Finish** marks the brace COMPLETE and returns to `/seisbrace`. |
+
+### `/projects/:projectId/submittal` — Submittal packages (`SubmittalPackagesPage`)
+Submittal Manager surface (ported from the Content ZIP, reframed to Hydra). Lists the active construction project's **submittal packages**, backed by `SubmittalPackagesContext` (sessionStorage, scoped by construction `projectId`). Construction project context is provided by the shell breadcrumb/top bar, so the page only owns the packages list.
+
+| UI Element | Action | Destination / Result |
+|---|---|---|
+| **New package** button (header + empty state) | Opens `PackageCreateEditModal` | Creates a package in the active project |
+| `PackageCard` chevron | Collapse / expand the card | local state |
+| Part name link (in parts table) | Navigate | `/search/parts/:partKey` |
+| Move up / down (▲▼) | Reorder a part within the package | `movePart` (no DnD lib in repo) |
+| Remove part (🗑, per row) | `Popconfirm` → remove | `removePartFromPackage` |
+| **Add part from search** (dashed CTA) | Navigate | `/search/results?q=all` (unified search) |
+| Download (footer) | Opens `PdfPreviewModal` | Stub preview + stubbed download |
+| Rename (footer) | Opens `PackageCreateEditModal` (edit) | `updatePackage` |
+| Delete (footer) | `Popconfirm` → delete | `deletePackage` |
+
+**Add to submittal (from a part):** Catalog/search Part detail → `UnifiedPartActions` "Add to submittal" (project-gated) → `AddToPackageModal` (pick existing or create-and-add) → success notification with "Go to packages" + session-cart floating button (`SubmittalPackageCartFloatingButton`) → `/projects/:projectId/submittal`.
+
+> The earlier flat `SubmittalDraftContext` draft-lines stub has been replaced by this package-based model; the context was retired.
 
 ### `/dashboard`
 🟡 `DashboardPlaceholder` — one paragraph + "Back to Projects" link.
@@ -99,43 +145,51 @@ Linear steps explainer with "Open (demo)" cards pointing to hardcoded project `n
 ```
 /bom/search
   ├─► Search input + example chips
-  │     └─► [Search Catalog] / Enter
-  │           └─► Navigate: /catalog/results?q=<query>   (q="all" if empty)
+  │     └─► [Search] / Enter
+  │           └─► Navigate: /search/results?q=<query>   (unified search)
   │
   └─► [Back] → /bom/flow (not /bom landing — potential UX issue)
 ```
 
 ---
 
-## 4. Global Catalog (accessible from BOM Search)
+## 4. Unified Search (Home, Catalog, and BOM Search all enter here)
 
-### `/catalog` (`CatalogHome`)
+### `/search/results?q=` (`UnifiedSearchResultsPage`)
+Single results experience across domains. Parts are fully wired; Content, Submittal, BOM, and
+SeisBrace return preview rows that prove the multi-domain model.
+
+```
+/search/results?q=<query>
+  ├─► Tabs: All | Parts | Content | Submittal | BOM | SeisBrace
+  ├─► Part row → /search/parts/:partId
+  └─► Refine search input → updates ?q=
+```
+
+### `/search/parts/:partId` (`UnifiedPartDetailPage` + `UnifiedPartActions`)
+Discovery is open (view metadata with no project). All three Unified Action Bar clicks are
+project-gated per the PNG flow.
+
+```
+/search/parts/:partId
+  ├─► [Download]        → Project gate if no active project → audit log + stub download
+  ├─► [Add to submittal]→ Project gate if no active project → addLine → /projects/:id/submittal
+  ├─► [Add to BOM]      → Project gate if no active project → /bom (scoped to active project)
+  │     └─► Gate (ProjectRequiredModal): select or create project → pending action resumes
+  └─► Back → /search/results
+```
+
+### `/catalog` (`CatalogHome`) — browse entry into unified search
 
 ```
 /catalog
-  ├─► Search input → /catalog/results?q=<query>
-  ├─► Category tag chips → /catalog/results?q=<tag>
-  └─► Part preview rows → /catalog/parts/:partId
+  ├─► Search input → /search/results?q=<query>
+  ├─► Category tag chips → /search/results?q=<tag>
+  └─► Part preview rows → /search/parts/:partId
 ```
 
-### `/catalog/results` (`CatalogResults`)
-🟡 Stub behavior — query param `q` is received but **not used for filtering**; full list always shown.
-
-```
-/catalog/results
-  ├─► Part row → /catalog/parts/:partId
-  └─► Pagination → (local mock)
-```
-
-### `/catalog/parts/:partId` (`CatalogPartPage`)
-
-```
-/catalog/parts/:partId
-  ├─► Quick Download → 🟡 stub (no download)
-  ├─► [Add to Submittal] → Opens: Project select modal
-  │     └─► [Confirm] → Navigate: /projects/:selectedId/submittal
-  └─► Back → /catalog/results
-```
+> Legacy `/catalog/results` and `/catalog/parts/:partId` now redirect to the `/search/*`
+> equivalents (preserving query and part id) for bookmark compatibility.
 
 ---
 
@@ -443,18 +497,26 @@ Used on Landing page. ✅ Active.
 ```
 /projects (Home)
   ├── /projects/:id/content          🟡 stub
-  ├── /projects/:id/seis-brace       🟡 stub
+  ├── /projects/:id/seis-brace       → redirects to /seisbrace (scopes active project)
   ├── /projects/:id/submittal        partial (receives from Catalog)
   └── /dashboard                     🟡 stub
 
-/catalog (reachable from BOM Search, not sidebar)
-  ├── /catalog/results               🟡 no real filtering
-  └── /catalog/parts/:id
-        └── → /projects/:id/submittal (via modal)
+/seisbrace (top-level module; sidebar "SeisBrace" + Home rollup)
+  ├── /seisbrace                     designs rail + brace table + files (scoped to active project)
+  └── /seisbrace/wizard/:step        5-step brace setup wizard
+
+/search (entered from Home global search, Catalog, and BOM Search)
+  ├── /search/results?q=             unified results (Parts wired; other domains preview)
+  └── /search/parts/:id              Unified Action Bar (Download / Submittal / BOM, all gated)
+        └── → project gate → resume action → /projects/:id/submittal or /bom
+
+/catalog (browse entry; sidebar)
+  ├── /catalog/results               → redirects to /search/results
+  └── /catalog/parts/:id             → redirects to /search/parts/:id
 
 /bom
   ├── /bom/flow                      flow overview (demo links to "new" project only)
-  ├── /bom/search                    → /catalog/results
+  ├── /bom/search                    → /search/results
   └── /bom/projects/:id/
         ├── parsing-review           → matching
         ├── matching                 → workspace  OR  → narrow (per item)
@@ -493,7 +555,8 @@ Used on Landing page. ✅ Active.
 | 14 | AppTopBar — Help / Notifications / Account | No handlers attached. | 🟡 Placeholder |
 | 15 | `/dashboard` | One paragraph placeholder. | 🟡 Stub |
 | 16 | `/projects/:id/content` | Stub paragraph. | 🟡 Stub |
-| 17 | `/projects/:id/seis-brace` | Stub paragraph. | 🟡 Stub |
+| 17 | `/projects/:id/seis-brace` | Redirects to `/seisbrace` (scopes active project). | ✅ Wired |
+| 17a | `/seisbrace` | Seismic designs + brace table + files; opens the 5-step brace wizard. | ✅ Wired |
 | 18 | Parsing review — no row editing | Parsed data cannot be corrected before matching. | 🔴 Feature gap |
 | 19 | "Approve with Feedback" | Handler exists in resolve modal but only logs to console. | 🟡 Stub |
 | 20 | Service request submit | Toast only — no real submission or confirmation. | 🟡 Stub |

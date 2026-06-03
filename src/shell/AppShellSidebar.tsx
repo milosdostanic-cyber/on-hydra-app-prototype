@@ -73,6 +73,12 @@ export function AppShellSidebar() {
 
   const onMenuClick: MenuProps['onClick'] = ({ key }) => {
     const pid = getLastScopedProjectId();
+    const projectScoped = key === 'seis' || key === 'spec' || key === 'submittal' || key === 'content';
+    if (projectScoped && !pid) {
+      // No project scoped yet — send the user home to pick or create one first.
+      navigate('/dashboard');
+      return;
+    }
     const routes: Record<string, string> = {
       dash: '/dashboard',
       seis: `/projects/${pid}/seis-brace`,

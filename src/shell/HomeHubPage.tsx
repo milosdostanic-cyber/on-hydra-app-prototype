@@ -17,7 +17,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { mockBomProjects } from '../bom/data/mockData';
 import { useActiveProject } from '../context/ActiveProjectContext';
-import { useSubmittalDraft } from '../context/SubmittalDraftContext';
+import { useSubmittalPackages } from '../context/SubmittalPackagesContext';
 import {
   AppSearchInput,
   Button,
@@ -46,7 +46,7 @@ import {
   formValuesToProjectFields,
   projectRowToFormValues,
 } from './ProjectFormFields';
-import { PROJECT_SEED_ROWS, type ProjectFormValues, type ProjectRow } from './projectSeed';
+import { type ProjectFormValues, type ProjectRow } from './projectSeed';
 import {
   UMBRELLA_COMPANY_LABEL,
   UMBRELLA_COMPANY_SLUG,
@@ -75,9 +75,9 @@ function firstVisibleProjectKey(rows: ProjectRow[], page: number): string | unde
   return rows.slice(start, start + HOME_HUB_PROJECTS_PAGE_SIZE)[0]?.key;
 }
 
-function initialExpandedRowKeys(): Key[] {
-  const recentRows = PROJECT_SEED_ROWS.filter((r) => r.recent);
-  const key = recentRows[0]?.key ?? PROJECT_SEED_ROWS[0]?.key;
+function initialExpandedRowKeys(rows: ProjectRow[]): Key[] {
+  const recentRows = rows.filter((r) => r.recent);
+  const key = recentRows[0]?.key ?? rows[0]?.key;
   return key ? [key] : [];
 }
 
@@ -170,15 +170,14 @@ function ProjectModuleRollupCards({ project }: { project: ProjectRow }) {
   const { token } = theme.useToken();
   const navigate = useNavigate();
   const { setProjectId } = useActiveProject();
-  const { countForProject } = useSubmittalDraft();
+  const { packageCountForProject } = useSubmittalPackages();
   const pid = project.key;
   const seed = hashSeed(pid);
   const bomCount = useMemo(() => bomCountForUmbrellaProject(pid), [pid]);
   const specCount = takeCount(seed, 2, 0, 12);
   const seisBraceCount = takeCount(seed, 1, 1, 5);
-  const draftSubmittals = countForProject(pid);
-  const submittalPackagesCount =
-    draftSubmittals > 0 ? draftSubmittals : takeCount(seed, 3, 1, 4);
+  const packageCount = packageCountForProject(pid);
+  const submittalPackagesCount = packageCount > 0 ? packageCount : takeCount(seed, 3, 1, 4);
 
   const go = (path: 'bom' | 'sales-brace' | 'seis-brace' | 'submittal') => {
     setProjectId(pid);
@@ -238,10 +237,9 @@ export function HomeHubPage() {
   const navigate = useNavigate();
   const companyLabel = UMBRELLA_COMPANY_LABEL;
   const companySlug = UMBRELLA_COMPANY_SLUG;
-  const { setProjectId } = useActiveProject();
+  const { projects, setProjectId, addProject, updateProject, deleteProject } = useActiveProject();
   const [tab, setTab] = useState<string>('recent');
   const [starredKeys, setStarredKeys] = useState<Set<string>>(() => new Set(['1', '3']));
-  const [rows, setRows] = useState<ProjectRow[]>(() => [...PROJECT_SEED_ROWS]);
   const [projectsPage, setProjectsPage] = useState(1);
   const [searchText, setSearchText] = useState('');
   const [globalSearchText, setGlobalSearchText] = useState('');
@@ -250,7 +248,9 @@ export function HomeHubPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [editKey, setEditKey] = useState<string | null>(null);
   const [editForm] = Form.useForm();
-  const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>(initialExpandedRowKeys);
+  const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>(() =>
+    initialExpandedRowKeys(projects),
+  );
 
   const toggleStar = (key: string) => {
     setStarredKeys((prev) => {
@@ -262,7 +262,7 @@ export function HomeHubPage() {
   };
 
   const filteredRows = useMemo(() => {
-    let list = rows;
+    let list = projects;
     if (tab === 'recent') list = list.filter((r) => r.recent);
     if (tab === 'starred') list = list.filter((r) => starredKeys.has(r.key));
     const q = searchText.trim().toLowerCase();
@@ -276,7 +276,7 @@ export function HomeHubPage() {
       );
     }
     return list.map((r) => ({ ...r, starred: starredKeys.has(r.key) }));
-  }, [rows, tab, starredKeys, searchText]);
+  }, [projects, tab, starredKeys, searchText]);
 
   useEffect(() => {
     setProjectsPage(1);
@@ -284,14 +284,15 @@ export function HomeHubPage() {
 
   const firstVisibleKey = firstVisibleProjectKey(filteredRows, projectsPage);
 
+  // Auto-expand the first visible row for a useful default view. Expansion is purely visual:
+  // it does NOT set the active project, so a user can browse the hub without committing to one.
   useEffect(() => {
     if (firstVisibleKey) {
       setExpandedRowKeys([firstVisibleKey]);
-      setProjectId(firstVisibleKey);
     } else {
       setExpandedRowKeys([]);
     }
-  }, [firstVisibleKey, tab, searchText, projectsPage, setProjectId]);
+  }, [firstVisibleKey, tab, searchText, projectsPage]);
 
   const pagedProjectRows = useMemo(() => {
     const start = (projectsPage - 1) * HOME_HUB_PROJECTS_PAGE_SIZE;
@@ -305,15 +306,15 @@ export function HomeHubPage() {
   ];
 
   const openEdit = (key: string) => {
-    const row = rows.find((r) => r.key === key);
+    const row = projects.find((r) => r.key === key);
     if (!row) return;
     setEditKey(key);
     editForm.setFieldsValue(projectRowToFormValues(row));
     setEditOpen(true);
   };
 
-  const deleteProject = (key: string) => {
-    setRows((prev) => prev.filter((r) => r.key !== key));
+  const handleDeleteProject = (key: string) => {
+    deleteProject(key);
     setStarredKeys((prev) => {
       const next = new Set(prev);
       next.delete(key);
@@ -429,7 +430,7 @@ export function HomeHubPage() {
             description="This removes the project from your list."
             okText="Delete"
             okButtonProps={{ danger: true }}
-            onConfirm={() => deleteProject(record.key)}
+            onConfirm={() => handleDeleteProject(record.key)}
           >
             <Tooltip title="Delete">
               <Button
@@ -450,7 +451,7 @@ export function HomeHubPage() {
   const expandedRollupAlignStart =
     token.controlHeightLG + token.padding + token.controlHeightLG + token.padding;
 
-  const hasAnyProjects = rows.length > 0;
+  const hasAnyProjects = projects.length > 0;
   const showEmpty = !hasAnyProjects;
   const showNoMatches = hasAnyProjects && filteredRows.length === 0;
   const starredEmpty = tab === 'starred' && hasAnyProjects && filteredRows.length === 0 && searchText.trim() === '';
@@ -471,11 +472,7 @@ export function HomeHubPage() {
 
   const runGlobalSearch = () => {
     const q = globalSearchText.trim();
-    if (q) {
-      navigate(`/catalog/results?q=${encodeURIComponent(q)}`);
-    } else {
-      navigate('/catalog');
-    }
+    navigate(`/search/results?q=${encodeURIComponent(q || 'all')}`);
   };
 
   return (
@@ -511,12 +508,13 @@ export function HomeHubPage() {
         }
       >
         <Typography.Paragraph type="secondary" style={{ margin: `0 0 ${token.marginSM}px`, fontSize: token.fontSizeSM }}>
-          Search catalog and parts. Opens results; browse catalog without a query if you prefer.
+          One search across parts, content, submittals, and BOM. Open a result to download or package
+          it — we&apos;ll ask for a project at that moment.
         </Typography.Paragraph>
         <Flex gap={token.marginSM} wrap="wrap" align="stretch">
           <AppSearchInput
             allowClear
-            placeholder="Search catalog, SKUs, descriptions…"
+            placeholder="Search parts, SKUs, descriptions…"
             value={globalSearchText}
             onChange={(e) => setGlobalSearchText(e.target.value)}
             onPressEnter={runGlobalSearch}
@@ -660,12 +658,8 @@ export function HomeHubPage() {
                 ),
                 expandedRowKeys,
                 onExpandedRowsChange: (keys) => {
-                  const next = [...keys].map(String);
-                  const prevArr = expandedRowKeys.map(String);
-                  const opened = next.filter((k) => !prevArr.includes(k));
-                  if (opened.length > 0) {
-                    setProjectId(opened[opened.length - 1]);
-                  }
+                  // Expansion is visual only; the active project is set by explicit module
+                  // navigation or the project gate, never by browsing the list.
                   setExpandedRowKeys([...keys]);
                 },
                 expandRowByClick: true,
@@ -708,16 +702,7 @@ export function HomeHubPage() {
           form={createForm}
           initialValues={{ country: 'US', contacts: [{}] }}
           onFinish={(values: ProjectFormValues) => {
-            const key = `p-${Date.now()}`;
-            setRows((prev) => [
-              {
-                key,
-                ...formValuesToProjectFields(values),
-                lastOpened: 'Just now',
-                recent: true,
-              },
-              ...prev,
-            ]);
+            const key = addProject(formValuesToProjectFields(values));
             setCreateOpen(false);
             createForm.resetFields();
             navigate(flatProjectWorkspacePath(key, 'content'));
@@ -750,9 +735,7 @@ export function HomeHubPage() {
           form={editForm}
           onFinish={(values: ProjectFormValues) => {
             if (!editKey) return;
-            setRows((prev) =>
-              prev.map((r) => (r.key === editKey ? { ...r, ...formValuesToProjectFields(values) } : r)),
-            );
+            updateProject(editKey, formValuesToProjectFields(values));
             setEditOpen(false);
             setEditKey(null);
             editForm.resetFields();

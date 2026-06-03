@@ -22,7 +22,7 @@ import { shellLayout } from '../theme/hydraAlias';
 import { Avatar, Button, Dropdown, Flex, List, Modal, Typography, theme } from '../ui/antd';
 import type { MenuProps } from '../ui/antd';
 import { useActiveProject } from '../context/ActiveProjectContext';
-import { PROJECT_SEED_ROWS, type ProjectRow } from './projectSeed';
+import { type ProjectRow } from './projectSeed';
 
 const userMenuItems: MenuProps['items'] = [
   { key: 'profile', label: 'Profile' },
@@ -55,10 +55,16 @@ function topBarCopyForPath(pathname: string, activeProjectName?: string): TopBar
       subtitle: activeProjectName ? `${activeProjectName} · project workspace` : 'Project workspace',
     };
   }
+  if (pathname.startsWith('/search')) {
+    return {
+      title: 'Search',
+      subtitle: 'One search across parts, content, submittals, and BOM',
+    };
+  }
   if (pathname.startsWith('/catalog')) {
     return {
       title: 'Catalog',
-      subtitle: 'Global browse — tie items to a project when you package or download',
+      subtitle: 'Global browse — pick a project when you download or package an item',
     };
   }
   if (pathname.startsWith('/projects/reframing-proposal')) {
@@ -81,7 +87,8 @@ function topBarCopyForPath(pathname: string, activeProjectName?: string): TopBar
 
 function SwitchProjectModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { token } = theme.useToken();
-  const { projectId, setProjectId } = useActiveProject();
+  const { projectId, projects, setProjectId, clearProjectId } = useActiveProject();
+  const noProjectSelected = projectId === null;
 
   return (
     <Modal
@@ -92,8 +99,37 @@ function SwitchProjectModal({ open, onClose }: { open: boolean; onClose: () => v
       width={480}
       styles={{ body: { padding: 0 } }}
     >
+      <List
+        dataSource={[{ key: '__none__' }]}
+        renderItem={() => (
+          <List.Item
+            onClick={() => {
+              clearProjectId();
+              onClose();
+            }}
+            style={{
+              cursor: 'pointer',
+              paddingInline: token.paddingMD,
+              background: noProjectSelected ? token.colorFillAlter : undefined,
+              borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+            }}
+          >
+            <Flex align="center" justify="space-between" style={{ width: '100%' }}>
+              <Flex vertical gap={2}>
+                <Typography.Text strong={noProjectSelected}>No project selected</Typography.Text>
+                <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
+                  Search and browse without scoping to a job site
+                </Typography.Text>
+              </Flex>
+              {noProjectSelected ? (
+                <CheckOutlined style={{ color: token.colorPrimary, flexShrink: 0 }} />
+              ) : null}
+            </Flex>
+          </List.Item>
+        )}
+      />
       <List<ProjectRow>
-        dataSource={PROJECT_SEED_ROWS}
+        dataSource={projects}
         renderItem={(row) => {
           const isActive = row.key === projectId;
           return (

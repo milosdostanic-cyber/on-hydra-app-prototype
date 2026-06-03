@@ -41,6 +41,16 @@ export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] 
     return toItems(segs);
   }
 
+  if (pathname.startsWith('/search')) {
+    if (pathname.includes('/parts/') && partId) {
+      segs.push({ label: 'Search', to: '/search/results?q=all' });
+      segs.push({ label: `Part ${decodeURIComponent(partId)}` });
+      return toItems(segs);
+    }
+    segs.push({ label: 'Search' });
+    return toItems(segs);
+  }
+
   if (pathname.startsWith('/catalog')) {
     segs.push({ label: 'Catalog', to: pathname !== '/catalog' ? '/catalog' : undefined });
     if (pathname.includes('/results')) {

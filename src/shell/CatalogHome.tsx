@@ -28,7 +28,7 @@ export function CatalogHome() {
 
   const goResults = (query?: string) => {
     const next = (query ?? q).trim() || 'all';
-    navigate(`/catalog/results?q=${encodeURIComponent(next)}`);
+    navigate(`/search/results?q=${encodeURIComponent(next)}`);
   };
 
   const previewColumns: TableColumnsType<CatalogPartRow> = [
@@ -36,7 +36,7 @@ export function CatalogHome() {
       title: 'SKU',
       key: 'sku',
       render: (_, row) => (
-        <Link to={`/catalog/parts/${encodeURIComponent(row.key)}`}>{row.sku}</Link>
+        <Link to={`/search/parts/${encodeURIComponent(row.key)}`}>{row.sku}</Link>
       ),
     },
     {
@@ -53,8 +53,8 @@ export function CatalogHome() {
         Catalog
       </Typography.Title>
       <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
-        Search the product catalog without creating or opening a project. When you need submittals or
-        project-scoped downloads, we&apos;ll ask you to pick or create a project at that moment.
+        Browse the product catalog without creating or opening a project. When you download a part, add
+        it to a submittal, or add it to a BOM, we&apos;ll ask you to pick or create a project at that moment.
       </Typography.Paragraph>
 
       <Flex wrap="wrap" gap={token.margin} align="flex-end">
@@ -94,7 +94,7 @@ export function CatalogHome() {
           Featured sample parts
         </Typography.Title>
         <Typography.Paragraph type="secondary" style={{ marginTop: 0, marginBottom: token.marginSM }}>
-          Same data as full results — open a row to try quick download or add a cut sheet to a submittal.
+          Same data as full results — open a row to download, add to a submittal, or add to a BOM.
         </Typography.Paragraph>
         <Table<CatalogPartRow>
           rowKey="key"

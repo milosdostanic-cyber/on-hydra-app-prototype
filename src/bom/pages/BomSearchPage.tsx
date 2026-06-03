@@ -15,12 +15,12 @@ export function BomSearchPage() {
 
   const exampleQueries = ['005 FireLock coupling 4 inch grooved', 'Victaulic grooved coupling', 'Tyco sprinkler head 155F'];
 
-  const goCatalog = () => {
+  const goSearch = () => {
     if (!q.trim()) {
       message.warning('Enter a search term');
       return;
     }
-    navigate(`/catalog/results?q=${encodeURIComponent(q.trim())}`);
+    navigate(`/search/results?q=${encodeURIComponent(q.trim())}`);
   };
 
   return (
@@ -30,8 +30,8 @@ export function BomSearchPage() {
         title="Natural language search"
         description="Search for parts using competitor part numbers, generic descriptions, or natural language."
         actions={
-          <Button type="primary" size="large" icon={<SearchOutlined />} onClick={() => goCatalog()}>
-            Search catalog
+          <Button type="primary" size="large" icon={<SearchOutlined />} onClick={() => goSearch()}>
+            Search
           </Button>
         }
       />
@@ -45,7 +45,7 @@ export function BomSearchPage() {
             placeholder="Example: 005 FireLock coupling 4 inch grooved"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            onPressEnter={() => goCatalog()}
+            onPressEnter={() => goSearch()}
             style={{ width: '100%', maxWidth: token.screenLG }}
           />
           <Typography.Text type="secondary">
