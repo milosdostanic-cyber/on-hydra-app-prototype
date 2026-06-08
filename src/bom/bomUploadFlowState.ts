@@ -1,3 +1,4 @@
+import type { BomMappingConfidence } from './bomFieldMappingUtils';
 import type { BomProject } from './data/types';
 
 /** Carried on `location.state` through field mapping → parsing review → commit. */
@@ -7,6 +8,8 @@ export type BomUploadFlowLocationState = {
   appendTargetId?: string;
   /** Field mapping page output */
   fieldMapping?: Record<string, string | undefined>;
+  /** Derived on smart mapping summary from auto / saved field mapping */
+  mappingConfidence?: BomMappingConfidence;
   /** Tracks in-flight import session for progress strip + matching state */
   uploadId?: string;
   /** Step-back target for field mapping chrome (upload entry — not hub when resuming from workspace). */

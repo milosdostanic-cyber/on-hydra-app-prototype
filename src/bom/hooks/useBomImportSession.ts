@@ -14,7 +14,7 @@ import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
 function stepForPathname(pathname: string): BomImportStep {
   if (pathname.includes('/matching')) return 'match';
   if (pathname.includes('/parsing-review')) return 'review';
-  if (pathname.includes('/field-mapping')) return 'map';
+  if (pathname.includes('/mapping-summary') || pathname.includes('/field-mapping')) return 'map';
   return 'map';
 }
 

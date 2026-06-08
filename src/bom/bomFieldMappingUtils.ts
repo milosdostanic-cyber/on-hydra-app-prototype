@@ -1,11 +1,94 @@
+import {
+  ASC_DEST_FIELDS,
+  BOM_FIELD_SKIP_VALUE,
+  DEFAULT_FIELD_MAPPING,
+  type BomFieldAliasMap,
+} from './bomFieldMappingConfig';
 import type { BomParsingReviewColumnProfile } from './data/types';
 
-/** Must match `SKIP_VALUE` on `BomFieldMappingPage`. */
-export const BOM_FIELD_SKIP_VALUE = '--Skip--';
+export { BOM_FIELD_SKIP_VALUE } from './bomFieldMappingConfig';
+
+export type BomMappingConfidence = 'high' | 'partial' | 'blocked';
+
+export type MappingSummaryEntry = {
+  ascKey: string;
+  ascLabel: string;
+  bomColumn: string;
+};
 
 export function normalizeFieldMappingSkip(val: string | undefined): string | undefined {
   if (!val || val === BOM_FIELD_SKIP_VALUE || val === '— Skip —') return undefined;
   return val;
+}
+
+export function deriveDefaultFieldMapping(): BomFieldAliasMap {
+  return { ...DEFAULT_FIELD_MAPPING };
+}
+
+export function resolveFieldMapping(saved?: BomFieldAliasMap): BomFieldAliasMap {
+  if (saved && Object.keys(saved).length > 0) {
+    return { ...DEFAULT_FIELD_MAPPING, ...saved };
+  }
+  return deriveDefaultFieldMapping();
+}
+
+export function hasRequiredFieldMapping(fieldMapping: BomFieldAliasMap): boolean {
+  return (
+    Boolean(normalizeFieldMappingSkip(fieldMapping['PART NUMBER'])) &&
+    Boolean(normalizeFieldMappingSkip(fieldMapping.DESCRIPTION)) &&
+    Boolean(normalizeFieldMappingSkip(fieldMapping.QTY))
+  );
+}
+
+export function findDuplicateBomColumns(fieldMapping: BomFieldAliasMap): Set<string> {
+  const counts = new Map<string, number>();
+  for (const v of Object.values(fieldMapping)) {
+    const normalized = normalizeFieldMappingSkip(v);
+    if (!normalized) continue;
+    counts.set(normalized, (counts.get(normalized) ?? 0) + 1);
+  }
+  return new Set([...counts.entries()].filter(([, n]) => n > 1).map(([col]) => col));
+}
+
+export function evaluateMappingConfidence(fieldMapping: BomFieldAliasMap): BomMappingConfidence {
+  const duplicates = findDuplicateBomColumns(fieldMapping);
+  if (!hasRequiredFieldMapping(fieldMapping) || duplicates.size > 0) {
+    return 'blocked';
+  }
+  const mappedCount = countMappedAscFields(fieldMapping);
+  if (mappedCount >= 8) return 'high';
+  return 'partial';
+}
+
+export function buildMappingSummaryEntries(fieldMapping: BomFieldAliasMap): MappingSummaryEntry[] {
+  const entries: MappingSummaryEntry[] = [];
+  for (const { key, label } of ASC_DEST_FIELDS) {
+    const bomColumn = normalizeFieldMappingSkip(fieldMapping[key]);
+    if (!bomColumn) continue;
+    entries.push({ ascKey: key, ascLabel: label, bomColumn });
+  }
+  return entries;
+}
+
+export function bomMappingSummaryRoute(bomProjectId: string): string {
+  return `/bom/projects/${bomProjectId}/mapping-summary`;
+}
+
+export function bomAdvancedFieldMappingRoute(bomProjectId: string): string {
+  return `/bom/projects/${bomProjectId}/field-mapping`;
+}
+
+export function mappingConfidenceLabel(confidence: BomMappingConfidence): string {
+  switch (confidence) {
+    case 'high':
+      return 'High confidence';
+    case 'partial':
+      return 'Some columns need review';
+    case 'blocked':
+      return 'Mapping incomplete';
+    default:
+      return confidence;
+  }
 }
 
 /** Which parsing-review table variant to show based on field mapping (Figma 03a / 03b / 03c). */

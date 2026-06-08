@@ -1,5 +1,5 @@
 import { FilterOutlined } from '@ant-design/icons';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import {
@@ -41,6 +41,8 @@ type LocationState = {
     size?: string;
     category?: string;
   };
+  /** Pre-fill catalog search when opened from workspace figure link. */
+  catalogSearch?: string;
 } | null;
 
 export function BomAscProductsPage() {
@@ -64,6 +66,11 @@ export function BomAscProductsPage() {
   const [draftMfr, setDraftMfr] = useState<string[]>([]);
   const [draftInstall, setDraftInstall] = useState<string[]>([]);
   const [draftSize, setDraftSize] = useState<string[]>([]);
+
+  useEffect(() => {
+    const q = state?.catalogSearch?.trim();
+    if (q) setSearch(q);
+  }, [state?.catalogSearch]);
 
   const activeFilterCount = selectedMfr.length + selectedInstall.length + selectedSize.length;
 

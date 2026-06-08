@@ -1,3 +1,4 @@
+import { isReadyToConfirmMatch, matchRequiresSkuSelection } from './bomMatchSkuUtils';
 import { matchScoreBand } from './data/bomImportFlowSeed';
 import type { BomMatchResult } from './data/types';
 import { BomConfidenceTag, BomManualTag, BomMatchLineStatusTag } from './components/BomTags';
@@ -16,9 +17,10 @@ export const MATCHING_RESULTS_COLUMN_WIDTHS = {
 } as const;
 
 type MatchRowActions = {
-  onAccept: (row: BomMatchResult) => void;
+  onConfirm: (row: BomMatchResult) => void;
   onSkip: (row: BomMatchResult) => void;
-  onRefine: (row: BomMatchResult) => void;
+  onChoose: (row: BomMatchResult) => void;
+  onSelectSku: (row: BomMatchResult) => void;
 };
 
 type RowNumberLookup = (itemId: string) => number | undefined;
@@ -48,7 +50,14 @@ export function buildMatchingResultsColumns(
       render: (_, row) =>
         row.topMatch ? (
           <Space orientation="vertical" size={0}>
-            <Typography.Text strong>{row.topMatch.partNumber}</Typography.Text>
+            {row.figureNumber ? (
+              <Typography.Text type="secondary">Fig. {row.figureNumber}</Typography.Text>
+            ) : null}
+            <Typography.Text strong>
+              {matchRequiresSkuSelection(row)
+                ? `${row.topMatch.partNumber} (figure)`
+                : row.topMatch.partNumber}
+            </Typography.Text>
             <Typography.Text type="secondary">{row.topMatch.description}</Typography.Text>
           </Space>
         ) : (
@@ -77,6 +86,9 @@ export function buildMatchingResultsColumns(
           <Flex gap={4} wrap="wrap" align="center">
             {confTag}
             {row.source === 'manual' ? <BomManualTag /> : null}
+            {row.source !== 'manual' && row.topMatch.matchConfidence > 0 ? (
+              <Typography.Text type="secondary">{row.topMatch.matchConfidence}%</Typography.Text>
+            ) : null}
           </Flex>
         );
       },
@@ -108,7 +120,7 @@ function MatchActionsCell({
   actions: MatchRowActions;
 }) {
   const { token } = theme.useToken();
-  const pendingPickLabel = row.topMatch ? 'Refine' : 'Choose';
+  const chooseLabel = row.topMatch ? 'Choose different part' : 'Choose';
 
   if (row.lineStatus === 'accepted' || row.lineStatus === 'skipped') {
     return (
@@ -116,23 +128,42 @@ function MatchActionsCell({
         type="link"
         size="small"
         style={linkButtonStyle}
-        onClick={() => actions.onRefine(row)}
+        onClick={() => actions.onChoose(row)}
       >
-        Refine
+        Choose different part
       </Button>
     );
   }
 
+  const needsSku = matchRequiresSkuSelection(row);
+
   return (
     <Flex gap={token.marginXS} wrap="wrap">
-      <Button type="link" size="small" style={linkButtonStyle} onClick={() => actions.onAccept(row)}>
-        Accept
-      </Button>
+      {needsSku ? (
+        <Button
+          type="link"
+          size="small"
+          style={linkButtonStyle}
+          onClick={() => actions.onSelectSku(row)}
+        >
+          Select SKU
+        </Button>
+      ) : (
+        <Button
+          type="link"
+          size="small"
+          style={linkButtonStyle}
+          disabled={!isReadyToConfirmMatch(row)}
+          onClick={() => actions.onConfirm(row)}
+        >
+          Confirm
+        </Button>
+      )}
       <Button type="link" size="small" style={linkButtonStyle} onClick={() => actions.onSkip(row)}>
         Skip
       </Button>
-      <Button type="link" size="small" style={linkButtonStyle} onClick={() => actions.onRefine(row)}>
-        {pendingPickLabel}
+      <Button type="link" size="small" style={linkButtonStyle} onClick={() => actions.onChoose(row)}>
+        {chooseLabel}
       </Button>
     </Flex>
   );

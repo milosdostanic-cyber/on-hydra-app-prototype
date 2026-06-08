@@ -105,33 +105,78 @@ function withConfidence(part: (typeof mockAscParts)[number], matchConfidence: nu
 /** Demo rows aligned with Figma 12 Matching Results (mixed scores + statuses). */
 function matchForItem(item: BomItem): BomMatchResult {
   const pool = mockAscParts;
-  const base = (top: (typeof pool)[number] | undefined, suggested: typeof pool, lineStatus: BomMatchResult['lineStatus'], source: BomMatchResult['source'] = 'auto'): BomMatchResult => ({
+  const base = (
+    top: (typeof pool)[number] | undefined,
+    suggested: typeof pool,
+    lineStatus: BomMatchResult['lineStatus'],
+    source: BomMatchResult['source'] = 'auto',
+    extra?: Partial<BomMatchResult>,
+  ): BomMatchResult => ({
     itemId: item.id,
     originalRequest: item.originalInput,
     suggestedParts: suggested.slice(0, 3),
     topMatch: top,
     lineStatus,
     source,
+    ...extra,
   });
 
   switch (item.id) {
-    case 'item-1':
-      return base(withConfidence(pool[0], 94), pool, 'accepted');
+    case 'item-1': {
+      const top = withConfidence(
+        { ...pool[0], matchLevel: 'sku', figureNumber: 'FP7450', partNumber: '4371000570' },
+        94,
+      );
+      return base(top, pool, 'accepted', 'auto', {
+        matchLevel: 'sku',
+        figureNumber: 'FP7450',
+        selectedVariantId: 'fl-400-g-sku',
+      });
+    }
     case 'item-2': {
-      const top = withConfidence(pool[1], 92);
-      return base(top, [top, ...pool.filter((p) => p.partNumber !== top.partNumber)], 'pending');
+      const top = withConfidence(
+        {
+          ...pool[1],
+          matchLevel: 'figure',
+          figureNumber: 'ASC-SR-155-TH',
+          partNumber: 'ASC-SR-155-TH',
+          description: 'Standard Response Sprinkler family — select SKU variant',
+        },
+        92,
+      );
+      return base(top, [top, ...pool.filter((p) => p.partNumber !== top.partNumber)], 'pending', 'auto', {
+        matchLevel: 'figure',
+        figureNumber: 'ASC-SR-155-TH',
+      });
     }
     case 'item-3': {
-      const top = withConfidence(pool[2], 62);
-      return base(top, [top, ...pool.filter((p) => p.partNumber !== top.partNumber)], 'pending');
+      const top = withConfidence(
+        {
+          ...pool[2],
+          matchLevel: 'figure',
+          figureNumber: 'ASC-GV-600-FL',
+          partNumber: 'ASC-GV-600-FL',
+          description: 'Gate Valve family (Class 150) — select SKU variant',
+        },
+        78,
+      );
+      return base(top, [top, ...pool.filter((p) => p.partNumber !== top.partNumber)], 'pending', 'auto', {
+        matchLevel: 'figure',
+        figureNumber: 'ASC-GV-600-FL',
+      });
     }
-    case 'item-4': {
-      const top = withConfidence(pool[3] ?? pool[0], 48);
-      return base(top, [top, ...pool], 'skipped');
-    }
+    case 'item-4':
+      return base(undefined, [], 'pending');
     case 'item-5': {
-      const top = withConfidence(pool[0], 91);
-      return base(top, [top, ...pool.filter((p) => p.partNumber !== top.partNumber)], 'accepted', 'manual');
+      const top = withConfidence(
+        { ...pool[0], matchLevel: 'sku', figureNumber: 'CV-400-GR', partNumber: '4371000570' },
+        91,
+      );
+      return base(top, [top, ...pool.filter((p) => p.partNumber !== top.partNumber)], 'accepted', 'manual', {
+        matchLevel: 'sku',
+        figureNumber: 'CV-400-GR',
+        selectedVariantId: 'cv-400-gr-sku',
+      });
     }
     default: {
       const top = withConfidence(pool[0], 88);

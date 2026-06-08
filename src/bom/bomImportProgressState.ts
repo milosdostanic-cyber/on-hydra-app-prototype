@@ -5,11 +5,11 @@ import { createInitialMatchResults, createParsingReviewRows } from './data/bomIm
 export function routeForImportStep(bomProjectId: string, step: BomImportStep): string {
   switch (step) {
     case 'map':
-      return `/bom/projects/${bomProjectId}/field-mapping`;
+      return `/bom/projects/${bomProjectId}/mapping-summary`;
     case 'review':
       return `/bom/projects/${bomProjectId}/parsing-review`;
     case 'match':
-      return `/bom/projects/${bomProjectId}/matching`;
+      return `/bom/projects/${bomProjectId}/matching/review`;
     case 'done':
       return `/bom/projects/${bomProjectId}/workspace`;
     default:

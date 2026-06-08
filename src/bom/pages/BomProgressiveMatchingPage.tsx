@@ -1,25 +1,50 @@
-import { CheckCircleOutlined, RightOutlined, TableOutlined } from '@ant-design/icons';
+import {
+  CheckCircleOutlined,
+  ExclamationCircleOutlined,
+  RightOutlined,
+  TableOutlined,
+} from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { applyAcceptAllHighSkipRest, bulkAcceptHighSkipRestMessage } from '../bomMatchingBulkActions';
+import {
+  applyVariantToMatch,
+  isReadyToConfirmMatch,
+  matchRequiresSkuSelection,
+  resolveFigureNumber,
+} from '../bomMatchSkuUtils';
+import { buildWorkspaceRowFromMatch } from '../bomMatchingWorkspaceImport';
 import { matchScoreBand } from '../data/bomImportFlowSeed';
 import { useBomCancelUpload } from '../hooks/useBomCancelUpload';
 import { useBomMatchingData } from '../hooks/useBomMatchingData';
 import { useBomImportFlow } from '../context/BomImportFlowContext';
 import { useBomWorkspace } from '../../context/BomWorkspaceContext';
-import { ensureWorkspaceRowDisplayFields } from '../data/bomWorkspaceSeed';
-import { BomImportProgressStrip } from '../components/BomImportProgressStrip';
+import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
+import { readUploadFileName } from '../bomUploadFlowState';
+import { BomChoosePartDrawer } from '../components/BomChoosePartDrawer';
+import { BomMatchDetailDrawer } from '../components/BomMatchDetailDrawer';
+import { BomSkuVariantPicker } from '../components/BomSkuVariantPicker';
+import { BomUploadFlowStepChrome } from '../components/BomUploadFlowStepChrome';
+import { useBomChoosePartDrawer } from '../hooks/useBomChoosePartDrawer';
 import { BomConfidenceTag, BomManualTag } from '../components/BomTags';
 import { BomPageHeader } from '../layout/BomPageHeader';
-import { bomItemById } from '../data/mockData';
-import type { BomItem, BomItemConfidence, BomMatchResult } from '../data/types';
-import { PageBackButton } from '../../shell/PageBackButton';
+import { bomItemById, bomProjectTitleById } from '../data/mockData';
+import type { BomMatchResult } from '../data/types';
 import {
+  hydraBaseNormal,
+  hydraLargeStrong,
+  hydraSmallNormal,
+  hydraTextStyleToReactCss,
+  hydraTitleHeading1,
+} from '../../theme/hydraTypography';
+import {
+  Alert,
   Button,
   Card,
   Divider,
   Flex,
+  Modal,
   Progress,
   Space,
   Typography,
@@ -27,50 +52,22 @@ import {
   theme,
 } from '../../ui/antd';
 
-function buildWorkspaceRowFromMatch(
-  result: BomMatchResult,
-  parsedItem: BomItem | undefined,
-  rowIndex: number,
-): BomItem {
-  const match = result.topMatch;
-  const conf: BomItemConfidence =
-    result.source === 'manual' || (match?.matchConfidence ?? 0) >= 90
-      ? 'high'
-      : (match?.matchConfidence ?? 0) >= 70
-        ? 'medium'
-        : 'low';
-  return ensureWorkspaceRowDisplayFields({
-    id: `ws-import-${result.itemId}`,
-    rowNumber: rowIndex,
-    originalInput: result.originalRequest,
-    parsedDescription: match?.description ?? result.originalRequest,
-    sku: match?.partNumber,
-    size: match?.dimensions ?? parsedItem?.size ?? '',
-    pressureClass: match?.pressureRating ?? parsedItem?.pressureClass ?? '',
-    connectionType: match?.connectionType ?? parsedItem?.connectionType ?? '',
-    quantity: parsedItem?.quantity ?? 1,
-    confidence: conf,
-    category: match?.productFamily ?? parsedItem?.category,
-    unit: parsedItem?.unit ?? 'EA',
-    manufacturer: parsedItem?.manufacturer,
-    status: 'pending' as const,
-  });
-}
-import {
-  hydraLargeNormal,
-  hydraLargeStrong,
-  hydraTextStyleToReactCss,
-  hydraTitleHeading1,
-} from '../../theme/hydraTypography';
-
 export function BomProgressiveMatchingPage() {
   const { token } = theme.useToken();
   const { bomProjectId = '' } = useParams<{ bomProjectId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const uploadState = (location.state ?? {}) as BomUploadFlowLocationState;
+  const uploadFileName = readUploadFileName(uploadState);
+  const projectTitle = bomProjectTitleById(bomProjectId) ?? 'BOM project';
   const { updateProgress } = useBomImportFlow();
   const { confirmCancelUpload } = useBomCancelUpload(bomProjectId);
   const { rowsByProjectId, setWorkspaceRows } = useBomWorkspace();
   const { session, uploadId, matchResults, persist, stats } = useBomMatchingData(bomProjectId);
+  const { chooseOpen, chooseMatchRow, openChoose, closeChoose, handleSelectPart } = useBomChoosePartDrawer(
+    matchResults,
+    persist,
+  );
 
   const queue = useMemo(
     () => matchResults.filter((r) => r.lineStatus === 'pending'),
@@ -78,14 +75,32 @@ export function BomProgressiveMatchingPage() {
   );
 
   const [index, setIndex] = useState(0);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [completeModalOpen, setCompleteModalOpen] = useState(false);
+  const [lastReviewed, setLastReviewed] = useState<BomMatchResult | undefined>();
   const current: BomMatchResult | undefined = queue[index];
-  const parsedItem = current ? bomItemById(current.itemId) ?? session?.parsedItems.find((i) => i.id === current.itemId) : undefined;
   const processed = stats.accepted + stats.skipped + stats.manual;
   const allDone = queue.length === 0;
+  const displayMatch = current ?? (allDone ? lastReviewed : undefined);
+  const parsedItem = displayMatch
+    ? bomItemById(displayMatch.itemId) ?? session?.parsedItems.find((i) => i.id === displayMatch.itemId)
+    : undefined;
+  const totalParts = matchResults.length;
+  const reviewingPosition = allDone ? totalParts : processed + 1;
+  const matchingProgressStatus = allDone
+    ? `All ${totalParts} reviewed`
+    : `Reviewing ${reviewingPosition} of ${totalParts}`;
+
+  const parsingReviewRoute = `/bom/projects/${bomProjectId}/parsing-review`;
+  const tableRoute = `/bom/projects/${bomProjectId}/matching/table`;
 
   useEffect(() => {
     if (index >= queue.length && queue.length > 0) setIndex(0);
   }, [queue.length, index]);
+
+  useEffect(() => {
+    if (allDone) setCompleteModalOpen(true);
+  }, [allDone]);
 
   function patchCurrent(patch: Partial<BomMatchResult>) {
     if (!current) return;
@@ -97,24 +112,35 @@ export function BomProgressiveMatchingPage() {
     else setIndex(0);
   }
 
-  function handleAcceptAndNext() {
+  function handleConfirm() {
     if (!current) return;
-    patchCurrent({ lineStatus: 'accepted', source: 'auto' });
-    message.success('Line accepted.');
+    if (!isReadyToConfirmMatch(current)) {
+      message.warning('Select a SKU variant before confirming this match.');
+      return;
+    }
+    setLastReviewed(current);
+    patchCurrent({ lineStatus: 'accepted', source: current.source === 'manual' ? 'manual' : 'auto' });
+    message.success('Match confirmed.');
     advanceAfterAction();
+  }
+
+  function handleSelectVariant(variant: Parameters<typeof applyVariantToMatch>[1]) {
+    if (!current) return;
+    patchCurrent(applyVariantToMatch(current, variant));
+    message.success('SKU variant selected.');
   }
 
   function handleSkip() {
     if (!current) return;
+    setLastReviewed(current);
     patchCurrent({ lineStatus: 'skipped' });
+    message.info('Part skipped — you can review skipped items before import.');
     advanceAfterAction();
   }
 
-  function handleManualPick() {
+  function handleChoosePart() {
     if (!current) return;
-    navigate(`/bom/projects/${bomProjectId}/matching/items/${current.itemId}/replacement`, {
-      state: { returnTo: 'progressive', uploadId },
-    });
+    openChoose(current.itemId);
   }
 
   function handleAcceptAllHigh() {
@@ -128,24 +154,45 @@ export function BomProgressiveMatchingPage() {
     setIndex(0);
   }
 
+  function goReviewSkipped() {
+    navigate(tableRoute, { state: { ...uploadState, focusSkipped: true } });
+  }
+
   function handleSaveAndImport() {
+    if (stats.skipped > 0) {
+      Modal.confirm({
+        title: `Import without ${stats.skipped} skipped line${stats.skipped === 1 ? '' : 's'}?`,
+        icon: <ExclamationCircleOutlined style={{ color: token.colorWarning }} />,
+        content: `Skipped lines will not be added to your BOM. You can review and resolve them in the table view first, or import the ${stats.accepted + stats.manual} confirmed match${stats.accepted + stats.manual === 1 ? '' : 'es'} now.`,
+        okText: 'Import confirmed matches',
+        cancelText: 'Review skipped first',
+        onOk: runImport,
+        onCancel: goReviewSkipped,
+      });
+      return;
+    }
+    runImport();
+  }
+
+  function runImport() {
     const accepted = matchResults.filter((r) => r.lineStatus === 'accepted' || r.source === 'manual');
     const parsedItems = session?.parsedItems ?? [];
     const existingRows = rowsByProjectId[bomProjectId] ?? [];
     const startIndex = existingRows.length;
     const newRows = accepted.map((result, i) => {
-      const parsedItem = parsedItems.find((p) => p.id === result.itemId);
-      return buildWorkspaceRowFromMatch(result, parsedItem, startIndex + i + 1);
+      const item = parsedItems.find((p) => p.id === result.itemId);
+      return buildWorkspaceRowFromMatch(result, item, startIndex + i + 1);
     });
     if (newRows.length > 0) {
       setWorkspaceRows(bomProjectId, (prev) => [...prev, ...newRows]);
     }
     if (uploadId) updateProgress(uploadId, { currentStep: 'done' });
     message.success(
-      `Imported ${stats.total} items — ${stats.accepted} accepted · ${stats.manual} added manually · ${stats.skipped} skipped.`,
+      `Imported ${stats.total} items — ${stats.accepted} confirmed · ${stats.manual} chosen manually · ${stats.skipped} skipped.`,
     );
     navigate(`/bom/projects/${bomProjectId}/workspace`, {
       state: {
+        ...uploadState,
         importSummary: {
           fileName: session?.progress.fileName,
           total: stats.total,
@@ -157,81 +204,69 @@ export function BomProgressiveMatchingPage() {
     });
   }
 
-  if (allDone) {
-    return (
-      <Flex vertical align="center" justify="center" gap={token.marginLG} style={{ minHeight: 400, width: '100%' }}>
-        <CheckCircleOutlined style={{ fontSize: hydraTitleHeading1.fontSize, color: token.colorSuccess }} />
-        <Typography.Title level={3} style={{ margin: 0 }}>
-          Matching complete
-        </Typography.Title>
-        <Typography.Text type="secondary">
-          {stats.accepted} accepted · {stats.manual} added manually · {stats.skipped} skipped
-        </Typography.Text>
-        <Space wrap>
-          <Button onClick={() => navigate(`/bom/projects/${bomProjectId}/matching`)}>View as table</Button>
-          <Button type="primary" size="large" onClick={handleSaveAndImport}>
-            Save and import to BOM
-          </Button>
-        </Space>
-      </Flex>
-    );
-  }
+  if (!allDone && !current) return null;
+  if (allDone && !displayMatch) return null;
 
-  if (!current) return null;
-
-  const top = current.topMatch;
+  const top = displayMatch?.topMatch;
   const conf = top?.matchConfidence ?? 0;
+  const scoreBand = top ? matchScoreBand(conf) : null;
+  const chooseLabel = top ? 'Choose different part' : 'Choose';
+  const needsSku = displayMatch ? matchRequiresSkuSelection(displayMatch) : false;
+  const figureRef = displayMatch ? resolveFigureNumber(displayMatch) : undefined;
+  const confirmReady = current ? isReadyToConfirmMatch(current) : false;
 
   return (
     <>
-      <BomImportProgressStrip placement="shell-flush" progress={session.progress} />
-      <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
-      <PageBackButton to="/bom">Back to BOM</PageBackButton>
+    <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+      <BomUploadFlowStepChrome
+        backTo={parsingReviewRoute}
+        backLabel="Back to parsed data review"
+        backState={uploadState}
+        fileName={uploadFileName}
+        currentStep={2}
+        statusLabel={matchingProgressStatus}
+      />
 
       <BomPageHeader
-        title="Matching results"
-        description="Confirm matches one line at a time, or switch to the table view."
+        title={
+          allDone
+            ? `All ${totalParts} parts reviewed`
+            : `Reviewing ${reviewingPosition} of ${totalParts} parts`
+        }
+        description={
+          allDone
+            ? `${stats.accepted} confirmed · ${stats.manual} chosen manually · ${stats.skipped} skipped for ${projectTitle}.`
+            : `Confirm each ASC match for ${projectTitle}. You can skip lines and return to them from the table view.`
+        }
         actions={
-          <Space wrap>
-            <Button
-              size="large"
-              icon={<TableOutlined />}
-              onClick={() => navigate(`/bom/projects/${bomProjectId}/matching`)}
-            >
-              View as table
-            </Button>
-            <Button size="large" onClick={() => confirmCancelUpload('match')}>
-              Cancel upload
-            </Button>
-            <Button type="primary" ghost onClick={handleAcceptAllHigh}>
-              Accept all high matches and skip rest
-            </Button>
-            <Button
-              type="primary"
-              size="large"
-              disabled={queue.length > 0}
-              title={queue.length > 0 ? `${queue.length} item${queue.length === 1 ? '' : 's'} still pending — review all items before importing.` : undefined}
-              onClick={handleSaveAndImport}
-            >
-              Save and import to BOM
-            </Button>
-          </Space>
+          allDone ? null : (
+            <Flex gap={token.marginXS} align="center" wrap="wrap">
+              <Button size="large" icon={<TableOutlined />} onClick={() => navigate(tableRoute, { state: uploadState })}>
+                View all in table
+              </Button>
+              <Button size="large" onClick={() => confirmCancelUpload('match')}>
+                Cancel upload
+              </Button>
+              <Button type="primary" ghost onClick={handleAcceptAllHigh}>
+                Confirm all high matches
+              </Button>
+            </Flex>
+          )
         }
       />
 
       <Card styles={{ body: { padding: `${token.paddingSM}px ${token.paddingMD}px` } }}>
         <Flex align="center" gap={token.marginMD}>
-          <Flex vertical gap={token.marginXXS}>
-            <Typography.Text strong>
-              {index + 1}{' '}
-              <Typography.Text type="secondary">/ {queue.length} pending</Typography.Text>
+          <Flex vertical gap={token.marginXXS} style={{ flexShrink: 0 }}>
+            <Typography.Text strong style={hydraTextStyleToReactCss(hydraLargeStrong)}>
+              {reviewingPosition} of {totalParts}
             </Typography.Text>
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
-              {processed} of {matchResults.length} lines processed overall
+            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
+              {stats.pending} remaining · {stats.skipped} skipped
             </Typography.Text>
           </Flex>
           <Progress
-            percent={matchResults.length ? Math.round((processed / matchResults.length) * 100) : 0}
+            percent={totalParts ? Math.round((processed / totalParts) * 100) : 0}
             showInfo={false}
             strokeColor={token.colorPrimary}
             style={{ flex: 1, margin: 0 }}
@@ -243,23 +278,48 @@ export function BomProgressiveMatchingPage() {
         <Flex
           gap={token.marginSM}
           wrap="wrap"
+          align="center"
           style={{
             paddingInline: token.paddingMD,
-            paddingBlock: token.paddingXS,
+            paddingBlock: token.paddingSM,
             background: token.colorFillAlter,
             borderRadius: token.borderRadiusLG,
             border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
           }}
         >
-          <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
-            Match score:
+          <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+            Match confidence:
           </Typography.Text>
           {current.source === 'manual' ? (
             <BomManualTag />
-          ) : (
-            <BomConfidenceTag confidence={matchScoreBand(conf) === 'high' ? 'high' : matchScoreBand(conf) === 'medium' ? 'medium' : 'low'} />
-          )}
+          ) : scoreBand && scoreBand !== 'processing' ? (
+            <BomConfidenceTag
+              confidence={scoreBand === 'high' ? 'high' : scoreBand === 'medium' ? 'medium' : 'low'}
+              showIcon
+            />
+          ) : null}
+          {current.source !== 'manual' && conf > 0 ? (
+            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
+              Score {conf}%
+            </Typography.Text>
+          ) : null}
         </Flex>
+      ) : (
+        <Alert
+          type="info"
+          showIcon
+          message="No suggested match"
+          description="We could not suggest an ASC part for this line. Choose a part manually to continue."
+        />
+      )}
+
+      {needsSku ? (
+        <Alert
+          type="warning"
+          showIcon
+          message="Figure-level match — select a SKU"
+          description="This line matched a parent figure number. Choose the specific SKU variant before you confirm."
+        />
       ) : null}
 
       <Card styles={{ body: { padding: token.paddingMD } }}>
@@ -274,14 +334,29 @@ export function BomProgressiveMatchingPage() {
               border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
             }}
           >
-            <Typography.Text strong style={{ display: 'block', marginBottom: token.marginSM }}>
-              ORIGINAL PART
+            <Typography.Text
+              type="secondary"
+              style={{
+                ...hydraTextStyleToReactCss(hydraSmallNormal),
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                display: 'block',
+                marginBottom: token.marginXS,
+              }}
+            >
+              Original imported part
             </Typography.Text>
             <Divider style={{ marginBlock: token.marginXS }} />
             <Space orientation="vertical" size={token.marginXS}>
-              <Typography.Text>{current.originalRequest}</Typography.Text>
-              {parsedItem ? (
+              <Typography.Text strong>{current.originalRequest}</Typography.Text>
+              {parsedItem?.parsedDescription ? (
                 <Typography.Text type="secondary">{parsedItem.parsedDescription}</Typography.Text>
+              ) : null}
+              {parsedItem ? (
+                <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
+                  Qty {parsedItem.quantity}
+                  {parsedItem.manufacturer ? ` · ${parsedItem.manufacturer}` : ''}
+                </Typography.Text>
               ) : null}
             </Space>
           </div>
@@ -300,32 +375,146 @@ export function BomProgressiveMatchingPage() {
               border: `${token.lineWidth}px ${token.lineType} ${top ? token.colorPrimaryBorder : token.colorBorderSecondary}`,
             }}
           >
-            <Typography.Text strong style={{ display: 'block', marginBottom: token.marginSM }}>
-              SUGGESTED ASC PART
-            </Typography.Text>
+            <Flex align="center" justify="space-between" gap={token.marginXS}>
+              <Typography.Text
+                type="secondary"
+                style={{
+                  ...hydraTextStyleToReactCss(hydraSmallNormal),
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                Suggested ASC match
+              </Typography.Text>
+              {top ? (
+                <Button
+                  type="link"
+                  size="small"
+                  style={{ padding: 0, height: 'auto' }}
+                  onClick={() => setDetailOpen(true)}
+                >
+                  View details
+                </Button>
+              ) : null}
+            </Flex>
             <Divider style={{ marginBlock: token.marginXS }} />
             {top ? (
               <Space orientation="vertical" size={token.marginXS}>
+                {figureRef ? (
+                  <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
+                    Figure {figureRef}
+                  </Typography.Text>
+                ) : null}
                 <Typography.Text strong style={hydraTextStyleToReactCss(hydraLargeStrong)}>
-                  {top.partNumber}
+                  {needsSku ? `${top.partNumber} (figure)` : top.partNumber}
                 </Typography.Text>
                 <Typography.Text>{top.description}</Typography.Text>
+                {top.productFamily ? (
+                  <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
+                    {top.productFamily}
+                    {top.dimensions ? ` · ${top.dimensions}` : ''}
+                  </Typography.Text>
+                ) : null}
               </Space>
             ) : (
-              <Typography.Text type="secondary">No automatic match — pick a part manually.</Typography.Text>
+              <Typography.Text type="secondary">No automatic match for this line.</Typography.Text>
             )}
           </div>
         </Flex>
 
+        {needsSku && figureRef ? (
+          <div style={{ marginTop: token.marginMD }}>
+            <BomSkuVariantPicker
+              figureNumber={figureRef}
+              figureDescription={top?.description}
+              selectedVariantId={current.selectedVariantId}
+              onSelectVariant={handleSelectVariant}
+            />
+          </div>
+        ) : null}
+
         <Flex justify="flex-end" gap={token.marginSM} wrap="wrap" style={{ marginTop: token.marginMD }}>
-          <Button onClick={handleSkip}>Skip</Button>
-          <Button onClick={handleManualPick}>Manual pick</Button>
-          <Button type="primary" onClick={handleAcceptAndNext}>
-            Approve &amp; next
+          <Button size="large" onClick={handleSkip}>
+            Skip
+          </Button>
+          <Button size="large" onClick={handleChoosePart}>
+            {chooseLabel}
+          </Button>
+          <Button type="primary" size="large" onClick={handleConfirm} disabled={!confirmReady}>
+            Confirm
           </Button>
         </Flex>
       </Card>
+
+      <BomChoosePartDrawer
+        open={chooseOpen}
+        matchRow={chooseMatchRow}
+        onClose={closeChoose}
+        onSelectPart={handleSelectPart}
+      />
+
+      <BomMatchDetailDrawer
+        open={detailOpen}
+        matchRow={current ?? null}
+        parsedItem={parsedItem}
+        onClose={() => setDetailOpen(false)}
+        onConfirm={handleConfirm}
+        onChoose={handleChoosePart}
+      />
+        </>
+      )}
     </Space>
+
+      {allDone ? (
+        <Modal
+          title={null}
+          open={completeModalOpen}
+          onCancel={() => setCompleteModalOpen(false)}
+          footer={
+            <Flex justify="center" gap={token.marginSM} wrap="wrap">
+              <Button
+                size="large"
+                icon={<TableOutlined />}
+                onClick={() => navigate(tableRoute, { state: uploadState })}
+              >
+                View all in table
+              </Button>
+              <Button type="primary" size="large" onClick={handleSaveAndImport}>
+                Save and import to BOM
+              </Button>
+            </Flex>
+          }
+          centered
+          width={520}
+          destroyOnClose={false}
+        >
+          <Flex vertical align="center" gap={token.marginMD} style={{ paddingBlock: token.paddingSM }}>
+            <CheckCircleOutlined
+              style={{ fontSize: hydraTitleHeading1.fontSize, color: token.colorSuccess }}
+            />
+            <Typography.Title level={3} style={{ margin: 0, textAlign: 'center' }}>
+              Match review complete
+            </Typography.Title>
+            <Typography.Text type="secondary" style={{ textAlign: 'center' }}>
+              {stats.accepted} confirmed · {stats.manual} chosen manually · {stats.skipped} skipped
+            </Typography.Text>
+            {stats.skipped > 0 ? (
+              <Alert
+                type="warning"
+                showIcon
+                style={{ width: '100%' }}
+                message={`${stats.skipped} part${stats.skipped === 1 ? '' : 's'} skipped`}
+                description="Skipped lines will not be imported. Resolve them in the table view, or import the confirmed matches now."
+                action={
+                  <Button size="small" onClick={goReviewSkipped}>
+                    Review skipped
+                  </Button>
+                }
+              />
+            ) : null}
+          </Flex>
+        </Modal>
+      ) : null}
     </>
   );
 }

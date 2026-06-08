@@ -1,3 +1,4 @@
+import { UnorderedListOutlined } from '@ant-design/icons';
 import { useCallback, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -20,7 +21,10 @@ import {
   HIGH_MATCH_AUTO_ACCEPT_THRESHOLD,
 } from '../bomMatchingBulkActions';
 import { buildMatchingResultsColumns } from '../bomMatchingColumns';
+import { BomChoosePartDrawer } from '../components/BomChoosePartDrawer';
+import { BomSkuVariantDrawer } from '../components/BomSkuVariantDrawer';
 import { BomUploadFlowStepChrome } from '../components/BomUploadFlowStepChrome';
+import { useBomChoosePartDrawer } from '../hooks/useBomChoosePartDrawer';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { createParsingReviewRows } from '../data/bomImportFlowSeed';
 import { bomProjectById, bomProjectTitleById } from '../data/mockData';
@@ -141,16 +145,30 @@ export function BomMatchingPage() {
   const projectTitle = bomProjectTitleById(bomProjectId) ?? 'New BOM project';
   const [page, setPage] = useState(1);
   const [confidenceFilter, setConfidenceFilter] = useState<ConfidenceFilter>('all');
+  const [skippedOnly, setSkippedOnly] = useState<boolean>(
+    Boolean((location.state as { focusSkipped?: boolean } | null)?.focusSkipped),
+  );
+  const [skuRowId, setSkuRowId] = useState<string | null>(null);
 
   const { matchResults, persist, stats } = useBomMatchingData(bomProjectId);
+  const { chooseOpen, chooseMatchRow, openChoose, closeChoose, handleSelectPart } = useBomChoosePartDrawer(
+    matchResults,
+    persist,
+  );
 
   const rowNumbers = useMemo(() => {
     const parsed = createParsingReviewRows();
     return new Map(parsed.map((r) => [r.id, r.rowNumber]));
   }, []);
 
+  const skippedCount = useMemo(
+    () => matchResults.filter((r) => r.lineStatus === 'skipped').length,
+    [matchResults],
+  );
+
   const filteredResults = useMemo(() => {
     return matchResults.filter((row) => {
+      if (skippedOnly && row.lineStatus !== 'skipped') return false;
       const c = rowConfidence(row);
       if (confidenceFilter === 'all') return true;
       if (confidenceFilter === 'high') return c === 'high';
@@ -158,7 +176,7 @@ export function BomMatchingPage() {
       if (confidenceFilter === 'low') return c === 'low' || c === 'none';
       return true;
     });
-  }, [confidenceFilter, matchResults]);
+  }, [confidenceFilter, matchResults, skippedOnly]);
 
   const pagedMatchResults = useMemo(() => {
     const start = (page - 1) * shellLayout.tablePageSizeDefault;
@@ -172,12 +190,13 @@ export function BomMatchingPage() {
     ? `All ${stats.total} reviewed`
     : mappedFieldsStatus;
   const parsingReviewRoute = `/bom/projects/${bomProjectId}/parsing-review`;
+  const reviewRoute = `/bom/projects/${bomProjectId}/matching/review`;
   const { confirmCancelUpload } = useBomCancelUpload(bomProjectId);
 
-  const handleAccept = useCallback(
+  const handleConfirm = useCallback(
     (row: BomMatchResult) => {
       persist(matchResults.map((r) => (r.itemId === row.itemId ? { ...r, lineStatus: 'accepted' } : r)));
-      message.success('Line accepted.');
+      message.success('Match confirmed.');
     },
     [matchResults, persist],
   );
@@ -190,23 +209,39 @@ export function BomMatchingPage() {
     [matchResults, persist],
   );
 
-  const handleRefine = useCallback(
+  const handleChoose = useCallback(
     (row: BomMatchResult) => {
-      navigate(`/bom/projects/${bomProjectId}/matching/items/${row.itemId}/replacement`, {
-        state: { ...uploadState, returnTo: 'matching' },
-      });
+      openChoose(row.itemId);
     },
-    [bomProjectId, navigate, uploadState],
+    [openChoose],
+  );
+
+  const handleSelectSku = useCallback((row: BomMatchResult) => {
+    setSkuRowId(row.itemId);
+  }, []);
+
+  const skuMatchRow = useMemo(
+    () => (skuRowId ? matchResults.find((r) => r.itemId === skuRowId) ?? null : null),
+    [matchResults, skuRowId],
+  );
+
+  const handleApplySkuVariant = useCallback(
+    (next: BomMatchResult) => {
+      persist(matchResults.map((r) => (r.itemId === next.itemId ? next : r)));
+      message.success('SKU variant selected.');
+    },
+    [matchResults, persist],
   );
 
   const columns = useMemo(
     () =>
       buildMatchingResultsColumns((itemId) => rowNumbers.get(itemId), {
-        onAccept: handleAccept,
+        onConfirm: handleConfirm,
         onSkip: handleSkip,
-        onRefine: handleRefine,
+        onChoose: handleChoose,
+        onSelectSku: handleSelectSku,
       }),
-    [handleAccept, handleRefine, handleSkip, rowNumbers],
+    [handleChoose, handleConfirm, handleSelectSku, handleSkip, rowNumbers],
   );
 
   function handleAcceptAllHighAndSkipRest() {
@@ -248,15 +283,32 @@ export function BomMatchingPage() {
         stepsComplete={allLinesReviewed}
       />
       <BomPageHeader
-        title="Matching results"
-        description={`Catalog candidates per BOM line. Project: ${projectTitle}.`}
+        title="All match results"
+        description={`Optional table view of every line for ${projectTitle}. Guided review is the recommended way to confirm matches and import.`}
         actions={
           <Flex gap={token.marginXS} align="center" wrap="wrap">
+            <Button
+              size="large"
+              icon={<UnorderedListOutlined />}
+              onClick={() => navigate(reviewRoute, { state: uploadState })}
+            >
+              Guided review
+            </Button>
             <Button size="large" onClick={() => confirmCancelUpload('match')}>
               Cancel upload
             </Button>
-            <Button type="primary" size="large" onClick={() => navigate(`/bom/projects/${bomProjectId}/workspace`)}>
-              Save and import to BOM
+            <Button
+              type="primary"
+              size="large"
+              disabled={stats.pending > 0}
+              title={
+                stats.pending > 0
+                  ? `${stats.pending} part${stats.pending === 1 ? '' : 's'} still pending in guided review`
+                  : undefined
+              }
+              onClick={() => navigate(reviewRoute, { state: uploadState })}
+            >
+              Finish review &amp; import
             </Button>
           </Flex>
         }
@@ -283,20 +335,33 @@ export function BomMatchingPage() {
             background: token.colorFillAlter,
           }}
         >
-          <Select<ConfidenceFilter>
-            value={confidenceFilter}
-            onChange={(v) => {
-              setConfidenceFilter(v);
-              setPage(1);
-            }}
-            style={{ width: 160 }}
-            options={[
-              { value: 'all', label: 'All confidence level' },
-              { value: 'high', label: 'High' },
-              { value: 'medium', label: 'Medium' },
-              { value: 'low', label: 'Low' },
-            ]}
-          />
+          <Flex align="center" gap={token.marginXS} wrap="wrap">
+            <Select<ConfidenceFilter>
+              value={confidenceFilter}
+              onChange={(v) => {
+                setConfidenceFilter(v);
+                setPage(1);
+              }}
+              style={{ width: 160 }}
+              options={[
+                { value: 'all', label: 'All confidence level' },
+                { value: 'high', label: 'High' },
+                { value: 'medium', label: 'Medium' },
+                { value: 'low', label: 'Low' },
+              ]}
+            />
+            <Button
+              type={skippedOnly ? 'primary' : 'default'}
+              ghost={skippedOnly}
+              disabled={skippedCount === 0 && !skippedOnly}
+              onClick={() => {
+                setSkippedOnly((v) => !v);
+                setPage(1);
+              }}
+            >
+              {skippedOnly ? 'Showing skipped' : `Review skipped (${skippedCount})`}
+            </Button>
+          </Flex>
           <Button
             type="primary"
             ghost
@@ -341,6 +406,20 @@ export function BomMatchingPage() {
           />
         </Flex>
       </Card>
+
+      <BomChoosePartDrawer
+        open={chooseOpen}
+        matchRow={chooseMatchRow}
+        onClose={closeChoose}
+        onSelectPart={handleSelectPart}
+      />
+
+      <BomSkuVariantDrawer
+        open={skuRowId !== null}
+        matchRow={skuMatchRow}
+        onClose={() => setSkuRowId(null)}
+        onApply={handleApplySkuVariant}
+      />
     </Space>
   );
 }

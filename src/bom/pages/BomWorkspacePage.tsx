@@ -21,8 +21,9 @@ import type { BomItem, BomProject } from '../data/types';
 import { BomConfidenceTag } from '../components/BomTags';
 import { BomEditProjectModal } from '../components/BomEditProjectModal';
 import { AscProductsDrawer } from '../components/AscProductsDrawer';
-import { PartTranslationModal } from '../components/PartTranslationModal';
+import { buildBomWorkspaceColumns } from '../bomWorkspaceColumns';
 import { isWorkspaceRowConfirmed, suggestedAscPartForRow } from '../bomWorkspaceHelpers';
+import { BomWorkspaceImportDetailDrawer } from '../components/BomWorkspaceImportDetailDrawer';
 import { useBomHubPath } from '../../context/ActiveProjectContext';
 import { PageBackButton } from '../../shell/PageBackButton';
 import { BomPageHeader } from '../layout/BomPageHeader';
@@ -36,18 +37,14 @@ import {
   Divider,
   Empty,
   Flex,
-  Input,
-  InputNumber,
   Modal,
   Progress,
-  Rate,
   Space,
   Table,
   Typography,
   message,
   theme,
 } from '../../ui/antd';
-import type { TableColumnsType } from '../../ui/antd';
 import { shellLayout } from '../../theme/hydraAlias';
 import {
   hydraBaseNormal,
@@ -90,16 +87,13 @@ export function BomWorkspacePage() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [actionError, setActionError] = useState<{ type: WorkspaceActionErrorType; message: string } | null>(null);
   const [resolveModalRow, setResolveModalRow] = useState<BomItem | null>(null);
-  const [resolvePhase, setResolvePhase] = useState<'review' | 'feedback'>('review');
-  const [feedbackText, setFeedbackText] = useState('');
-  const [feedbackRating, setFeedbackRating] = useState(0);
   const [statusFilter, setStatusFilter] = useState<WorkspaceStatusFilter>('all');
   const [ascDrawerOpen, setAscDrawerOpen] = useState(false);
-  const [translationOpen, setTranslationOpen] = useState(false);
   const emptyWorkspaceFileRef = useRef<HTMLInputElement>(null);
   const [appendImportBanner, setAppendImportBanner] = useState<{ fileName: string; count: number } | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editProject, setEditProject] = useState<BomProject | null>(project ?? null);
+  const [importDetailRow, setImportDetailRow] = useState<BomItem | null>(null);
 
   useEffect(() => {
     if (project) setEditProject(project);
@@ -228,10 +222,10 @@ export function BomWorkspacePage() {
       title: 'Re-upload BOM file?',
       content:
         'This will replace your current BOM run after you map columns again. Existing workspace rows stay until you complete a new import.',
-      okText: 'Continue to field mapping',
+      okText: 'Continue to column mapping',
       onOk: () => {
         setActionError(null);
-        navigate(`/bom/projects/${bomProjectId}/field-mapping`, {
+        navigate(`/bom/projects/${bomProjectId}/mapping-summary`, {
           state: {
             uploadDestination: 'append',
             appendTargetId: bomProjectId,
@@ -258,8 +252,8 @@ export function BomWorkspacePage() {
     const closeLoading = message.loading('Processing your file…', 0);
     window.setTimeout(() => {
       closeLoading();
-      message.success('File received. Opening field mapping.');
-      navigate(`/bom/projects/${bomProjectId}/field-mapping`, {
+      message.success('File received. Reviewing column mapping.');
+      navigate(`/bom/projects/${bomProjectId}/mapping-summary`, {
         state: {
           uploadFileName: file.name,
           uploadDestination: 'append',
@@ -297,15 +291,10 @@ export function BomWorkspacePage() {
 
   function openResolveModal(row: BomItem) {
     setResolveModalRow(row);
-    setResolvePhase('review');
-    setFeedbackText('');
-    setFeedbackRating(0);
   }
 
   function closeResolveModal() {
     setResolveModalRow(null);
-    setResolvePhase('review');
-    setFeedbackText('');
   }
 
   function openDeleteModal(row: BomItem) {
@@ -375,18 +364,7 @@ export function BomWorkspacePage() {
         ? { ...prev, status: 'needs-review' }
         : prev
     ));
-    setResolvePhase('review');
-    message.info('Row moved to Needs Review. Continue with approve, feedback, or manual swap.');
-  }
-
-  function handleSubmitFeedback(row: BomItem) {
-    setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, status: 'confirmed' as const } : r)));
-    closeResolveModal();
-    message.success(
-      feedbackRating > 0
-        ? `Feedback submitted (${feedbackRating}/5). Item confirmed.`
-        : 'Feedback submitted. Item confirmed.',
-    );
+    message.info('Row moved to Needs Review. Confirm the match or choose a different part.');
   }
 
   function handleContinuePendingUpload(session: BomImportSession) {
@@ -417,76 +395,17 @@ export function BomWorkspacePage() {
     });
   }
 
-  const columns: TableColumnsType<BomItem> = [
-    { title: '#', dataIndex: 'rowNumber', key: 'rowNumber', width: 50 },
-    {
-      title: 'Part',
-      dataIndex: 'parsedDescription',
-      key: 'parsedDescription',
-      ellipsis: true,
-    },
-    {
-      title: 'Figure Number',
-      dataIndex: 'figureNumber',
-      key: 'figureNumber',
-      width: 157,
-      render: (value: string | undefined) => value ?? '—',
-    },
-    {
-      title: 'SKU',
-      dataIndex: 'sku',
-      key: 'sku',
-      width: 157,
-      render: (value: string | undefined) => value ?? '—',
-    },
-    {
-      title: 'Quantity',
-      dataIndex: 'quantity',
-      key: 'quantity',
-      width: 110,
-      render: (quantity: number, row) => (
-        <InputNumber
-          min={1}
-          value={quantity}
-          onChange={(next) => {
-            if (next == null) return;
-            setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, quantity: next } : r)));
-          }}
-          style={{ width: '100%' }}
-        />
-      ),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      width: 130,
-      render: (_, row) => (
-        <Space size={token.margin}>
-          {!isWorkspaceRowConfirmed(row) ? (
-            <Typography.Link
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                openResolveModal(row);
-              }}
-            >
-              Review
-            </Typography.Link>
-          ) : null}
-          <Typography.Link
-            type="danger"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              openDeleteModal(row);
-            }}
-          >
-            Delete
-          </Typography.Link>
-        </Space>
-      ),
-    },
-  ];
+  const columns = useMemo(
+    () =>
+      buildBomWorkspaceColumns({
+        bomProjectId,
+        onViewOriginal: setImportDetailRow,
+        onReview: openResolveModal,
+        onDelete: openDeleteModal,
+        isConfirmed: isWorkspaceRowConfirmed,
+      }),
+    [bomProjectId],
+  );
 
   function renderTableEmptyState() {
     if (!hasWorkspaceRows) {
@@ -526,131 +445,97 @@ export function BomWorkspacePage() {
 
     return (
       <Modal
-        title={isConfirmed ? 'Review BOM Line' : 'Resolve BOM Line'}
+        title="Review BOM line"
         open={!!resolveModalRow}
         onCancel={closeResolveModal}
         footer={null}
         width={720}
         destroyOnClose
       >
-        {resolvePhase === 'review' ? (
-          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            <div>
-              <Typography.Text type="secondary" style={{
-                ...hydraTextStyleToReactCss(hydraSmallNormal),
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-              }}>
-                Original BOM Line
-              </Typography.Text>
-              <Descriptions
-                bordered
-                size="small"
-                column={2}
-                style={{ marginTop: token.marginXS }}
-              >
-                <Descriptions.Item label="Part number">{resolveModalRow.originalInput}</Descriptions.Item>
-                <Descriptions.Item label="Description">{resolveModalRow.parsedDescription}</Descriptions.Item>
-                <Descriptions.Item label="Size">{resolveModalRow.size || '—'}</Descriptions.Item>
-                <Descriptions.Item label="Category">{resolveModalRow.category || '—'}</Descriptions.Item>
-                <Descriptions.Item label="Quantity">{resolveModalRow.quantity} {resolveModalRow.unit || ''}</Descriptions.Item>
-                <Descriptions.Item label="Confidence">
-                  <BomConfidenceTag confidence={resolveModalRow.confidence} />
-                </Descriptions.Item>
-              </Descriptions>
-            </div>
-
-            <Divider style={{ margin: 0 }} />
-
-            <div>
-              <Typography.Text type="secondary" style={{
-                ...hydraTextStyleToReactCss(hydraSmallNormal),
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-              }}>
-                Suggested ASC Part
-              </Typography.Text>
-              <Descriptions
-                bordered
-                size="small"
-                column={2}
-                style={{ marginTop: token.marginXS }}
-              >
-                <Descriptions.Item label="Part number">{suggestedPart.partNumber}</Descriptions.Item>
-                <Descriptions.Item label="Description">{suggestedPart.description}</Descriptions.Item>
-                <Descriptions.Item label="Family">{suggestedPart.productFamily}</Descriptions.Item>
-                <Descriptions.Item label="Dimensions">{suggestedPart.dimensions}</Descriptions.Item>
-                <Descriptions.Item label="Pressure">{suggestedPart.pressureRating}</Descriptions.Item>
-                <Descriptions.Item label="Connection">{suggestedPart.connectionType}</Descriptions.Item>
-                <Descriptions.Item label="Match confidence" span={2}>
-                  <Progress percent={suggestedPart.matchConfidence} size="small" style={{ maxWidth: 280 }} />
-                </Descriptions.Item>
-              </Descriptions>
-            </div>
-
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-              Review the suggested ASC part and confirm or replace it before final export.
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <div>
+            <Typography.Text type="secondary" style={{
+              ...hydraTextStyleToReactCss(hydraSmallNormal),
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+            }}>
+              Original imported line
             </Typography.Text>
+            <Descriptions
+              bordered
+              size="small"
+              column={2}
+              style={{ marginTop: token.marginXS }}
+            >
+              <Descriptions.Item label="Part number">{resolveModalRow.originalInput}</Descriptions.Item>
+              <Descriptions.Item label="Description">{resolveModalRow.parsedDescription}</Descriptions.Item>
+              <Descriptions.Item label="Size">{resolveModalRow.size || '—'}</Descriptions.Item>
+              <Descriptions.Item label="Category">{resolveModalRow.category || '—'}</Descriptions.Item>
+              <Descriptions.Item label="Quantity">{resolveModalRow.quantity} {resolveModalRow.unit || ''}</Descriptions.Item>
+              <Descriptions.Item label="Confidence">
+                <BomConfidenceTag confidence={resolveModalRow.confidence} />
+              </Descriptions.Item>
+            </Descriptions>
+          </div>
 
-            <Flex justify="flex-end" gap={token.marginXS} wrap="wrap">
-              {isConfirmed ? (
-                <>
-                  <Button onClick={closeResolveModal}>Done</Button>
-                  <Button icon={<SwapOutlined />} onClick={() => handleManualSwap(resolveModalRow)}>
-                    Manual Swap
-                  </Button>
-                  <Button danger onClick={() => handleReopen(resolveModalRow)}>
-                    Reopen for Review
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button onClick={closeResolveModal}>Cancel</Button>
-                  <Button onClick={() => setResolvePhase('feedback')}>
-                    Approve with Feedback
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setTranslationOpen(true);
-                    }}
-                  >
-                    Review translation
-                  </Button>
-                  <Button icon={<SwapOutlined />} onClick={() => handleManualSwap(resolveModalRow)}>
-                    Manual Swap
-                  </Button>
-                  <Button type="primary" onClick={() => handleApprove(resolveModalRow)}>
-                    Approve
-                  </Button>
-                </>
-              )}
-            </Flex>
-          </Space>
-        ) : (
-          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            <Typography.Text>
-              Confirm this match and attach feedback for review. Your feedback helps improve future matching.
+          <Divider style={{ margin: 0 }} />
+
+          <div>
+            <Typography.Text type="secondary" style={{
+              ...hydraTextStyleToReactCss(hydraSmallNormal),
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+            }}>
+              Suggested ASC part
             </Typography.Text>
-            <div>
-              <Typography.Text type="secondary" style={{ display: 'block', marginBottom: token.marginXS }}>
-                Optional rating
-              </Typography.Text>
-              <Rate value={feedbackRating} onChange={setFeedbackRating} />
-            </div>
-            <Input.TextArea
-              rows={4}
-              placeholder="Describe any issues or notes about this match..."
-              value={feedbackText}
-              onChange={(e) => setFeedbackText(e.target.value)}
-            />
-            <Flex justify="flex-end" gap={token.marginXS}>
-              <Button onClick={() => setResolvePhase('review')}>Back</Button>
-              <Button type="primary" onClick={() => handleSubmitFeedback(resolveModalRow)}>
-                Submit &amp; Confirm
-              </Button>
-            </Flex>
-          </Space>
-        )}
+            <Descriptions
+              bordered
+              size="small"
+              column={2}
+              style={{ marginTop: token.marginXS }}
+            >
+              <Descriptions.Item label="Part number">{suggestedPart.partNumber}</Descriptions.Item>
+              <Descriptions.Item label="Description">{suggestedPart.description}</Descriptions.Item>
+              <Descriptions.Item label="Family">{suggestedPart.productFamily}</Descriptions.Item>
+              <Descriptions.Item label="Dimensions">{suggestedPart.dimensions}</Descriptions.Item>
+              <Descriptions.Item label="Pressure">{suggestedPart.pressureRating}</Descriptions.Item>
+              <Descriptions.Item label="Connection">{suggestedPart.connectionType}</Descriptions.Item>
+              <Descriptions.Item label="Match confidence" span={2}>
+                <Progress percent={suggestedPart.matchConfidence} size="small" style={{ maxWidth: 280 }} />
+              </Descriptions.Item>
+            </Descriptions>
+          </div>
+
+          <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
+            {isConfirmed
+              ? 'This line is confirmed. You can choose a different part or reopen it for review.'
+              : 'Confirm the suggested ASC part, or choose a different part before final export.'}
+          </Typography.Text>
+
+          <Flex justify="flex-end" gap={token.marginXS} wrap="wrap">
+            {isConfirmed ? (
+              <>
+                <Button onClick={closeResolveModal}>Done</Button>
+                <Button icon={<SwapOutlined />} onClick={() => handleManualSwap(resolveModalRow)}>
+                  Choose different part
+                </Button>
+                <Button danger onClick={() => handleReopen(resolveModalRow)}>
+                  Reopen for review
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button onClick={closeResolveModal}>Cancel</Button>
+                <Button icon={<SwapOutlined />} onClick={() => handleManualSwap(resolveModalRow)}>
+                  Choose different part
+                </Button>
+                <Button type="primary" onClick={() => handleApprove(resolveModalRow)}>
+                  Confirm match
+                </Button>
+              </>
+            )}
+          </Flex>
+        </Space>
       </Modal>
     );
   }
@@ -756,31 +641,6 @@ export function BomWorkspacePage() {
             );
             setAscDrawerOpen(false);
             message.success('Product added from quick picker.');
-          }}
-        />
-        <PartTranslationModal
-          open={translationOpen}
-          onClose={() => setTranslationOpen(false)}
-          items={resolveModalRow ? [resolveModalRow] : []}
-          ascParts={resolveModalRow ? [suggestedAscPartForRow(resolveModalRow)] : []}
-          onConfirm={(itemId, ascPart) => {
-            setRows((prev) =>
-              prev.map((r) =>
-                r.id === itemId
-                  ? {
-                      ...r,
-                      status: 'confirmed' as const,
-                      confidence: 'high' as const,
-                      originalInput: ascPart.partNumber,
-                      parsedDescription: ascPart.description,
-                      size: ascPart.dimensions,
-                    }
-                  : r,
-              ),
-            );
-            setTranslationOpen(false);
-            closeResolveModal();
-            message.success('Translation reviewed and line confirmed.');
           }}
         />
         <BomEditProjectModal
@@ -944,6 +804,12 @@ export function BomWorkspacePage() {
 
       {renderResolveModal()}
 
+      <BomWorkspaceImportDetailDrawer
+        open={importDetailRow !== null}
+        row={importDetailRow}
+        onClose={() => setImportDetailRow(null)}
+      />
+
       <AscProductsDrawer
         open={ascDrawerOpen}
         onClose={() => setAscDrawerOpen(false)}
@@ -969,32 +835,6 @@ export function BomWorkspacePage() {
           );
           setAscDrawerOpen(false);
           message.success('Product added from quick picker.');
-        }}
-      />
-
-      <PartTranslationModal
-        open={translationOpen}
-        onClose={() => setTranslationOpen(false)}
-        items={resolveModalRow ? [resolveModalRow] : []}
-        ascParts={resolveModalRow ? [suggestedAscPartForRow(resolveModalRow)] : []}
-        onConfirm={(itemId, ascPart) => {
-          setRows((prev) =>
-            prev.map((r) =>
-              r.id === itemId
-                ? {
-                    ...r,
-                    status: 'confirmed' as const,
-                    confidence: 'high' as const,
-                    originalInput: ascPart.partNumber,
-                    parsedDescription: ascPart.description,
-                    size: ascPart.dimensions,
-                  }
-                : r,
-            ),
-          );
-          setTranslationOpen(false);
-          closeResolveModal();
-          message.success('Translation reviewed and line confirmed.');
         }}
       />
 

@@ -294,9 +294,9 @@ export function BomSiteProjectsPage() {
     const closeLoading = message.loading('Processing your file…', 0);
     window.setTimeout(() => {
       closeLoading();
-      message.success('File received. Opening field mapping.');
+      message.success('File received. Reviewing column mapping.');
       if (state.uploadDestination === 'new') {
-        navigate('/bom/projects/new/field-mapping', {
+        navigate('/bom/projects/new/mapping-summary', {
           state: {
             ...state,
             uploadFlowBackTo: bomHubPath,
@@ -304,7 +304,7 @@ export function BomSiteProjectsPage() {
           },
         });
       } else if (state.appendTargetId) {
-        navigate(`/bom/projects/${state.appendTargetId}/field-mapping`, {
+        navigate(`/bom/projects/${state.appendTargetId}/mapping-summary`, {
           state: {
             ...state,
             uploadFlowBackTo: `/bom/projects/${state.appendTargetId}/workspace`,

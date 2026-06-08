@@ -58,36 +58,108 @@ export function countParsingReviewWarnings(
 }
 
 /** Short tag on the upload progress bar — plain language, no spreadsheet jargon. */
-export function parsingReviewProgressStatusLabel(rows: BomItem[]): string {
+export function parsingReviewProgressStatusLabel(
+  rows: BomItem[],
+  profile?: BomParsingReviewColumnProfile,
+): string {
   const count = rows.length;
-  const review = countParsingReviewWarnings(rows);
+  const review = countParsingReviewWarnings(rows, profile);
   const items = `${count} item${count === 1 ? '' : 's'}`;
-  if (review === 0) return `${items} parsed`;
-  return `${items} · review ${review} below`;
+  if (review === 0) return `${items} ready`;
+  return `${items} · ${review} to review (optional)`;
 }
 
-/** Figma parsing-review alert (`5022:23914` / `24134` / `24042`). */
+export type ParsingReviewQualityCounts = {
+  high: number;
+  medium: number;
+  low: number;
+  total: number;
+};
+
+export function parsingReviewQualityCounts(rows: BomItem[]): ParsingReviewQualityCounts {
+  return {
+    high: rows.filter((r) => r.confidence === 'high').length,
+    medium: rows.filter((r) => r.confidence === 'medium').length,
+    low: rows.filter((r) => r.confidence === 'low').length,
+    total: rows.length,
+  };
+}
+
+/** Rows with weak or incomplete parsed data (medium/low confidence or missing attributes). */
+export function isParsingReviewLowConfidenceRow(
+  row: BomItem,
+  profile: BomParsingReviewColumnProfile,
+): boolean {
+  if (row.confidence === 'medium' || row.confidence === 'low') return true;
+  return issuesForRow(row, profile).length > 0;
+}
+
+export function filterParsingReviewLowConfidenceRows(
+  rows: BomItem[],
+  profile: BomParsingReviewColumnProfile,
+): BomItem[] {
+  return rows.filter((row) => isParsingReviewLowConfidenceRow(row, profile));
+}
+
+/** Human-readable issue labels for a row (drawer / row summary). */
+export function parsingReviewIssueLabels(
+  row: BomItem,
+  profile: BomParsingReviewColumnProfile,
+): string[] {
+  return issuesForRow(row, profile).map((key) => ISSUE_LABEL[key]);
+}
+
+/** Primary parsing-review banner — non-blocking language per PRD. */
+export function parsingReviewQualityAlert(
+  rows: BomItem[],
+  profile: BomParsingReviewColumnProfile,
+): ParsingReviewAlertContent {
+  const counts = parsingReviewQualityCounts(rows);
+  const needsReview = countParsingReviewWarnings(rows, profile);
+  const message = `${counts.total} item${counts.total === 1 ? '' : 's'} parsed`;
+
+  if (needsReview === 0) {
+    return {
+      type: 'info',
+      message,
+      description:
+        'Your uploaded rows have enough data for matching. Continue when you are ready — no fixes required.',
+    };
+  }
+
+  const qualityParts = [
+    counts.high > 0 ? `${counts.high} high quality` : null,
+    counts.medium > 0 ? `${counts.medium} medium quality` : null,
+    counts.low > 0 ? `${counts.low} low quality` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+  return {
+    type: 'warning',
+    message: 'Some rows may produce less accurate matches',
+    description: `${needsReview} row${needsReview === 1 ? '' : 's'} have incomplete or weak data (${qualityParts}). Match accuracy may be lower for those lines — you are not blocked. Add more information now or continue with the current data.`,
+  };
+}
+
+/** @deprecated Use {@link parsingReviewQualityAlert} — kept for any legacy callers. */
 export function figmaParsingReviewAlert(
   rows: BomItem[],
   profile?: BomParsingReviewColumnProfile,
 ): ParsingReviewAlertContent {
-  const count = rows.length;
-  const review = countParsingReviewWarnings(rows, profile);
-  const message = `${count} item${count === 1 ? '' : 's'} parsed`;
-
-  if (review === 0) {
+  if (!profile) {
+    const review = countParsingReviewWarnings(rows);
+    const count = rows.length;
+    if (review === 0) {
+      return { type: 'info', message: `${count} items parsed`, description: 'All rows parsed with high confidence.' };
+    }
     return {
-      type: 'info',
-      message,
-      description: 'All rows parsed with high confidence.',
+      type: 'warning',
+      message: `${count} items parsed`,
+      description: `${review} rows may need attention.`,
     };
   }
-
-  return {
-    type: 'warning',
-    message,
-    description: `${review} row${review === 1 ? '' : 's'} may need attention (confidence or missing attributes)`,
-  };
+  return parsingReviewQualityAlert(rows, profile);
 }
 
 function isBlank(value: string | undefined): boolean {

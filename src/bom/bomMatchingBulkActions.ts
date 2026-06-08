@@ -1,3 +1,4 @@
+import { isReadyToConfirmMatch } from './bomMatchSkuUtils';
 import type { BomMatchResult } from './data/types';
 
 /** Same threshold as `matchScoreBand` high band — only these auto-accept on bulk action. */
@@ -23,7 +24,7 @@ export function applyAcceptAllHighSkipRest(results: BomMatchResult[]): BulkAccep
 
   const next = results.map((row) => {
     if (row.lineStatus !== 'pending') return row;
-    if (isHighMatchConfidence(row.topMatch?.matchConfidence)) {
+    if (isHighMatchConfidence(row.topMatch?.matchConfidence) && isReadyToConfirmMatch(row)) {
       acceptedCount += 1;
       return { ...row, lineStatus: 'accepted' as const };
     }

@@ -203,6 +203,22 @@ Skills are folders with `SKILL.md`. Cursor loads them when attached or registere
 
 ---
 
+## hydra-ux-audit
+
+- **Location:** `.cursor/skills/hydra-ux-audit/SKILL.md`
+- **Purpose:** **Universal quality gate** for any UI task — build, review, fix, or improve. Orchestrates all Hydra UX/rules/skills.
+- **What it does:**
+  - Applies to **every** screen/flow change (not only explicit "audit" requests).
+  - **North star triad:** effortless wayfinding (user never guesses) + PRD must-haves on default path + working functionality.
+  - **Non-negotiables:** adopted patterns, `src/ui/antd.ts`, tokens, `figmaTypography`, 5-second test, functional logic.
+  - **9 layers:** user-friendliness, functionality/logic, pattern parity, tokens/typography, components, **sizes/control consistency (buttons)**, states, Figma (if provided), meta gate.
+  - Self-audits after implement; fixes P0/P1 before closing task.
+  - Scored report (P0/P1/P2) with `path:line` evidence when reviewing or when issues found.
+  - Routes DS-wide work to `@ds-parity-auditor`; does **not** use `ui-ux-pro-max` or official Figma MCP.
+- **How to invoke:** `@hydra-ux-audit` + describe task (file, flow, Figma, or "my changes"); optional `Audit only`
+
+---
+
 ## hydra-ui-tokens-and-components
 
 - **Location:** `Documentation/hydra-ai-pack/skills/hydra-ui-tokens-and-components/SKILL.md`
@@ -303,6 +319,16 @@ Implement Phase 1 only from: Documents/plans/2026-06-08-example-plan.md
 Allowed files: [from plan]
 ```
 
+**UX audit + fix (screen / flow / PR diff):**
+```
+@hydra-ux-audit
+@hydra-ui-tokens-and-components
+
+Mode: screen
+Target: src/bom/pages/BomMatchingPage.tsx
+Audit and fix P0/P1. Allowed files: [from scope]
+```
+
 **DS / token audit:**
 ```
 @ds-parity-auditor @figma-console-mcp @figma-repo-parity
@@ -315,7 +341,7 @@ Allowed files: [from plan]
 | Folder | Contents |
 |--------|----------|
 | `.cursor/rules/` | All rules (`.mdc`) |
-| `.cursor/skills/` | Project skills (`figma-console-mcp`, `prd-ux-implementation-planner`) |
+| `.cursor/skills/` | Project skills (`figma-console-mcp`, `prd-ux-implementation-planner`, `hydra-ux-audit`) |
 | `.agents/skills/` | External skills (`caveman`, `caveman-compress`) |
 | `Documentation/hydra-ai-pack/` | Portable checklist and skill copy |
 | `Documents/plans/` | Plans from `@plan-orchestrator` |

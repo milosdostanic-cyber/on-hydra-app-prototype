@@ -5,13 +5,13 @@ import {
   ASC_BROWSER_PRODUCTS,
   type AscBrowserProductRow,
 } from '../data/ascBrowserProducts';
-import { mockAscParts } from '../data/mockData';
+import { ascBrowserRowToCatalogPart } from '../bomChoosePartUtils';
 import { matchScoreBand } from '../data/bomImportFlowSeed';
 import { useBomMatchingData } from '../hooks/useBomMatchingData';
 import { BomTablePaginationBar } from '../components/BomTablePaginationBar';
 import { BomConfidenceTag, BomManualTag } from '../components/BomTags';
 import { BomPageHeader } from '../layout/BomPageHeader';
-import type { AscCatalogPart, BomMatchResult } from '../data/types';
+import type { BomMatchResult } from '../data/types';
 import { PageBackButton } from '../../shell/PageBackButton';
 import {
   Alert,
@@ -28,7 +28,7 @@ import type { TableColumnsType } from '../../ui/antd';
 import { shellLayout } from '../../theme/hydraAlias';
 
 type LocationState = {
-  returnTo?: 'table' | 'progressive';
+  returnTo?: 'table' | 'review' | 'progressive';
   uploadId?: string;
 };
 
@@ -42,25 +42,6 @@ const PICKER_WIDTHS = {
   weight: 157,
   matchScore: 157,
 } as const;
-
-function catalogPartToAsc(row: AscBrowserProductRow): AscCatalogPart {
-  const existing = mockAscParts.find((p) => p.partNumber === row.ascNumber);
-  if (existing) return { ...existing, matchConfidence: 92 };
-  return {
-    partNumber: row.ascNumber,
-    productFamily: row.partType,
-    description: row.description,
-    dimensions: row.size,
-    pressureRating: '300 PSI',
-    connectionType: 'Grooved',
-    approvals: ['UL Listed'],
-    matchConfidence: 85,
-    matchedAttributes: [],
-    ignoredAttributes: [],
-    conversionRule: 'Manual catalog selection',
-    substitutionRisk: 'low',
-  };
-}
 
 export function BomReplacementPickerPage() {
   const { token } = theme.useToken();
@@ -83,11 +64,15 @@ export function BomReplacementPickerPage() {
   }, [page]);
 
   function goBack() {
-    if (state.returnTo === 'progressive') {
-      navigate(`/bom/projects/${bomProjectId}/matching/progressive`);
+    if (state.returnTo === 'review' || state.returnTo === 'progressive') {
+      navigate(`/bom/projects/${bomProjectId}/matching/review`);
       return;
     }
-    navigate(`/bom/projects/${bomProjectId}/matching`);
+    if (state.returnTo === 'table') {
+      navigate(`/bom/projects/${bomProjectId}/matching/table`);
+      return;
+    }
+    navigate(`/bom/projects/${bomProjectId}/matching/review`);
   }
 
   function handleApprove() {
@@ -96,16 +81,19 @@ export function BomReplacementPickerPage() {
       message.warning('Select a replacement part first.');
       return;
     }
-    const topMatch = catalogPartToAsc(row);
+    const topMatch = ascBrowserRowToCatalogPart(row);
     const next: BomMatchResult = {
       ...matchRow,
       topMatch,
       source: 'manual',
-      lineStatus: 'accepted',
-      suggestedParts: [topMatch, ...matchRow.suggestedParts].slice(0, 3),
+      lineStatus: 'pending',
+      suggestedParts: [topMatch, ...matchRow.suggestedParts.filter((p) => p.partNumber !== topMatch.partNumber)].slice(
+        0,
+        3,
+      ),
     };
     persist(matchResults.map((r) => (r.itemId === itemId ? next : r)));
-    message.success('Part approved and marked as added manually.');
+    message.success('Part selected — confirm the match in review to continue.');
     goBack();
   }
 
@@ -166,20 +154,30 @@ export function BomReplacementPickerPage() {
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <PageBackButton to={`/bom/projects/${bomProjectId}/matching`}>
-        {state.returnTo === 'progressive' ? 'Back to matching' : 'Back to review'}
+      <PageBackButton
+        to={
+          state.returnTo === 'table'
+            ? `/bom/projects/${bomProjectId}/matching/table`
+            : `/bom/projects/${bomProjectId}/matching/review`
+        }
+      >
+        Back to match review
       </PageBackButton>
 
       <BomPageHeader
-        title="Replacement Part"
-        description="Choose an ASC product to replace the current suggested match for this BOM line."
+        title={matchRow.topMatch ? 'Choose a different part' : 'Choose a part'}
+        description={
+          matchRow.topMatch
+            ? 'Select another ASC product for this BOM line.'
+            : 'No match was suggested — pick the ASC part that fits this line.'
+        }
         actions={
           <Space wrap>
             <Button size="large" onClick={() => setSelectedKey(null)}>
-              Choose different part
+              Clear selection
             </Button>
             <Button type="primary" size="large" onClick={handleApprove}>
-              Approve
+              Use selected part
             </Button>
           </Space>
         }
@@ -189,7 +187,7 @@ export function BomReplacementPickerPage() {
         type="info"
         showIcon
         message={manualSwapLabel}
-        description="Select a row below, then Approve to mark this line as added manually."
+        description="Select a row below, then use the selected part and return to match review to confirm."
       />
 
       <Card styles={{ body: { padding: 0 } }}>
