@@ -4,7 +4,8 @@ import { BomLayout } from './layout/BomLayout';
 import { BomAscProductsPage } from './pages/BomAscProductsPage';
 import { BomExportPage } from './pages/BomExportPage';
 import { BomFieldMappingPage } from './pages/BomFieldMappingPage';
-import { BomLandingPage } from './pages/BomLandingPage';
+import { BomIndexRedirect } from './pages/BomIndexRedirect';
+import { BomSiteProjectsPage } from './pages/BomSiteProjectsPage';
 import { BomMatchingPage } from './pages/BomMatchingPage';
 import { BomNarrowPage } from './pages/BomNarrowPage';
 import { BomParsingReviewPage } from './pages/BomParsingReviewPage';
@@ -21,7 +22,8 @@ export function BomRoutes() {
   return (
     <Routes>
       <Route element={<BomLayout />}>
-        <Route index element={<BomLandingPage />} />
+        <Route index element={<BomIndexRedirect />} />
+        <Route path="site/:constructionProjectId" element={<BomSiteProjectsPage />} />
         <Route path="search" element={<BomSearchPage />} />
         <Route path="projects/:bomProjectId/parsing-review" element={<BomParsingReviewPage />} />
         <Route path="projects/:bomProjectId/matching" element={<BomMatchingPage />} />

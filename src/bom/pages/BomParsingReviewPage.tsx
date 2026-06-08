@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import { useBomHubPath } from '../../context/ActiveProjectContext';
 import { useBomWorkspace } from '../../context/BomWorkspaceContext';
 import { shellLayout } from '../../theme/hydraAlias';
 import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
-import { resolveUploadDestination } from '../bomUploadFlowState';
+import { readUploadFileName, resolveUploadDestination } from '../bomUploadFlowState';
+import { BomUploadFlowStepChrome } from '../components/BomUploadFlowStepChrome';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { BomAliasConfigurator } from '../components/BomAliasConfigurator';
 import { mockParsedItems, bomProjectById, bomProjectTitleById } from '../data/mockData';
@@ -34,6 +36,7 @@ export function BomParsingReviewPage() {
   const { token } = theme.useToken();
   const { bomProjectId = '' } = useParams<{ bomProjectId: string }>();
   const navigate = useNavigate();
+  const bomHubPath = useBomHubPath();
   const location = useLocation();
   const { setWorkspaceRows } = useBomWorkspace();
   const uploadState = (location.state ?? {}) as BomUploadFlowLocationState;
@@ -41,7 +44,7 @@ export function BomParsingReviewPage() {
     bomProjectId,
     uploadState,
   );
-  const uploadFileName = uploadState.uploadFileName ?? 'Your file';
+  const uploadFileName = readUploadFileName(uploadState);
   const projectMeta = bomProjectById(bomProjectId);
   const title = bomProjectTitleById(bomProjectId) ?? 'BOM project';
   const [page, setPage] = useState(1);
@@ -207,7 +210,7 @@ export function BomParsingReviewPage() {
           confidence: 'medium' as const,
         }));
         setWorkspaceRows('new', () => renumberRows(stamped));
-        navigate('/bom/projects/new/matching');
+        navigate('/bom/projects/new/matching', { state: uploadState });
         return;
       }
       const stamped = rows.map((r, i) => ({
@@ -224,7 +227,7 @@ export function BomParsingReviewPage() {
       });
       return;
     }
-    navigate(`/bom/projects/${bomProjectId}/matching`);
+    navigate(`/bom/projects/${bomProjectId}/matching`, { state: uploadState });
   }
 
   if (bomProjectId && bomProjectId !== 'new' && !projectMeta) {
@@ -234,7 +237,7 @@ export function BomParsingReviewPage() {
           title="BOM project not found"
           description="Unknown project id in this demo."
           actions={
-            <Button type="primary" size="large" onClick={() => navigate('/bom')}>
+            <Button type="primary" size="large" onClick={() => navigate(bomHubPath)}>
               Go to BOM home
             </Button>
           }
@@ -248,6 +251,14 @@ export function BomParsingReviewPage() {
     const isAppendFlow = uploadDestination === 'append';
     return (
       <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+        <BomUploadFlowStepChrome
+          backTo={`/bom/projects/${bomProjectId}/field-mapping`}
+          backLabel="Back to field mapping"
+          backState={fieldMappingBackState}
+          fileName={uploadFileName}
+          currentStep={1}
+          statusLabel={`${rows.length} rows parsed`}
+        />
         <BomPageHeader
           title="Nothing to parse"
           description="No line items were produced from your file. Adjust column mapping or upload a different file."
@@ -273,7 +284,7 @@ export function BomParsingReviewPage() {
                   Cancel — keep workspace as-is
                 </Button>
               ) : null}
-              <Link to="/bom">
+              <Link to={bomHubPath}>
                 <Button size="large">BOM home</Button>
               </Link>
             </Space>
@@ -284,8 +295,21 @@ export function BomParsingReviewPage() {
     );
   }
 
+  const parsingStatusLabel =
+    warningRows > 0
+      ? `${rows.length} rows · ${warningRows} may need attention`
+      : `${rows.length} rows parsed`;
+
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+      <BomUploadFlowStepChrome
+        backTo={`/bom/projects/${bomProjectId}/field-mapping`}
+        backLabel="Back to field mapping"
+        backState={fieldMappingBackState}
+        fileName={uploadFileName}
+        currentStep={1}
+        statusLabel={parsingStatusLabel}
+      />
       <BomPageHeader
         title="Parsing review"
         description={`Review parsed rows before matching. Project: ${title}.`}
@@ -294,7 +318,7 @@ export function BomParsingReviewPage() {
             <Button type="primary" size="large" disabled={rows.length === 0} onClick={handleCommitParsingReview}>
               {reviewPrimaryLabel}
             </Button>
-            <Link to="/bom">
+            <Link to={bomHubPath}>
               <Button size="large">BOM home</Button>
             </Link>
           </Space>

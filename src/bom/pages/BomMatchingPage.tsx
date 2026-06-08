@@ -1,7 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import { useBomHubPath } from '../../context/ActiveProjectContext';
 import { shellLayout } from '../../theme/hydraAlias';
+import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
+import { readUploadFileName } from '../bomUploadFlowState';
+import { BomUploadFlowStepChrome } from '../components/BomUploadFlowStepChrome';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { bomProjectById, bomProjectTitleById, mockMatchResults, mockParsedItems } from '../data/mockData';
 import {
@@ -37,6 +41,10 @@ export function BomMatchingPage() {
   const { token } = theme.useToken();
   const { bomProjectId = '' } = useParams<{ bomProjectId: string }>();
   const navigate = useNavigate();
+  const bomHubPath = useBomHubPath();
+  const location = useLocation();
+  const uploadState = (location.state ?? {}) as BomUploadFlowLocationState;
+  const uploadFileName = readUploadFileName(uploadState);
   const projectMeta = bomProjectById(bomProjectId);
   const projectTitle = bomProjectTitleById(bomProjectId) ?? 'BOM project';
   const [page, setPage] = useState(1);
@@ -122,7 +130,7 @@ export function BomMatchingPage() {
           title="BOM project not found"
           description="Unknown project id."
           actions={
-            <Button type="primary" size="large" onClick={() => navigate('/bom')}>
+            <Button type="primary" size="large" onClick={() => navigate(bomHubPath)}>
               Go to BOM home
             </Button>
           }
@@ -131,8 +139,21 @@ export function BomMatchingPage() {
     );
   }
 
+  const matchingStatusLabel =
+    highConfidenceCount > 0
+      ? `${highConfidenceCount} of ${mockMatchResults.length} high-confidence`
+      : `${mockMatchResults.length} lines to match`;
+
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+      <BomUploadFlowStepChrome
+        backTo={`/bom/projects/${bomProjectId}/parsing-review`}
+        backLabel="Back to parsing review"
+        backState={uploadState}
+        fileName={uploadFileName}
+        currentStep={2}
+        statusLabel={matchingStatusLabel}
+      />
       <BomPageHeader
         title="Matching results"
         description={`Catalog candidates per BOM line. Project: ${projectTitle}.`}
@@ -141,7 +162,7 @@ export function BomMatchingPage() {
             <Button type="primary" size="large" onClick={() => navigate(`/bom/projects/${bomProjectId}/workspace`)}>
               Skip to workspace
             </Button>
-            <Link to="/bom">
+            <Link to={bomHubPath}>
               <Button size="large">BOM home</Button>
             </Link>
           </Space>

@@ -38,3 +38,9 @@ export function sortBomProjectsByLastEditedDesc(projects: BomProject[]): BomProj
 export type BomWorkspaceAppendBannerState = {
   appendImportBanner?: { fileName: string; count: number };
 };
+
+const DEFAULT_UPLOAD_FILE_NAME = 'BOM-ExLine2.xlsx';
+
+export function readUploadFileName(state: BomUploadFlowLocationState | null | undefined): string {
+  return state?.uploadFileName?.trim() || DEFAULT_UPLOAD_FILE_NAME;
+}

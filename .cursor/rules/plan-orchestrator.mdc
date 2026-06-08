@@ -1,0 +1,268 @@
+---
+description: >-
+  Orchestrates rules and skills for a request and writes an English markdown plan only — no
+  implementation. Plans go to Documents/plans/ with per-phase @skill and @rule invocation blocks
+  for later implementation. Use when the user invokes @plan-orchestrator or asks for an orchestrated
+  plan before any code.
+alwaysApply: false
+---
+
+# Plan orchestrator
+
+All plan file content must be **English**.
+
+## Mission
+
+Orchestrate the correct **rules** and **skills** for the request, run **planning only**, and save one markdown plan under `Documents/`.
+
+**Never implement.** Do not edit `src/`, theme files, configs, or tests. The only write in this run is the plan under `Documents/`.
+
+---
+
+## Step 1 — Classify the request
+
+| Type | Signals |
+|------|---------|
+| `figma-delta` | Figma URL, node-id, sync from Figma, changed frames |
+| `prd-feature` | PRD path, new feature, requirements doc |
+| `bom-feature` | BOM, `docs/prd/bom-prd.md`, upload/mapping flow |
+| `ui-screenshot` | Screenshot, mock, image — no Figma MCP |
+| `ui-change` | Change existing screen/flow, no design file |
+| `ds-parity` | Design system audit, token parity, Figma ↔ repo |
+
+If ambiguous, ask one short question. Do not guess.
+
+---
+
+## Step 2 — Orchestrate for planning
+
+Read and follow each selected `SKILL.md` or `.mdc` for **planning only** — ignore implement steps in those files during this run.
+
+### Planning orchestration by type
+
+| Type | Orchestrate for planning |
+|------|--------------------------|
+| `figma-delta` | `@figma-console-mcp` · `@prd-ux-implementation-planner` · `@hydra-design-to-code` |
+| `prd-feature` | `@prd-ux-implementation-planner` · `@product-ux-rules` |
+| `bom-feature` | `@prd-ux-implementation-planner` · `AGENTS.md` · `docs/prd/bom-prd.md` |
+| `ui-screenshot` | `@hydra-design-to-code` · `@hydra-ui-tokens-and-components` |
+| `ui-change` | `@prd-ux-implementation-planner` · `@hydra-ui-tokens-and-components` |
+| `ds-parity` | `@ds-parity-auditor` · `@figma-console-mcp` · `@figma-repo-parity` |
+
+Figma types: **Figma Console MCP only** (`user-figma-console`). Never official Figma MCP.
+
+### Implicit rules (always active — list in plan)
+
+| Invoke | Path |
+|--------|------|
+| `@token-discipline` | `.cursor/rules/token-discipline.mdc` |
+| `@scope-guardrails` | `.cursor/rules/scope-guardrails.mdc` |
+| `@product-ux-rules` | `.cursor/rules/product-ux-rules.mdc` |
+| `@ux-guardrails` | `.cursor/rules/ux-guardrails.mdc` |
+| `@hydra-ui-tokens` | `.cursor/rules/hydra-ui-tokens.mdc` |
+| `@hydra-ux-composition` | `.cursor/rules/hydra-ux-composition.mdc` |
+| `@figma-repo-parity` | `.cursor/rules/figma-repo-parity.mdc` |
+
+---
+
+## Step 3 — Implementation invocation map (embed in every plan)
+
+For each request type, the plan **must** include the matching blocks below. Per-phase blocks may add or drop items if justified (document why).
+
+### Baseline (attach for every UI implementation phase)
+
+```
+@scope-guardrails
+@token-discipline
+@ux-guardrails
+@hydra-ui-tokens-and-components
+```
+
+Path for skill: `Documentation/hydra-ai-pack/skills/hydra-ui-tokens-and-components`
+
+Implicit rules above are always on; still list them in the plan so implementers know what applies.
+
+### By request type — default implementation attach set
+
+| Type | Attach in implementation chat |
+|------|--------------------------------|
+| `figma-delta` | `@figma-console-mcp` `@hydra-design-to-code` `@hydra-ui-tokens-and-components` `@scope-guardrails` `@token-discipline` |
+| `prd-feature` | `@hydra-ui-tokens-and-components` `@product-ux-rules` `@scope-guardrails` `@token-discipline` |
+| `bom-feature` | `@hydra-ui-tokens-and-components` `@product-ux-rules` `@scope-guardrails` `@token-discipline` + `@docs/prd/bom-prd.md` `AGENTS.md` |
+| `ui-screenshot` | `@hydra-design-to-code` `@hydra-ui-tokens-and-components` `@scope-guardrails` `@token-discipline` |
+| `ui-change` | `@hydra-ui-tokens-and-components` `@scope-guardrails` `@token-discipline` `@product-ux-rules` |
+| `ds-parity` | `@ds-parity-auditor` `@figma-console-mcp` `@figma-repo-parity` `@scope-guardrails` — **ask sync direction before edits** |
+
+Add `@figma-repo-parity` to any implementation phase that changes theme, primitives, or `src/theme/*`.
+
+---
+
+## Step 4 — Planning work (read-only)
+
+1. Scope — routes, pages, components, state.
+2. Current flow audit.
+3. Requirements / gap table.
+4. UX review.
+5. Phased plan (description only).
+6. Guardrails.
+7. Acceptance criteria.
+
+`figma-delta` / `ds-parity`: `figma_get_status` (probe). If Bridge is down, record blocker; no official MCP.
+
+`bom-feature`: requirements from `docs/prd/bom-prd.md`.
+
+---
+
+## Step 5 — Write plan file
+
+### Path
+
+| Case | Path |
+|------|------|
+| Default | `Documents/plans/<YYYY-MM-DD>-<short-slug>-plan.md` |
+| BOM | `Documents/Bom/<YYYY-MM-DD>-<short-slug>-plan.md` |
+
+Collision: append `-2`, `-3`. Create `Documents/plans/` if missing.
+
+### Required sections (English, this order)
+
+```markdown
+# Plan: <title>
+
+## Meta
+- **Date:**
+- **Request type:**
+- **User request summary:**
+- **Status:** draft — planning only; implementation not started
+- **Plan file:** <full path>
+
+## Orchestration for planning (this run)
+
+### Explicit skills and rules used
+| Name | Type | Path | Why selected |
+|------|------|------|--------------|
+
+### Implicit rules (always active)
+| Invoke | Path | Why relevant to this task |
+|--------|------|---------------------------|
+
+### Not used (and why)
+| Name | Why skipped |
+|------|-------------|
+
+## Implementation invocation (use in a new chat after approval)
+
+### Baseline — attach every UI implementation phase
+```
+@scope-guardrails
+@token-discipline
+@ux-guardrails
+@hydra-ui-tokens-and-components
+```
+
+### Default attach set for this request type
+```
+<paste type-specific @ lines from Step 3 map>
+```
+
+### Implicit rules during implementation
+| Invoke | Path | Applies when |
+|--------|------|--------------|
+
+### Optional add-ons
+| Invoke | Path | When to add |
+|--------|------|-------------|
+
+## Scope summary
+
+## Current flow audit
+
+## Requirements / gap table
+| Requirement | Current | Gap | UX risk | Area |
+
+## Proposed UX flow
+
+## Implementation plan by phase
+
+### Phase 1 — <name>
+- **Goal:**
+- **Files:**
+- **UI changes:**
+- **Data/state:**
+- **Acceptance criteria:**
+- **Must not change:**
+
+#### Phase 1 — invoke for implementation
+```
+<@mentions for this phase — start from default set; add/remove with reason in plan if needed>
+```
+
+**Copy-paste prompt:**
+```
+Implement Phase 1 only from this plan: <plan file path>
+
+<@mentions repeated>
+
+Allowed files:
+- <list>
+
+Forbidden:
+- <list>
+
+<Figma URLs / node-ids / PRD links if needed>
+```
+
+(repeat per phase)
+
+## File change plan
+| File | Action | Reason |
+
+## Guardrails
+- **Allowed (after approval):**
+- **Forbidden:**
+- **Assumptions:**
+- **Open questions:**
+
+## Risks
+
+## Acceptance checklist
+- [ ] …
+
+## Full implementation prompt (all approved phases)
+```
+Implement approved phase(s) from: <plan file path>
+
+<@mentions>
+
+Follow allowed files and guardrails in the plan. Do not expand scope.
+```
+```
+
+**Important:** Every phase section must include its own **invoke** code block and **copy-paste prompt** with the correct `@` skills and rules for that phase.
+
+---
+
+## Step 6 — Chat reply (English)
+
+1. Request type and rationale.
+2. Full plan path under `Documents/`.
+3. Default implementation `@` set for this type.
+4. Blockers if any.
+5. Tell user to approve a phase, then start a **new chat** using the **Phase N — copy-paste prompt** from the plan.
+
+---
+
+## Hard constraints
+
+| Allowed | Forbidden |
+|---------|-----------|
+| Read repo, PRD, Figma (Console) | Edit `src/`, `public/`, theme, package files |
+| Write plan under `Documents/` | Application code or config changes |
+| Summarize + link PRD | Paste full PRD into plan |
+
+---
+
+## Related
+
+- Catalog: `Documentation/agent-rules-and-skills.md`
+- Plans folder: `Documents/plans/README.md`

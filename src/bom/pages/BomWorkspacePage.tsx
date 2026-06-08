@@ -19,6 +19,7 @@ import { AscProductsDrawer } from '../components/AscProductsDrawer';
 import { PartTranslationModal } from '../components/PartTranslationModal';
 import { BomConfidenceTag, BomMatchStatusTag } from '../components/BomTags';
 import { isWorkspaceRowConfirmed, suggestedAscPartForRow } from '../bomWorkspaceHelpers';
+import { useBomHubPath } from '../../context/ActiveProjectContext';
 import { PageBackButton } from '../../shell/PageBackButton';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import {
@@ -92,6 +93,7 @@ export function BomWorkspacePage() {
   const { modal } = App.useApp();
   const { bomProjectId = '' } = useParams<{ bomProjectId: string }>();
   const navigate = useNavigate();
+  const bomHubPath = useBomHubPath();
   const location = useLocation();
   const project = bomProjectById(bomProjectId);
   const projectTitle = project?.name ?? bomProjectTitleById(bomProjectId) ?? 'BOM project';
@@ -776,11 +778,8 @@ export function BomWorkspacePage() {
   if (bomProjectId && bomProjectId !== 'new' && !project) {
     return (
       <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-        <Typography.Title level={3} style={{ margin: 0 }}>
-          Project not found
-        </Typography.Title>
-        <Typography.Paragraph type="secondary">This BOM project id is not in the demo data.</Typography.Paragraph>
-        <Button type="primary" onClick={() => navigate('/bom')}>
+        <BomPageHeader title="Project not found" description="This BOM project id is not in the demo data." />
+        <Button type="primary" onClick={() => navigate(bomHubPath)}>
           BOM home
         </Button>
       </Space>
@@ -789,7 +788,7 @@ export function BomWorkspacePage() {
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <PageBackButton to="/bom">Back to BOM projects</PageBackButton>
+      <PageBackButton to={bomHubPath}>Back to BOM projects</PageBackButton>
       <BomPageHeader
         title={`${projectTitle} workspace`}
         description="Active project BOM review workspace. Confirm lines, resolve review items, and finalize project output."

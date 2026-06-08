@@ -2,10 +2,10 @@ import type { ReactNode } from 'react';
 
 import {
   hydraBaseNormal,
+  hydraLargeStrong,
   hydraTextStyleToReactCss,
   hydraSmallNormal,
-  hydraTitleHeading2,
-  hydraTitleHeading3,
+  hydraTitleHeading4,
 } from '../../theme/hydraTypography';
 import { Flex, Space, Typography, theme } from '../../ui/antd';
 
@@ -14,8 +14,8 @@ type Props = {
   description?: string;
   /** Short context above the title (e.g. what “BOM” stands for). */
   eyebrow?: string;
-  /** Use 3 for a lighter landing-style headline. */
-  titleLevel?: 2 | 3;
+  /** Figma `Large/Strong` (16/24/600) for Get started–style subtitles; default `Base/Normal`. */
+  descriptionVariant?: 'base' | 'large-strong';
   /**
    * Primary flow actions (typically `size="large"` buttons) shown to the right of the title.
    * Table-scoped actions (filters, search, add row) stay above the table on each page.
@@ -23,10 +23,10 @@ type Props = {
   actions?: ReactNode;
 };
 
-export function BomPageHeader({ title, description, eyebrow, titleLevel = 2, actions }: Props) {
+/** Page-level BOM headlines — Figma `Title/Heading 4` (20/28) on every screen of equal importance. */
+export function BomPageHeader({ title, description, eyebrow, descriptionVariant = 'base', actions }: Props) {
   const { token } = theme.useToken();
-  const heading = titleLevel === 3 ? hydraTitleHeading3 : hydraTitleHeading2;
-  const antLevel = titleLevel === 3 ? 3 : 2;
+  const descriptionTypography = descriptionVariant === 'large-strong' ? hydraLargeStrong : hydraBaseNormal;
 
   const titleStack = (
     <Space orientation="vertical" size={token.marginXS} style={{ minWidth: 0, width: actions ? undefined : '100%' }}>
@@ -42,10 +42,10 @@ export function BomPageHeader({ title, description, eyebrow, titleLevel = 2, act
         </Typography.Text>
       ) : null}
       <Typography.Title
-        level={antLevel}
+        level={4}
         style={{
           margin: 0,
-          ...hydraTextStyleToReactCss(heading),
+          ...hydraTextStyleToReactCss(hydraTitleHeading4),
         }}
       >
         {title}
@@ -55,7 +55,7 @@ export function BomPageHeader({ title, description, eyebrow, titleLevel = 2, act
           style={{
             margin: 0,
             color: token.colorTextDescription,
-            ...hydraTextStyleToReactCss(hydraBaseNormal),
+            ...hydraTextStyleToReactCss(descriptionTypography),
           }}
         >
           {description}
@@ -66,11 +66,11 @@ export function BomPageHeader({ title, description, eyebrow, titleLevel = 2, act
 
   if (actions) {
     return (
-      <Flex align="flex-start" justify="space-between" gap={token.marginMD} wrap="wrap" style={{ width: '100%' }}>
-        <div style={{ flex: '1 1 240px', minWidth: 0 }}>{titleStack}</div>
-        <Space size={token.marginSM} wrap align="center" style={{ flexShrink: 0 }}>
+      <Flex align="center" justify="space-between" gap={token.marginSM} wrap="nowrap" style={{ width: '100%' }}>
+        <div style={{ flex: '1 1 auto', minWidth: 0 }}>{titleStack}</div>
+        <Flex gap={token.marginXS} align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
           {actions}
-        </Space>
+        </Flex>
       </Flex>
     );
   }

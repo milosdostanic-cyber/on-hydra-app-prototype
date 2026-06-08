@@ -4,12 +4,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { BomCardTitle } from '../components/BomCardTitle';
 import { BomPageHeader } from '../layout/BomPageHeader';
+import { useBomHubPath } from '../../context/ActiveProjectContext';
 import { PageBackButton } from '../../shell/PageBackButton';
 import { AppSearchInput, Button, Card, Space, Typography, message, theme } from '../../ui/antd';
 
 export function BomSearchPage() {
   const { token } = theme.useToken();
   const navigate = useNavigate();
+  const bomHubPath = useBomHubPath();
   const [searchParams] = useSearchParams();
   const [q, setQ] = useState(searchParams.get('q') ?? '');
 
@@ -25,7 +27,7 @@ export function BomSearchPage() {
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <PageBackButton to="/bom">Back to BOM</PageBackButton>
+      <PageBackButton to={bomHubPath}>Back to BOM</PageBackButton>
       <BomPageHeader
         title="Natural language search"
         description="Search for parts using competitor part numbers, generic descriptions, or natural language."

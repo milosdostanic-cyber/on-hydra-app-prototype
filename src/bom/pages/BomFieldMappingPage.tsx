@@ -2,12 +2,20 @@ import { ArrowRightOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import { bomSitePath, useActiveProject } from '../../context/ActiveProjectContext';
 import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
+import { readUploadFileName } from '../bomUploadFlowState';
+import { BomUploadFlowStepChrome } from '../components/BomUploadFlowStepChrome';
 import { BomPageHeader } from '../layout/BomPageHeader';
-import { bomProjectById, bomProjectTitleById } from '../data/mockData';
-import { PageBackButton } from '../../shell/PageBackButton';
+import { bomProjectById } from '../data/mockData';
 import {
-  Alert,
+  hydraBaseNormal,
+  hydraLargeNormal,
+  hydraLargeStrong,
+  hydraSmallStrong,
+  hydraTextStyleToReactCss,
+} from '../../theme/hydraTypography';
+import {
   Button,
   Card,
   Flex,
@@ -17,14 +25,11 @@ import {
   message,
   theme,
 } from '../../ui/antd';
-import {
-  hydraSmallNormal,
-  hydraSmallStrong,
-  hydraTextStyleToReactCss,
-} from '../../theme/hydraTypography';
+
+const SKIP_VALUE = '--Skip--';
 
 const BOM_SOURCE_FIELDS = [
-  '— Skip —',
+  SKIP_VALUE,
   'BRAND',
   'DESCRIPTION',
   'FIGURE NUM',
@@ -33,25 +38,28 @@ const BOM_SOURCE_FIELDS = [
   'INSTALL TYPE',
   'MANUFACTURER',
   'MATERIAL',
-  'ORDER FLAG',
   'PART NUMBER',
   'QTY',
+  'SKU',
   'UNIT',
-  'NOTES',
+  'UPC',
 ];
 
+/** Figma 5202:19667 — 9 visible rows + 4 below fold; badge default "11 of 13 fields mapped". */
 const ASC_DEST_FIELDS = [
   { key: 'PART NUMBER', label: 'Part Number' },
   { key: 'DESCRIPTION', label: 'Description' },
-  { key: 'QTY', label: 'Quantity' },
-  { key: 'BRAND', label: 'Brand' },
+  { key: 'SKU', label: 'SKU' },
+  { key: 'UPC', label: 'UPC' },
   { key: 'FIGURE NUM', label: 'Figure Number' },
   { key: 'FINISH', label: 'Finish' },
   { key: 'MFR NUM', label: 'Mfr Number' },
   { key: 'INSTALL TYPE', label: 'Install Type' },
   { key: 'MANUFACTURER', label: 'Manufacturer' },
+  { key: 'QTY', label: 'Quantity' },
+  { key: 'BRAND', label: 'Brand' },
   { key: 'MATERIAL', label: 'Material' },
-  { key: 'ORDER FLAG', label: 'Order Flag' },
+  { key: 'UNIT', label: 'Unit' },
 ] as const;
 
 type AliasMap = Record<string, string | undefined>;
@@ -59,19 +67,21 @@ type AliasMap = Record<string, string | undefined>;
 const DEFAULT_ALIAS: AliasMap = {
   'PART NUMBER': 'PART NUMBER',
   DESCRIPTION: 'DESCRIPTION',
-  QTY: 'QTY',
-  BRAND: 'BRAND',
+  SKU: SKIP_VALUE,
+  UPC: SKIP_VALUE,
   'FIGURE NUM': 'FIGURE NUM',
   FINISH: 'FINISH',
   'MFR NUM': 'MFR NUM',
   'INSTALL TYPE': 'INSTALL TYPE',
   MANUFACTURER: 'MANUFACTURER',
+  QTY: 'QTY',
+  BRAND: 'BRAND',
   MATERIAL: 'MATERIAL',
-  'ORDER FLAG': 'ORDER FLAG',
+  UNIT: 'UNIT',
 };
 
 function normalizeSkip(val: string | undefined) {
-  if (!val || val === '— Skip —') return undefined;
+  if (!val || val === SKIP_VALUE) return undefined;
   return val;
 }
 
@@ -80,10 +90,15 @@ export function BomFieldMappingPage() {
   const { bomProjectId = '' } = useParams<{ bomProjectId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const { projectId } = useActiveProject();
   const [aliasMap, setAliasMap] = useState<AliasMap>({ ...DEFAULT_ALIAS });
 
   const projectMeta = bomProjectById(bomProjectId);
-  const projectLabel = bomProjectTitleById(bomProjectId) ?? 'BOM project';
+  const uploadState =
+    typeof location.state === 'object' && location.state && !Array.isArray(location.state)
+      ? (location.state as BomUploadFlowLocationState)
+      : {};
+  const uploadFileName = readUploadFileName(uploadState);
 
   const mappedValues = useMemo(
     () => Object.entries(aliasMap).map(([k, v]) => [k, normalizeSkip(v)] as const),
@@ -106,7 +121,7 @@ export function BomFieldMappingPage() {
     Boolean(normalizeSkip(aliasMap.DESCRIPTION)) &&
     Boolean(normalizeSkip(aliasMap.QTY));
 
-  const categoryMapped = Boolean(normalizeSkip(aliasMap['FIGURE NUM']) || normalizeSkip(aliasMap.MATERIAL));
+  const bomBackTarget = bomSitePath(projectId);
 
   function handleSave() {
     if (!hasRequired) {
@@ -118,10 +133,7 @@ export function BomFieldMappingPage() {
       return;
     }
     message.success('Field mapping saved.');
-    const uploadBase: BomUploadFlowLocationState =
-      typeof location.state === 'object' && location.state && !Array.isArray(location.state)
-        ? { ...(location.state as BomUploadFlowLocationState) }
-        : {};
+    const uploadBase: BomUploadFlowLocationState = { ...uploadState };
     navigate(`/bom/projects/${bomProjectId}/parsing-review`, {
       state: { ...uploadBase, fieldMapping: aliasMap },
     });
@@ -136,35 +148,38 @@ export function BomFieldMappingPage() {
       navigate(`/bom/projects/${bomProjectId}/workspace`);
       return;
     }
-    navigate('/bom');
+    navigate(bomBackTarget);
   }
 
   if (bomProjectId && bomProjectId !== 'new' && !projectMeta) {
     return (
       <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-        <BomPageHeader
-          title="BOM project not found"
-          description="This project id is not in the demo list."
-          actions={
-            <Button type="primary" size="large" onClick={() => navigate('/bom')}>
-              Go to BOM home
-            </Button>
-          }
-        />
+        <BomPageHeader title="BOM project not found" />
+        <Button type="primary" size="large" onClick={() => navigate(bomBackTarget)}>
+          Go to BOM home
+        </Button>
       </Space>
     );
   }
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <PageBackButton to="/bom">Back to BOM</PageBackButton>
+      <BomUploadFlowStepChrome
+        backTo={bomBackTarget}
+        backLabel="Back to BOM"
+        backState={uploadState}
+        fileName={uploadFileName}
+        currentStep={0}
+        statusLabel={`${mappedCount} of ${totalFields} fields mapped`}
+      />
+
       <BomPageHeader
         title="Field mapping"
-        description={`Map columns from your uploaded BOM to ASC fields before parsing. ${projectLabel}.`}
+        description="Map columns from your uploaded BOM to ASC fields before parsing. New BOM project."
         actions={
-          <Space wrap>
+          <Flex gap={token.marginXS} align="center" wrap="wrap">
             <Button size="large" onClick={handleCancel}>
-              Cancel
+              Cancel upload
             </Button>
             <Button
               type="primary"
@@ -174,176 +189,138 @@ export function BomFieldMappingPage() {
             >
               Save mapping &amp; continue
             </Button>
-          </Space>
+          </Flex>
         }
       />
 
-      {!hasRequired ? (
-        <Alert
-          type="warning"
-          showIcon
-          message="Required mappings"
-          description="Map at least Part Number, Description, and Quantity to continue."
-        />
-      ) : null}
-
-      {duplicateBomColumns.size > 0 ? (
-        <Alert
-          type="error"
-          showIcon
-          message="Duplicate BOM column"
-          description="Two or more ASC fields point at the same BOM column. Change one mapping."
-        />
-      ) : null}
-
-      {!categoryMapped ? (
-        <Alert
-          type="info"
-          showIcon
-          message="Category not mapped"
-          description="Matching accuracy may be lower until figure or material columns are mapped."
-        />
-      ) : null}
-
-      <Flex gap={token.marginMD} align="flex-start" wrap="wrap">
-        <Card
-          styles={{ body: { padding: 0 } }}
-          style={{ flex: '1 1 400px', minWidth: 0 }}
+      {/* Mapping table — Projects Container gap 12; row pad 16/12, inner gap 8 */}
+      <Card
+        styles={{ body: { padding: 0 } }}
+        style={{ width: '100%', borderRadius: token.borderRadiusLG }}
+      >
+        <Flex
+          style={{
+            borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+            background: token.colorFillAlter,
+          }}
         >
           <Flex
-            gap={token.marginSM}
             align="center"
             style={{
+              flex: 1,
               paddingInline: token.paddingMD,
               paddingBlock: token.paddingSM,
-              borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-              background: token.colorFillAlter,
+              minWidth: 0,
             }}
           >
-            <div style={{ flex: 1 }}>
-              <Typography.Text
-                strong
-                style={{ ...hydraTextStyleToReactCss(hydraSmallStrong), color: token.colorTextSecondary }}
-              >
-                ASC FIELD
-              </Typography.Text>
-            </div>
-            <div style={{ width: 36, flexShrink: 0 }} />
-            <div style={{ flex: 1 }}>
-              <Typography.Text
-                strong
-                style={{ ...hydraTextStyleToReactCss(hydraSmallStrong), color: token.colorPrimary }}
-              >
-                YOUR BOM COLUMN
-              </Typography.Text>
-            </div>
+            <Typography.Text
+              strong
+              style={{ ...hydraTextStyleToReactCss(hydraSmallStrong), color: token.colorTextSecondary }}
+            >
+              ASC FIELD
+            </Typography.Text>
           </Flex>
+          <Flex
+            align="center"
+            justify="space-between"
+            gap={token.marginXS}
+            style={{
+              flex: 1,
+              paddingInline: token.paddingMD,
+              paddingBlock: token.paddingSM,
+              minWidth: 0,
+            }}
+          >
+            <Typography.Text
+              strong
+              style={{ ...hydraTextStyleToReactCss(hydraSmallStrong), color: token.colorPrimary }}
+            >
+              YOUR BOM COLUMN
+            </Typography.Text>
+            <Button type="link" onClick={handleReset} style={{ padding: 0, height: 'auto', flexShrink: 0 }}>
+              Reset to Defaults
+            </Button>
+          </Flex>
+        </Flex>
 
-          <Space orientation="vertical" size={0} style={{ width: '100%' }}>
-            {ASC_DEST_FIELDS.map(({ key, label }, idx) => {
-              const raw = aliasMap[key];
-              const normalized = normalizeSkip(raw);
-              const isMapped = Boolean(normalized);
-              const dup = normalized && duplicateBomColumns.has(normalized);
-              return (
+        <Space orientation="vertical" size={0} style={{ width: '100%' }}>
+          {ASC_DEST_FIELDS.map(({ key, label }, idx) => {
+            const raw = aliasMap[key];
+            const normalized = normalizeSkip(raw);
+            const isMapped = Boolean(normalized);
+            const dup = normalized && duplicateBomColumns.has(normalized);
+            const chipTypography = isMapped ? hydraLargeStrong : hydraLargeNormal;
+            return (
+              <Flex
+                key={key}
+                align="center"
+                gap={token.marginXS}
+                style={{
+                  paddingInline: token.paddingMD,
+                  paddingBlock: token.paddingSM,
+                  borderBottom:
+                    idx < ASC_DEST_FIELDS.length - 1
+                      ? `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`
+                      : undefined,
+                }}
+              >
                 <Flex
-                  key={key}
-                  gap={token.marginSM}
+                  flex={1}
                   align="center"
+                  justify="space-between"
                   style={{
-                    paddingInline: token.paddingMD,
-                    paddingBlock: token.paddingSM,
-                    borderBottom:
-                      idx < ASC_DEST_FIELDS.length - 1
-                        ? `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`
-                        : undefined,
+                    minWidth: 0,
+                    minHeight: token.controlHeightLG,
+                    paddingInline: token.paddingSM,
+                    paddingBlock: token.paddingXS,
+                    background: isMapped ? token.colorPrimaryBg : token.colorFillQuaternary,
+                    border: `${token.lineWidth}px ${token.lineType} ${isMapped ? token.colorPrimaryBorder : token.colorBorderSecondary}`,
+                    borderRadius: token.borderRadius,
                   }}
                 >
-                  <div style={{ flex: 1 }}>
-                    <Flex
-                      align="center"
-                      justify="space-between"
-                      style={{
-                        paddingInline: token.paddingMD,
-                        paddingBlock: token.paddingXS,
-                        background: isMapped ? token.colorPrimaryBg : token.colorFillQuaternary,
-                        border: `${token.lineWidth}px ${token.lineType} ${isMapped ? token.colorPrimaryBorder : token.colorBorderSecondary}`,
-                        borderRadius: token.borderRadius,
-                        minHeight: token.controlHeight,
-                      }}
-                    >
-                      <Typography.Text
-                        strong={isMapped}
-                        style={{
-                          ...(isMapped
-                            ? hydraTextStyleToReactCss(hydraSmallStrong)
-                            : hydraTextStyleToReactCss(hydraSmallNormal)),
-                          color: isMapped ? token.colorPrimary : token.colorTextTertiary,
-                        }}
-                      >
-                        {label}
-                      </Typography.Text>
-                      {isMapped ? (
-                        <CheckCircleOutlined
-                          style={{ color: token.colorSuccess, fontSize: hydraSmallNormal.fontSize }}
-                        />
-                      ) : null}
-                    </Flex>
-                  </div>
-
-                  <Flex
-                    align="center"
-                    justify="center"
+                  <Typography.Text
                     style={{
-                      width: 36,
-                      flexShrink: 0,
-                      color: isMapped ? token.colorPrimary : token.colorBorderSecondary,
+                      ...hydraTextStyleToReactCss(chipTypography),
+                      color: isMapped ? token.colorPrimary : token.colorTextTertiary,
                     }}
                   >
-                    <ArrowRightOutlined />
-                  </Flex>
-
-                  <div style={{ flex: 1 }}>
-                    <Select
-                      value={raw ?? undefined}
-                      onChange={(val) => setAliasMap((prev) => ({ ...prev, [key]: val }))}
-                      placeholder="Select BOM column…"
-                      style={{ width: '100%' }}
-                      status={dup ? 'warning' : undefined}
-                      options={BOM_SOURCE_FIELDS.map((f) => ({ value: f, label: f }))}
+                    {label}
+                  </Typography.Text>
+                  {isMapped ? (
+                    <CheckCircleOutlined
+                      style={{ color: token.colorSuccess, fontSize: hydraLargeNormal.fontSize }}
                     />
-                    {dup ? (
-                      <Typography.Text type="warning" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-                        This BOM column is already mapped elsewhere.
-                      </Typography.Text>
-                    ) : null}
-                  </div>
+                  ) : null}
                 </Flex>
-              );
-            })}
-          </Space>
-        </Card>
 
-        <Flex vertical gap={token.marginSM} style={{ width: 220, flexShrink: 0 }}>
-          <Card styles={{ body: { padding: token.paddingMD } }}>
-            <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
-              <Typography.Text strong>Mapping status</Typography.Text>
-              <Flex justify="space-between" align="center">
-                <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-                  Fields mapped
-                </Typography.Text>
-                <Typography.Text strong>
-                  {mappedCount} / {totalFields}
-                </Typography.Text>
+                <Flex
+                  align="center"
+                  justify="center"
+                  style={{
+                    width: token.fontSizeLG,
+                    flexShrink: 0,
+                    color: token.colorTextQuaternary,
+                  }}
+                >
+                  <ArrowRightOutlined style={{ fontSize: hydraBaseNormal.fontSize }} />
+                </Flex>
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <Select
+                    size="large"
+                    value={raw ?? undefined}
+                    onChange={(val) => setAliasMap((prev) => ({ ...prev, [key]: val }))}
+                    placeholder={SKIP_VALUE}
+                    style={{ width: '100%' }}
+                    status={dup ? 'warning' : undefined}
+                    options={BOM_SOURCE_FIELDS.map((f) => ({ value: f, label: f }))}
+                  />
+                </div>
               </Flex>
-            </Space>
-          </Card>
-
-          <Button block onClick={handleReset}>
-            Reset to defaults
-          </Button>
-        </Flex>
-      </Flex>
+            );
+          })}
+        </Space>
+      </Card>
     </Space>
   );
 }

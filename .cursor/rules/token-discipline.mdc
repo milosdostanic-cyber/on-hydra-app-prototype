@@ -1,0 +1,15 @@
+---
+description: Token and context efficiency rules
+alwaysApply: true
+---
+
+# Token Discipline
+
+- Read only files that are directly relevant to the current task.
+- Do not scan the entire repo unless absolutely necessary.
+- Prefer targeted search by feature name, route name, component name, or file path.
+- Summarize large files instead of pasting them.
+- Do not duplicate long PRD content in responses.
+- Work in phases.
+- Stop after producing a plan unless explicitly asked to implement.
+- When implementing, change only the files listed in the approved plan.
