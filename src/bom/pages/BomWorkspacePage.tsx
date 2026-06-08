@@ -1,23 +1,27 @@
 import {
+  EditOutlined,
   ExclamationCircleOutlined,
   ExportOutlined,
   FileSearchOutlined,
   PlusOutlined,
   SwapOutlined,
-  TranslationOutlined,
   UploadOutlined,
 } from '@ant-design/icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import { useBomImportFlow } from '../context/BomImportFlowContext';
 import { useBomWorkspaceRows } from '../../context/BomWorkspaceContext';
-import type { BomWorkspaceAppendBannerState } from '../bomUploadFlowState';
+import { routeForImportStep, type BomImportSession } from '../bomImportProgressState';
+import type { BomUploadFlowLocationState, BomWorkspaceAppendBannerState } from '../bomUploadFlowState';
+import { BomPendingUploadsRegion } from '../components/BomPendingUploadsRegion';
 import { MAX_UPLOAD_BYTES, VALID_UPLOAD_TYPES } from '../constants/uploadLimits';
 import { bomProjectById, bomProjectTitleById } from '../data/mockData';
-import type { BomItem } from '../data/types';
+import type { BomItem, BomProject } from '../data/types';
+import { BomConfidenceTag } from '../components/BomTags';
+import { BomEditProjectModal } from '../components/BomEditProjectModal';
 import { AscProductsDrawer } from '../components/AscProductsDrawer';
 import { PartTranslationModal } from '../components/PartTranslationModal';
-import { BomConfidenceTag, BomMatchStatusTag } from '../components/BomTags';
 import { isWorkspaceRowConfirmed, suggestedAscPartForRow } from '../bomWorkspaceHelpers';
 import { useBomHubPath } from '../../context/ActiveProjectContext';
 import { PageBackButton } from '../../shell/PageBackButton';
@@ -33,6 +37,7 @@ import {
   Empty,
   Flex,
   Input,
+  InputNumber,
   Modal,
   Progress,
   Rate,
@@ -48,7 +53,6 @@ import {
   hydraBaseNormal,
   hydraSmallNormal,
   hydraTextStyleToReactCss,
-  hydraTitleHeading3,
 } from '../../theme/hydraTypography';
 
 
@@ -63,26 +67,6 @@ type AddedCatalogProduct = {
   partType: string;
   qty?: number;
 };
-
-function confidenceSummaryPercent(rows: BomItem[]): number {
-  if (rows.length === 0) return 0;
-  const weight = (c: BomItem['confidence']) => (c === 'high' ? 1 : c === 'medium' ? 0.5 : 0);
-  const sum = rows.reduce((acc, r) => acc + weight(r.confidence), 0);
-  return Math.round((sum / rows.length) * 100);
-}
-
-function confidenceRank(confidence: BomItem['confidence']): number {
-  if (confidence === 'high') return 3;
-  if (confidence === 'medium') return 2;
-  return 1;
-}
-
-function statusRank(status: BomItem['status']): number {
-  if (status === 'confirmed') return 3;
-  if (status === 'needs-review') return 2;
-  if (status === 'matched') return 1;
-  return 0;
-}
 
 function renumberRows(rows: BomItem[]): BomItem[] {
   return rows.map((row, idx) => ({ ...row, rowNumber: idx + 1 }));
@@ -99,6 +83,8 @@ export function BomWorkspacePage() {
   const projectTitle = project?.name ?? bomProjectTitleById(bomProjectId) ?? 'BOM project';
   const isSeedEmptyProject = project != null && project.items === 0;
   const { rows, setRows } = useBomWorkspaceRows(bomProjectId);
+  const { pendingForProject, setActiveUploadId } = useBomImportFlow();
+  const pendingUploadSessions = pendingForProject(bomProjectId);
   const [query, setQuery] = useState('');
 
   const [isTranslating, setIsTranslating] = useState(false);
@@ -112,13 +98,26 @@ export function BomWorkspacePage() {
   const [translationOpen, setTranslationOpen] = useState(false);
   const emptyWorkspaceFileRef = useRef<HTMLInputElement>(null);
   const [appendImportBanner, setAppendImportBanner] = useState<{ fileName: string; count: number } | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editProject, setEditProject] = useState<BomProject | null>(project ?? null);
+
+  useEffect(() => {
+    if (project) setEditProject(project);
+  }, [project]);
 
   const filteredRows = useMemo(() => {
     const q = query.trim().toLowerCase();
     return rows.filter((row) => {
       const matchesQuery =
         !q ||
-        [row.originalInput, row.parsedDescription, row.category ?? '', row.unit ?? '']
+        [
+          row.originalInput,
+          row.parsedDescription,
+          row.figureNumber ?? '',
+          row.sku ?? '',
+          row.category ?? '',
+          row.unit ?? '',
+        ]
           .join(' ')
           .toLowerCase()
           .includes(q);
@@ -130,14 +129,9 @@ export function BomWorkspacePage() {
     });
   }, [rows, query, statusFilter]);
 
-  const totalItems = rows.length;
-  const confirmedCount = rows.filter(isWorkspaceRowConfirmed).length;
-  const needsReviewCount = rows.filter((row) => row.status === 'needs-review').length;
-  const missingCount = rows.filter((row) => row.status === 'pending' || row.status === undefined).length;
-  const reviewCount = totalItems - confirmedCount;
-  const confidencePercent = confidenceSummaryPercent(rows);
+  const reviewCount = rows.length - rows.filter(isWorkspaceRowConfirmed).length;
   const canTranslate = reviewCount > 0;
-  const hasWorkspaceRows = totalItems > 0;
+  const hasWorkspaceRows = rows.length > 0;
 
   useEffect(() => {
     const st = (location.state ?? {}) as BomWorkspaceAppendBannerState;
@@ -238,7 +232,12 @@ export function BomWorkspacePage() {
       onOk: () => {
         setActionError(null);
         navigate(`/bom/projects/${bomProjectId}/field-mapping`, {
-          state: { uploadDestination: 'append', appendTargetId: bomProjectId },
+          state: {
+            uploadDestination: 'append',
+            appendTargetId: bomProjectId,
+            uploadFlowBackTo: `/bom/projects/${bomProjectId}/workspace`,
+            uploadFlowBackLabel: 'Back to workspace',
+          },
         });
       },
     });
@@ -265,6 +264,8 @@ export function BomWorkspacePage() {
           uploadFileName: file.name,
           uploadDestination: 'append',
           appendTargetId: bomProjectId,
+          uploadFlowBackTo: `/bom/projects/${bomProjectId}/workspace`,
+          uploadFlowBackLabel: 'Back to workspace',
         },
       });
     }, 900);
@@ -388,6 +389,19 @@ export function BomWorkspacePage() {
     );
   }
 
+  function handleContinuePendingUpload(session: BomImportSession) {
+    setActiveUploadId(session.uploadId);
+    const { bomProjectId: projectId, currentStep, fileName } = session.progress;
+    const uploadState: BomUploadFlowLocationState = {
+      uploadId: session.uploadId,
+      uploadFileName: fileName,
+      fieldMapping: session.fieldMapping,
+      uploadFlowBackTo: `/bom/projects/${projectId}/workspace`,
+      uploadFlowBackLabel: 'Back to workspace',
+    };
+    navigate(routeForImportStep(projectId, currentStep), { state: uploadState });
+  }
+
   function handleManualSwap(row: BomItem) {
     closeResolveModal();
     navigate(`/bom/projects/${bomProjectId}/asc-products`, {
@@ -403,75 +417,62 @@ export function BomWorkspacePage() {
     });
   }
 
-  const statCardShell = {
-    background: token.colorBgContainer,
-    border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-    borderRadius: token.borderRadiusLG,
-    boxShadow: token.boxShadowTertiary,
-    paddingBlock: token.padding,
-    paddingInlineStart: token.paddingMD,
-    paddingInlineEnd: token.paddingMD,
-  };
-  const statCardAccentWidth = token.lineWidth * 2;
-
   const columns: TableColumnsType<BomItem> = [
     { title: '#', dataIndex: 'rowNumber', key: 'rowNumber', width: 50 },
     {
-      title: 'Part number',
-      dataIndex: 'originalInput',
-      key: 'originalInput',
-      width: 157,
-      sorter: (a, b) => a.originalInput.localeCompare(b.originalInput),
-      render: (partNumber: string, row) => (
-        <Typography.Link onClick={() => openResolveModal(row)}>{partNumber}</Typography.Link>
-      ),
-    },
-    {
-      title: 'Description',
+      title: 'Part',
       dataIndex: 'parsedDescription',
       key: 'parsedDescription',
       ellipsis: true,
     },
     {
-      title: 'Category',
-      dataIndex: 'category',
-      key: 'category',
-      width: 110,
-      sorter: (a, b) => (a.category ?? '').localeCompare(b.category ?? ''),
+      title: 'Figure Number',
+      dataIndex: 'figureNumber',
+      key: 'figureNumber',
+      width: 157,
+      render: (value: string | undefined) => value ?? '—',
+    },
+    {
+      title: 'SKU',
+      dataIndex: 'sku',
+      key: 'sku',
+      width: 157,
+      render: (value: string | undefined) => value ?? '—',
     },
     {
       title: 'Quantity',
       dataIndex: 'quantity',
       key: 'quantity',
       width: 110,
-      sorter: (a, b) => a.quantity - b.quantity,
-    },
-    { title: 'Unit', dataIndex: 'unit', key: 'unit', width: 110 },
-    {
-      title: 'Confidence',
-      dataIndex: 'confidence',
-      key: 'confidence',
-      width: 110,
-      sorter: (a, b) => confidenceRank(a.confidence) - confidenceRank(b.confidence),
-      render: (c: BomItem['confidence']) => <BomConfidenceTag confidence={c} />,
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      width: 110,
-      sorter: (a, b) => statusRank(a.status) - statusRank(b.status),
-      render: (s: BomItem['status']) => (s ? <BomMatchStatusTag status={s} /> : '—'),
+      render: (quantity: number, row) => (
+        <InputNumber
+          min={1}
+          value={quantity}
+          onChange={(next) => {
+            if (next == null) return;
+            setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, quantity: next } : r)));
+          }}
+          style={{ width: '100%' }}
+        />
+      ),
     },
     {
       title: 'Actions',
       key: 'actions',
-      width: 150,
+      width: 130,
       render: (_, row) => (
         <Space size={token.margin}>
-          <Typography.Link onClick={() => openResolveModal(row)}>
-            {isWorkspaceRowConfirmed(row) ? 'Review' : 'Resolve'}
-          </Typography.Link>
+          {!isWorkspaceRowConfirmed(row) ? (
+            <Typography.Link
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                openResolveModal(row);
+              }}
+            >
+              Review
+            </Typography.Link>
+          ) : null}
           <Typography.Link
             type="danger"
             onClick={(e) => {
@@ -667,7 +668,18 @@ export function BomWorkspacePage() {
         <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
           <BomPageHeader
             eyebrow="Draft"
-            title={projectTitle}
+            title={editProject?.name ?? projectTitle}
+            titleVariant="heading3"
+            titleAddon={
+              project ? (
+                <Button
+                  type="text"
+                  icon={<EditOutlined />}
+                  aria-label="Edit project name"
+                  onClick={() => setEditModalOpen(true)}
+                />
+              ) : null
+            }
             description="Upload a file to parse your BOM, browse ASC products, or use the quick picker."
             actions={
               <Space wrap>
@@ -771,6 +783,16 @@ export function BomWorkspacePage() {
             message.success('Translation reviewed and line confirmed.');
           }}
         />
+        <BomEditProjectModal
+          open={editModalOpen}
+          project={editProject}
+          onClose={() => setEditModalOpen(false)}
+          onSave={(updated) => {
+            setEditProject(updated);
+            setEditModalOpen(false);
+            message.success('Project name updated.');
+          }}
+        />
       </>
     );
   }
@@ -787,20 +809,31 @@ export function BomWorkspacePage() {
   }
 
   return (
-    <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+    <>
+      <BomPendingUploadsRegion
+        sessions={pendingUploadSessions}
+        onContinue={handleContinuePendingUpload}
+      />
+      <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to={bomHubPath}>Back to BOM projects</PageBackButton>
       <BomPageHeader
-        title={`${projectTitle} workspace`}
+        title={editProject?.name ?? projectTitle}
+        titleVariant="heading3"
         description="Active project BOM review workspace. Confirm lines, resolve review items, and finalize project output."
+        titleAddon={
+          project ? (
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              aria-label="Edit project name"
+              onClick={() => setEditModalOpen(true)}
+            />
+          ) : null
+        }
         actions={
-          <Space wrap>
-            <Button size="large" type="primary" icon={<ExportOutlined />} onClick={handleExport}>
-              Export
-            </Button>
-            <Button size="large" onClick={handleRequestService}>
-              Request service
-            </Button>
-          </Space>
+          <Button size="large" type="primary" icon={<ExportOutlined />} onClick={handleExport}>
+            Export
+          </Button>
         }
       />
 
@@ -844,117 +877,6 @@ export function BomWorkspacePage() {
         />
       ) : null}
 
-      <Flex gap={token.margin} wrap="wrap" align="stretch">
-        <div
-          style={{
-            ...statCardShell,
-            flex: '1 1 160px',
-            minWidth: 0,
-            cursor: 'pointer',
-            borderInlineStartWidth: statCardAccentWidth,
-            borderInlineStartStyle: 'solid',
-            borderInlineStartColor: token.colorPrimaryBorder,
-          }}
-          onClick={() => setStatusFilter('all')}
-        >
-          <Flex align="center" justify="space-between" gap={token.marginXS}>
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-              Total items
-            </Typography.Text>
-            <Typography.Title level={3} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading3) }}>
-              {totalItems}
-            </Typography.Title>
-          </Flex>
-        </div>
-        <div
-          style={{
-            ...statCardShell,
-            flex: '1 1 160px',
-            minWidth: 0,
-            cursor: 'pointer',
-            borderInlineStartWidth: statCardAccentWidth,
-            borderInlineStartStyle: 'solid',
-            borderInlineStartColor: token.colorSuccessBorder,
-          }}
-          onClick={() => setStatusFilter('confirmed')}
-        >
-          <Flex align="center" justify="space-between" gap={token.marginXS}>
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-              Confirmed
-            </Typography.Text>
-            <Typography.Title level={3} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading3) }}>
-              {confirmedCount}
-            </Typography.Title>
-          </Flex>
-        </div>
-        <div
-          style={{
-            ...statCardShell,
-            flex: '1 1 160px',
-            minWidth: 0,
-            cursor: 'pointer',
-            borderInlineStartWidth: statCardAccentWidth,
-            borderInlineStartStyle: 'solid',
-            borderInlineStartColor: token.colorWarningBorder,
-          }}
-          onClick={() => setStatusFilter('needs-review')}
-        >
-          <Flex align="center" justify="space-between" gap={token.marginXS}>
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-              Needs Review
-            </Typography.Text>
-            <Typography.Title level={3} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading3) }}>
-              {needsReviewCount}
-            </Typography.Title>
-          </Flex>
-        </div>
-        <div
-          style={{
-            ...statCardShell,
-            flex: '1 1 160px',
-            minWidth: 0,
-            cursor: 'pointer',
-            borderInlineStartWidth: statCardAccentWidth,
-            borderInlineStartStyle: 'solid',
-            borderInlineStartColor: token.colorErrorBorder,
-          }}
-          onClick={() => setStatusFilter('missing')}
-        >
-          <Flex align="center" justify="space-between" gap={token.marginXS}>
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-              Missing
-            </Typography.Text>
-            <Typography.Title level={3} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading3) }}>
-              {missingCount}
-            </Typography.Title>
-          </Flex>
-        </div>
-        <div
-          style={{
-            ...statCardShell,
-            flex: '1 1 220px',
-            maxWidth: 368,
-            minWidth: 200,
-            borderInlineStartWidth: statCardAccentWidth,
-            borderInlineStartStyle: 'solid',
-            borderInlineStartColor: token.colorInfoBorder,
-          }}
-        >
-          <Flex vertical justify="center" gap={token.marginXXS} style={{ width: '100%', minHeight: '100%' }}>
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-              Match Confidence
-            </Typography.Text>
-            <Progress
-              percent={confidencePercent}
-              size="small"
-              strokeColor={token.colorInfo}
-              trailColor={token.colorFillSecondary}
-              style={{ margin: 0 }}
-            />
-          </Flex>
-        </div>
-      </Flex>
-
       {isTranslating && (
         <Alert
           type="info"
@@ -983,20 +905,14 @@ export function BomWorkspacePage() {
             <Button type="primary" icon={<PlusOutlined />} onClick={() => setAscDrawerOpen(true)}>
               Add Item
             </Button>
-            <Button onClick={() => navigate(`/bom/projects/${bomProjectId}/asc-products`)}>Browse products</Button>
             <Button icon={<UploadOutlined />} onClick={handleUpload}>
               Upload file
             </Button>
-            {canTranslate ? (
-              <Button icon={<TranslationOutlined />} onClick={() => navigate(`/bom/projects/${bomProjectId}/translate`)}>
-                Translate all
-              </Button>
-            ) : null}
           </Space>
           <Flex align="center" gap={token.marginXS} wrap="wrap">
             <AppSearchInput
               allowClear
-              placeholder="Search items..."
+              placeholder="Search Items..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               style={{ width: 240, maxWidth: '100%' }}
@@ -1008,13 +924,15 @@ export function BomWorkspacePage() {
           columns={columns}
           dataSource={filteredRows}
           scroll={{ x: 'max-content' }}
+          onRow={(row) => ({
+            onDoubleClick: () => openResolveModal(row),
+          })}
           locale={{
             emptyText: renderTableEmptyState(),
           }}
           pagination={{
             pageSize: shellLayout.tablePageSizeDefault,
             showSizeChanger: false,
-            showTotal: (total) => `${total} row${total === 1 ? '' : 's'}`,
             position: ['bottomRight'],
           }}
           styles={{
@@ -1079,6 +997,18 @@ export function BomWorkspacePage() {
           message.success('Translation reviewed and line confirmed.');
         }}
       />
-    </Space>
+
+      <BomEditProjectModal
+        open={editModalOpen}
+        project={editProject}
+        onClose={() => setEditModalOpen(false)}
+        onSave={(updated) => {
+          setEditProject(updated);
+          setEditModalOpen(false);
+          message.success('Project name updated.');
+        }}
+      />
+      </Space>
+    </>
   );
 }

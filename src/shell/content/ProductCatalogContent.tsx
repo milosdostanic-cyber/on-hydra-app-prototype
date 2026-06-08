@@ -254,7 +254,7 @@ export function ProductCatalogContent() {
             ) : null}
             <Flex vertical gap={token.marginMD} style={{ width: '100%' }}>
               <Flex align="center" justify="space-between" wrap="wrap" gap={token.marginXS}>
-                <Typography.Title level={4} style={{ margin: 0 }}>
+                <Typography.Title level={3} style={{ margin: 0 }}>
                   Categories
                 </Typography.Title>
                 <Button type="primary" size="large" icon={<DownloadOutlined />} onClick={() => message.info('Stub: download would start.')}>

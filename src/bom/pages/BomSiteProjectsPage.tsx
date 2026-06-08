@@ -9,7 +9,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { Key } from 'react';
 
-import { useActiveProject } from '../../context/ActiveProjectContext';
+import { useActiveProject, useBomHubPath } from '../../context/ActiveProjectContext';
 import { BomCreateProjectModal } from '../components/BomCreateProjectModal';
 import { BomUploadDestinationModal } from '../components/BomUploadDestinationModal';
 import { BomPageHeader } from '../layout/BomPageHeader';
@@ -65,6 +65,7 @@ export function BomSiteProjectsPage() {
   const navigate = useNavigate();
   const { constructionProjectId = '' } = useParams<{ constructionProjectId: string }>();
   const { setProjectId, project } = useActiveProject();
+  const bomHubPath = useBomHubPath();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -295,9 +296,21 @@ export function BomSiteProjectsPage() {
       closeLoading();
       message.success('File received. Opening field mapping.');
       if (state.uploadDestination === 'new') {
-        navigate('/bom/projects/new/field-mapping', { state });
+        navigate('/bom/projects/new/field-mapping', {
+          state: {
+            ...state,
+            uploadFlowBackTo: bomHubPath,
+            uploadFlowBackLabel: 'Back to BOM',
+          },
+        });
       } else if (state.appendTargetId) {
-        navigate(`/bom/projects/${state.appendTargetId}/field-mapping`, { state });
+        navigate(`/bom/projects/${state.appendTargetId}/field-mapping`, {
+          state: {
+            ...state,
+            uploadFlowBackTo: `/bom/projects/${state.appendTargetId}/workspace`,
+            uploadFlowBackLabel: 'Back to workspace',
+          },
+        });
       }
       setPendingUpload(null);
     }, 900);

@@ -1,13 +1,10 @@
-import {
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
-  RightOutlined,
-  TableOutlined,
-} from '@ant-design/icons';
+import { CheckCircleOutlined, RightOutlined, TableOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { applyAcceptAllHighSkipRest, bulkAcceptHighSkipRestMessage } from '../bomMatchingBulkActions';
 import { matchScoreBand } from '../data/bomImportFlowSeed';
+import { useBomCancelUpload } from '../hooks/useBomCancelUpload';
 import { useBomMatchingData } from '../hooks/useBomMatchingData';
 import { useBomImportFlow } from '../context/BomImportFlowContext';
 import { useBomWorkspace } from '../../context/BomWorkspaceContext';
@@ -19,7 +16,6 @@ import { bomItemById } from '../data/mockData';
 import type { BomItem, BomItemConfidence, BomMatchResult } from '../data/types';
 import { PageBackButton } from '../../shell/PageBackButton';
 import {
-  App,
   Button,
   Card,
   Divider,
@@ -69,10 +65,10 @@ import {
 
 export function BomProgressiveMatchingPage() {
   const { token } = theme.useToken();
-  const { modal } = App.useApp();
   const { bomProjectId = '' } = useParams<{ bomProjectId: string }>();
   const navigate = useNavigate();
-  const { updateProgress, dismissSession } = useBomImportFlow();
+  const { updateProgress } = useBomImportFlow();
+  const { confirmCancelUpload } = useBomCancelUpload(bomProjectId);
   const { rowsByProjectId, setWorkspaceRows } = useBomWorkspace();
   const { session, uploadId, matchResults, persist, stats } = useBomMatchingData(bomProjectId);
 
@@ -90,21 +86,6 @@ export function BomProgressiveMatchingPage() {
   useEffect(() => {
     if (index >= queue.length && queue.length > 0) setIndex(0);
   }, [queue.length, index]);
-
-  function handleCancelUpload() {
-    modal.confirm({
-      title: 'Cancel upload?',
-      content: 'All matching progress for this file will be discarded.',
-      icon: <ExclamationCircleOutlined style={{ color: token.colorWarning }} />,
-      okText: 'Cancel upload',
-      okType: 'danger',
-      cancelText: 'Keep matching',
-      onOk: () => {
-        if (uploadId) dismissSession(uploadId);
-        navigate('/bom');
-      },
-    });
-  }
 
   function patchCurrent(patch: Partial<BomMatchResult>) {
     if (!current) return;
@@ -137,14 +118,13 @@ export function BomProgressiveMatchingPage() {
   }
 
   function handleAcceptAllHigh() {
-    const next = matchResults.map((r) => {
-      const conf = r.topMatch?.matchConfidence ?? 0;
-      if (r.lineStatus === 'pending' && conf >= 90) return { ...r, lineStatus: 'accepted' as const };
-      if (r.lineStatus === 'pending' && conf < 90) return { ...r, lineStatus: 'skipped' as const };
-      return r;
-    });
+    const { next, acceptedCount, skippedCount } = applyAcceptAllHighSkipRest(matchResults);
+    if (acceptedCount === 0 && skippedCount === 0) {
+      message.info('No pending lines to update.');
+      return;
+    }
     persist(next);
-    message.success('Accepted all high-confidence matches; remaining lines skipped.');
+    message.success(bulkAcceptHighSkipRestMessage(acceptedCount, skippedCount));
     setIndex(0);
   }
 
@@ -220,10 +200,12 @@ export function BomProgressiveMatchingPage() {
             >
               View as table
             </Button>
-            <Button size="large" onClick={handleCancelUpload}>
+            <Button size="large" onClick={() => confirmCancelUpload('match')}>
               Cancel upload
             </Button>
-            <Button onClick={handleAcceptAllHigh}>Accept all high matches and skip rest</Button>
+            <Button type="primary" ghost onClick={handleAcceptAllHigh}>
+              Accept all high matches and skip rest
+            </Button>
             <Button
               type="primary"
               size="large"

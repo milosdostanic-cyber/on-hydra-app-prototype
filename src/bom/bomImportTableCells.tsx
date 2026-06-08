@@ -1,9 +1,5 @@
 import { Input, InputNumber, Typography } from '../ui/antd';
 
-function isBlank(value: string | undefined): boolean {
-  return !value?.trim();
-}
-
 /** Read-only table cell (Figma: plain text, no input chrome). */
 export function readOnlyTableText(value: string | undefined, ellipsis = true) {
   const display = value?.trim() ? value : '—';
@@ -17,14 +13,15 @@ export function readOnlyTableText(value: string | undefined, ellipsis = true) {
 type EditableTextProps = {
   value: string | undefined;
   onChange: (next: string) => void;
-  warnIfEmpty?: boolean;
+  /** Figma attention state — yellow input border when the parser left this field empty. */
+  needsAttention?: boolean;
 };
 
-export function editableTableText({ value, onChange, warnIfEmpty }: EditableTextProps) {
+export function editableTableText({ value, onChange, needsAttention }: EditableTextProps) {
   return (
     <Input
       value={value ?? ''}
-      status={warnIfEmpty && isBlank(value) ? 'warning' : undefined}
+      status={needsAttention ? 'warning' : undefined}
       onChange={(e) => onChange(e.target.value)}
     />
   );
@@ -33,17 +30,17 @@ export function editableTableText({ value, onChange, warnIfEmpty }: EditableText
 type EditableNumberProps = {
   value: number | undefined;
   onChange: (next: number | null) => void;
-  warnIfEmpty?: boolean;
+  needsAttention?: boolean;
   min?: number;
 };
 
-export function editableTableNumber({ value, onChange, warnIfEmpty, min = 0 }: EditableNumberProps) {
+export function editableTableNumber({ value, onChange, needsAttention, min = 0 }: EditableNumberProps) {
   return (
     <InputNumber
       min={min}
       style={{ width: '100%' }}
       value={value}
-      status={warnIfEmpty && (value == null || value <= 0) ? 'warning' : undefined}
+      status={needsAttention ? 'warning' : undefined}
       onChange={(n) => onChange(typeof n === 'number' ? n : null)}
     />
   );

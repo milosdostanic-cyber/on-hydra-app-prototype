@@ -242,42 +242,83 @@ export function dismissImportSession(uploadId: string): void {
   saveToStorage();
 }
 
-const DEMO_PENDING_SEED_VERSION = 2;
+const DEMO_PENDING_SEED_VERSION = 4;
 const demoPendingSeedKey = (bomProjectId: string) =>
   `hydra_bom_demo_pending_seed_v${DEMO_PENDING_SEED_VERSION}_${bomProjectId}`;
 
-function seedDemoPendingImports(bomProjectId: string): void {
-  const files = ['BOM-ExLine.xlsx', 'BOM-ExLine2.xlsx', 'BOM-ExLine3.xlsx'] as const;
-  const steps: BomImportStep[] = ['review', 'map', 'match'];
-  files.forEach((fileName, i) => {
+/** Figma `5080:16558` — 3 pending uploads on Office Complex (all BOM-ExLine2.xlsx). */
+function seedThreePendingImports(bomProjectId: string): void {
+  const fileName = 'BOM-ExLine2.xlsx';
+  const configs: Array<{
+    step: BomImportStep;
+    mappedAscFields: number;
+    parsedRows: number;
+    acceptedCount: number;
+    skippedCount: number;
+  }> = [
+    { step: 'match', mappedAscFields: 11, parsedRows: 5, acceptedCount: 1, skippedCount: 0 },
+    { step: 'review', mappedAscFields: 11, parsedRows: 3, acceptedCount: 0, skippedCount: 0 },
+    { step: 'map', mappedAscFields: 6, parsedRows: 0, acceptedCount: 0, skippedCount: 0 },
+  ];
+
+  configs.forEach((cfg) => {
     const session = createImportSession(bomProjectId, fileName);
     updateImportSession(session.uploadId, {
-      currentStep: steps[i],
-      mappedAscFields: i === 0 ? 11 : i === 1 ? 4 : 8,
-      parsedRows: i === 0 ? session.parsedItems.length : i === 2 ? Math.floor(session.parsedItems.length / 2) : 0,
-      acceptedCount: i === 2 ? 2 : 0,
-      skippedCount: i === 2 ? 1 : 0,
+      currentStep: cfg.step,
+      mappedAscFields: cfg.mappedAscFields,
+      parsedRows: cfg.parsedRows,
+      acceptedCount: cfg.acceptedCount,
+      skippedCount: cfg.skippedCount,
     });
   });
 }
 
+/** Figma `5202:21559` — single resume strip (Office Complex HVAC Upgrade). */
+function seedSinglePendingImport(bomProjectId: string): void {
+  const session = createImportSession(bomProjectId, 'BOM-ExLine2.xlsx');
+  updateImportSession(session.uploadId, {
+    currentStep: 'map',
+    mappedAscFields: 4,
+  });
+}
+
+function clearPendingForProject(bomProjectId: string): void {
+  listPendingImportsForProject(bomProjectId).forEach((s) => dismissImportSession(s.uploadId));
+  uploadIdsByProjectId.set(bomProjectId, []);
+}
+
 export function ensureDemoPendingImports(bomProjectId: string): void {
   try {
-    const seeded = localStorage.getItem(demoPendingSeedKey(bomProjectId));
+    const seedKey = demoPendingSeedKey(bomProjectId);
+    const seeded = localStorage.getItem(seedKey);
     const pending = listPendingImportsForProject(bomProjectId);
-    if (seeded === '1' && pending.length === 3) return;
 
-    if (bomProjectId === '1') {
-      pending.forEach((s) => dismissImportSession(s.uploadId));
-      uploadIdsByProjectId.set(bomProjectId, []);
-    } else if ((uploadIdsByProjectId.get(bomProjectId) ?? []).length > 0) {
+    // Office Complex HVAC Upgrade — 3 pending uploads (Figma `5080:16558`).
+    if (bomProjectId === '3') {
+      if (seeded === '1' && pending.length === 3) return;
+      clearPendingForProject(bomProjectId);
+      seedThreePendingImports(bomProjectId);
+      localStorage.setItem(seedKey, '1');
       return;
     }
 
-    seedDemoPendingImports(bomProjectId);
-    localStorage.setItem(demoPendingSeedKey(bomProjectId), '1');
+    // Hospital Wing — 1 interrupted upload strip.
+    if (bomProjectId === '1') {
+      if (seeded === '1' && pending.length === 1) return;
+      clearPendingForProject(bomProjectId);
+      seedSinglePendingImport(bomProjectId);
+      localStorage.setItem(seedKey, '1');
+      return;
+    }
+
+    if (seeded === '1') return;
+    if (pending.length > 0) return;
   } catch {
-    if ((uploadIdsByProjectId.get(bomProjectId) ?? []).length > 0) return;
-    seedDemoPendingImports(bomProjectId);
+    if (bomProjectId === '3') {
+      clearPendingForProject(bomProjectId);
+      seedThreePendingImports(bomProjectId);
+    } else if (bomProjectId === '1' && listPendingImportsForProject(bomProjectId).length === 0) {
+      seedSinglePendingImport(bomProjectId);
+    }
   }
 }

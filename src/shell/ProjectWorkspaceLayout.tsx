@@ -109,7 +109,7 @@ export function ProjectWorkspaceLayout() {
             >
               All projects
             </Button>
-            <Typography.Title level={4} style={{ margin: 0 }}>
+            <Typography.Title level={3} style={{ margin: 0 }}>
               {title}
             </Typography.Title>
             <Typography.Text type="secondary" style={{ display: 'block', marginTop: token.marginXXS }}>

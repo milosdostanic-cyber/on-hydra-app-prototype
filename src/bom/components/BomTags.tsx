@@ -1,4 +1,10 @@
-import type { BomItemConfidence, BomItemMatchStatus, BomProjectStatus, AscSubstitutionRisk } from '../data/types';
+import type {
+  BomItemConfidence,
+  BomItemMatchStatus,
+  BomMatchLineStatus,
+  BomProjectStatus,
+  AscSubstitutionRisk,
+} from '../data/types';
 import { HydraTag, type HydraTagTone } from '../../ui/HydraTag';
 import { CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 
@@ -80,4 +86,16 @@ export function BomRiskTag({ risk }: { risk: AscSubstitutionRisk }) {
 
 export function BomManualTag() {
   return <HydraTag tone="processing">Added manually</HydraTag>;
+}
+
+const lineStatusLabel: Record<BomMatchLineStatus, string> = {
+  pending: 'Pending',
+  accepted: 'Accepted',
+  skipped: 'Skipped',
+};
+
+export function BomMatchLineStatusTag({ status }: { status: BomMatchLineStatus }) {
+  const tone: HydraTagTone =
+    status === 'accepted' ? 'success' : status === 'skipped' ? 'warning' : 'processing';
+  return <HydraTag tone={tone}>{lineStatusLabel[status]}</HydraTag>;
 }

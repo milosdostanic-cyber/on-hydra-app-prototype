@@ -6,6 +6,7 @@ import { Button, Flex, theme } from '../../ui/antd';
 import {
   BomUploadProgressBar,
   type BomUploadFlowStepIndex,
+  type BomUploadProgressStatusTone,
 } from './BomUploadProgressBar';
 
 type BomUploadFlowStepChromeProps = {
@@ -15,6 +16,8 @@ type BomUploadFlowStepChromeProps = {
   fileName: string;
   currentStep: BomUploadFlowStepIndex;
   statusLabel?: string;
+  statusTone?: BomUploadProgressStatusTone;
+  stepsComplete?: boolean;
 };
 
 /**
@@ -29,6 +32,8 @@ export function BomUploadFlowStepChrome({
   fileName,
   currentStep,
   statusLabel,
+  statusTone,
+  stepsComplete,
 }: BomUploadFlowStepChromeProps) {
   const navigate = useNavigate();
   const { token } = theme.useToken();
@@ -47,6 +52,8 @@ export function BomUploadFlowStepChrome({
         fileName={fileName}
         currentStep={currentStep}
         statusLabel={statusLabel}
+        statusTone={statusTone}
+        stepsComplete={stepsComplete}
       />
     </Flex>
   );

@@ -11,6 +11,9 @@ import { shellBreadcrumbBarStyle, shellContentRailStyle } from './shellContentRa
 
 const { Header, Content } = Layout;
 
+/** Portal target for BOM workspace pending-upload collapse — flush under breadcrumbs (Figma `5080:16558`, gap 0). */
+export const BOM_SHELL_FLUSH_BELOW_BREADCRUMB_ID = 'bom-shell-flush-below-breadcrumb';
+
 /** Product Catalog hero is full-bleed in the main column, flush under breadcrumbs (no shell rail / horizontal inset). */
 export function isProjectProductCatalogPath(pathname: string): boolean {
   return /^\/projects\/[^/]+\/content$/.test(pathname);
@@ -91,6 +94,7 @@ export function AppShell() {
             </div>
           </Header>
         ) : null}
+        <div id={BOM_SHELL_FLUSH_BELOW_BREADCRUMB_ID} style={{ width: '100%', flexShrink: 0 }} />
         <Content
           style={{
             flex: 1,

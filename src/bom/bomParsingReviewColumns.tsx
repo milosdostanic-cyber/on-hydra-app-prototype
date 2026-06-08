@@ -1,4 +1,5 @@
 import type { BomItem, BomParsingReviewColumnProfile } from './data/types';
+import { parsingReviewFieldNeedsAttention } from './bomParsingReviewAlert';
 import {
   editableTableNumber,
   editableTableText,
@@ -24,7 +25,7 @@ export const PARSING_REVIEW_COLUMN_WIDTHS = {
 
 type RowUpdater = (rowId: string, patch: Partial<BomItem>) => void;
 
-function qtyColumn(updateRow: RowUpdater): TableColumnsType<BomItem>[number] {
+function qtyColumn(profile: BomParsingReviewColumnProfile, updateRow: RowUpdater): TableColumnsType<BomItem>[number] {
   return {
     title: 'Qty',
     dataIndex: 'quantity',
@@ -33,7 +34,7 @@ function qtyColumn(updateRow: RowUpdater): TableColumnsType<BomItem>[number] {
     render: (v: number, record) => (
       editableTableNumber({
         value: v,
-        warnIfEmpty: true,
+        needsAttention: parsingReviewFieldNeedsAttention(record, 'quantity', profile),
         onChange: (n) =>
           updateRow(record.id, { quantity: typeof n === 'number' ? n : record.quantity }),
       })
@@ -42,7 +43,10 @@ function qtyColumn(updateRow: RowUpdater): TableColumnsType<BomItem>[number] {
 }
 
 /** Size → Manufacturer → Figure Number (Qty and UPC added per profile). */
-function sharedMiddleColumns(updateRow: RowUpdater): TableColumnsType<BomItem> {
+function sharedMiddleColumns(
+  profile: BomParsingReviewColumnProfile,
+  updateRow: RowUpdater,
+): TableColumnsType<BomItem> {
   return [
     {
       title: 'Size (inches)',
@@ -52,7 +56,7 @@ function sharedMiddleColumns(updateRow: RowUpdater): TableColumnsType<BomItem> {
       render: (v: string, record) => (
         editableTableNumber({
           value: parseSizeInches(v),
-          warnIfEmpty: true,
+          needsAttention: parsingReviewFieldNeedsAttention(record, 'size', profile),
           onChange: (n) => updateRow(record.id, { size: formatSizeInches(n, record.size) }),
         })
       ),
@@ -65,7 +69,7 @@ function sharedMiddleColumns(updateRow: RowUpdater): TableColumnsType<BomItem> {
       render: (v: string | undefined, record) =>
         editableTableText({
           value: v,
-          warnIfEmpty: true,
+          needsAttention: parsingReviewFieldNeedsAttention(record, 'manufacturer', profile),
           onChange: (next) => updateRow(record.id, { manufacturer: next }),
         }),
     },
@@ -77,7 +81,7 @@ function sharedMiddleColumns(updateRow: RowUpdater): TableColumnsType<BomItem> {
       render: (v: string | undefined, record) =>
         editableTableText({
           value: v,
-          warnIfEmpty: true,
+          needsAttention: parsingReviewFieldNeedsAttention(record, 'figureNumber', profile),
           onChange: (next) => updateRow(record.id, { figureNumber: next }),
         }),
     },
@@ -116,7 +120,7 @@ export function buildParsingReviewColumns(
         render: (v: string, record) =>
           editableTableText({
             value: v,
-            warnIfEmpty: true,
+            needsAttention: parsingReviewFieldNeedsAttention(record, 'parsedDescription', profile),
             onChange: (next) => updateRow(record.id, { parsedDescription: next }),
           }),
       },
@@ -128,11 +132,11 @@ export function buildParsingReviewColumns(
         render: (v: string | undefined, record) =>
           editableTableText({
             value: v,
-            warnIfEmpty: true,
+            needsAttention: parsingReviewFieldNeedsAttention(record, 'sku', profile),
             onChange: (next) => updateRow(record.id, { sku: next }),
           }),
       },
-      ...sharedMiddleColumns(updateRow),
+      ...sharedMiddleColumns(profile, updateRow),
       {
         title: 'UPC',
         dataIndex: 'upc',
@@ -141,11 +145,11 @@ export function buildParsingReviewColumns(
         render: (v: string | undefined, record) =>
           editableTableText({
             value: v,
-            warnIfEmpty: true,
+            needsAttention: parsingReviewFieldNeedsAttention(record, 'upc', profile),
             onChange: (next) => updateRow(record.id, { upc: next }),
           }),
       },
-      qtyColumn(updateRow),
+      qtyColumn(profile, updateRow),
     ];
   }
 
@@ -160,12 +164,12 @@ export function buildParsingReviewColumns(
         render: (v: string | undefined, record) =>
           editableTableText({
             value: v,
-            warnIfEmpty: true,
+            needsAttention: parsingReviewFieldNeedsAttention(record, 'sku', profile),
             onChange: (next) => updateRow(record.id, { sku: next }),
           }),
       },
-      ...sharedMiddleColumns(updateRow),
-      qtyColumn(updateRow),
+      ...sharedMiddleColumns(profile, updateRow),
+      qtyColumn(profile, updateRow),
     ];
   }
 
@@ -179,7 +183,7 @@ export function buildParsingReviewColumns(
       render: (v: string | undefined, record) =>
         editableTableText({
           value: v,
-          warnIfEmpty: true,
+          needsAttention: parsingReviewFieldNeedsAttention(record, 'upc', profile),
           onChange: (next) => updateRow(record.id, { upc: next }),
         }),
     },
@@ -191,11 +195,11 @@ export function buildParsingReviewColumns(
       render: (v: string | undefined, record) =>
         editableTableText({
           value: v,
-          warnIfEmpty: true,
+          needsAttention: parsingReviewFieldNeedsAttention(record, 'sku', profile),
           onChange: (next) => updateRow(record.id, { sku: next }),
         }),
     },
-    ...sharedMiddleColumns(updateRow),
-    qtyColumn(updateRow),
+    ...sharedMiddleColumns(profile, updateRow),
+    qtyColumn(profile, updateRow),
   ];
 }

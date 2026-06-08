@@ -8,6 +8,7 @@ import { readUploadFileName } from '../bomUploadFlowState';
 import { BomUploadFlowStepChrome } from '../components/BomUploadFlowStepChrome';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { bomProjectById } from '../data/mockData';
+import { useBomCancelUpload } from '../hooks/useBomCancelUpload';
 import {
   hydraBaseNormal,
   hydraLargeNormal,
@@ -91,13 +92,19 @@ export function BomFieldMappingPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { projectId } = useActiveProject();
-  const [aliasMap, setAliasMap] = useState<AliasMap>({ ...DEFAULT_ALIAS });
-
-  const projectMeta = bomProjectById(bomProjectId);
   const uploadState =
     typeof location.state === 'object' && location.state && !Array.isArray(location.state)
       ? (location.state as BomUploadFlowLocationState)
       : {};
+  const [aliasMap, setAliasMap] = useState<AliasMap>(() => {
+    const saved = uploadState.fieldMapping;
+    if (saved && Object.keys(saved).length > 0) {
+      return { ...DEFAULT_ALIAS, ...saved };
+    }
+    return { ...DEFAULT_ALIAS };
+  });
+
+  const projectMeta = bomProjectById(bomProjectId);
   const uploadFileName = readUploadFileName(uploadState);
 
   const mappedValues = useMemo(
@@ -122,6 +129,9 @@ export function BomFieldMappingPage() {
     Boolean(normalizeSkip(aliasMap.QTY));
 
   const bomBackTarget = bomSitePath(projectId);
+  const flowBackTo = uploadState.uploadFlowBackTo ?? bomBackTarget;
+  const flowBackLabel = uploadState.uploadFlowBackLabel ?? 'Back to BOM';
+  const { confirmCancelUpload } = useBomCancelUpload(bomProjectId);
 
   function handleSave() {
     if (!hasRequired) {
@@ -143,14 +153,6 @@ export function BomFieldMappingPage() {
     setAliasMap({ ...DEFAULT_ALIAS });
   }
 
-  function handleCancel() {
-    if (bomProjectId && bomProjectId !== 'new' && projectMeta) {
-      navigate(`/bom/projects/${bomProjectId}/workspace`);
-      return;
-    }
-    navigate(bomBackTarget);
-  }
-
   if (bomProjectId && bomProjectId !== 'new' && !projectMeta) {
     return (
       <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
@@ -165,8 +167,8 @@ export function BomFieldMappingPage() {
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <BomUploadFlowStepChrome
-        backTo={bomBackTarget}
-        backLabel="Back to BOM"
+        backTo={flowBackTo}
+        backLabel={flowBackLabel}
         backState={uploadState}
         fileName={uploadFileName}
         currentStep={0}
@@ -178,7 +180,7 @@ export function BomFieldMappingPage() {
         description="Map columns from your uploaded BOM to ASC fields before parsing. New BOM project."
         actions={
           <Flex gap={token.marginXS} align="center" wrap="wrap">
-            <Button size="large" onClick={handleCancel}>
+            <Button size="large" onClick={() => confirmCancelUpload('map')}>
               Cancel upload
             </Button>
             <Button

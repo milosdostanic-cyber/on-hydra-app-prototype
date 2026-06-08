@@ -23,7 +23,7 @@ export function createParsingReviewRows(): BomItem[] {
       id: 'item-2',
       rowNumber: 2,
       originalInput: 'Tyco TY3251 sprinkler head 155F',
-      parsedDescription: 'Standard Response Pendent Sprinkler',
+      parsedDescription: '',
       sku: 'Threaded',
       size: '1/2 inch',
       pressureClass: '175 PSI',

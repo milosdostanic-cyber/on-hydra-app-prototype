@@ -5,6 +5,7 @@ import {
   hydraLargeStrong,
   hydraTextStyleToReactCss,
   hydraSmallNormal,
+  hydraTitleHeading3,
   hydraTitleHeading4,
 } from '../../theme/hydraTypography';
 import { Flex, Space, Typography, theme } from '../../ui/antd';
@@ -16,17 +17,31 @@ type Props = {
   eyebrow?: string;
   /** Figma `Large/Strong` (16/24/600) for Get started–style subtitles; default `Base/Normal`. */
   descriptionVariant?: 'base' | 'large-strong';
+  /** Figma `Title/Heading 3` (24) for page titles; `heading4` reserved for card-level titles elsewhere. */
+  titleVariant?: 'heading3' | 'heading4';
   /**
    * Primary flow actions (typically `size="large"` buttons) shown to the right of the title.
    * Table-scoped actions (filters, search, add row) stay above the table on each page.
    */
   actions?: ReactNode;
+  /** Inline control beside the title (e.g. workspace edit icon — Figma `5080:16558`). */
+  titleAddon?: ReactNode;
 };
 
-/** Page-level BOM headlines — Figma `Title/Heading 4` (20/28) on every screen of equal importance. */
-export function BomPageHeader({ title, description, eyebrow, descriptionVariant = 'base', actions }: Props) {
+/** Page-level BOM headlines — Figma `Title/Heading 3` (24/32) on every screen of equal importance. */
+export function BomPageHeader({
+  title,
+  description,
+  eyebrow,
+  descriptionVariant = 'base',
+  titleVariant = 'heading3',
+  actions,
+  titleAddon,
+}: Props) {
   const { token } = theme.useToken();
   const descriptionTypography = descriptionVariant === 'large-strong' ? hydraLargeStrong : hydraBaseNormal;
+  const titleTypography = titleVariant === 'heading3' ? hydraTitleHeading3 : hydraTitleHeading4;
+  const titleLevel = titleVariant === 'heading3' ? 3 : 4;
 
   const titleStack = (
     <Space orientation="vertical" size={token.marginXS} style={{ minWidth: 0, width: actions ? undefined : '100%' }}>
@@ -41,15 +56,18 @@ export function BomPageHeader({ title, description, eyebrow, descriptionVariant 
           {eyebrow}
         </Typography.Text>
       ) : null}
-      <Typography.Title
-        level={4}
-        style={{
-          margin: 0,
-          ...hydraTextStyleToReactCss(hydraTitleHeading4),
-        }}
-      >
-        {title}
-      </Typography.Title>
+      <Flex align="center" gap={token.marginXXS} wrap="wrap">
+        <Typography.Title
+          level={titleLevel}
+          style={{
+            margin: 0,
+            ...hydraTextStyleToReactCss(titleTypography),
+          }}
+        >
+          {title}
+        </Typography.Title>
+        {titleAddon}
+      </Flex>
       {description ? (
         <Typography.Paragraph
           style={{

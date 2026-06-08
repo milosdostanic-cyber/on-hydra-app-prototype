@@ -1,20 +1,37 @@
-import { useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useMemo, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useBomHubPath } from '../../context/ActiveProjectContext';
 import { shellLayout } from '../../theme/hydraAlias';
+import { bluePrimaryPrimitiveLight } from '../../theme/primaryPrimitiveBlue';
+import {
+  hydraBaseNormal,
+  hydraTextStyleToReactCss,
+  hydraTitleHeading3,
+} from '../../theme/hydraTypography';
+import { BomConfidenceTag } from '../components/BomTags';
+import type { BomItemConfidence } from '../data/types';
 import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
 import { readUploadFileName } from '../bomUploadFlowState';
+import { ASC_FIELD_MAPPING_TOTAL, countMappedAscFields } from '../bomFieldMappingUtils';
+import {
+  applyAcceptAllHighSkipRest,
+  bulkAcceptHighSkipRestMessage,
+  HIGH_MATCH_AUTO_ACCEPT_THRESHOLD,
+} from '../bomMatchingBulkActions';
+import { buildMatchingResultsColumns } from '../bomMatchingColumns';
 import { BomUploadFlowStepChrome } from '../components/BomUploadFlowStepChrome';
 import { BomPageHeader } from '../layout/BomPageHeader';
-import { bomProjectById, bomProjectTitleById, mockMatchResults, mockParsedItems } from '../data/mockData';
+import { createParsingReviewRows } from '../data/bomImportFlowSeed';
+import { bomProjectById, bomProjectTitleById } from '../data/mockData';
+import { useBomCancelUpload } from '../hooks/useBomCancelUpload';
+import { useBomMatchingData } from '../hooks/useBomMatchingData';
+import type { BomMatchResult } from '../data/types';
 import {
-  Alert,
   Button,
   Card,
   Flex,
   Pagination,
-  Progress,
   Select,
   Space,
   Table,
@@ -22,19 +39,94 @@ import {
   message,
   theme,
 } from '../../ui/antd';
-import type { TableColumnsType } from '../../ui/antd';
-import { hydraLargeNormal, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
-import type { BomMatchResult } from '../data/types';
-import { BomRiskTag } from '../components/BomTags';
 
 type ConfidenceFilter = 'all' | 'high' | 'medium' | 'low';
 
 function rowConfidence(row: BomMatchResult): 'high' | 'medium' | 'low' | 'none' {
   const p = row.topMatch?.matchConfidence ?? 0;
   if (!row.topMatch) return 'none';
-  if (p >= 90) return 'high';
+  if (p >= HIGH_MATCH_AUTO_ACCEPT_THRESHOLD) return 'high';
   if (p >= 70) return 'medium';
   return 'low';
+}
+
+/** KPI reflects accepted lines only — skipped medium/low are not treated as accepted matches. */
+function aggregateMatchConfidence(results: BomMatchResult[]): BomItemConfidence {
+  const accepted = results.filter((r) => r.lineStatus === 'accepted');
+  const source = accepted.length > 0 ? accepted : results.filter((r) => r.lineStatus === 'pending');
+  if (source.length === 0) return 'low';
+
+  const bands = source.map(rowConfidence);
+  if (bands.every((b) => b === 'high' || b === 'none')) return 'high';
+  if (bands.some((b) => b === 'low' || b === 'none')) return 'low';
+  return 'medium';
+}
+
+/** Figma `5026:21422` — KPI stat strip above matching table. */
+function BomMatchingStatsStrip({
+  total,
+  accepted,
+  pending,
+  skipped,
+  matchConfidence,
+}: {
+  total: number;
+  accepted: number;
+  pending: number;
+  skipped: number;
+  matchConfidence: BomItemConfidence;
+}) {
+  const { token } = theme.useToken();
+
+  const cardShellStyle = (accentColor: string, flex?: string | number) => ({
+    flex: flex ?? 1,
+    minWidth: 212,
+    height: 56,
+    paddingLeft: token.paddingMD,
+    paddingRight: token.paddingMD,
+    paddingTop: token.paddingSM,
+    paddingBottom: token.paddingSM,
+    borderRadius: token.borderRadiusLG,
+    border: 'none',
+    borderLeft: `${token.sizeUnit}px solid ${accentColor}`,
+    background: token.colorBgContainer,
+    boxShadow: token.boxShadowTertiary,
+    boxSizing: 'border-box' as const,
+  });
+
+  const statInner = (label: string, value: number) => (
+    <Flex align="center" justify="space-between" style={{ width: '100%', height: 32 }}>
+      <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+        {label}
+      </Typography.Text>
+      <Typography.Text style={hydraTextStyleToReactCss(hydraTitleHeading3)}>{value}</Typography.Text>
+    </Flex>
+  );
+
+  return (
+    <Flex gap={token.margin} align="stretch" style={{ width: '100%' }}>
+      <Flex align="center" style={cardShellStyle(bluePrimaryPrimitiveLight[6])}>
+        {statInner('Total items', total)}
+      </Flex>
+      <Flex align="center" style={cardShellStyle(token.colorSuccessBorder)}>
+        {statInner('Accepted', accepted)}
+      </Flex>
+      <Flex align="center" style={cardShellStyle(bluePrimaryPrimitiveLight[2])}>
+        {statInner('Pending', pending)}
+      </Flex>
+      <Flex align="center" style={cardShellStyle(token.colorWarning)}>
+        {statInner('Skipped', skipped)}
+      </Flex>
+      <Flex align="center" style={{ ...cardShellStyle(bluePrimaryPrimitiveLight[2], 'none'), minWidth: 368 }}>
+        <Flex align="center" justify="space-between" style={{ width: '100%', maxWidth: 326, height: 30 }}>
+          <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+            Match Confidence
+          </Typography.Text>
+          <BomConfidenceTag confidence={matchConfidence} showIcon />
+        </Flex>
+      </Flex>
+    </Flex>
+  );
 }
 
 export function BomMatchingPage() {
@@ -46,13 +138,19 @@ export function BomMatchingPage() {
   const uploadState = (location.state ?? {}) as BomUploadFlowLocationState;
   const uploadFileName = readUploadFileName(uploadState);
   const projectMeta = bomProjectById(bomProjectId);
-  const projectTitle = bomProjectTitleById(bomProjectId) ?? 'BOM project';
+  const projectTitle = bomProjectTitleById(bomProjectId) ?? 'New BOM project';
   const [page, setPage] = useState(1);
   const [confidenceFilter, setConfidenceFilter] = useState<ConfidenceFilter>('all');
-  const [matchError, setMatchError] = useState(false);
+
+  const { matchResults, persist, stats } = useBomMatchingData(bomProjectId);
+
+  const rowNumbers = useMemo(() => {
+    const parsed = createParsingReviewRows();
+    return new Map(parsed.map((r) => [r.id, r.rowNumber]));
+  }, []);
 
   const filteredResults = useMemo(() => {
-    return mockMatchResults.filter((row) => {
+    return matchResults.filter((row) => {
       const c = rowConfidence(row);
       if (confidenceFilter === 'all') return true;
       if (confidenceFilter === 'high') return c === 'high';
@@ -60,68 +158,66 @@ export function BomMatchingPage() {
       if (confidenceFilter === 'low') return c === 'low' || c === 'none';
       return true;
     });
-  }, [confidenceFilter]);
-
-  const noMatches = mockMatchResults.every((r) => !r.topMatch);
+  }, [confidenceFilter, matchResults]);
 
   const pagedMatchResults = useMemo(() => {
     const start = (page - 1) * shellLayout.tablePageSizeDefault;
     return filteredResults.slice(start, start + shellLayout.tablePageSizeDefault);
   }, [filteredResults, page]);
 
-  const highConfidenceCount = mockMatchResults.filter((r) => rowConfidence(r) === 'high').length;
+  const matchConfidence = aggregateMatchConfidence(matchResults);
+  const allLinesReviewed = stats.pending === 0;
+  const mappedFieldsStatus = `${countMappedAscFields(uploadState.fieldMapping)} of ${ASC_FIELD_MAPPING_TOTAL} fields mapped`;
+  const matchingProgressStatus = allLinesReviewed
+    ? `All ${stats.total} reviewed`
+    : mappedFieldsStatus;
+  const parsingReviewRoute = `/bom/projects/${bomProjectId}/parsing-review`;
+  const { confirmCancelUpload } = useBomCancelUpload(bomProjectId);
 
-  const columns: TableColumnsType<BomMatchResult> = [
-    {
-      title: 'Line',
-      key: 'line',
-      width: 64,
-      render: (_, row) => mockParsedItems.find((i) => i.id === row.itemId)?.rowNumber ?? '—',
+  const handleAccept = useCallback(
+    (row: BomMatchResult) => {
+      persist(matchResults.map((r) => (r.itemId === row.itemId ? { ...r, lineStatus: 'accepted' } : r)));
+      message.success('Line accepted.');
     },
-    {
-      title: 'Original request',
-      dataIndex: 'originalRequest',
-      key: 'originalRequest',
+    [matchResults, persist],
+  );
+
+  const handleSkip = useCallback(
+    (row: BomMatchResult) => {
+      persist(matchResults.map((r) => (r.itemId === row.itemId ? { ...r, lineStatus: 'skipped' } : r)));
+      message.info('Line skipped.');
     },
-    {
-      title: 'Top match',
-      key: 'top',
-      render: (_, row) =>
-        row.topMatch ? (
-          <Space orientation="vertical" size={token.marginXXS}>
-            <Typography.Text strong>{row.topMatch.partNumber}</Typography.Text>
-            <Typography.Text type="secondary">{row.topMatch.description}</Typography.Text>
-            <Progress percent={row.topMatch.matchConfidence} size="small" />
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
-              {row.suggestedParts.length} candidate{row.suggestedParts.length !== 1 ? 's' : ''}
-            </Typography.Text>
-          </Space>
-        ) : (
-          <Typography.Text type="secondary">No matches — manual selection required</Typography.Text>
-        ),
+    [matchResults, persist],
+  );
+
+  const handleRefine = useCallback(
+    (row: BomMatchResult) => {
+      navigate(`/bom/projects/${bomProjectId}/matching/items/${row.itemId}/replacement`, {
+        state: { ...uploadState, returnTo: 'matching' },
+      });
     },
-    {
-      title: 'Risk',
-      key: 'risk',
-      width: 120,
-      render: (_, row) => (row.topMatch ? <BomRiskTag risk={row.topMatch.substitutionRisk} /> : '—'),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      width: 160,
-      render: (_, row) => (
-        <Button
-          type="link"
-          size="small"
-          style={{ padding: 0, height: 'auto' }}
-          onClick={() => navigate(`/bom/projects/${bomProjectId}/items/${row.itemId}/narrow`)}
-        >
-          Refine
-        </Button>
-      ),
-    },
-  ];
+    [bomProjectId, navigate, uploadState],
+  );
+
+  const columns = useMemo(
+    () =>
+      buildMatchingResultsColumns((itemId) => rowNumbers.get(itemId), {
+        onAccept: handleAccept,
+        onSkip: handleSkip,
+        onRefine: handleRefine,
+      }),
+    [handleAccept, handleRefine, handleSkip, rowNumbers],
+  );
+
+  function handleAcceptAllHighAndSkipRest() {
+    const { next, acceptedCount, skippedCount } = applyAcceptAllHighSkipRest(matchResults);
+    if (acceptedCount === 0 && skippedCount === 0) {
+      message.info('No pending lines to update.');
+      return;
+    }
+    persist(next);
+    message.success(bulkAcceptHighSkipRestMessage(acceptedCount, skippedCount));
+  }
 
   if (bomProjectId && bomProjectId !== 'new' && !projectMeta) {
     return (
@@ -139,68 +235,40 @@ export function BomMatchingPage() {
     );
   }
 
-  const matchingStatusLabel =
-    highConfidenceCount > 0
-      ? `${highConfidenceCount} of ${mockMatchResults.length} high-confidence`
-      : `${mockMatchResults.length} lines to match`;
-
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <BomUploadFlowStepChrome
-        backTo={`/bom/projects/${bomProjectId}/parsing-review`}
+        backTo={parsingReviewRoute}
         backLabel="Back to parsing review"
         backState={uploadState}
         fileName={uploadFileName}
         currentStep={2}
-        statusLabel={matchingStatusLabel}
+        statusLabel={matchingProgressStatus}
+        statusTone={allLinesReviewed ? 'success' : 'warning'}
+        stepsComplete={allLinesReviewed}
       />
       <BomPageHeader
         title="Matching results"
         description={`Catalog candidates per BOM line. Project: ${projectTitle}.`}
         actions={
-          <Space wrap>
-            <Button type="primary" size="large" onClick={() => navigate(`/bom/projects/${bomProjectId}/workspace`)}>
-              Skip to workspace
+          <Flex gap={token.marginXS} align="center" wrap="wrap">
+            <Button size="large" onClick={() => confirmCancelUpload('match')}>
+              Cancel upload
             </Button>
-            <Link to={bomHubPath}>
-              <Button size="large">BOM home</Button>
-            </Link>
-          </Space>
+            <Button type="primary" size="large" onClick={() => navigate(`/bom/projects/${bomProjectId}/workspace`)}>
+              Save and import to BOM
+            </Button>
+          </Flex>
         }
       />
 
-      {matchError ? (
-        <Alert
-          type="error"
-          showIcon
-          message="Matching could not be completed"
-          description="Try again or continue to the workspace for manual matching."
-          action={
-            <Space>
-              <Button size="small" onClick={() => setMatchError(false)}>
-                Retry
-              </Button>
-              <Button size="small" type="primary" onClick={() => navigate(`/bom/projects/${bomProjectId}/workspace`)}>
-                Go to workspace
-              </Button>
-            </Space>
-          }
-        />
-      ) : null}
-
-      {noMatches ? (
-        <Alert
-          type="warning"
-          showIcon
-          message="No automatic matches"
-          description="You can still continue to the workspace to pick products manually or revisit column mapping."
-          action={
-            <Button size="small" onClick={() => navigate(`/bom/projects/${bomProjectId}/field-mapping`)}>
-              Change mapping
-            </Button>
-          }
-        />
-      ) : null}
+      <BomMatchingStatsStrip
+        total={stats.total}
+        accepted={stats.accepted}
+        pending={stats.pending}
+        skipped={stats.skipped}
+        matchConfidence={matchConfidence}
+      />
 
       <Card styles={{ body: { padding: 0 } }}>
         <Flex
@@ -221,20 +289,21 @@ export function BomMatchingPage() {
               setConfidenceFilter(v);
               setPage(1);
             }}
-            style={{ minWidth: token.controlHeight * 5 }}
+            style={{ width: 160 }}
             options={[
-              { value: 'all', label: 'All confidence levels' },
-              { value: 'high', label: 'High (≥90%)' },
-              { value: 'medium', label: 'Medium (70–89%)' },
-              { value: 'low', label: 'Low / none' },
+              { value: 'all', label: 'All confidence level' },
+              { value: 'high', label: 'High' },
+              { value: 'medium', label: 'Medium' },
+              { value: 'low', label: 'Low' },
             ]}
           />
           <Button
-            onClick={() => {
-              message.success(`Accepted ${highConfidenceCount} high-confidence line${highConfidenceCount !== 1 ? 's' : ''} (demo).`);
-            }}
+            type="primary"
+            ghost
+            disabled={stats.pending === 0}
+            onClick={handleAcceptAllHighAndSkipRest}
           >
-            Accept all high-confidence
+            Accept all high matches and skip rest
           </Button>
         </Flex>
         <Table<BomMatchResult>
@@ -243,14 +312,6 @@ export function BomMatchingPage() {
           dataSource={pagedMatchResults}
           pagination={false}
           scroll={{ x: 'max-content' }}
-          onRow={(record) => ({
-            style: {
-              background:
-                rowConfidence(record) === 'low' || rowConfidence(record) === 'none'
-                  ? token.colorWarningBg
-                  : undefined,
-            },
-          })}
           styles={{
             header: {
               cell: {

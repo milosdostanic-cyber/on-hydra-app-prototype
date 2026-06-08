@@ -20,7 +20,6 @@ import {
   hydraLargeNormal,
   hydraTextStyleToReactCss,
   hydraTitleHeading3,
-  hydraTitleHeading4,
 } from '../theme/hydraTypography';
 import { Button, Col, Empty, Flex, Row, Space, Typography, theme } from '../ui/antd';
 
@@ -132,8 +131,8 @@ export function FeaturedParts({ contextNote, emphasized = false }: FeaturedParts
   const featuredGridGap = emphasized ? token.marginMD : token.margin;
   const featuredGridHalfGap = featuredGridGap / 2;
   const sectionStackGap = emphasized ? token.marginLG : token.marginMD;
-  const sectionTitleStyle = emphasized ? hydraTitleHeading3 : hydraTitleHeading4;
-  const sectionTitleLevel = emphasized ? 3 : 4;
+  const sectionTitleStyle = hydraTitleHeading3;
+  const sectionTitleLevel = 3;
 
   const sectionHeader = (
     <Flex vertical gap={emphasized ? token.marginXS : token.marginXXS} style={{ width: '100%' }}>

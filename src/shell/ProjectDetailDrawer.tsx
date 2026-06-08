@@ -125,7 +125,7 @@ export function ProjectDetailDrawer({ project, open, onClose }: Props) {
         >
           <Flex justify="space-between" align="flex-start" gap={token.marginMD}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <Typography.Title level={4} style={{ margin: 0 }}>
+              <Typography.Title level={3} style={{ margin: 0 }}>
                 {project.name}
               </Typography.Title>
               <Flex align="center" gap={token.marginXS} style={{ marginTop: token.marginXS }}>

@@ -1,36 +1,34 @@
-import { useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useMemo, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useBomHubPath } from '../../context/ActiveProjectContext';
-import { useBomWorkspace } from '../../context/BomWorkspaceContext';
 import { shellLayout } from '../../theme/hydraAlias';
 import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
 import { readUploadFileName, resolveUploadDestination } from '../bomUploadFlowState';
+import {
+  ASC_FIELD_MAPPING_TOTAL,
+  parsingReviewColumnProfile,
+  countMappedAscFields,
+} from '../bomFieldMappingUtils';
+import { buildParsingReviewColumns } from '../bomParsingReviewColumns';
 import { BomUploadFlowStepChrome } from '../components/BomUploadFlowStepChrome';
 import { BomPageHeader } from '../layout/BomPageHeader';
-import { BomAliasConfigurator } from '../components/BomAliasConfigurator';
-import { mockParsedItems, bomProjectById, bomProjectTitleById } from '../data/mockData';
+import { createParsingReviewRows } from '../data/bomImportFlowSeed';
+import { bomProjectById, bomProjectTitleById } from '../data/mockData';
+import { useBomCancelUpload } from '../hooks/useBomCancelUpload';
+import { figmaParsingReviewAlert } from '../bomParsingReviewAlert';
 import type { BomItem } from '../data/types';
-import { BomConfidenceTag } from '../components/BomTags';
 import {
   Alert,
   Button,
   Card,
   Flex,
-  Input,
-  InputNumber,
   Pagination,
   Space,
   Table,
-  Typography,
   message,
   theme,
 } from '../../ui/antd';
-import type { TableColumnsType } from '../../ui/antd';
-
-function renumberRows(list: BomItem[]): BomItem[] {
-  return list.map((row, idx) => ({ ...row, rowNumber: idx + 1 }));
-}
 
 export function BomParsingReviewPage() {
   const { token } = theme.useToken();
@@ -38,7 +36,6 @@ export function BomParsingReviewPage() {
   const navigate = useNavigate();
   const bomHubPath = useBomHubPath();
   const location = useLocation();
-  const { setWorkspaceRows } = useBomWorkspace();
   const uploadState = (location.state ?? {}) as BomUploadFlowLocationState;
   const { destination: uploadDestination, appendTargetId: resolvedAppendId } = resolveUploadDestination(
     bomProjectId,
@@ -46,185 +43,34 @@ export function BomParsingReviewPage() {
   );
   const uploadFileName = readUploadFileName(uploadState);
   const projectMeta = bomProjectById(bomProjectId);
-  const title = bomProjectTitleById(bomProjectId) ?? 'BOM project';
+  const title = bomProjectTitleById(bomProjectId) ?? 'New BOM project';
   const [page, setPage] = useState(1);
-  const [rows, setRows] = useState<BomItem[]>(() => mockParsedItems.map((r) => ({ ...r })));
-  const [aliasOpen, setAliasOpen] = useState(false);
+  const [rows, setRows] = useState<BomItem[]>(() => createParsingReviewRows().map((r) => ({ ...r })));
 
-  const parseSizeValue = (sizeString: string): number | undefined => {
-    const match = sizeString.match(/(\d+\.?\d*|\d+\/\d+)\s*(inch|in)/i);
-    if (match) {
-      const numStr = match[1];
-      if (numStr.includes('/')) {
-        const parts = numStr.split('/').map(Number);
-        return parts[0] / parts[1];
-      }
-      return Number(numStr);
-    }
-    return undefined;
-  };
+  const columnProfile = parsingReviewColumnProfile(uploadState.fieldMapping);
+  const mappedFieldsStatus = `${countMappedAscFields(uploadState.fieldMapping)} of ${ASC_FIELD_MAPPING_TOTAL} fields mapped`;
+  const parsingBanner = figmaParsingReviewAlert(rows, columnProfile);
 
-  const parsePressureValue = (pressureString: string): number | undefined => {
-    const match = pressureString.match(/(\d+\.?\d*)\s*PSI/i);
-    if (match) {
-      return Number(match[1]);
-    }
-    return undefined;
-  };
+  const updateRow = useCallback((rowId: string, patch: Partial<BomItem>) => {
+    setRows((prev) => prev.map((r) => (r.id === rowId ? { ...r, ...patch } : r)));
+  }, []);
 
-  const warningRows = rows.filter((r) => r.confidence === 'medium' || r.confidence === 'low').length;
-  const errorRows = rows.filter((r) => r.confidence === 'low').length;
+  const columns = useMemo(
+    () => buildParsingReviewColumns(columnProfile, updateRow),
+    [columnProfile, updateRow],
+  );
 
   const pagedParsedItems = useMemo(() => {
     const start = (page - 1) * shellLayout.tablePageSizeDefault;
     return rows.slice(start, start + shellLayout.tablePageSizeDefault);
   }, [page, rows]);
 
-  const columns: TableColumnsType<BomItem> = [
-    { title: '#', dataIndex: 'rowNumber', key: 'rowNumber', width: 56 },
-    {
-      title: 'Original input',
-      dataIndex: 'originalInput',
-      key: 'originalInput',
-      render: (v: string, record) => (
-        <Input
-          value={v}
-          onChange={(e) =>
-            setRows((prev) => prev.map((r) => (r.id === record.id ? { ...r, originalInput: e.target.value } : r)))
-          }
-        />
-      ),
-    },
-    {
-      title: 'Parsed description',
-      dataIndex: 'parsedDescription',
-      key: 'parsedDescription',
-      render: (v: string, record) => (
-        <Input
-          value={v}
-          onChange={(e) =>
-            setRows((prev) =>
-              prev.map((r) => (r.id === record.id ? { ...r, parsedDescription: e.target.value } : r)),
-            )
-          }
-        />
-      ),
-    },
-    {
-      title: (
-        <Flex vertical>
-          <Typography.Text>Size (in)</Typography.Text>
-        </Flex>
-      ),
-      dataIndex: 'size',
-      key: 'size',
-      render: (v: string, record) => (
-        <InputNumber
-          value={parseSizeValue(v)}
-          onChange={(n) =>
-            setRows((prev) =>
-              prev.map((r) =>
-                r.id === record.id ? { ...r, size: `${typeof n === 'number' ? n : parseSizeValue(v)} inch` } : r,
-              ),
-            )
-          }
-        />
-      ),
-    },
-    {
-      title: 'Pressure (PSI)',
-      dataIndex: 'pressureClass',
-      key: 'pressureClass',
-      render: (v: string, record) => (
-        <InputNumber
-          value={parsePressureValue(v)}
-          onChange={(n) =>
-            setRows((prev) =>
-              prev.map((r) =>
-                r.id === record.id ? { ...r, pressureClass: `${typeof n === 'number' ? n : parsePressureValue(v)} PSI` } : r,
-              ),
-            )
-          }
-        />
-      ),
-    },
-    {
-      title: 'Connection (Type)',
-      dataIndex: 'connectionType',
-      key: 'connectionType',
-      render: (v: string, record) => (
-        <Input
-          value={v}
-          onChange={(e) =>
-            setRows((prev) => prev.map((r) => (r.id === record.id ? { ...r, connectionType: e.target.value } : r)))
-          }
-        />
-      ),
-    },
-    {
-      title: 'Qty',
-      dataIndex: 'quantity',
-      key: 'quantity',
-      width: 100,
-      render: (v: number, record) => (
-        <InputNumber
-          min={0}
-          value={v}
-          onChange={(n) =>
-            setRows((prev) =>
-              prev.map((r) => (r.id === record.id ? { ...r, quantity: typeof n === 'number' ? n : r.quantity } : r)),
-            )
-          }
-        />
-      ),
-    },
-    {
-      title: 'Confidence',
-      dataIndex: 'confidence',
-      key: 'confidence',
-      render: (c: BomItem['confidence']) => <BomConfidenceTag confidence={c} />,
-    },
-  ];
-
-  const fieldMappingBackState: BomUploadFlowLocationState = {
-    ...uploadState,
-    fieldMapping: undefined,
-  };
-
-  const reviewPrimaryLabel =
-    uploadDestination === 'append' ? 'Add items to workspace' : 'Continue to matching';
+  const fieldMappingRoute = `/bom/projects/${bomProjectId}/field-mapping`;
+  const { confirmCancelUpload } = useBomCancelUpload(bomProjectId);
 
   function handleCommitParsingReview() {
     if (rows.length === 0) {
-      message.warning('No parsed rows to continue.');
-      return;
-    }
-    if (uploadDestination === 'append') {
-      const targetId = resolvedAppendId ?? bomProjectId;
-      if (!bomProjectById(targetId)) {
-        message.warning('That BOM project was removed. Created a new project from your file.');
-        const stamped = rows.map((r, i) => ({
-          ...r,
-          id: `import-${Date.now()}-${i}-${r.id}`,
-          status: 'needs-review' as const,
-          confidence: 'medium' as const,
-        }));
-        setWorkspaceRows('new', () => renumberRows(stamped));
-        navigate('/bom/projects/new/matching', { state: uploadState });
-        return;
-      }
-      const stamped = rows.map((r, i) => ({
-        ...r,
-        id: `import-${Date.now()}-${i}-${r.id}`,
-        status: 'needs-review' as const,
-        confidence: 'medium' as const,
-      }));
-      setWorkspaceRows(targetId, (prev) => renumberRows([...prev, ...stamped]));
-      const projName = bomProjectTitleById(targetId) ?? 'BOM project';
-      message.success(`${rows.length} item${rows.length === 1 ? '' : 's'} added to ${projName}.`);
-      navigate(`/bom/projects/${targetId}/workspace`, {
-        state: { appendImportBanner: { fileName: uploadFileName, count: rows.length } },
-      });
+      message.warning('No parsed items to continue.');
       return;
     }
     navigate(`/bom/projects/${bomProjectId}/matching`, { state: uploadState });
@@ -252,112 +98,73 @@ export function BomParsingReviewPage() {
     return (
       <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
         <BomUploadFlowStepChrome
-          backTo={`/bom/projects/${bomProjectId}/field-mapping`}
+          backTo={fieldMappingRoute}
           backLabel="Back to field mapping"
-          backState={fieldMappingBackState}
+          backState={uploadState}
           fileName={uploadFileName}
           currentStep={1}
-          statusLabel={`${rows.length} rows parsed`}
+          statusLabel={mappedFieldsStatus}
         />
         <BomPageHeader
-          title="Nothing to parse"
-          description="No line items were produced from your file. Adjust column mapping or upload a different file."
+          title="Parsing review"
+          description={`Review parsed rows before matching. Project: ${title}.`}
           actions={
             <Space wrap>
-              <Button size="large" onClick={() => setAliasOpen(true)}>
-                Change column mapping
+              <Button size="large" onClick={() => confirmCancelUpload('review')}>
+                Cancel upload
               </Button>
               <Button
                 type="primary"
                 size="large"
-                onClick={() =>
-                  navigate(`/bom/projects/${bomProjectId}/field-mapping`, { state: fieldMappingBackState })
-                }
+                onClick={() => navigate(fieldMappingRoute, { state: uploadState })}
               >
                 Open field mapping
               </Button>
               {isAppendFlow ? (
-                <Button
-                  size="large"
-                  onClick={() => navigate(`/bom/projects/${appendWorkspaceId}/workspace`)}
-                >
+                <Button size="large" onClick={() => navigate(`/bom/projects/${appendWorkspaceId}/workspace`)}>
                   Cancel — keep workspace as-is
                 </Button>
               ) : null}
-              <Link to={bomHubPath}>
-                <Button size="large">BOM home</Button>
-              </Link>
             </Space>
           }
         />
-        <BomAliasConfigurator open={aliasOpen} onClose={() => setAliasOpen(false)} />
       </Space>
     );
   }
 
-  const parsingStatusLabel =
-    warningRows > 0
-      ? `${rows.length} rows · ${warningRows} may need attention`
-      : `${rows.length} rows parsed`;
-
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <BomUploadFlowStepChrome
-        backTo={`/bom/projects/${bomProjectId}/field-mapping`}
+        backTo={fieldMappingRoute}
         backLabel="Back to field mapping"
-        backState={fieldMappingBackState}
+        backState={uploadState}
         fileName={uploadFileName}
         currentStep={1}
-        statusLabel={parsingStatusLabel}
+        statusLabel={mappedFieldsStatus}
       />
       <BomPageHeader
         title="Parsing review"
         description={`Review parsed rows before matching. Project: ${title}.`}
         actions={
-          <Space wrap>
-            <Button type="primary" size="large" disabled={rows.length === 0} onClick={handleCommitParsingReview}>
-              {reviewPrimaryLabel}
+          <Flex gap={token.marginXS} align="center" wrap="wrap">
+            <Button size="large" onClick={() => confirmCancelUpload('review')}>
+              Cancel upload
             </Button>
-            <Link to={bomHubPath}>
-              <Button size="large">BOM home</Button>
-            </Link>
-          </Space>
+            <Button type="primary" size="large" disabled={rows.length === 0} onClick={handleCommitParsingReview}>
+              Continue to matching
+            </Button>
+          </Flex>
         }
       />
 
       <Alert
-        type={errorRows > 0 ? 'warning' : 'info'}
+        type={parsingBanner.type === 'success' ? 'info' : parsingBanner.type}
         showIcon
-        message={`${rows.length} items parsed`}
-        description={
-          warningRows > 0
-            ? `${warningRows} row${warningRows !== 1 ? 's' : ''} may need attention (confidence or missing attributes).`
-            : 'All sample rows parsed with high or medium confidence.'
-        }
+        message={parsingBanner.message}
+        description={parsingBanner.description}
       />
 
       <Card styles={{ body: { padding: 0 } }}>
-        <Flex
-          wrap
-          gap={token.marginSM}
-          align="center"
-          style={{
-            paddingInline: token.paddingMD,
-            paddingBlock: token.paddingSM,
-            borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-            background: token.colorFillAlter,
-          }}
-        >
-          <Typography.Link onClick={() => setAliasOpen(true)}>Change column mapping</Typography.Link>
-          <Typography.Text type="secondary">·</Typography.Text>
-          <Typography.Link
-            onClick={() =>
-              navigate(`/bom/projects/${bomProjectId}/field-mapping`, { state: fieldMappingBackState })
-            }
-          >
-            Open full field mapping page
-          </Typography.Link>
-        </Flex>
         <Table<BomItem>
           rowKey="id"
           columns={columns}
@@ -393,14 +200,6 @@ export function BomParsingReviewPage() {
           />
         </Flex>
       </Card>
-
-      <BomAliasConfigurator
-        open={aliasOpen}
-        onClose={() => setAliasOpen(false)}
-        onSave={() => {
-          /* Demo: re-parse hook would run here */
-        }}
-      />
     </Space>
   );
 }

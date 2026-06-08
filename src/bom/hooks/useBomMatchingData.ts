@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useBomImportFlow } from '../context/BomImportFlowContext';
-import { createInitialMatchResults } from '../data/bomImportFlowSeed';
-import { mockMatchResults } from '../data/mockData';
+import { createInitialMatchResults, createParsingReviewRows } from '../data/bomImportFlowSeed';
 import type { BomMatchResult } from '../data/types';
 import { useBomImportSession } from './useBomImportSession';
 
@@ -11,7 +10,9 @@ export function useBomMatchingData(bomProjectId: string) {
   const { updateProgress } = useBomImportFlow();
 
   const [matchResults, setMatchResults] = useState<BomMatchResult[]>(() =>
-    session?.matchResults?.length ? [...session.matchResults] : [...mockMatchResults],
+    session?.matchResults?.length
+      ? [...session.matchResults]
+      : createInitialMatchResults(createParsingReviewRows()),
   );
 
   useEffect(() => {

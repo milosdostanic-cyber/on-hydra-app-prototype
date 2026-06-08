@@ -66,7 +66,7 @@ export function CatalogResults() {
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to="/catalog">Back to catalog</PageBackButton>
-      <Typography.Title level={4} style={{ margin: 0 }}>
+      <Typography.Title level={3} style={{ margin: 0 }}>
         {title}
       </Typography.Title>
       <Typography.Paragraph type="secondary" style={{ margin: 0 }}>

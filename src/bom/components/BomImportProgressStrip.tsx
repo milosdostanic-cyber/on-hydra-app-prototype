@@ -7,7 +7,6 @@ import {
 } from '../bomImportProgressState';
 import {
   hydraBaseNormal,
-  hydraBaseStrong,
   hydraLargeStrong,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
@@ -51,16 +50,20 @@ export function BomImportProgressStrip({
       ? `Continue file upload process for "${progress.fileName}"?`
       : `Import in progress for "${progress.fileName}"`;
 
-  const stepPrefix = variant === 'resume' ? 'Stopped at:' : 'Current step:';
+  const stepDetail =
+    variant === 'resume'
+      ? `Continue from: ${currentStepLabel} · Step ${stepNum} of 3`
+      : `Current step: ${currentStepLabel} · ${stepNum} of 3 steps complete`;
 
   const strip = (
     <Flex
       align="center"
+      justify="space-between"
       gap={token.marginMD}
-      wrap="wrap"
+      wrap="nowrap"
       style={{
         width: '100%',
-        paddingInline: token.paddingLG,
+        paddingInline: nested ? 0 : token.paddingLG,
         paddingBlock: token.paddingSM,
         background: nested ? 'transparent' : token.colorWarningBg,
         borderRadius: nested || isShellFlush ? 0 : token.borderRadiusLG,
@@ -77,26 +80,12 @@ export function BomImportProgressStrip({
         >
           {title}
         </Typography.Text>
-        <Typography.Text style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-          <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-            {stepPrefix}{' '}
-          </Typography.Text>
-          <Typography.Text
-            style={{
-              ...hydraTextStyleToReactCss(hydraBaseStrong),
-              color: token.colorText,
-            }}
-          >
-            {currentStepLabel}
-          </Typography.Text>
-          <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-            {' '}
-            · {stepNum} of 3 steps complete
-          </Typography.Text>
+        <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+          {stepDetail}
         </Typography.Text>
       </Flex>
 
-      <Flex align="center" gap={token.marginXS} style={{ flex: '1 1 200px', minWidth: 0 }}>
+      <Flex align="center" gap={token.marginXS} style={{ flex: '1 1 200px', minWidth: 120, maxWidth: 360 }}>
         <Progress
           percent={percent}
           showInfo

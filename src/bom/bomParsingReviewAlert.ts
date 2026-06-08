@@ -6,6 +6,90 @@ export type ParsingReviewAlertContent = {
   description: string;
 };
 
+export type ParsingReviewField =
+  | 'parsedDescription'
+  | 'sku'
+  | 'upc'
+  | 'size'
+  | 'manufacturer'
+  | 'figureNumber'
+  | 'quantity';
+
+/** True when this editable cell is empty / invalid and should show warning chrome (Figma attention state). */
+export function parsingReviewFieldNeedsAttention(
+  row: BomItem,
+  field: ParsingReviewField,
+  profile: BomParsingReviewColumnProfile,
+): boolean {
+  switch (field) {
+    case 'parsedDescription':
+      return profile === 'description' && isBlank(row.parsedDescription);
+    case 'sku':
+      return (profile === 'description' || profile === 'sku-only' || profile === 'upc') && isBlank(row.sku);
+    case 'upc':
+      return (profile === 'description' || profile === 'upc') && isBlank(row.upc);
+    case 'figureNumber':
+      return isBlank(row.figureNumber);
+    case 'manufacturer':
+      return isBlank(row.manufacturer);
+    case 'size':
+      return !hasSizeValue(row.size);
+    case 'quantity':
+      return !row.quantity || row.quantity <= 0;
+    default:
+      return false;
+  }
+}
+
+function rowNeedsAttention(row: BomItem, profile: BomParsingReviewColumnProfile): boolean {
+  if (row.confidence === 'medium' || row.confidence === 'low') return true;
+  return issuesForRow(row, profile).some((issue) => issue !== 'low confidence');
+}
+
+/** Rows the user should skim on parsing review (uncertain parse or missing attributes). */
+export function countParsingReviewWarnings(
+  rows: BomItem[],
+  profile?: BomParsingReviewColumnProfile,
+): number {
+  if (!profile) {
+    return rows.filter((r) => r.confidence === 'medium' || r.confidence === 'low').length;
+  }
+  return rows.filter((r) => rowNeedsAttention(r, profile)).length;
+}
+
+/** Short tag on the upload progress bar — plain language, no spreadsheet jargon. */
+export function parsingReviewProgressStatusLabel(rows: BomItem[]): string {
+  const count = rows.length;
+  const review = countParsingReviewWarnings(rows);
+  const items = `${count} item${count === 1 ? '' : 's'}`;
+  if (review === 0) return `${items} parsed`;
+  return `${items} · review ${review} below`;
+}
+
+/** Figma parsing-review alert (`5022:23914` / `24134` / `24042`). */
+export function figmaParsingReviewAlert(
+  rows: BomItem[],
+  profile?: BomParsingReviewColumnProfile,
+): ParsingReviewAlertContent {
+  const count = rows.length;
+  const review = countParsingReviewWarnings(rows, profile);
+  const message = `${count} item${count === 1 ? '' : 's'} parsed`;
+
+  if (review === 0) {
+    return {
+      type: 'info',
+      message,
+      description: 'All rows parsed with high confidence.',
+    };
+  }
+
+  return {
+    type: 'warning',
+    message,
+    description: `${review} row${review === 1 ? '' : 's'} may need attention (confidence or missing attributes)`,
+  };
+}
+
 function isBlank(value: string | undefined): boolean {
   return !value?.trim();
 }
@@ -37,28 +121,24 @@ const ISSUE_LABEL: Record<IssueKey, string> = {
   'quantity is zero': 'quantity is 0',
 };
 
+const FIELD_ISSUE_KEYS: [ParsingReviewField, IssueKey][] = [
+  ['parsedDescription', 'missing parsed description'],
+  ['sku', 'missing SKU'],
+  ['upc', 'missing UPC'],
+  ['figureNumber', 'missing figure number'],
+  ['manufacturer', 'missing manufacturer'],
+  ['size', 'missing size'],
+  ['quantity', 'quantity is zero'],
+];
+
 function issuesForRow(row: BomItem, profile: BomParsingReviewColumnProfile): IssueKey[] {
   const issues: IssueKey[] = [];
 
   if (row.confidence === 'low') issues.push('low confidence');
 
-  // Original description is read-only in Figma (source file); only parsed output is corrected here.
-  if (profile === 'description' && isBlank(row.parsedDescription)) {
-    issues.push('missing parsed description');
+  for (const [field, key] of FIELD_ISSUE_KEYS) {
+    if (parsingReviewFieldNeedsAttention(row, field, profile)) issues.push(key);
   }
-
-  if ((profile === 'description' || profile === 'sku-only' || profile === 'upc') && isBlank(row.sku)) {
-    issues.push('missing SKU');
-  }
-
-  if ((profile === 'description' || profile === 'upc') && isBlank(row.upc)) {
-    issues.push('missing UPC');
-  }
-
-  if (isBlank(row.figureNumber)) issues.push('missing figure number');
-  if (isBlank(row.manufacturer)) issues.push('missing manufacturer');
-  if (!hasSizeValue(row.size)) issues.push('missing size');
-  if (!row.quantity || row.quantity <= 0) issues.push('quantity is zero');
 
   return issues;
 }

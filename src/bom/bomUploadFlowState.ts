@@ -9,6 +9,9 @@ export type BomUploadFlowLocationState = {
   fieldMapping?: Record<string, string | undefined>;
   /** Tracks in-flight import session for progress strip + matching state */
   uploadId?: string;
+  /** Step-back target for field mapping chrome (upload entry — not hub when resuming from workspace). */
+  uploadFlowBackTo?: string;
+  uploadFlowBackLabel?: string;
 };
 
 export function resolveUploadDestination(
@@ -24,10 +27,8 @@ export function resolveUploadDestination(
       appendTargetId: state.appendTargetId ?? (bomProjectId !== 'new' ? bomProjectId : undefined),
     };
   }
-  if (bomProjectId === 'new') {
-    return { destination: 'new', appendTargetId: undefined };
-  }
-  return { destination: 'append', appendTargetId: bomProjectId };
+  // Resume / in-project import without explicit destination → full 3-step flow (not append shortcut).
+  return { destination: 'new', appendTargetId: undefined };
 }
 
 export function sortBomProjectsByLastEditedDesc(projects: BomProject[]): BomProject[] {
