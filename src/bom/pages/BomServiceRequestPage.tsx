@@ -1,7 +1,7 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useState } from 'react';
 
-import { useActiveProject } from '../../context/ActiveProjectContext';
+import { useActiveProject, useBomHubPath } from '../../context/ActiveProjectContext';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { bomProjectById, bomProjectTitleById } from '../data/mockData';
 import {
@@ -24,6 +24,7 @@ export function BomServiceRequestPage() {
   const { token } = theme.useToken();
   const { bomProjectId = '' } = useParams<{ bomProjectId: string }>();
   const navigate = useNavigate();
+  const bomHubPath = useBomHubPath();
   const { project } = useActiveProject();
   const projectTitle = bomProjectTitleById(bomProjectId) ?? 'BOM project';
   const meta = bomProjectById(bomProjectId);
@@ -122,7 +123,7 @@ export function BomServiceRequestPage() {
             </Upload>
           </Form.Item>
           <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
-            <Link to="/bom">BOM home</Link>
+            <Link to={bomHubPath}>BOM home</Link>
           </Typography.Text>
         </Form>
       </Card>

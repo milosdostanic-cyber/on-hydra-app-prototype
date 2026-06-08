@@ -2,6 +2,7 @@ import { CheckCircleOutlined, FileExcelOutlined, FileTextOutlined, SendOutlined 
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
+import { useBomHubPath } from '../../context/ActiveProjectContext';
 import { useBomWorkspaceRows } from '../../context/BomWorkspaceContext';
 import { isWorkspaceRowConfirmed } from '../bomWorkspaceHelpers';
 import { shellLayout } from '../../theme/hydraAlias';
@@ -92,6 +93,7 @@ export function BomExportPage() {
   const { token } = theme.useToken();
   const { bomProjectId = '' } = useParams<{ bomProjectId: string }>();
   const navigate = useNavigate();
+  const bomHubPath = useBomHubPath();
   const { rows } = useBomWorkspaceRows(bomProjectId);
   const projectMeta = bomProjectById(bomProjectId);
   const projectTitle = bomProjectTitleById(bomProjectId) ?? 'BOM project';
@@ -183,7 +185,7 @@ export function BomExportPage() {
           title="BOM project not found"
           description="Unknown project id."
           actions={
-            <Button type="primary" size="large" onClick={() => navigate('/bom')}>
+            <Button type="primary" size="large" onClick={() => navigate(bomHubPath)}>
               Go to BOM home
             </Button>
           }
@@ -199,7 +201,7 @@ export function BomExportPage() {
         description={`Choose one export route, preview the output, then run a single final action. Project: ${projectTitle}.`}
         actions={
           <Space wrap>
-            <Link to="/bom">
+            <Link to={bomHubPath}>
               <Button size="large">BOM home</Button>
             </Link>
             <Button

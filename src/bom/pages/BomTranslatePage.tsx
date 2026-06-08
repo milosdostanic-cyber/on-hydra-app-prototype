@@ -24,6 +24,7 @@ import {
   hydraLargeStrong,
   hydraTextStyleToReactCss,
   hydraTitleHeading1,
+  hydraTitleHeading4,
 } from '../../theme/hydraTypography';
 
 function confidenceTone(conf: number) {
@@ -148,7 +149,7 @@ export function BomTranslatePage() {
       >
         <CheckCircleOutlined style={{ fontSize: hydraTitleHeading1.fontSize, color: token.colorSuccess }} />
         <Flex vertical align="center" gap={token.marginXS}>
-          <Typography.Title level={3} style={{ margin: 0 }}>
+          <Typography.Title level={4} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading4) }}>
             Translation complete
           </Typography.Title>
           <Typography.Text type="secondary">

@@ -11,6 +11,7 @@ type BreadcrumbSeg = { label: string; to?: string };
 type BuildArgs = {
   pathname: string;
   projectId?: string;
+  constructionProjectId?: string;
   partId?: string;
   itemId?: string;
   swapRowId?: string;
@@ -75,10 +76,22 @@ export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] 
   }
 
   if (pathname.startsWith('/bom')) {
-    segs.push({ label: 'BOM', to: pathname !== '/bom' ? '/bom' : undefined });
-    if (pathname === '/bom') return toItems(segs);
+    const siteMatch = /^\/bom\/site\/([^/]+)/.exec(pathname);
+    const resolvedSiteId = siteMatch?.[1] ?? a.constructionProjectId;
+    const bomHub = resolvedSiteId ? `/bom/site/${resolvedSiteId}` : '/bom';
+    const onBomHub = pathname === bomHub || pathname === '/bom';
+
+    segs.push({ label: 'BOM', to: onBomHub ? undefined : bomHub });
+
     if (pathname === '/bom/search') {
       segs.push({ label: 'Search' });
+      return toItems(segs);
+    }
+
+    if (siteMatch || (pathname === '/bom' && resolvedSiteId)) {
+      const siteTitle = projectTitleById(resolvedSiteId ?? '') ?? 'Construction project';
+      segs.push({ label: siteTitle, to: siteMatch && !onBomHub ? bomHub : undefined });
+      if (onBomHub || siteMatch) segs.push({ label: 'BOM Projects' });
       return toItems(segs);
     }
 
@@ -86,9 +99,14 @@ export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] 
     if (bomProjectMatch) {
       const pid = bomProjectMatch[1];
       const ws = `/bom/projects/${pid}/workspace`;
-      const pTitle = bomProjectTitleById(pid) ?? 'BOM project';
+      const onFieldMapping = pathname.includes('/field-mapping');
       const onWorkspace = pathname.includes('/workspace');
-      segs.push({ label: pTitle, to: onWorkspace ? undefined : ws });
+      if (onFieldMapping) {
+        segs.push({ label: 'New BOM Project' });
+      } else {
+        const pTitle = bomProjectTitleById(pid) ?? 'BOM project';
+        segs.push({ label: pTitle, to: onWorkspace ? undefined : ws });
+      }
 
       const resolvedItemId = itemId ?? /\/items\/([^/]+)/.exec(pathname)?.[1];
       if (resolvedItemId) {

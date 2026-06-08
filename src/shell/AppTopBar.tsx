@@ -1,6 +1,5 @@
 import {
   BellOutlined,
-  CheckOutlined,
   DownOutlined,
   FolderOpenOutlined,
   QuestionCircleOutlined,
@@ -9,21 +8,19 @@ import {
 } from '@ant-design/icons';
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
+import { useActiveProject } from '../context/ActiveProjectContext';
 import {
   hydraBaseNormal,
-  hydraLargeNormal,
   hydraTextStyleToReactCss,
   hydraTitleHeading3,
   hydraTitleHeading5,
 } from '../theme/hydraTypography';
 import { shellLayout } from '../theme/hydraAlias';
-import { Avatar, Button, Dropdown, Flex, List, Modal, Typography, theme } from '../ui/antd';
+import { Avatar, Button, Dropdown, Flex, Typography, theme } from '../ui/antd';
 import type { MenuProps } from '../ui/antd';
-import { useActiveProject } from '../context/ActiveProjectContext';
-import { setLastScopedProjectId } from './lastProjectScope';
-import { PROJECT_SEED_ROWS, type ProjectRow } from './projectSeed';
+import { ConstructionProjectSwitcherModal } from './ConstructionProjectSwitcherModal';
 
 const userMenuItems: MenuProps['items'] = [
   { key: 'profile', label: 'Profile' },
@@ -53,70 +50,6 @@ function topBarTitleAndSubtitle(pathname: string): { title: string; subtitle: st
     title: 'BOM',
     subtitle: 'Build or Convert a Bill of Materials',
   };
-}
-
-function SwitchProjectModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { token } = theme.useToken();
-  const { pathname } = useLocation();
-  const navigate = useNavigate();
-  const { projectId, setProjectId } = useActiveProject();
-  const onContentRoute = /^\/projects\/[^/]+\/content(\/|$)/.test(pathname);
-
-  return (
-    <Modal
-      title="Switch project"
-      open={open}
-      onCancel={onClose}
-      footer={null}
-      width={480}
-      styles={{ body: { padding: 0 } }}
-    >
-      <List<ProjectRow>
-        dataSource={PROJECT_SEED_ROWS}
-        renderItem={(row) => {
-          const isActive = row.key === projectId;
-          return (
-            <List.Item
-              onClick={() => {
-                setProjectId(row.key);
-                setLastScopedProjectId(row.key);
-                onClose();
-                if (onContentRoute) {
-                  navigate(`/projects/${row.key}/content`);
-                }
-              }}
-              style={{
-                cursor: 'pointer',
-                paddingInline: token.paddingMD,
-                background: isActive ? token.colorFillAlter : undefined,
-                transition: 'background 0.15s',
-              }}
-              onMouseEnter={(e) =>
-                !isActive &&
-                ((e.currentTarget as HTMLElement).style.background = token.colorFillTertiary)
-              }
-              onMouseLeave={(e) =>
-                !isActive &&
-                ((e.currentTarget as HTMLElement).style.background = 'transparent')
-              }
-            >
-              <Flex align="center" justify="space-between" style={{ width: '100%' }}>
-                <Flex vertical gap={2}>
-                  <Typography.Text strong={isActive}>{row.name}</Typography.Text>
-                  <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
-                    {row.city}, {row.state} · Last opened {row.lastOpened}
-                  </Typography.Text>
-                </Flex>
-                {isActive && (
-                  <CheckOutlined style={{ color: token.colorPrimary, flexShrink: 0 }} />
-                )}
-              </Flex>
-            </List.Item>
-          );
-        }}
-      />
-    </Modal>
-  );
 }
 
 /**
@@ -168,7 +101,6 @@ export function AppTopBar() {
         </Flex>
 
         <Flex align="center" gap={token.marginSM} style={{ flexShrink: 0 }}>
-          {/* Project switcher */}
           <Button
             type="text"
             icon={<FolderOpenOutlined />}
@@ -230,7 +162,7 @@ export function AppTopBar() {
         </Flex>
       </Flex>
 
-      <SwitchProjectModal open={switchOpen} onClose={() => setSwitchOpen(false)} />
+      <ConstructionProjectSwitcherModal open={switchOpen} onClose={() => setSwitchOpen(false)} />
     </>
   );
 }

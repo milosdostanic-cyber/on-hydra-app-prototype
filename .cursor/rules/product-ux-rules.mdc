@@ -1,0 +1,23 @@
+---
+description: Product UX rules for implementing user-facing flows
+alwaysApply: true
+---
+
+# Product UX Rules
+
+When working on user-facing flows:
+
+- Optimize for a non-technical human user.
+- Prefer clear step-by-step flows over dense technical screens.
+- Do not expose implementation details unless necessary.
+- Use clear primary and secondary CTAs.
+- Avoid making default screens feel like spreadsheets.
+- Use progressive disclosure for advanced information.
+- Warnings must clearly explain whether they are blocking or informational.
+- Every screen must answer:
+  - What happened?
+  - What does the user need to review?
+  - What is the next action?
+  - What happens after the action?
+- Prefer existing design system components.
+- Do not create new UI patterns unless existing ones cannot support the requirement.

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Outlet, useLocation, useParams } from 'react-router-dom';
 
+import { useActiveProject } from '../context/ActiveProjectContext';
 import { Breadcrumb, Layout, theme } from '../ui/antd';
 
 import { buildAppBreadcrumbItems } from './buildAppBreadcrumbItems';
@@ -19,6 +20,7 @@ export function AppShell() {
   const { token } = theme.useToken();
   const location = useLocation();
   const params = useParams();
+  const { projectId: activeConstructionProjectId } = useActiveProject();
   const locationState = (location.state ?? {}) as {
     swapRowId?: string;
     swapSource?: { partNumber?: string };
@@ -29,12 +31,22 @@ export function AppShell() {
       buildAppBreadcrumbItems({
         pathname: location.pathname,
         projectId: params.projectId,
+        constructionProjectId: params.constructionProjectId ?? activeConstructionProjectId,
         partId: params.partId,
         itemId: params.itemId,
         swapRowId: locationState.swapRowId,
         swapPartNumber: locationState.swapSource?.partNumber,
       }),
-    [location.pathname, locationState.swapRowId, locationState.swapSource?.partNumber, params.projectId, params.partId, params.itemId],
+    [
+      location.pathname,
+      locationState.swapRowId,
+      locationState.swapSource?.partNumber,
+      params.projectId,
+      params.constructionProjectId,
+      activeConstructionProjectId,
+      params.partId,
+      params.itemId,
+    ],
   );
 
   const showBreadcrumbHeader = true;
