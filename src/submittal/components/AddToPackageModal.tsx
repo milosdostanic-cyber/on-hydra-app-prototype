@@ -14,6 +14,7 @@ type Props = {
   open: boolean;
   projectId: string;
   part: AddToPackagePart | null;
+  title?: string;
   /** Fired after the part is added; receives the resolved package id + name for the success toast. */
   onAdded: (info: { packageId: string; packageName: string }) => void;
   onCancel: () => void;
@@ -25,7 +26,7 @@ type Mode = 'existing' | 'new';
  * Pick an existing submittal package or create one on the fly, then add the current part.
  * (ZIP `AddToPackageModal`, reframed to the Hydra package context.)
  */
-export function AddToPackageModal({ open, projectId, part, onAdded, onCancel }: Props) {
+export function AddToPackageModal({ open, projectId, part, title = 'Add to submittal package', onAdded, onCancel }: Props) {
   const { token } = theme.useToken();
   const { packagesForProject, createPackage, addPartToPackage } = useSubmittalPackages();
   const packages = useMemo(() => packagesForProject(projectId), [packagesForProject, projectId]);
@@ -72,7 +73,7 @@ export function AddToPackageModal({ open, projectId, part, onAdded, onCancel }: 
   return (
     <Modal
       open={open}
-      title="Add to submittal package"
+      title={title}
       okText="Add to package"
       okButtonProps={{ disabled: !canSubmit }}
       onOk={handleOk}
