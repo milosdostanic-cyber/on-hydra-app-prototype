@@ -167,16 +167,17 @@ SeisBrace return preview rows that prove the multi-domain model.
 ```
 
 ### `/search/parts/:partId` (`UnifiedPartDetailPage` + `UnifiedPartActions`)
-Discovery is open (view metadata with no project). All three Unified Action Bar clicks are
-project-gated per the PNG flow.
+Discovery is open (view metadata with no project). Primary CTA is a single **Add to** dropdown.
 
 ```
 /search/parts/:partId
-  ├─► [Download]        → Project gate if no active project → audit log + stub download
-  ├─► [Add to submittal]→ Project gate if no active project → addLine → /projects/:id/submittal
-  ├─► [Add to BOM]      → Project gate if no active project → /bom (scoped to active project)
-  │     └─► Gate (ProjectRequiredModal): select or create project → pending action resumes
-  └─► Back → /search/results
+  ├─► [Add to ▼]
+  │     ├─► BOM → (project gate if needed) → AddToBomModal → pick/create BOM → workspace
+  │     ├─► Add Revit File → (project gate if needed) → Revit download queue + floating cart
+  │     ├─► Quick Download Revit File → (project gate if needed) → immediate .rfa stub download
+  │     └─► Submittal Manager → (project gate if needed) → AddToPackageModal → package confirm
+  │           └─► Gate (ProjectRequiredModal): select or create project → pending action resumes
+  └─► Back → /dashboard (part detail hero)
 ```
 
 ### `/catalog` (`CatalogHome`) — browse entry into unified search

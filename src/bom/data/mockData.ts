@@ -336,11 +336,11 @@ export function bomProjectTitleById(bomProjectId: string | undefined): string | 
   return bomProjectById(bomProjectId)?.name;
 }
 
-export function addBomProject(name: string, description?: string): BomProject {
+export function addBomProject(constructionProjectId: string, name: string, description?: string): BomProject {
   const id = `proj-${Date.now()}`;
   const project: BomProject = {
     id,
-    projectId: '1',
+    projectId: constructionProjectId,
     name,
     description,
     lastEdited: new Date().toISOString().slice(0, 10),

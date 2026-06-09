@@ -141,7 +141,7 @@ export function UnifiedPartDetailPage() {
           <Typography.Text strong style={hydraTextStyleToReactCss(hydraSmallStrong)}>
             {sku}
           </Typography.Text>
-          {part ? <UnifiedPartActions part={part} layout="header" /> : null}
+          {part ? <UnifiedPartActions part={part} /> : null}
         </Flex>
 
         <Card
