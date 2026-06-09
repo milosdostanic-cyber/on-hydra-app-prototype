@@ -6,6 +6,22 @@ export type ParsingReviewAlertContent = {
   description: string;
 };
 
+/** Rows with enough parsed detail vs rows that may match poorly (Matt: informational, not blocking). */
+export type ParsingReviewMatchOutlook = {
+  total: number;
+  ready: number;
+  limited: number;
+};
+
+export function parsingReviewMatchOutlook(
+  rows: BomItem[],
+  profile: BomParsingReviewColumnProfile,
+): ParsingReviewMatchOutlook {
+  const total = rows.length;
+  const limited = countParsingReviewWarnings(rows, profile);
+  return { total, limited, ready: total - limited };
+}
+
 export type ParsingReviewField =
   | 'parsedDescription'
   | 'sku'
@@ -109,36 +125,25 @@ export function parsingReviewIssueLabels(
   return issuesForRow(row, profile).map((key) => ISSUE_LABEL[key]);
 }
 
-/** Primary parsing-review banner — non-blocking language per PRD. */
+/** Primary parsing-review banner — non-blocking language per PRD / Matt transcript. */
 export function parsingReviewQualityAlert(
   rows: BomItem[],
   profile: BomParsingReviewColumnProfile,
 ): ParsingReviewAlertContent {
-  const counts = parsingReviewQualityCounts(rows);
-  const needsReview = countParsingReviewWarnings(rows, profile);
-  const message = `${counts.total} item${counts.total === 1 ? '' : 's'} parsed`;
+  const outlook = parsingReviewMatchOutlook(rows, profile);
 
-  if (needsReview === 0) {
+  if (outlook.limited === 0) {
     return {
-      type: 'info',
-      message,
-      description:
-        'Your uploaded rows have enough data for matching. Continue when you are ready — no fixes required.',
+      type: 'success',
+      message: 'Ready for matching',
+      description: `All ${outlook.total} line${outlook.total === 1 ? '' : 's'} have enough detail for accurate matching. Continue when you are ready.`,
     };
   }
 
-  const qualityParts = [
-    counts.high > 0 ? `${counts.high} high quality` : null,
-    counts.medium > 0 ? `${counts.medium} medium quality` : null,
-    counts.low > 0 ? `${counts.low} low quality` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-
   return {
     type: 'warning',
-    message: 'Some rows may produce less accurate matches',
-    description: `${needsReview} row${needsReview === 1 ? '' : 's'} have incomplete or weak data (${qualityParts}). Match accuracy may be lower for those lines — you are not blocked. Add more information now or continue with the current data.`,
+    message: 'Some lines are missing detail — you can still continue without updating',
+    description: `${outlook.ready} of ${outlook.total} line${outlook.total === 1 ? '' : 's'} have enough detail for accurate matching. ${outlook.limited} line${outlook.limited === 1 ? ' is' : 's are'} missing information (highlighted below) — we may not suggest a strong ASC match for those. Use Add info if you have more details, or continue and expect weaker matches on those lines.`,
   };
 }
 

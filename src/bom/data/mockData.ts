@@ -360,11 +360,15 @@ export function bomProjectTitleById(bomProjectId: string | undefined): string | 
   return bomProjectById(bomProjectId)?.name;
 }
 
-export function addBomProject(name: string, description?: string): BomProject {
+export function addBomProject(
+  name: string,
+  description?: string,
+  constructionProjectId = '1',
+): BomProject {
   const id = `proj-${Date.now()}`;
   const project: BomProject = {
     id,
-    projectId: '1',
+    projectId: constructionProjectId,
     name,
     description,
     lastEdited: new Date().toISOString().slice(0, 10),

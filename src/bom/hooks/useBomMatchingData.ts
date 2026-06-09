@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useBomImportFlow } from '../context/BomImportFlowContext';
-import { createInitialMatchResults, createParsingReviewRows } from '../data/bomImportFlowSeed';
+import { createInitialMatchResults, normalizeParsedItemsForUpload } from '../data/bomImportFlowSeed';
 import type { BomMatchResult } from '../data/types';
 import { useBomImportSession } from './useBomImportSession';
 
@@ -9,17 +9,17 @@ export function useBomMatchingData(bomProjectId: string) {
   const { session, uploadId } = useBomImportSession(bomProjectId);
   const { updateProgress } = useBomImportFlow();
 
-  const [matchResults, setMatchResults] = useState<BomMatchResult[]>(() =>
-    session?.matchResults?.length
-      ? [...session.matchResults]
-      : createInitialMatchResults(createParsingReviewRows()),
-  );
+  const [matchResults, setMatchResults] = useState<BomMatchResult[]>(() => {
+    if (session?.matchResults?.length) return session.matchResults.map((r) => ({ ...r }));
+    const items = normalizeParsedItemsForUpload(session?.parsedItems, session?.progress.fileName);
+    return createInitialMatchResults(items);
+  });
 
   useEffect(() => {
     if (session?.matchResults?.length) {
       setMatchResults(session.matchResults.map((r) => ({ ...r })));
     }
-  }, [session?.uploadId, session?.matchResults]);
+  }, [session?.uploadId, session?.matchResults?.length]);
 
   const persist = useCallback(
     (next: BomMatchResult[]) => {

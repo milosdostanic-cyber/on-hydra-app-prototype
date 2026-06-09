@@ -101,7 +101,7 @@ export function BomRecommendPage() {
       ) : (
         <>
           <Card styles={{ body: { padding: token.paddingLG } }}>
-            <Descriptions title={top.partNumber} bordered column={1} size="small">
+            <Descriptions title={top.partNumber} bordered column={1}>
               <Descriptions.Item label="Description">{top.description}</Descriptions.Item>
               <Descriptions.Item label="Family">{top.productFamily}</Descriptions.Item>
               <Descriptions.Item label="Dimensions">{top.dimensions}</Descriptions.Item>

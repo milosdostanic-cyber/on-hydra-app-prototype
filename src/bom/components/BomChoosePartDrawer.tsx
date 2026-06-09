@@ -9,14 +9,14 @@ import { BomTablePaginationBar } from './BomTablePaginationBar';
 import type { BomMatchResult } from '../data/types';
 import {
   hydraBaseNormal,
-  hydraSmallStrong,
+  hydraBaseStrong,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
 import { shellLayout } from '../../theme/hydraAlias';
 import {
+  Alert,
   AppSearchInput,
   Button,
-  Card,
   Drawer,
   Flex,
   Radio,
@@ -52,7 +52,7 @@ export function BomChoosePartDrawer({
   }, [filtered, page]);
 
   const hasSuggestion = Boolean(matchRow?.topMatch);
-  const title = hasSuggestion ? 'Choose a different part' : 'Choose a part';
+  const title = 'Choose a part';
 
   function handleClose() {
     setSearch('');
@@ -79,10 +79,18 @@ export function BomChoosePartDrawer({
       title={title}
       open={open}
       onClose={handleClose}
-      width={720}
+      width={560}
       destroyOnClose
+      styles={{
+        body: {
+          display: 'flex',
+          flexDirection: 'column',
+          paddingBottom: 0,
+          overflow: 'hidden',
+        },
+      }}
       footer={
-        <Flex justify="flex-end" gap={token.marginSM}>
+        <Flex justify="flex-end" gap={token.marginXS} wrap="wrap">
           <Button size="large" onClick={handleClose}>
             Cancel
           </Button>
@@ -92,84 +100,100 @@ export function BomChoosePartDrawer({
         </Flex>
       }
     >
-      <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
+      <Space
+        orientation="vertical"
+        size={token.marginMD}
+        style={{ width: '100%', height: '100%', minHeight: 0 }}
+      >
         {matchRow ? (
-          <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-            {hasSuggestion
-              ? `Replacing suggested match for: ${matchRow.originalRequest}`
-              : `No automatic match for: ${matchRow.originalRequest}`}
-          </Typography.Text>
+          <Alert
+            type="info"
+            showIcon
+            message={hasSuggestion ? 'Replace the current match' : 'No automatic match'}
+            description={
+              hasSuggestion
+                ? `Pick a different ASC part for: ${matchRow.originalRequest}`
+                : `We could not suggest a part for: ${matchRow.originalRequest}. Search the catalog and select one.`
+            }
+          />
         ) : null}
 
-        <div>
-          <Typography.Text
-            strong
-            style={{
-              ...hydraTextStyleToReactCss(hydraSmallStrong),
-              display: 'block',
-              marginBottom: token.marginXS,
-            }}
-          >
-            Featured categories
-          </Typography.Text>
-          <Flex gap={token.marginXS} wrap="wrap">
-            {featured.map((product) => (
-              <Button
-                key={product.key}
-                type={selectedKey === product.key ? 'primary' : 'default'}
-                onClick={() => handleFeaturedPick(product)}
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingBottom: token.paddingMD }}>
+          <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
+            <div>
+              <Typography.Text
+                strong
+                style={{
+                  ...hydraTextStyleToReactCss(hydraBaseStrong),
+                  display: 'block',
+                  marginBottom: token.marginXS,
+                }}
               >
-                {product.partType}
-              </Button>
-            ))}
-          </Flex>
-        </div>
+                Featured categories
+              </Typography.Text>
+              <Flex gap={token.marginXS} wrap="wrap">
+                {featured.map((product) => (
+                  <Button
+                    key={product.key}
+                    size="large"
+                    type={selectedKey === product.key ? 'primary' : 'default'}
+                    onClick={() => handleFeaturedPick(product)}
+                  >
+                    {product.partType}
+                  </Button>
+                ))}
+              </Flex>
+            </div>
 
-        <AppSearchInput
-          allowClear
-          size="large"
-          placeholder="Search by part number, figure, or description"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-        />
+            <AppSearchInput
+              allowClear
+              size="large"
+              placeholder="Search by part number, figure, or description"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+            />
 
-        <Card styles={{ body: { padding: 0 } }} style={{ width: '100%' }}>
-          <Radio.Group
-            value={selectedKey ?? undefined}
-            onChange={(e) => setSelectedKey(e.target.value)}
-            style={{ width: '100%' }}
-          >
-            <Space orientation="vertical" size={0} style={{ width: '100%' }}>
-              {paged.map((product) => (
-                <Flex
-                  key={product.key}
-                  align="flex-start"
-                  gap={token.marginSM}
-                  style={{
-                    width: '100%',
-                    padding: token.paddingSM,
-                    borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-                    background:
-                      selectedKey === product.key ? token.colorPrimaryBg : token.colorBgContainer,
-                  }}
-                >
-                  <Radio value={product.key} style={{ marginTop: token.marginXXS }} />
-                  <Flex vertical gap={token.marginXXS} style={{ flex: 1, minWidth: 0 }}>
-                    <Typography.Text strong>{product.ascNumber}</Typography.Text>
-                    <Typography.Text>{product.description}</Typography.Text>
-                    <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-                      {product.partType} · Fig. {product.figureNumber} · {product.size}
-                    </Typography.Text>
+            <Radio.Group
+              value={selectedKey ?? undefined}
+              onChange={(e) => setSelectedKey(e.target.value)}
+              style={{ width: '100%' }}
+            >
+              <Space orientation="vertical" size={0} style={{ width: '100%' }}>
+                {paged.map((product) => (
+                  <Flex
+                    key={product.key}
+                    align="flex-start"
+                    gap={token.marginSM}
+                    style={{
+                      width: '100%',
+                      padding: token.paddingSM,
+                      borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+                      background:
+                        selectedKey === product.key ? token.colorPrimaryBgSubtle : token.colorBgContainer,
+                      borderRadius: selectedKey === product.key ? token.borderRadius : undefined,
+                    }}
+                  >
+                    <Radio value={product.key} style={{ marginTop: token.marginXXS }} />
+                    <Flex vertical gap={token.marginXXS} style={{ flex: 1, minWidth: 0 }}>
+                      <Typography.Text strong>{product.ascNumber}</Typography.Text>
+                      <Typography.Text style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+                        {product.description}
+                      </Typography.Text>
+                      <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+                        {product.partType} · Fig. {product.figureNumber} · {product.size}
+                      </Typography.Text>
+                    </Flex>
                   </Flex>
-                </Flex>
-              ))}
-            </Space>
-          </Radio.Group>
-          <BomTablePaginationBar current={page} total={filtered.length} onChange={setPage} />
-        </Card>
+                ))}
+              </Space>
+            </Radio.Group>
+
+            <BomTablePaginationBar current={page} total={filtered.length} onChange={setPage} />
+          </Space>
+        </div>
       </Space>
     </Drawer>
   );

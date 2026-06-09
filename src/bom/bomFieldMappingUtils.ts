@@ -1,5 +1,6 @@
 import {
   ASC_DEST_FIELDS,
+  BOM_CONCATENATED_SOURCE_COLUMN,
   BOM_FIELD_SKIP_VALUE,
   DEFAULT_FIELD_MAPPING,
   type BomFieldAliasMap,
@@ -25,6 +26,46 @@ export function deriveDefaultFieldMapping(): BomFieldAliasMap {
   return { ...DEFAULT_FIELD_MAPPING };
 }
 
+/** True when the uploaded file is a single concatenated column (demo: filename pattern). */
+export function isConcatenatedColumnUpload(fileName?: string): boolean {
+  return /single|one-?col|concat|combined/i.test(fileName?.trim() ?? '');
+}
+
+function concatenatedColumnFieldMapping(): BomFieldAliasMap {
+  const skip = BOM_FIELD_SKIP_VALUE;
+  return {
+    'PART NUMBER': skip,
+    DESCRIPTION: BOM_CONCATENATED_SOURCE_COLUMN,
+    SKU: skip,
+    UPC: skip,
+    'FIGURE NUM': skip,
+    FINISH: skip,
+    'MFR NUM': skip,
+    'INSTALL TYPE': skip,
+    MANUFACTURER: skip,
+    QTY: skip,
+    BRAND: skip,
+    MATERIAL: skip,
+    UNIT: skip,
+  };
+}
+
+export function deriveFieldMappingForUpload(
+  fileName?: string,
+  saved?: BomFieldAliasMap,
+): BomFieldAliasMap {
+  const hasSavedMappings =
+    saved &&
+    Object.values(saved).some((v) => Boolean(normalizeFieldMappingSkip(v)));
+  if (hasSavedMappings) {
+    return resolveFieldMapping(saved);
+  }
+  if (isConcatenatedColumnUpload(fileName)) {
+    return concatenatedColumnFieldMapping();
+  }
+  return deriveDefaultFieldMapping();
+}
+
 export function resolveFieldMapping(saved?: BomFieldAliasMap): BomFieldAliasMap {
   if (saved && Object.keys(saved).length > 0) {
     return { ...DEFAULT_FIELD_MAPPING, ...saved };
@@ -32,7 +73,19 @@ export function resolveFieldMapping(saved?: BomFieldAliasMap): BomFieldAliasMap 
   return deriveDefaultFieldMapping();
 }
 
+export function isConcatenatedFieldMapping(fieldMapping: BomFieldAliasMap): boolean {
+  const description = normalizeFieldMappingSkip(fieldMapping.DESCRIPTION);
+  if (description !== BOM_CONCATENATED_SOURCE_COLUMN) return false;
+  return (
+    !normalizeFieldMappingSkip(fieldMapping['PART NUMBER']) &&
+    !normalizeFieldMappingSkip(fieldMapping.QTY)
+  );
+}
+
 export function hasRequiredFieldMapping(fieldMapping: BomFieldAliasMap): boolean {
+  if (isConcatenatedFieldMapping(fieldMapping)) {
+    return Boolean(normalizeFieldMappingSkip(fieldMapping.DESCRIPTION));
+  }
   return (
     Boolean(normalizeFieldMappingSkip(fieldMapping['PART NUMBER'])) &&
     Boolean(normalizeFieldMappingSkip(fieldMapping.DESCRIPTION)) &&
@@ -55,6 +108,7 @@ export function evaluateMappingConfidence(fieldMapping: BomFieldAliasMap): BomMa
   if (!hasRequiredFieldMapping(fieldMapping) || duplicates.size > 0) {
     return 'blocked';
   }
+  if (isConcatenatedFieldMapping(fieldMapping)) return 'partial';
   const mappedCount = countMappedAscFields(fieldMapping);
   if (mappedCount >= 8) return 'high';
   return 'partial';

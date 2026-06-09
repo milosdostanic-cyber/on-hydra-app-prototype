@@ -1,13 +1,8 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useBomHubPath } from '../../context/ActiveProjectContext';
 import { shellLayout } from '../../theme/hydraAlias';
-import {
-  hydraBaseNormal,
-  hydraTextStyleToReactCss,
-  hydraTitleHeading3,
-} from '../../theme/hydraTypography';
 import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
 import { readUploadFileName, resolveUploadDestination } from '../bomUploadFlowState';
 import {
@@ -23,15 +18,19 @@ import {
   countParsingReviewWarnings,
   filterParsingReviewLowConfidenceRows,
   parsingReviewProgressStatusLabel,
-  parsingReviewQualityAlert,
-  parsingReviewQualityCounts,
 } from '../bomParsingReviewAlert';
+import { BomParsingReviewQualityAlert } from '../components/BomParsingReviewQualityAlert';
 import { BomParsingReviewRowDrawer } from '../components/BomParsingReviewRowDrawer';
 import { BomUploadFlowStepChrome } from '../components/BomUploadFlowStepChrome';
 import { BomPageHeader } from '../layout/BomPageHeader';
-import { createParsingReviewRows } from '../data/bomImportFlowSeed';
+import {
+  createInitialMatchResults,
+  normalizeParsedItemsForUpload,
+} from '../data/bomImportFlowSeed';
 import { bomProjectById, bomProjectTitleById } from '../data/mockData';
+import { useBomImportFlow } from '../context/BomImportFlowContext';
 import { useBomCancelUpload } from '../hooks/useBomCancelUpload';
+import { useBomImportSession } from '../hooks/useBomImportSession';
 import type { BomItem } from '../data/types';
 import {
   Alert,
@@ -41,59 +40,9 @@ import {
   Pagination,
   Space,
   Table,
-  Typography,
   message,
   theme,
 } from '../../ui/antd';
-
-function ParsingReviewQualityStrip({
-  high,
-  medium,
-  low,
-}: {
-  high: number;
-  medium: number;
-  low: number;
-}) {
-  const { token } = theme.useToken();
-
-  const cardShellStyle = (accentColor: string) => ({
-    flex: 1,
-    minWidth: 160,
-    height: 56,
-    paddingInline: token.paddingMD,
-    paddingBlock: token.paddingSM,
-    borderRadius: token.borderRadiusLG,
-    border: 'none',
-    borderLeft: `${token.sizeUnit}px solid ${accentColor}`,
-    background: token.colorBgContainer,
-    boxShadow: token.boxShadowTertiary,
-    boxSizing: 'border-box' as const,
-  });
-
-  const statInner = (label: string, value: number) => (
-    <Flex align="center" justify="space-between" style={{ width: '100%', height: 32 }}>
-      <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-        {label}
-      </Typography.Text>
-      <Typography.Text style={hydraTextStyleToReactCss(hydraTitleHeading3)}>{value}</Typography.Text>
-    </Flex>
-  );
-
-  return (
-    <Flex gap={token.margin} align="stretch" style={{ width: '100%' }} wrap="wrap">
-      <Flex align="center" style={cardShellStyle(token.colorSuccessBorder)}>
-        {statInner('High quality', high)}
-      </Flex>
-      <Flex align="center" style={cardShellStyle(token.colorWarningBorder)}>
-        {statInner('Medium quality', medium)}
-      </Flex>
-      <Flex align="center" style={cardShellStyle(token.colorErrorBorder)}>
-        {statInner('Low quality', low)}
-      </Flex>
-    </Flex>
-  );
-}
 
 export function BomParsingReviewPage() {
   const { token } = theme.useToken();
@@ -109,20 +58,51 @@ export function BomParsingReviewPage() {
   const uploadFileName = readUploadFileName(uploadState);
   const projectMeta = bomProjectById(bomProjectId);
   const title = bomProjectTitleById(bomProjectId) ?? 'New BOM project';
+  const { session, uploadId } = useBomImportSession(bomProjectId);
+  const { updateProgress, bumpRefresh } = useBomImportFlow();
   const [page, setPage] = useState(1);
-  const [rows, setRows] = useState<BomItem[]>(() => createParsingReviewRows().map((r) => ({ ...r })));
+  const [rows, setRows] = useState<BomItem[]>(() =>
+    normalizeParsedItemsForUpload(undefined, uploadFileName).map((r) => ({ ...r })),
+  );
+
+  const sessionFileName = session?.progress.fileName ?? uploadFileName;
+
+  useEffect(() => {
+    const normalized = normalizeParsedItemsForUpload(session?.parsedItems, sessionFileName);
+    setRows(normalized.map((r) => ({ ...r })));
+
+    const resolvedUploadId = uploadId ?? session?.uploadId;
+    if (
+      resolvedUploadId &&
+      session &&
+      normalized.length !== (session.parsedItems?.length ?? 0)
+    ) {
+      updateProgress(resolvedUploadId, {
+        parsedItems: normalized,
+        matchResults: createInitialMatchResults(normalized),
+        totalRows: normalized.length,
+      });
+      bumpRefresh();
+    }
+  }, [
+    session?.parsedItems,
+    session?.uploadId,
+    sessionFileName,
+    uploadId,
+    updateProgress,
+    bumpRefresh,
+  ]);
   const [lowConfidenceOnly, setLowConfidenceOnly] = useState(false);
   const [editRowId, setEditRowId] = useState<string | null>(null);
   const tableRef = useRef<HTMLDivElement>(null);
 
   const columnProfile = parsingReviewColumnProfile(uploadState.fieldMapping);
-  const qualityCounts = useMemo(() => parsingReviewQualityCounts(rows), [rows]);
   const lowConfidenceCount = useMemo(
     () => countParsingReviewWarnings(rows, columnProfile),
     [rows, columnProfile],
   );
-  const parsingBanner = parsingReviewQualityAlert(rows, columnProfile);
   const progressStatus = parsingReviewProgressStatusLabel(rows, columnProfile);
+  const parsingStatusTone = progressStatus.endsWith(' ready') ? 'success' : 'warning';
 
   const visibleRows = useMemo(() => {
     if (!lowConfidenceOnly) return rows;
@@ -158,12 +138,30 @@ export function BomParsingReviewPage() {
       message.warning('No parsed items to continue.');
       return;
     }
-    navigate(`/bom/projects/${bomProjectId}/matching/review`, { state: uploadState });
+    const nextMatchResults = createInitialMatchResults(rows);
+    const resolvedUploadId = uploadId ?? session?.uploadId;
+    if (resolvedUploadId) {
+      updateProgress(resolvedUploadId, {
+        parsedItems: rows,
+        matchResults: nextMatchResults,
+        parsedRows: rows.length,
+        totalRows: rows.length,
+        currentStep: 'match',
+        acceptedCount: 0,
+        skippedCount: 0,
+        manualCount: 0,
+        matchedRows: 0,
+      });
+      bumpRefresh();
+    }
+    navigate(`/bom/projects/${bomProjectId}/matching/review`, {
+      state: { ...uploadState, uploadId: resolvedUploadId },
+    });
   }
 
   function handleReviewLowConfidence() {
     if (lowConfidenceCount === 0) {
-      message.info('All rows look ready — no low-confidence rows to review.');
+      message.info('All lines look ready for matching.');
       return;
     }
     setLowConfidenceOnly(true);
@@ -177,7 +175,7 @@ export function BomParsingReviewPage() {
   }
 
   const headerActions = (
-    <Flex gap={token.marginXS} align="center" wrap="wrap">
+    <Flex gap={token.marginXS} align="center" wrap="wrap" justify="flex-end">
       <Button size="large" onClick={() => confirmCancelUpload('review')}>
         Cancel upload
       </Button>
@@ -191,7 +189,7 @@ export function BomParsingReviewPage() {
           disabled={lowConfidenceCount === 0}
           onClick={handleReviewLowConfidence}
         >
-          Review low-confidence rows
+          Show lines that may not match well
         </Button>
       )}
       <Button type="primary" size="large" disabled={rows.length === 0} onClick={handleCommitParsingReview}>
@@ -228,6 +226,7 @@ export function BomParsingReviewPage() {
           fileName={uploadFileName}
           currentStep={1}
           statusLabel={progressStatus}
+          statusTone={parsingStatusTone}
         />
         <BomPageHeader
           title="Parsed data review"
@@ -265,32 +264,22 @@ export function BomParsingReviewPage() {
         fileName={uploadFileName}
         currentStep={1}
         statusLabel={progressStatus}
+        statusTone={parsingStatusTone}
       />
       <BomPageHeader
         title="Parsed data review"
-        description="Check whether your uploaded rows have enough detail for accurate matching. Fixing rows is optional."
+        description="We show what we could parse from your file. Highlighted rows may not match well — fixing them is optional."
         actions={headerActions}
       />
 
-      <ParsingReviewQualityStrip
-        high={qualityCounts.high}
-        medium={qualityCounts.medium}
-        low={qualityCounts.low}
-      />
-
-      <Alert
-        type={parsingBanner.type === 'success' ? 'info' : parsingBanner.type}
-        showIcon
-        message={parsingBanner.message}
-        description={parsingBanner.description}
-      />
+      <BomParsingReviewQualityAlert rows={rows} profile={columnProfile} />
 
       {lowConfidenceOnly ? (
         <Alert
           type="info"
           showIcon
-          message={`Showing ${visibleRows.length} low-confidence row${visibleRows.length === 1 ? '' : 's'}`}
-          description="Use Add info on a row to fill in missing details, or continue with current data when you are done reviewing."
+          message={`Showing ${visibleRows.length} line${visibleRows.length === 1 ? '' : 's'} that may not match well`}
+          description="Use Add info to fill in missing details, or Show all rows when you are done."
         />
       ) : null}
 
@@ -303,7 +292,7 @@ export function BomParsingReviewPage() {
             pagination={false}
             scroll={{ x: 'max-content' }}
             onRow={(record) => ({
-              style: parsingReviewRowStyle(record, token),
+              style: parsingReviewRowStyle(record, token, columnProfile),
             })}
             styles={{
               header: {

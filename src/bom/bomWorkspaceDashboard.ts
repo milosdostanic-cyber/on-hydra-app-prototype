@@ -16,6 +16,13 @@ const BOM_DEMO_SUBMITTAL_BY_FIGURE: Record<string, string> = {
 };
 
 /** Demo submittal document for a figure family (falls back to the generic dummy PDF). */
+/** Demo product page URL for verifying a figure family in the catalog. */
+export function demoProductUrlForFigure(figureNumber: string | undefined): string | undefined {
+  const key = figureNumber?.trim();
+  if (!key) return undefined;
+  return `/catalog/parts/${encodeURIComponent(key)}`;
+}
+
 export function demoSubmittalUrlForFigure(figureNumber: string | undefined): string {
   const key = figureNumber?.trim();
   if (key && BOM_DEMO_SUBMITTAL_BY_FIGURE[key]) return BOM_DEMO_SUBMITTAL_BY_FIGURE[key];

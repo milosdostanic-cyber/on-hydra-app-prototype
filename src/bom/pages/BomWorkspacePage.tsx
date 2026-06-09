@@ -1,4 +1,5 @@
 import {
+  DeleteOutlined,
   EditOutlined,
   ExclamationCircleOutlined,
   ExportOutlined,
@@ -7,7 +8,7 @@ import {
   SwapOutlined,
   UploadOutlined,
 } from '@ant-design/icons';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type Key } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useBomImportFlow } from '../context/BomImportFlowContext';
@@ -39,6 +40,7 @@ import {
   Flex,
   Modal,
   Progress,
+  Select,
   Space,
   Table,
   Typography,
@@ -46,10 +48,11 @@ import {
   theme,
 } from '../../ui/antd';
 import { shellLayout } from '../../theme/hydraAlias';
+import { bluePrimaryPrimitiveLight } from '../../theme/primaryPrimitiveBlue';
 import {
   hydraBaseNormal,
-  hydraSmallNormal,
   hydraTextStyleToReactCss,
+  hydraTitleHeading3,
 } from '../../theme/hydraTypography';
 
 
@@ -67,6 +70,60 @@ type AddedCatalogProduct = {
 
 function renumberRows(rows: BomItem[]): BomItem[] {
   return rows.map((row, idx) => ({ ...row, rowNumber: idx + 1 }));
+}
+
+function BomWorkspaceStatsStrip({
+  total,
+  confirmed,
+  needsReview,
+  missing,
+}: {
+  total: number;
+  confirmed: number;
+  needsReview: number;
+  missing: number;
+}) {
+  const { token } = theme.useToken();
+
+  const cardShellStyle = (accentColor: string) => ({
+    flex: 1,
+    minWidth: 160,
+    height: 56,
+    paddingInline: token.paddingMD,
+    paddingBlock: token.paddingSM,
+    borderRadius: token.borderRadiusLG,
+    border: 'none',
+    borderLeft: `${token.sizeUnit}px solid ${accentColor}`,
+    background: token.colorBgContainer,
+    boxShadow: token.boxShadowTertiary,
+    boxSizing: 'border-box' as const,
+  });
+
+  const statInner = (label: string, value: number) => (
+    <Flex align="center" justify="space-between" style={{ width: '100%', height: 32 }}>
+      <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+        {label}
+      </Typography.Text>
+      <Typography.Text style={hydraTextStyleToReactCss(hydraTitleHeading3)}>{value}</Typography.Text>
+    </Flex>
+  );
+
+  return (
+    <Flex gap={token.margin} align="stretch" style={{ width: '100%' }} wrap="wrap">
+      <Flex align="center" style={cardShellStyle(bluePrimaryPrimitiveLight[6])}>
+        {statInner('Total lines', total)}
+      </Flex>
+      <Flex align="center" style={cardShellStyle(token.colorSuccessBorder)}>
+        {statInner('Confirmed', confirmed)}
+      </Flex>
+      <Flex align="center" style={cardShellStyle(token.colorWarningBorder)}>
+        {statInner('Needs review', needsReview)}
+      </Flex>
+      <Flex align="center" style={cardShellStyle(token.colorErrorBorder)}>
+        {statInner('Missing match', missing)}
+      </Flex>
+    </Flex>
+  );
 }
 
 export function BomWorkspacePage() {
@@ -89,15 +146,21 @@ export function BomWorkspacePage() {
   const [resolveModalRow, setResolveModalRow] = useState<BomItem | null>(null);
   const [statusFilter, setStatusFilter] = useState<WorkspaceStatusFilter>('all');
   const [ascDrawerOpen, setAscDrawerOpen] = useState(false);
+  const [swapRow, setSwapRow] = useState<BomItem | null>(null);
   const emptyWorkspaceFileRef = useRef<HTMLInputElement>(null);
   const [appendImportBanner, setAppendImportBanner] = useState<{ fileName: string; count: number } | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editProject, setEditProject] = useState<BomProject | null>(project ?? null);
   const [importDetailRow, setImportDetailRow] = useState<BomItem | null>(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
 
   useEffect(() => {
     if (project) setEditProject(project);
   }, [project]);
+
+  useEffect(() => {
+    setSelectedRowKeys([]);
+  }, [bomProjectId]);
 
   const filteredRows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -123,9 +186,17 @@ export function BomWorkspacePage() {
     });
   }, [rows, query, statusFilter]);
 
+  const workspaceStats = useMemo(() => {
+    const confirmed = rows.filter(isWorkspaceRowConfirmed).length;
+    const needsReview = rows.filter((r) => r.status === 'needs-review').length;
+    const missing = rows.filter((r) => r.status === 'pending' || r.status === undefined).length;
+    return { total: rows.length, confirmed, needsReview, missing };
+  }, [rows]);
+
   const reviewCount = rows.length - rows.filter(isWorkspaceRowConfirmed).length;
   const canTranslate = reviewCount > 0;
   const hasWorkspaceRows = rows.length > 0;
+  const hasSelection = selectedRowKeys.length > 0;
 
   useEffect(() => {
     const st = (location.state ?? {}) as BomWorkspaceAppendBannerState;
@@ -297,6 +368,20 @@ export function BomWorkspacePage() {
     setResolveModalRow(null);
   }
 
+  function handleRowDelete(id: string) {
+    setRows((prev) => renumberRows(prev.filter((r) => r.id !== id)));
+    setSelectedRowKeys((prev) => prev.filter((k) => k !== id));
+    message.success('Line item removed.');
+  }
+
+  function handleBulkDelete() {
+    const ids = new Set(selectedRowKeys as string[]);
+    const n = ids.size;
+    setRows((prev) => renumberRows(prev.filter((r) => !ids.has(r.id))));
+    setSelectedRowKeys([]);
+    message.success(`${n} line item${n > 1 ? 's' : ''} removed.`);
+  }
+
   function openDeleteModal(row: BomItem) {
     setResolveModalRow(null);
     modal.confirm({
@@ -321,7 +406,7 @@ export function BomWorkspacePage() {
             <Typography.Text
               type="secondary"
               style={{
-                ...hydraTextStyleToReactCss(hydraSmallNormal),
+                ...hydraTextStyleToReactCss(hydraBaseNormal),
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em',
               }}
@@ -330,7 +415,6 @@ export function BomWorkspacePage() {
             </Typography.Text>
             <Descriptions
               bordered
-              size="small"
               column={2}
               style={{ marginTop: token.marginXS }}
             >
@@ -345,8 +429,35 @@ export function BomWorkspacePage() {
         </Space>
       ),
       onOk: () => {
-        setRows((prev) => renumberRows(prev.filter((r) => r.id !== row.id)));
-        message.success('Line item removed.');
+        handleRowDelete(row.id);
+      },
+    });
+  }
+
+  function openBulkDeleteModal() {
+    const n = selectedRowKeys.length;
+    if (n === 0) return;
+    modal.confirm({
+      title: `Remove ${n} BOM line${n > 1 ? 's' : ''}?`,
+      icon: (
+        <ExclamationCircleOutlined style={{ color: token.colorError, fontSize: hydraBaseNormal.fontSize }} />
+      ),
+      width: 480,
+      centered: true,
+      okText: 'Remove all',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      content: (
+        <Alert
+          type="error"
+          showIcon
+          style={{ marginTop: token.marginSM }}
+          message="Selected lines will be removed from the workspace"
+          description="Row numbers will be renumbered. This demo action cannot be undone."
+        />
+      ),
+      onOk: () => {
+        handleBulkDelete();
       },
     });
   }
@@ -382,17 +493,8 @@ export function BomWorkspacePage() {
 
   function handleManualSwap(row: BomItem) {
     closeResolveModal();
-    navigate(`/bom/projects/${bomProjectId}/asc-products`, {
-      state: {
-        swapRowId: row.id,
-        swapSource: {
-          partNumber: row.originalInput,
-          description: row.parsedDescription,
-          size: row.size,
-          category: row.category,
-        },
-      },
-    });
+    setSwapRow(row);
+    setAscDrawerOpen(true);
   }
 
   const columns = useMemo(
@@ -433,7 +535,9 @@ export function BomWorkspacePage() {
           </Space>
         }
       >
-        <Button onClick={clearSearchAndFilters}>Reset filters</Button>
+        <Button size="large" onClick={clearSearchAndFilters}>
+          Reset filters
+        </Button>
       </Empty>
     );
   }
@@ -455,7 +559,7 @@ export function BomWorkspacePage() {
         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
           <div>
             <Typography.Text type="secondary" style={{
-              ...hydraTextStyleToReactCss(hydraSmallNormal),
+              ...hydraTextStyleToReactCss(hydraBaseNormal),
               textTransform: 'uppercase',
               letterSpacing: '0.04em',
             }}>
@@ -482,7 +586,7 @@ export function BomWorkspacePage() {
 
           <div>
             <Typography.Text type="secondary" style={{
-              ...hydraTextStyleToReactCss(hydraSmallNormal),
+              ...hydraTextStyleToReactCss(hydraBaseNormal),
               textTransform: 'uppercase',
               letterSpacing: '0.04em',
             }}>
@@ -490,7 +594,6 @@ export function BomWorkspacePage() {
             </Typography.Text>
             <Descriptions
               bordered
-              size="small"
               column={2}
               style={{ marginTop: token.marginXS }}
             >
@@ -506,34 +609,30 @@ export function BomWorkspacePage() {
             </Descriptions>
           </div>
 
-          <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
+          <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
             {isConfirmed
               ? 'This line is confirmed. You can choose a different part or reopen it for review.'
               : 'Confirm the suggested ASC part, or choose a different part before final export.'}
           </Typography.Text>
 
-          <Flex justify="flex-end" gap={token.marginXS} wrap="wrap">
-            {isConfirmed ? (
-              <>
-                <Button onClick={closeResolveModal}>Done</Button>
-                <Button icon={<SwapOutlined />} onClick={() => handleManualSwap(resolveModalRow)}>
-                  Choose different part
-                </Button>
-                <Button danger onClick={() => handleReopen(resolveModalRow)}>
+          <Flex justify="space-between" align="center" wrap="wrap" gap={token.marginSM}>
+            <Button size="large" onClick={closeResolveModal}>
+              {isConfirmed ? 'Done' : 'Cancel'}
+            </Button>
+            <Flex gap={token.marginXS} wrap="wrap">
+              <Button size="large" icon={<SwapOutlined />} onClick={() => handleManualSwap(resolveModalRow)}>
+                Choose different part
+              </Button>
+              {isConfirmed ? (
+                <Button size="large" danger onClick={() => handleReopen(resolveModalRow)}>
                   Reopen for review
                 </Button>
-              </>
-            ) : (
-              <>
-                <Button onClick={closeResolveModal}>Cancel</Button>
-                <Button icon={<SwapOutlined />} onClick={() => handleManualSwap(resolveModalRow)}>
-                  Choose different part
-                </Button>
-                <Button type="primary" onClick={() => handleApprove(resolveModalRow)}>
+              ) : (
+                <Button size="large" type="primary" onClick={() => handleApprove(resolveModalRow)}>
                   Confirm match
                 </Button>
-              </>
-            )}
+              )}
+            </Flex>
           </Flex>
         </Space>
       </Modal>
@@ -746,6 +845,15 @@ export function BomWorkspacePage() {
         />
       )}
 
+      {hasWorkspaceRows ? (
+        <BomWorkspaceStatsStrip
+          total={workspaceStats.total}
+          confirmed={workspaceStats.confirmed}
+          needsReview={workspaceStats.needsReview}
+          missing={workspaceStats.missing}
+        />
+      ) : null}
+
       <Card
         style={{ borderRadius: token.borderRadiusLG, boxShadow: token.boxShadowTertiary }}
         styles={{ body: { padding: 0 } }}
@@ -757,33 +865,65 @@ export function BomWorkspacePage() {
           wrap="wrap"
           style={{
             paddingInline: token.paddingMD,
-            paddingBlock: token.paddingSM,
+            paddingBlock: token.padding,
             borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
           }}
         >
-          <Space wrap size={token.marginXS}>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setAscDrawerOpen(true)}>
-              Add Item
-            </Button>
-            <Button icon={<UploadOutlined />} onClick={handleUpload}>
-              Upload file
-            </Button>
-          </Space>
-          <Flex align="center" gap={token.marginXS} wrap="wrap">
-            <AppSearchInput
-              allowClear
-              placeholder="Search Items..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              style={{ width: 240, maxWidth: '100%' }}
-            />
-          </Flex>
+          {hasSelection ? (
+            <Flex align="center" justify="space-between" gap={token.marginSM} style={{ width: '100%' }} wrap="wrap">
+              <Typography.Text type="secondary">
+                {selectedRowKeys.length} selected
+              </Typography.Text>
+              <Space size={token.marginSM}>
+                <Button danger icon={<DeleteOutlined />} onClick={openBulkDeleteModal}>
+                  Bulk Delete
+                </Button>
+                <Button onClick={() => setSelectedRowKeys([])}>Clear Selection</Button>
+              </Space>
+            </Flex>
+          ) : (
+            <>
+              <Space wrap size={token.marginXS}>
+                <Button type="primary" icon={<PlusOutlined />} onClick={() => setAscDrawerOpen(true)}>
+                  Add Item
+                </Button>
+                <Button icon={<UploadOutlined />} onClick={handleUpload}>
+                  Upload file
+                </Button>
+              </Space>
+              <Flex align="center" gap={token.marginXS} wrap="wrap">
+                <Select<WorkspaceStatusFilter>
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  style={{ width: 168 }}
+                  options={[
+                    { value: 'all', label: 'All statuses' },
+                    { value: 'confirmed', label: 'Confirmed' },
+                    { value: 'needs-review', label: 'Needs review' },
+                    { value: 'missing', label: 'Missing match' },
+                  ]}
+                />
+                <AppSearchInput
+                  allowClear
+                  placeholder="Search Items..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  style={{ width: 240, maxWidth: '100%' }}
+                />
+              </Flex>
+            </>
+          )}
         </Flex>
         <Table<BomItem>
           rowKey="id"
           columns={columns}
           dataSource={filteredRows}
           scroll={{ x: 'max-content' }}
+          rowSelection={{
+            selectedRowKeys,
+            onChange: (keys) => setSelectedRowKeys(keys),
+            preserveSelectedRowKeys: false,
+          }}
           onRow={(row) => ({
             onDoubleClick: () => openResolveModal(row),
           })}
@@ -812,8 +952,33 @@ export function BomWorkspacePage() {
 
       <AscProductsDrawer
         open={ascDrawerOpen}
-        onClose={() => setAscDrawerOpen(false)}
+        mode={swapRow ? 'swap' : 'browse'}
+        onClose={() => {
+          setAscDrawerOpen(false);
+          setSwapRow(null);
+        }}
         onAddProduct={(p) => {
+          if (swapRow) {
+            setRows((prev) =>
+              prev.map((r) =>
+                r.id === swapRow.id
+                  ? {
+                      ...r,
+                      parsedDescription: p.description,
+                      size: p.size,
+                      sku: p.ascNumber,
+                      category: p.partType,
+                      status: 'needs-review',
+                      matchSource: 'manual',
+                    }
+                  : r,
+              ),
+            );
+            setSwapRow(null);
+            setAscDrawerOpen(false);
+            message.success('Replacement part selected.');
+            return;
+          }
           setRows((prev) =>
             renumberRows([
               ...prev,
@@ -830,6 +995,7 @@ export function BomWorkspacePage() {
                 category: p.partType,
                 unit: 'EA',
                 status: 'needs-review',
+                matchSource: 'manual',
               },
             ]),
           );

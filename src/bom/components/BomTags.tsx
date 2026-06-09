@@ -1,3 +1,5 @@
+import type { BadgeProps } from 'antd';
+
 import type {
   BomItemConfidence,
   BomItemMatchStatus,
@@ -6,7 +8,15 @@ import type {
   AscSubstitutionRisk,
 } from '../data/types';
 import { HydraTag, type HydraTagTone } from '../../ui/HydraTag';
+import { Badge } from '../../ui/antd';
 import { CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+
+type AntBadgeStatus = NonNullable<BadgeProps['status']>;
+
+/** Figma DS `Badge__Status` — antd status dot + label. */
+export function BomStatusBadge({ status, text }: { status: AntBadgeStatus; text: string }) {
+  return <Badge status={status} text={text} />;
+}
 
 const bomProjectStatusLabel: Record<BomProjectStatus, string> = {
   'in-progress': 'In Progress',
@@ -17,20 +27,18 @@ const bomProjectStatusLabel: Record<BomProjectStatus, string> = {
   partial: 'Partial',
 };
 
+function bomProjectBadgeStatus(status: BomProjectStatus): AntBadgeStatus {
+  if (status === 'completed') return 'success';
+  if (status === 'needs-review' || status === 'partial') return 'warning';
+  if (status === 'failed') return 'error';
+  if (status === 'draft') return 'default';
+  return 'processing';
+}
+
 export function BomProjectStatusTag({ status }: { status: BomProjectStatus }) {
-  const tone: HydraTagTone =
-    status === 'completed'
-      ? 'success'
-      : status === 'needs-review'
-        ? 'warning'
-        : status === 'draft'
-          ? 'default'
-          : status === 'failed'
-            ? 'error'
-            : status === 'partial'
-              ? 'warning'
-              : 'processing';
-  return <HydraTag tone={tone}>{bomProjectStatusLabel[status]}</HydraTag>;
+  return (
+    <BomStatusBadge status={bomProjectBadgeStatus(status)} text={bomProjectStatusLabel[status]} />
+  );
 }
 
 const confidenceLabel: Record<BomItemConfidence, string> = {
@@ -48,14 +56,21 @@ function confidenceIcon(confidence: BomItemConfidence) {
 export function BomConfidenceTag({
   confidence,
   showIcon = false,
+  percent,
 }: {
   confidence: BomItemConfidence;
   showIcon?: boolean;
+  /** When set, renders e.g. "High 94%" in a single tag. */
+  percent?: number;
 }) {
   const tone: HydraTagTone = confidence === 'high' ? 'success' : confidence === 'medium' ? 'warning' : 'error';
+  const label =
+    percent != null && percent > 0
+      ? `${confidenceLabel[confidence]} ${percent}%`
+      : confidenceLabel[confidence];
   return (
     <HydraTag tone={tone} icon={showIcon ? confidenceIcon(confidence) : undefined}>
-      {confidenceLabel[confidence]}
+      {label}
     </HydraTag>
   );
 }
@@ -67,16 +82,17 @@ const matchStatusLabel: Record<BomItemMatchStatus, string> = {
   pending: 'Pending',
 };
 
+function workspaceMatchBadgeStatus(status: BomItemMatchStatus): AntBadgeStatus {
+  if (status === 'confirmed') return 'success';
+  if (status === 'needs-review') return 'warning';
+  if (status === 'matched') return 'processing';
+  return 'default';
+}
+
 export function BomMatchStatusTag({ status }: { status: BomItemMatchStatus }) {
-  const tone: HydraTagTone =
-    status === 'confirmed'
-      ? 'success'
-      : status === 'needs-review'
-        ? 'warning'
-        : status === 'matched'
-          ? 'processing'
-          : 'default';
-  return <HydraTag tone={tone}>{matchStatusLabel[status]}</HydraTag>;
+  return (
+    <BomStatusBadge status={workspaceMatchBadgeStatus(status)} text={matchStatusLabel[status]} />
+  );
 }
 
 export function BomRiskTag({ risk }: { risk: AscSubstitutionRisk }) {
@@ -94,8 +110,12 @@ const lineStatusLabel: Record<BomMatchLineStatus, string> = {
   skipped: 'Skipped',
 };
 
+function matchLineBadgeStatus(status: BomMatchLineStatus): AntBadgeStatus {
+  if (status === 'accepted') return 'success';
+  if (status === 'skipped') return 'warning';
+  return 'processing';
+}
+
 export function BomMatchLineStatusTag({ status }: { status: BomMatchLineStatus }) {
-  const tone: HydraTagTone =
-    status === 'accepted' ? 'success' : status === 'skipped' ? 'warning' : 'processing';
-  return <HydraTag tone={tone}>{lineStatusLabel[status]}</HydraTag>;
+  return <BomStatusBadge status={matchLineBadgeStatus(status)} text={lineStatusLabel[status]} />;
 }

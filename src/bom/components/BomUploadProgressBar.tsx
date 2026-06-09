@@ -15,7 +15,7 @@ export type BomUploadProgressStatusTone = 'warning' | 'success';
 type BomUploadProgressBarProps = {
   fileName: string;
   currentStep: BomUploadFlowStepIndex;
-  /** Right-side status tag (e.g. "11 of 13 fields mapped"). Omit to hide tag. */
+  /** Step-specific status tag — mapping: fields mapped; parsing: items ready; matching: parts reviewed. Omit to hide. */
   statusLabel?: string;
   /** Tag chrome — warning for in-progress mapping; success when all lines reviewed (`5204:211018`). */
   statusTone?: BomUploadProgressStatusTone;

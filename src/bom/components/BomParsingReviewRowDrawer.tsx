@@ -6,10 +6,10 @@ import { BomConfidenceTag } from './BomTags';
 import type { BomItem, BomParsingReviewColumnProfile } from '../data/types';
 import {
   hydraBaseNormal,
-  hydraSmallNormal,
+  hydraBaseStrong,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
-import { Alert, Button, Drawer, Flex, Form, Space, Typography, theme } from '../../ui/antd';
+import { Alert, Button, Flex, Form, Modal, Space, Typography, theme } from '../../ui/antd';
 
 type BomParsingReviewRowDrawerProps = {
   open: boolean;
@@ -43,15 +43,16 @@ export function BomParsingReviewRowDrawer({
   const fields = buildParsingReviewEditableFields(profile, draftRow, handleFieldUpdate);
 
   return (
-    <Drawer
+    <Modal
       title={`Line ${draftRow.rowNumber} — add or edit info`}
       open={open}
-      onClose={onClose}
-      width={480}
+      onCancel={onClose}
+      width={520}
+      centered
       destroyOnClose
       footer={
-        <Flex justify="flex-end" gap={token.marginSM}>
-          <Button size="large" onClick={onClose}>
+        <Flex justify="flex-end" gap={token.marginXS}>
+          <Button size="large" type="primary" onClick={onClose}>
             Done
           </Button>
         </Flex>
@@ -61,18 +62,26 @@ export function BomParsingReviewRowDrawer({
         <Flex align="center" gap={token.marginSM} wrap="wrap">
           <BomConfidenceTag confidence={draftRow.confidence} showIcon />
           {issueLabels.length > 0 ? (
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
+            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
               {issueLabels.join(' · ')}
             </Typography.Text>
           ) : null}
         </Flex>
 
-        {draftRow.confidence !== 'high' ? (
+        {issueLabels.length > 0 ? (
           <Alert
-            type="info"
+            type="warning"
             showIcon
-            message="Optional improvement"
-            description="Adding missing details can improve match accuracy. You can still continue without changing this row."
+            message="We may not match this line well"
+            description={
+              <Typography.Paragraph style={{ ...hydraTextStyleToReactCss(hydraBaseNormal), marginBottom: 0 }}>
+                We could not parse everything we usually need. If you have manufacturer, size, SKU, or figure
+                number details, add them here — otherwise expect a weaker match or no suggested part.{' '}
+                <span style={hydraTextStyleToReactCss(hydraBaseStrong)}>
+                  You can still continue without changes.
+                </span>
+              </Typography.Paragraph>
+            }
           />
         ) : null}
 
@@ -80,7 +89,7 @@ export function BomParsingReviewRowDrawer({
           <Typography.Text
             type="secondary"
             style={{
-              ...hydraTextStyleToReactCss(hydraSmallNormal),
+              ...hydraTextStyleToReactCss(hydraBaseNormal),
               textTransform: 'uppercase',
               letterSpacing: '0.04em',
               display: 'block',
@@ -102,6 +111,6 @@ export function BomParsingReviewRowDrawer({
           ))}
         </Form>
       </Space>
-    </Drawer>
+    </Modal>
   );
 }

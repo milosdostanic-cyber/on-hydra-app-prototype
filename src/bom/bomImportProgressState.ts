@@ -1,6 +1,11 @@
 import type { BomImportProgress, BomImportStep, BomItem, BomMatchResult } from './data/types';
 import { ASC_FIELD_MAPPING_TOTAL, countMappedAscFields } from './bomFieldMappingUtils';
-import { createInitialMatchResults, createParsingReviewRows } from './data/bomImportFlowSeed';
+import {
+  createInitialMatchResults,
+  createParsingReviewRows,
+  normalizeParsedItemsForUpload,
+  parsedItemsNeedExpansion,
+} from './data/bomImportFlowSeed';
 
 export function routeForImportStep(bomProjectId: string, step: BomImportStep): string {
   switch (step) {
@@ -74,7 +79,7 @@ export type BomImportSession = {
   fieldMapping?: Record<string, string | undefined>;
 };
 
-const LS_KEY = 'hydra_bom_import_sessions_v1';
+const LS_KEY = 'hydra_bom_import_sessions_v2';
 
 type PersistedStore = {
   sessions: BomImportSession[];
@@ -96,13 +101,34 @@ function saveToStorage(): void {
   }
 }
 
+function upgradeImportSessionParsedItems(session: BomImportSession): BomImportSession {
+  if (!parsedItemsNeedExpansion(session.parsedItems)) return session;
+
+  const parsedItems = normalizeParsedItemsForUpload(session.parsedItems, session.progress.fileName);
+  const matchResults = createInitialMatchResults(parsedItems);
+  return {
+    ...session,
+    parsedItems,
+    matchResults,
+    progress: {
+      ...session.progress,
+      totalRows: parsedItems.length,
+      parsedRows: Math.min(session.progress.parsedRows, parsedItems.length),
+      lastUpdatedAt: nowIso(),
+    },
+  };
+}
+
 function loadFromStorage(): void {
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return;
     const data = JSON.parse(raw) as PersistedStore;
     if (Array.isArray(data.sessions)) {
-      data.sessions.forEach((s) => sessionsByUploadId.set(s.uploadId, s));
+      data.sessions.forEach((s) => {
+        const upgraded = upgradeImportSessionParsedItems(s);
+        sessionsByUploadId.set(upgraded.uploadId, upgraded);
+      });
     }
     if (Array.isArray(data.uploadIdsByProjectId)) {
       data.uploadIdsByProjectId.forEach(([projectId, ids]) =>
@@ -128,7 +154,7 @@ export function createImportSession(
   fieldMapping?: Record<string, string | undefined>,
 ): BomImportSession {
   const uploadId = `upload-${bomProjectId}-${Date.now()}`;
-  const parsedItems = createParsingReviewRows();
+  const parsedItems = createParsingReviewRows(fileName);
   const matchResults = createInitialMatchResults(parsedItems);
   const mapped = countMappedAscFields(fieldMapping);
 
@@ -166,13 +192,19 @@ export function createImportSession(
 }
 
 export function getImportSession(uploadId: string): BomImportSession | undefined {
-  return sessionsByUploadId.get(uploadId);
+  const session = sessionsByUploadId.get(uploadId);
+  if (!session) return undefined;
+  if (!parsedItemsNeedExpansion(session.parsedItems)) return session;
+  const upgraded = upgradeImportSessionParsedItems(session);
+  sessionsByUploadId.set(uploadId, upgraded);
+  saveToStorage();
+  return upgraded;
 }
 
 export function getImportSessionForProject(bomProjectId: string): BomImportSession | undefined {
   const ids = uploadIdsByProjectId.get(bomProjectId) ?? [];
   for (const id of ids) {
-    const s = sessionsByUploadId.get(id);
+    const s = getImportSession(id);
     if (s && s.progress.currentStep !== 'done') return s;
   }
   return undefined;
@@ -190,7 +222,7 @@ export function getOrCreateImportSessionForProject(
   const ids = uploadIdsByProjectId.get(bomProjectId) ?? [];
   const latestId = ids[0];
   if (latestId) {
-    const latest = sessionsByUploadId.get(latestId);
+    const latest = getImportSession(latestId);
     if (latest) return latest;
   }
 
@@ -242,7 +274,7 @@ export function dismissImportSession(uploadId: string): void {
   saveToStorage();
 }
 
-const DEMO_PENDING_SEED_VERSION = 4;
+const DEMO_PENDING_SEED_VERSION = 5;
 const demoPendingSeedKey = (bomProjectId: string) =>
   `hydra_bom_demo_pending_seed_v${DEMO_PENDING_SEED_VERSION}_${bomProjectId}`;
 
@@ -256,8 +288,14 @@ function seedThreePendingImports(bomProjectId: string): void {
     acceptedCount: number;
     skippedCount: number;
   }> = [
-    { step: 'match', mappedAscFields: 11, parsedRows: 5, acceptedCount: 1, skippedCount: 0 },
-    { step: 'review', mappedAscFields: 11, parsedRows: 3, acceptedCount: 0, skippedCount: 0 },
+    {
+      step: 'match',
+      mappedAscFields: 11,
+      parsedRows: createParsingReviewRows(fileName).length,
+      acceptedCount: 1,
+      skippedCount: 0,
+    },
+    { step: 'review', mappedAscFields: 11, parsedRows: 0, acceptedCount: 0, skippedCount: 0 },
     { step: 'map', mappedAscFields: 6, parsedRows: 0, acceptedCount: 0, skippedCount: 0 },
   ];
 

@@ -14,21 +14,24 @@ import { BomConfidenceTag } from '../components/BomTags';
 import type { BomItemConfidence } from '../data/types';
 import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
 import { readUploadFileName } from '../bomUploadFlowState';
-import { ASC_FIELD_MAPPING_TOTAL, countMappedAscFields } from '../bomFieldMappingUtils';
+import { matchingStepStatusLabel } from '../bomUploadFlowStatus';
 import {
   applyAcceptAllHighSkipRest,
   bulkAcceptHighSkipRestMessage,
   HIGH_MATCH_AUTO_ACCEPT_THRESHOLD,
 } from '../bomMatchingBulkActions';
+import { isReadyToConfirmMatch } from '../bomMatchSkuUtils';
 import { buildMatchingResultsColumns } from '../bomMatchingColumns';
 import { BomChoosePartDrawer } from '../components/BomChoosePartDrawer';
+import { BomMatchDetailDrawer } from '../components/BomMatchDetailDrawer';
 import { BomSkuVariantDrawer } from '../components/BomSkuVariantDrawer';
 import { BomUploadFlowStepChrome } from '../components/BomUploadFlowStepChrome';
 import { useBomChoosePartDrawer } from '../hooks/useBomChoosePartDrawer';
 import { BomPageHeader } from '../layout/BomPageHeader';
-import { createParsingReviewRows } from '../data/bomImportFlowSeed';
-import { bomProjectById, bomProjectTitleById } from '../data/mockData';
+import { normalizeParsedItemsForUpload } from '../data/bomImportFlowSeed';
+import { bomItemById, bomProjectById, bomProjectTitleById } from '../data/mockData';
 import { useBomCancelUpload } from '../hooks/useBomCancelUpload';
+import { useBomFinishImport } from '../hooks/useBomFinishImport';
 import { useBomMatchingData } from '../hooks/useBomMatchingData';
 import type { BomMatchResult } from '../data/types';
 import {
@@ -149,17 +152,21 @@ export function BomMatchingPage() {
     Boolean((location.state as { focusSkipped?: boolean } | null)?.focusSkipped),
   );
   const [skuRowId, setSkuRowId] = useState<string | null>(null);
+  const [detailItemId, setDetailItemId] = useState<string | null>(null);
 
-  const { matchResults, persist, stats } = useBomMatchingData(bomProjectId);
+  const { session, uploadId, matchResults, persist, stats } = useBomMatchingData(bomProjectId);
   const { chooseOpen, chooseMatchRow, openChoose, closeChoose, handleSelectPart } = useBomChoosePartDrawer(
     matchResults,
     persist,
   );
 
   const rowNumbers = useMemo(() => {
-    const parsed = createParsingReviewRows();
+    const parsed = normalizeParsedItemsForUpload(
+      session?.parsedItems,
+      session?.progress.fileName ?? uploadFileName,
+    );
     return new Map(parsed.map((r) => [r.id, r.rowNumber]));
-  }, []);
+  }, [session?.parsedItems]);
 
   const skippedCount = useMemo(
     () => matchResults.filter((r) => r.lineStatus === 'skipped').length,
@@ -185,16 +192,30 @@ export function BomMatchingPage() {
 
   const matchConfidence = aggregateMatchConfidence(matchResults);
   const allLinesReviewed = stats.pending === 0;
-  const mappedFieldsStatus = `${countMappedAscFields(uploadState.fieldMapping)} of ${ASC_FIELD_MAPPING_TOTAL} fields mapped`;
-  const matchingProgressStatus = allLinesReviewed
-    ? `All ${stats.total} reviewed`
-    : mappedFieldsStatus;
+  const matchingProgressStatus = matchingStepStatusLabel(stats);
   const parsingReviewRoute = `/bom/projects/${bomProjectId}/parsing-review`;
   const reviewRoute = `/bom/projects/${bomProjectId}/matching/review`;
   const { confirmCancelUpload } = useBomCancelUpload(bomProjectId);
+  const { confirmFinishImport } = useBomFinishImport({
+    bomProjectId,
+    uploadState,
+    uploadFileName,
+    matchResults,
+    stats,
+    session,
+    uploadId,
+    onReviewSkipped: () => {
+      setSkippedOnly(true);
+      setPage(1);
+    },
+  });
 
   const handleConfirm = useCallback(
     (row: BomMatchResult) => {
+      if (!isReadyToConfirmMatch(row)) {
+        message.warning('Pick a SKU variant before confirming this match.');
+        return;
+      }
       persist(matchResults.map((r) => (r.itemId === row.itemId ? { ...r, lineStatus: 'accepted' } : r)));
       message.success('Match confirmed.');
     },
@@ -224,6 +245,15 @@ export function BomMatchingPage() {
     () => (skuRowId ? matchResults.find((r) => r.itemId === skuRowId) ?? null : null),
     [matchResults, skuRowId],
   );
+
+  const detailMatchRow = useMemo(
+    () => (detailItemId ? matchResults.find((r) => r.itemId === detailItemId) ?? null : null),
+    [matchResults, detailItemId],
+  );
+
+  const detailParsedItem = detailMatchRow
+    ? bomItemById(detailMatchRow.itemId) ?? session?.parsedItems.find((i) => i.id === detailMatchRow.itemId)
+    : undefined;
 
   const handleApplySkuVariant = useCallback(
     (next: BomMatchResult) => {
@@ -306,7 +336,7 @@ export function BomMatchingPage() {
                   ? `${stats.pending} part${stats.pending === 1 ? '' : 's'} still pending in guided review`
                   : undefined
               }
-              onClick={() => navigate(reviewRoute, { state: uploadState })}
+              onClick={confirmFinishImport}
             >
               Finish review &amp; import
             </Button>
@@ -377,6 +407,10 @@ export function BomMatchingPage() {
           dataSource={pagedMatchResults}
           pagination={false}
           scroll={{ x: 'max-content' }}
+          onRow={(row) => ({
+            onClick: () => setDetailItemId(row.itemId),
+            style: { cursor: 'pointer' },
+          })}
           styles={{
             header: {
               cell: {
@@ -419,6 +453,38 @@ export function BomMatchingPage() {
         matchRow={skuMatchRow}
         onClose={() => setSkuRowId(null)}
         onApply={handleApplySkuVariant}
+      />
+
+      <BomMatchDetailDrawer
+        open={detailItemId !== null}
+        matchRow={detailMatchRow}
+        parsedItem={detailParsedItem}
+        onClose={() => setDetailItemId(null)}
+        onConfirm={() => {
+          if (detailMatchRow) handleConfirm(detailMatchRow);
+          setDetailItemId(null);
+        }}
+        onChoose={() => {
+          if (detailMatchRow) handleChoose(detailMatchRow);
+          setDetailItemId(null);
+        }}
+        onPickVariant={
+          detailMatchRow
+            ? () => {
+                setDetailItemId(null);
+                handleSelectSku(detailMatchRow);
+              }
+            : undefined
+        }
+        onSkip={
+          detailMatchRow?.lineStatus === 'pending'
+            ? () => {
+                handleSkip(detailMatchRow);
+                setDetailItemId(null);
+              }
+            : undefined
+        }
+        chooseLabel="Choose"
       />
     </Space>
   );

@@ -2,8 +2,12 @@
 
 export const BOM_FIELD_SKIP_VALUE = '--Skip--';
 
+/** Demo source column for single-field concatenated BOM uploads. */
+export const BOM_CONCATENATED_SOURCE_COLUMN = 'COMBINED DATA';
+
 export const BOM_SOURCE_FIELDS = [
   BOM_FIELD_SKIP_VALUE,
+  BOM_CONCATENATED_SOURCE_COLUMN,
   'BRAND',
   'DESCRIPTION',
   'FIGURE NUM',

@@ -4,7 +4,6 @@ import {
   hydraBaseNormal,
   hydraLargeStrong,
   hydraTextStyleToReactCss,
-  hydraSmallNormal,
   hydraTitleHeading3,
   hydraTitleHeading4,
 } from '../../theme/hydraTypography';
@@ -50,7 +49,7 @@ export function BomPageHeader({
           type="secondary"
           style={{
             display: 'block',
-            ...hydraTextStyleToReactCss(hydraSmallNormal),
+            ...hydraTextStyleToReactCss(hydraBaseNormal),
           }}
         >
           {eyebrow}

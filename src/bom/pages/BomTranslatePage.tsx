@@ -17,6 +17,7 @@ import {
   message,
   theme,
 } from '../../ui/antd';
+import { BomStatusBadge } from '../components/BomTags';
 import { HydraTag } from '../../ui/HydraTag';
 import type { AscCatalogPart, BomItem } from '../data/types';
 import {
@@ -206,13 +207,9 @@ export function BomTranslatePage() {
             strokeColor={token.colorPrimary}
             style={{ flex: 1, margin: 0 }}
           />
-          <Flex gap={token.marginXXS} style={{ flexShrink: 0 }}>
-            <HydraTag tone="success">
-              {confirmed.size} confirmed
-            </HydraTag>
-            <HydraTag>
-              {skipped.size} skipped
-            </HydraTag>
+          <Flex gap={token.marginSM} style={{ flexShrink: 0 }}>
+            <BomStatusBadge status="success" text={`${confirmed.size} confirmed`} />
+            <BomStatusBadge status="warning" text={`${skipped.size} skipped`} />
           </Flex>
         </Flex>
       </Card>
@@ -233,16 +230,8 @@ export function BomTranslatePage() {
               {currentItem.parsedDescription}
             </Typography.Text>
           </Flex>
-          {isItemConfirmed ? (
-            <HydraTag tone="success">
-              Confirmed
-            </HydraTag>
-          ) : null}
-          {isSkipped ? (
-            <HydraTag>
-              Skipped
-            </HydraTag>
-          ) : null}
+          {isItemConfirmed ? <BomStatusBadge status="success" text="Confirmed" /> : null}
+          {isSkipped ? <BomStatusBadge status="warning" text="Skipped" /> : null}
         </Flex>
 
         {currentAscPart ? (

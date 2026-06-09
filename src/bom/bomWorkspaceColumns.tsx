@@ -1,4 +1,3 @@
-import { FilePdfOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 
 import {
@@ -10,10 +9,11 @@ import {
   workspaceSkuDisplayLabel,
 } from './bomWorkspaceDashboard';
 import { bomWorkspaceTableColumnWidths } from './data/bomWorkspaceSeed';
+import { BomTableRowActions, type BomTableRowAction } from './components/BomTableRowActions';
 import { BomConfidenceTag, BomManualTag, BomMatchStatusTag } from './components/BomTags';
 import type { BomItem } from './data/types';
 import { hydraBaseNormal, hydraTextStyleToReactCss } from '../theme/hydraTypography';
-import { Button, Flex, Space, Typography, theme } from '../ui/antd';
+import { Flex, Space, Typography } from '../ui/antd';
 import type { TableColumnsType } from '../ui/antd';
 
 export type BomWorkspaceRowActions = {
@@ -43,13 +43,29 @@ function FigureLink({ row, bomProjectId }: { row: BomItem; bomProjectId: string 
   );
 }
 
-function SubmittalLink({ row }: { row: BomItem }) {
-  const url = resolveWorkspaceSubmittalUrl(row);
-  if (!url) return null;
+function ImportedPartCell({
+  row,
+  onViewOriginal,
+}: {
+  row: BomItem;
+  onViewOriginal: (row: BomItem) => void;
+}) {
+  const label = row.originalInput?.trim() || '—';
+
+  if (!row.originalInput?.trim()) {
+    return <Typography.Text type="secondary">—</Typography.Text>;
+  }
 
   return (
-    <Typography.Link href={url} target="_blank" rel="noopener noreferrer">
-      <FilePdfOutlined aria-hidden /> Submittal
+    <Typography.Link
+      ellipsis
+      title={row.originalInput}
+      onClick={(e) => {
+        e.stopPropagation();
+        onViewOriginal(row);
+      }}
+    >
+      {label}
     </Typography.Link>
   );
 }
@@ -61,6 +77,15 @@ export function buildBomWorkspaceColumns(actions: BomWorkspaceRowActions): Table
       dataIndex: 'rowNumber',
       key: 'rowNumber',
       width: bomWorkspaceTableColumnWidths.rowNumber,
+    },
+    {
+      title: 'Imported part',
+      key: 'importedPart',
+      width: bomWorkspaceTableColumnWidths.importedPart,
+      ellipsis: true,
+      render: (_, row) => (
+        <ImportedPartCell row={row} onViewOriginal={actions.onViewOriginal} />
+      ),
     },
     {
       title: 'SKU / variant',
@@ -125,39 +150,32 @@ function WorkspaceActionsCell({
   row: BomItem;
   actions: BomWorkspaceRowActions;
 }) {
-  const { token } = theme.useToken();
-  const linkButtonStyle = { padding: 0, height: 'auto' } as const;
+  const submittalUrl = resolveWorkspaceSubmittalUrl(row);
+  const confirmed = actions.isConfirmed(row);
+  const rowActions: BomTableRowAction[] = [];
 
-  return (
-    <Flex gap={token.marginXS} wrap="wrap" align="center">
-      <Button
-        type="link"
-        size="small"
-        style={linkButtonStyle}
-        onClick={() => actions.onViewOriginal(row)}
-      >
-        Original
-      </Button>
-      <SubmittalLink row={row} />
-      {!actions.isConfirmed(row) ? (
-        <Button
-          type="link"
-          size="small"
-          style={linkButtonStyle}
-          onClick={() => actions.onReview(row)}
-        >
-          Review
-        </Button>
-      ) : null}
-      <Button
-        type="link"
-        size="small"
-        danger
-        style={linkButtonStyle}
-        onClick={() => actions.onDelete(row)}
-      >
-        Delete
-      </Button>
-    </Flex>
-  );
+  if (!confirmed) {
+    rowActions.push({
+      key: 'review',
+      label: 'Review',
+      onClick: () => actions.onReview(row),
+    });
+  }
+
+  if (submittalUrl) {
+    rowActions.push({
+      key: 'submittal',
+      label: 'Submittal',
+      onClick: () => window.open(submittalUrl, '_blank', 'noopener,noreferrer'),
+    });
+  }
+
+  rowActions.push({
+    key: 'delete',
+    label: 'Delete',
+    danger: true,
+    onClick: () => actions.onDelete(row),
+  });
+
+  return <BomTableRowActions actions={rowActions} />;
 }

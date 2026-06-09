@@ -1,6 +1,7 @@
 # BOM Flow Audit — Matt / Lucas Requirements (June 5, 2026)
 
 **Date:** 2026-06-08  
+**Updated:** 2026-06-08 (gap fixes applied in prototype)  
 **Author:** Implementation audit vs prototype  
 **Sources:**
 - Meeting notes: *Product/Design - Weekly — 2026-06-05* (Matt Pettit, Lucas Saeed)
@@ -9,6 +10,22 @@
 - Codebase: `src/bom/`
 
 **Scope:** Full upload → mapping → parsing → match review → SKU selection → final workspace flow.
+
+---
+
+## Fixes applied (2026-06-08)
+
+| Gap | Fix |
+|-----|-----|
+| Parsing edits not persisted | `BomParsingReviewPage` saves `parsedItems` + regenerated `matchResults` to import session on continue |
+| Concatenated column edge case | `deriveFieldMappingForUpload` + filename pattern; description-only mapping with warning |
+| Multi-candidate figures | `BomSuggestedPartsPicker` in progressive review |
+| Orphan replacement picker | `BomReplacementPickerPage` redirects to guided review |
+| Match detail gaps | Product URL, Skip/Next actions; exposed from matching table |
+| Review card polish | Thumbnail + SKU variant count on progressive review |
+| SKU picker | Variant count label + submittal link per variant |
+| Workspace dashboard | KPI strip, status filter UI, imported-part column, swap via drawer |
+| Copy / messaging | Smart mapping title, upload card copy, accurate import success count |
 
 ---
 

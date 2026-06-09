@@ -1,7 +1,10 @@
 import type { CSSProperties } from 'react';
 
 import type { BomItem, BomParsingReviewColumnProfile } from './data/types';
-import { parsingReviewFieldNeedsAttention } from './bomParsingReviewAlert';
+import {
+  isParsingReviewLowConfidenceRow,
+  parsingReviewFieldNeedsAttention,
+} from './bomParsingReviewAlert';
 import { BomConfidenceTag } from './components/BomTags';
 import {
   editableTableNumber,
@@ -32,11 +35,13 @@ export const PARSING_REVIEW_COLUMN_WIDTHS = {
 type RowUpdater = (rowId: string, patch: Partial<BomItem>) => void;
 
 function readOnlyAttentionText(value: string | undefined, needsAttention: boolean) {
-  const display = value?.trim() ? value : '—';
+  const hasValue = Boolean(value?.trim());
+  const display = hasValue ? value!.trim() : needsAttention ? '?' : '—';
   return (
     <Typography.Text
-      type={needsAttention ? 'warning' : undefined}
-      ellipsis={{ tooltip: display }}
+      type={needsAttention && !hasValue ? 'warning' : undefined}
+      strong={needsAttention && !hasValue}
+      ellipsis={{ tooltip: hasValue ? display : 'Missing — we could not parse this' }}
       style={{ display: 'block' }}
     >
       {display}
@@ -45,8 +50,11 @@ function readOnlyAttentionText(value: string | undefined, needsAttention: boolea
 }
 
 function readOnlyQty(value: number, needsAttention: boolean) {
+  const missing = needsAttention && (!value || value <= 0);
   return (
-    <Typography.Text type={needsAttention ? 'warning' : undefined}>{value}</Typography.Text>
+    <Typography.Text type={missing ? 'warning' : undefined} strong={missing}>
+      {missing ? '?' : value}
+    </Typography.Text>
   );
 }
 
@@ -59,16 +67,27 @@ function qualityColumn(): TableColumnsType<BomItem>[number] {
   };
 }
 
-function actionsColumn(onEditRow: (row: BomItem) => void): TableColumnsType<BomItem>[number] {
+function actionsColumn(
+  profile: BomParsingReviewColumnProfile,
+  onEditRow: (row: BomItem) => void,
+): TableColumnsType<BomItem>[number] {
   return {
     title: '',
     key: 'actions',
     width: PARSING_REVIEW_COLUMN_WIDTHS.actions,
-    render: (_, record) => (
-      <Button type="link" size="small" style={{ padding: 0, height: 'auto' }} onClick={() => onEditRow(record)}>
-        {record.confidence === 'high' ? 'Edit' : 'Add info'}
-      </Button>
-    ),
+    render: (_, record) => {
+      const needsInfo = isParsingReviewLowConfidenceRow(record, profile);
+      return (
+        <Button
+          type="link"
+          size="small"
+          style={{ padding: 0, height: 'auto' }}
+          onClick={() => onEditRow(record)}
+        >
+          {needsInfo ? 'Add info' : 'Edit'}
+        </Button>
+      );
+    },
   };
 }
 
@@ -160,7 +179,7 @@ export function buildParsingReviewReadOnlyColumns(
         render: (v: number, record) =>
           readOnlyQty(v, parsingReviewFieldNeedsAttention(record, 'quantity', profile)),
       },
-      actionsColumn(onEditRow),
+      actionsColumn(profile, onEditRow),
     ];
   }
 
@@ -184,7 +203,7 @@ export function buildParsingReviewReadOnlyColumns(
         render: (v: number, record) =>
           readOnlyQty(v, parsingReviewFieldNeedsAttention(record, 'quantity', profile)),
       },
-      actionsColumn(onEditRow),
+      actionsColumn(profile, onEditRow),
     ];
   }
 
@@ -215,15 +234,19 @@ export function buildParsingReviewReadOnlyColumns(
       render: (v: number, record) =>
         readOnlyQty(v, parsingReviewFieldNeedsAttention(record, 'quantity', profile)),
     },
-    actionsColumn(onEditRow),
+    actionsColumn(profile, onEditRow),
   ];
 }
 
-/** Row background for low-confidence rows — subtle warning, not a blocker state. */
+/** Row background when parsed data is thin — informational warning, not a blocker. */
 export function parsingReviewRowStyle(
   row: BomItem,
   token: ReturnType<typeof theme.useToken>['token'],
+  profile?: BomParsingReviewColumnProfile,
 ): CSSProperties | undefined {
+  if (profile && isParsingReviewLowConfidenceRow(row, profile)) {
+    return { background: token.colorWarningBg };
+  }
   if (row.confidence === 'low') {
     return { background: token.colorWarningBg };
   }

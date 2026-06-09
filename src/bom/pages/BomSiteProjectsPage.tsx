@@ -6,7 +6,7 @@ import {
   UploadOutlined,
 } from '@ant-design/icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import type { Key } from 'react';
 
 import { useActiveProject, useBomHubPath } from '../../context/ActiveProjectContext';
@@ -63,6 +63,7 @@ export function BomSiteProjectsPage() {
   const { token } = theme.useToken();
   const { modal } = App.useApp();
   const navigate = useNavigate();
+  const location = useLocation();
   const { constructionProjectId = '' } = useParams<{ constructionProjectId: string }>();
   const { setProjectId, project } = useActiveProject();
   const bomHubPath = useBomHubPath();
@@ -78,6 +79,14 @@ export function BomSiteProjectsPage() {
   const [hoveredQuickAction, setHoveredQuickAction] = useState<'upload' | 'search' | null>(null);
   const [uploadDestModalOpen, setUploadDestModalOpen] = useState(false);
   const [pendingUpload, setPendingUpload] = useState<{ name: string; size: number } | null>(null);
+  const [projectsListKey, setProjectsListKey] = useState(0);
+
+  useEffect(() => {
+    if (location.state?.refreshBomProjects) {
+      setProjectsListKey((key) => key + 1);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.pathname, location.state, navigate]);
 
   useEffect(() => {
     if (constructionProjectId) setProjectId(constructionProjectId);
@@ -92,7 +101,7 @@ export function BomSiteProjectsPage() {
 
   const projectBoms = useMemo(
     () => mockBomProjects.filter((p) => p.projectId === constructionProjectId && !deletedIds.has(p.id)),
-    [constructionProjectId, deletedIds],
+    [constructionProjectId, deletedIds, projectsListKey],
   );
 
   const filteredProjects = useMemo(() => {
@@ -154,7 +163,7 @@ export function BomSiteProjectsPage() {
             message="This project will be removed from your list"
             description="In this demo the project is only hidden locally until you refresh; there is no server delete."
           />
-          <Descriptions bordered size="small" column={1}>
+          <Descriptions bordered column={1}>
             <Descriptions.Item label="Project name">{row.name}</Descriptions.Item>
             <Descriptions.Item label="Items">{row.items}</Descriptions.Item>
             <Descriptions.Item label="Last edited">{row.lastEdited}</Descriptions.Item>
@@ -383,7 +392,7 @@ export function BomSiteProjectsPage() {
                   type="secondary"
                   style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
                 >
-                  Excel, CSV, or PDF. We&apos;ll take you to parsing review after a short simulated import.
+                  Excel, CSV, or PDF. We&apos;ll map your columns automatically, then guide you through review and matching.
                 </Typography.Paragraph>
               </Flex>
             </Card>

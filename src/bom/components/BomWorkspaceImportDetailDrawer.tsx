@@ -3,7 +3,6 @@ import { workspaceQuantityLabel } from '../bomWorkspaceDashboard';
 import { BomConfidenceTag } from './BomTags';
 import {
   hydraBaseNormal,
-  hydraSmallNormal,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
 import { Descriptions, Drawer, Space, Typography, theme } from '../../ui/antd';
@@ -31,11 +30,11 @@ export function BomWorkspaceImportDetailDrawer({
       destroyOnClose
     >
       <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
-        <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
+        <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
           Data from your uploaded BOM file. ASC match details stay in the main table.
         </Typography.Text>
 
-        <Descriptions bordered size="small" column={1}>
+        <Descriptions bordered column={1}>
           {row.importedRowNumber != null ? (
             <Descriptions.Item label="Import row">{row.importedRowNumber}</Descriptions.Item>
           ) : null}

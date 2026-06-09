@@ -3,7 +3,8 @@ import type { BomItem } from './types';
 /** Column widths from Figma `07 - BOM Flow / Workspace / Main` (node 4859:171500). */
 export const bomWorkspaceTableColumnWidths = {
   rowNumber: 50,
-  skuVariant: 280,
+  importedPart: 200,
+  skuVariant: 260,
   figureNumber: 140,
   quantity: 88,
   match: 120,

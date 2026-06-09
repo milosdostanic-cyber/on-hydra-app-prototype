@@ -1,8 +1,9 @@
 import { isReadyToConfirmMatch, matchRequiresSkuSelection } from './bomMatchSkuUtils';
 import { matchScoreBand } from './data/bomImportFlowSeed';
 import type { BomMatchResult } from './data/types';
+import { BomTableRowActions, type BomTableRowAction } from './components/BomTableRowActions';
 import { BomConfidenceTag, BomManualTag, BomMatchLineStatusTag } from './components/BomTags';
-import { Button, Flex, Space, Typography, theme } from '../ui/antd';
+import { Space, Typography } from '../ui/antd';
 import type { TableColumnsType } from '../ui/antd';
 
 /** Figma `5026:21449` — Matching results table column widths. */
@@ -10,10 +11,9 @@ export const MATCHING_RESULTS_COLUMN_WIDTHS = {
   line: 56,
   originalPart: 401,
   ourPart: 392,
-  candidates: 67,
-  matchScore: 140,
+  matchScore: 120,
   status: 101,
-  actions: 191,
+  actions: 168,
 } as const;
 
 type MatchRowActions = {
@@ -59,17 +59,13 @@ export function buildMatchingResultsColumns(
                 : row.topMatch.partNumber}
             </Typography.Text>
             <Typography.Text type="secondary">{row.topMatch.description}</Typography.Text>
+            {matchRequiresSkuSelection(row) ? (
+              <Typography.Text type="secondary">Pick a SKU variant to confirm</Typography.Text>
+            ) : null}
           </Space>
         ) : (
           <Typography.Text type="secondary">—</Typography.Text>
         ),
-    },
-    {
-      title: 'Candidates',
-      key: 'candidates',
-      width: MATCHING_RESULTS_COLUMN_WIDTHS.candidates,
-      align: 'right',
-      render: (_, row) => row.suggestedParts.length,
     },
     {
       title: 'Match score',
@@ -77,19 +73,14 @@ export function buildMatchingResultsColumns(
       width: MATCHING_RESULTS_COLUMN_WIDTHS.matchScore,
       render: (_, row) => {
         if (!row.topMatch) return '—';
+        if (row.source === 'manual') return <BomManualTag />;
         const band = matchScoreBand(row.topMatch.matchConfidence);
-        const confTag =
-          band === 'processing' ? null : (
-            <BomConfidenceTag confidence={band === 'high' ? 'high' : band === 'medium' ? 'medium' : 'low'} />
-          );
+        if (band === 'processing') return '—';
         return (
-          <Flex gap={4} wrap="wrap" align="center">
-            {confTag}
-            {row.source === 'manual' ? <BomManualTag /> : null}
-            {row.source !== 'manual' && row.topMatch.matchConfidence > 0 ? (
-              <Typography.Text type="secondary">{row.topMatch.matchConfidence}%</Typography.Text>
-            ) : null}
-          </Flex>
+          <BomConfidenceTag
+            confidence={band === 'high' ? 'high' : band === 'medium' ? 'medium' : 'low'}
+            percent={row.topMatch.matchConfidence}
+          />
         );
       },
     },
@@ -103,14 +94,10 @@ export function buildMatchingResultsColumns(
       title: 'Actions',
       key: 'actions',
       width: MATCHING_RESULTS_COLUMN_WIDTHS.actions,
-      render: (_, row) => (
-        <MatchActionsCell row={row} actions={actions} />
-      ),
+      render: (_, row) => <MatchActionsCell row={row} actions={actions} />,
     },
   ];
 }
-
-const linkButtonStyle = { padding: 0, height: 'auto' } as const;
 
 function MatchActionsCell({
   row,
@@ -119,52 +106,56 @@ function MatchActionsCell({
   row: BomMatchResult;
   actions: MatchRowActions;
 }) {
-  const { token } = theme.useToken();
-  const chooseLabel = row.topMatch ? 'Choose different part' : 'Choose';
-
   if (row.lineStatus === 'accepted' || row.lineStatus === 'skipped') {
     return (
-      <Button
-        type="link"
-        size="small"
-        style={linkButtonStyle}
-        onClick={() => actions.onChoose(row)}
-      >
-        Choose different part
-      </Button>
+      <BomTableRowActions
+        nowrap
+        maxVisible={2}
+        actions={[
+          {
+            key: 'change',
+            label: 'Choose',
+            onClick: () => actions.onChoose(row),
+          },
+        ]}
+      />
     );
   }
 
-  const needsSku = matchRequiresSkuSelection(row);
+  const overflow: BomTableRowAction[] = [];
+  let visible: BomTableRowAction[];
 
-  return (
-    <Flex gap={token.marginXS} wrap="wrap">
-      {needsSku ? (
-        <Button
-          type="link"
-          size="small"
-          style={linkButtonStyle}
-          onClick={() => actions.onSelectSku(row)}
-        >
-          Select SKU
-        </Button>
-      ) : (
-        <Button
-          type="link"
-          size="small"
-          style={linkButtonStyle}
-          disabled={!isReadyToConfirmMatch(row)}
-          onClick={() => actions.onConfirm(row)}
-        >
-          Confirm
-        </Button>
-      )}
-      <Button type="link" size="small" style={linkButtonStyle} onClick={() => actions.onSkip(row)}>
-        Skip
-      </Button>
-      <Button type="link" size="small" style={linkButtonStyle} onClick={() => actions.onChoose(row)}>
-        {chooseLabel}
-      </Button>
-    </Flex>
-  );
+  if (!row.topMatch) {
+    visible = [
+      { key: 'choose', label: 'Choose', onClick: () => actions.onChoose(row) },
+      { key: 'skip', label: 'Skip', onClick: () => actions.onSkip(row) },
+    ];
+  } else if (matchRequiresSkuSelection(row)) {
+    visible = [
+      { key: 'pick-variant', label: 'Pick variant', onClick: () => actions.onSelectSku(row) },
+      { key: 'skip', label: 'Skip', onClick: () => actions.onSkip(row) },
+    ];
+    overflow.push({
+      key: 'choose',
+      label: 'Choose',
+      onClick: () => actions.onChoose(row),
+    });
+  } else {
+    visible = [
+      {
+        key: 'confirm',
+        label: 'Confirm',
+        disabled: !isReadyToConfirmMatch(row),
+        onClick: () => actions.onConfirm(row),
+      },
+      { key: 'skip', label: 'Skip', onClick: () => actions.onSkip(row) },
+    ];
+    overflow.push({
+      key: 'choose',
+      label: 'Choose',
+      onClick: () => actions.onChoose(row),
+    });
+  }
+
+  return <BomTableRowActions nowrap maxVisible={2} actions={[...visible, ...overflow]} />;
 }
