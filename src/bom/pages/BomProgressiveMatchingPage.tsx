@@ -53,7 +53,7 @@ export function BomProgressiveMatchingPage() {
   const uploadFileName = readUploadFileName(uploadState);
   const projectTitle = bomProjectTitleById(bomProjectId) ?? 'BOM project';
   const tableRoute = `/bom/projects/${bomProjectId}/matching/table`;
-  const { session, matchResults, persist, stats } = useBomMatchingData(bomProjectId);
+  const { session, uploadId, matchResults, persist, stats } = useBomMatchingData(bomProjectId);
   const { chooseOpen, chooseMatchRow, openChoose, closeChoose, handleSelectPart } = useBomChoosePartDrawer(
     matchResults,
     persist,
@@ -75,10 +75,19 @@ export function BomProgressiveMatchingPage() {
     ? bomItemById(displayMatch.itemId) ?? session?.parsedItems.find((i) => i.id === displayMatch.itemId)
     : undefined;
   const totalParts = matchResults.length;
-  const reviewingPosition = allDone ? totalParts : processed + 1;
+  const reviewingPosition = useMemo(() => {
+    if (allDone) return totalParts;
+    if (!current) return 1;
+    const lineIndex = matchResults.findIndex((row) => row.itemId === current.itemId);
+    return lineIndex >= 0 ? lineIndex + 1 : 1;
+  }, [allDone, current, matchResults, totalParts]);
   const matchingProgressStatus = guidedMatchingStepStatusLabel(reviewingPosition, totalParts, allDone);
 
   const parsingReviewRoute = `/bom/projects/${bomProjectId}/parsing-review`;
+
+  useEffect(() => {
+    setIndex(0);
+  }, [uploadId]);
 
   useEffect(() => {
     if (index >= queue.length && queue.length > 0) setIndex(0);

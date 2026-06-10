@@ -273,13 +273,6 @@ function matchForItem(item: BomItem): BomMatchResult {
         { ...pool[0], matchLevel: 'sku', figureNumber: 'FP7450', partNumber: '4371000570' },
         94,
       );
-      if (item.rowNumber === 1) {
-        return base(top, pool, 'accepted', 'auto', {
-          matchLevel: 'sku',
-          figureNumber: 'FP7450',
-          selectedVariantId: 'fl-400-g-sku',
-        });
-      }
       return base(top, [top, ...pool.filter((p) => p.partNumber !== top.partNumber)], 'pending', 'auto', {
         matchLevel: 'sku',
         figureNumber: 'FP7450',
@@ -326,13 +319,6 @@ function matchForItem(item: BomItem): BomMatchResult {
         { ...pool[0], matchLevel: 'sku', figureNumber: 'CV-400-GR', partNumber: '4371000570' },
         91,
       );
-      if (item.rowNumber === 5) {
-        return base(top, [top, ...pool.filter((p) => p.partNumber !== top.partNumber)], 'accepted', 'manual', {
-          matchLevel: 'sku',
-          figureNumber: 'CV-400-GR',
-          selectedVariantId: 'cv-400-gr-sku',
-        });
-      }
       return base(top, [top, ...pool.filter((p) => p.partNumber !== top.partNumber)], 'pending', 'auto', {
         matchLevel: 'sku',
         figureNumber: 'CV-400-GR',
