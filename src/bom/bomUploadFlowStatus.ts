@@ -1,8 +1,8 @@
 import { ASC_FIELD_MAPPING_TOTAL } from './bomFieldMappingUtils';
 
-/** Step 0 — column mapping progress for the upload flow chrome tag. */
+/** Step 0 — column link progress for the upload flow chrome tag. */
 export function mappingStepStatusLabel(mappedCount: number): string {
-  return `${mappedCount} of ${ASC_FIELD_MAPPING_TOTAL} fields mapped`;
+  return `${mappedCount} of ${ASC_FIELD_MAPPING_TOTAL} columns linked`;
 }
 
 type MatchingReviewStats = {

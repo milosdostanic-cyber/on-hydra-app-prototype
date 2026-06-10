@@ -1,8 +1,12 @@
-import { isReadyToConfirmMatch, matchRequiresSkuSelection } from './bomMatchSkuUtils';
+import { matchRequiresSkuSelection } from './bomMatchSkuUtils';
+import {
+  reviewCanConfirm,
+  summaryTableRowActionLabel,
+} from './bomMatchingReviewCtas';
 import { matchScoreBand } from './data/bomImportFlowSeed';
 import type { BomMatchResult } from './data/types';
 import { BomTableRowActions, type BomTableRowAction } from './components/BomTableRowActions';
-import { BomConfidenceTag, BomManualTag, BomMatchLineStatusTag } from './components/BomTags';
+import { BomConfidenceTag, BomManualTag, BomReviewDisplayStatusTag } from './components/BomTags';
 import { Space, Typography } from '../ui/antd';
 import type { TableColumnsType } from '../ui/antd';
 
@@ -18,9 +22,9 @@ export const MATCHING_RESULTS_COLUMN_WIDTHS = {
 
 type MatchRowActions = {
   onConfirm: (row: BomMatchResult) => void;
-  onSkip: (row: BomMatchResult) => void;
   onChoose: (row: BomMatchResult) => void;
   onSelectSku: (row: BomMatchResult) => void;
+  onReview: (row: BomMatchResult) => void;
 };
 
 type RowNumberLookup = (itemId: string) => number | undefined;
@@ -60,7 +64,7 @@ export function buildMatchingResultsColumns(
             </Typography.Text>
             <Typography.Text type="secondary">{row.topMatch.description}</Typography.Text>
             {matchRequiresSkuSelection(row) ? (
-              <Typography.Text type="secondary">Pick a SKU variant to confirm</Typography.Text>
+              <Typography.Text type="secondary">Select a SKU variant to confirm</Typography.Text>
             ) : null}
           </Space>
         ) : (
@@ -88,10 +92,10 @@ export function buildMatchingResultsColumns(
       title: 'Status',
       key: 'status',
       width: MATCHING_RESULTS_COLUMN_WIDTHS.status,
-      render: (_, row) => <BomMatchLineStatusTag status={row.lineStatus} />,
+      render: (_, row) => <BomReviewDisplayStatusTag row={row} />,
     },
     {
-      title: 'Actions',
+      title: 'Action',
       key: 'actions',
       width: MATCHING_RESULTS_COLUMN_WIDTHS.actions,
       render: (_, row) => <MatchActionsCell row={row} actions={actions} />,
@@ -106,56 +110,26 @@ function MatchActionsCell({
   row: BomMatchResult;
   actions: MatchRowActions;
 }) {
-  if (row.lineStatus === 'accepted' || row.lineStatus === 'skipped') {
-    return (
-      <BomTableRowActions
-        nowrap
-        maxVisible={2}
-        actions={[
-          {
-            key: 'change',
-            label: 'Choose',
-            onClick: () => actions.onChoose(row),
-          },
-        ]}
-      />
-    );
-  }
+  const label = summaryTableRowActionLabel(row);
+  if (!label) return null;
 
-  const overflow: BomTableRowAction[] = [];
-  let visible: BomTableRowAction[];
-
-  if (!row.topMatch) {
-    visible = [
-      { key: 'choose', label: 'Choose', onClick: () => actions.onChoose(row) },
-      { key: 'skip', label: 'Skip', onClick: () => actions.onSkip(row) },
-    ];
+  let action: BomTableRowAction;
+  if (row.lineStatus === 'skipped') {
+    action = { key: 'review', label, onClick: () => actions.onReview(row) };
+  } else if (!row.topMatch) {
+    action = { key: 'choose', label, onClick: () => actions.onChoose(row) };
   } else if (matchRequiresSkuSelection(row)) {
-    visible = [
-      { key: 'pick-variant', label: 'Pick variant', onClick: () => actions.onSelectSku(row) },
-      { key: 'skip', label: 'Skip', onClick: () => actions.onSkip(row) },
-    ];
-    overflow.push({
-      key: 'choose',
-      label: 'Choose',
-      onClick: () => actions.onChoose(row),
-    });
+    action = { key: 'select-sku', label, onClick: () => actions.onSelectSku(row) };
+  } else if (row.lineStatus === 'accepted') {
+    action = { key: 'change', label, onClick: () => actions.onChoose(row) };
   } else {
-    visible = [
-      {
-        key: 'confirm',
-        label: 'Confirm',
-        disabled: !isReadyToConfirmMatch(row),
-        onClick: () => actions.onConfirm(row),
-      },
-      { key: 'skip', label: 'Skip', onClick: () => actions.onSkip(row) },
-    ];
-    overflow.push({
-      key: 'choose',
-      label: 'Choose',
-      onClick: () => actions.onChoose(row),
-    });
+    action = {
+      key: 'confirm',
+      label,
+      disabled: !reviewCanConfirm(row),
+      onClick: () => actions.onConfirm(row),
+    };
   }
 
-  return <BomTableRowActions nowrap maxVisible={2} actions={[...visible, ...overflow]} />;
+  return <BomTableRowActions nowrap maxVisible={1} actions={[action]} />;
 }

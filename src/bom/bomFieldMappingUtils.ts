@@ -139,7 +139,7 @@ export function mappingConfidenceLabel(confidence: BomMappingConfidence): string
     case 'partial':
       return 'Some columns need review';
     case 'blocked':
-      return 'Mapping incomplete';
+      return 'Needs your review';
     default:
       return confidence;
   }

@@ -15,26 +15,27 @@ import type { BomItemConfidence } from '../data/types';
 import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
 import { readUploadFileName } from '../bomUploadFlowState';
 import { matchingStepStatusLabel } from '../bomUploadFlowStatus';
-import {
-  applyAcceptAllHighSkipRest,
-  bulkAcceptHighSkipRestMessage,
-  HIGH_MATCH_AUTO_ACCEPT_THRESHOLD,
-} from '../bomMatchingBulkActions';
+import { HIGH_MATCH_AUTO_ACCEPT_THRESHOLD } from '../bomMatchingBulkActions';
 import { isReadyToConfirmMatch } from '../bomMatchSkuUtils';
+import {
+  computeMatchingReviewSummary,
+  deriveReviewDisplayStatus,
+  type BomReviewDisplayStatus,
+} from '../bomMatchingReviewStatus';
 import { buildMatchingResultsColumns } from '../bomMatchingColumns';
-import { BomChoosePartDrawer } from '../components/BomChoosePartDrawer';
+import { BomChoosePartModal } from '../components/BomChoosePartModal';
 import { BomMatchDetailDrawer } from '../components/BomMatchDetailDrawer';
-import { BomSkuVariantDrawer } from '../components/BomSkuVariantDrawer';
+import { BomSkuVariantModal } from '../components/BomSkuVariantModal';
 import { BomUploadFlowStepChrome } from '../components/BomUploadFlowStepChrome';
 import { useBomChoosePartDrawer } from '../hooks/useBomChoosePartDrawer';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { normalizeParsedItemsForUpload } from '../data/bomImportFlowSeed';
 import { bomItemById, bomProjectById, bomProjectTitleById } from '../data/mockData';
-import { useBomCancelUpload } from '../hooks/useBomCancelUpload';
 import { useBomFinishImport } from '../hooks/useBomFinishImport';
 import { useBomMatchingData } from '../hooks/useBomMatchingData';
 import type { BomMatchResult } from '../data/types';
 import {
+  Alert,
   Button,
   Card,
   Flex,
@@ -48,6 +49,7 @@ import {
 } from '../../ui/antd';
 
 type ConfidenceFilter = 'all' | 'high' | 'medium' | 'low';
+type ReviewStatusFilter = 'all' | BomReviewDisplayStatus;
 
 function rowConfidence(row: BomMatchResult): 'high' | 'medium' | 'low' | 'none' {
   const p = row.topMatch?.matchConfidence ?? 0;
@@ -69,18 +71,12 @@ function aggregateMatchConfidence(results: BomMatchResult[]): BomItemConfidence 
   return 'medium';
 }
 
-/** Figma `5026:21422` — KPI stat strip above matching table. */
+/** Figma `5026:21422` — review summary strip above matching table. */
 function BomMatchingStatsStrip({
-  total,
-  accepted,
-  pending,
-  skipped,
+  summary,
   matchConfidence,
 }: {
-  total: number;
-  accepted: number;
-  pending: number;
-  skipped: number;
+  summary: ReturnType<typeof computeMatchingReviewSummary>;
   matchConfidence: BomItemConfidence;
 }) {
   const { token } = theme.useToken();
@@ -111,18 +107,24 @@ function BomMatchingStatsStrip({
   );
 
   return (
-    <Flex gap={token.margin} align="stretch" style={{ width: '100%' }}>
+    <Flex gap={token.margin} align="stretch" wrap="wrap" style={{ width: '100%' }}>
       <Flex align="center" style={cardShellStyle(bluePrimaryPrimitiveLight[6])}>
-        {statInner('Total items', total)}
+        {statInner('Total parts', summary.total)}
       </Flex>
       <Flex align="center" style={cardShellStyle(token.colorSuccessBorder)}>
-        {statInner('Accepted', accepted)}
+        {statInner('Confirmed', summary.confirmed)}
       </Flex>
-      <Flex align="center" style={cardShellStyle(bluePrimaryPrimitiveLight[2])}>
-        {statInner('Pending', pending)}
+      <Flex align="center" style={cardShellStyle(token.colorSuccessBorder)}>
+        {statInner('Chosen', summary.chosen)}
       </Flex>
       <Flex align="center" style={cardShellStyle(token.colorWarning)}>
-        {statInner('Skipped', skipped)}
+        {statInner('Skipped', summary.skipped)}
+      </Flex>
+      <Flex align="center" style={cardShellStyle(token.colorError)}>
+        {statInner('Unresolved', summary.unresolved)}
+      </Flex>
+      <Flex align="center" style={cardShellStyle(token.colorWarning)}>
+        {statInner('Needs SKU', summary.needsSku)}
       </Flex>
       <Flex align="center" style={{ ...cardShellStyle(bluePrimaryPrimitiveLight[2], 'none'), minWidth: 368 }}>
         <Flex align="center" justify="space-between" style={{ width: '100%', maxWidth: 326, height: 30 }}>
@@ -148,9 +150,9 @@ export function BomMatchingPage() {
   const projectTitle = bomProjectTitleById(bomProjectId) ?? 'New BOM project';
   const [page, setPage] = useState(1);
   const [confidenceFilter, setConfidenceFilter] = useState<ConfidenceFilter>('all');
-  const [skippedOnly, setSkippedOnly] = useState<boolean>(
-    Boolean((location.state as { focusSkipped?: boolean } | null)?.focusSkipped),
-  );
+  const [reviewStatusFilter, setReviewStatusFilter] = useState<ReviewStatusFilter>('all');
+  const [skippedOnly, setSkippedOnly] = useState(Boolean(uploadState.focusSkipped));
+  const showReviewCompleteBanner = Boolean(uploadState.guidedReviewComplete);
   const [skuRowId, setSkuRowId] = useState<string | null>(null);
   const [detailItemId, setDetailItemId] = useState<string | null>(null);
 
@@ -173,9 +175,14 @@ export function BomMatchingPage() {
     [matchResults],
   );
 
+  const reviewSummary = useMemo(() => computeMatchingReviewSummary(matchResults), [matchResults]);
+
   const filteredResults = useMemo(() => {
     return matchResults.filter((row) => {
       if (skippedOnly && row.lineStatus !== 'skipped') return false;
+      if (reviewStatusFilter !== 'all' && deriveReviewDisplayStatus(row) !== reviewStatusFilter) {
+        return false;
+      }
       const c = rowConfidence(row);
       if (confidenceFilter === 'all') return true;
       if (confidenceFilter === 'high') return c === 'high';
@@ -183,7 +190,7 @@ export function BomMatchingPage() {
       if (confidenceFilter === 'low') return c === 'low' || c === 'none';
       return true;
     });
-  }, [confidenceFilter, matchResults, skippedOnly]);
+  }, [confidenceFilter, matchResults, reviewStatusFilter, skippedOnly]);
 
   const pagedMatchResults = useMemo(() => {
     const start = (page - 1) * shellLayout.tablePageSizeDefault;
@@ -195,7 +202,6 @@ export function BomMatchingPage() {
   const matchingProgressStatus = matchingStepStatusLabel(stats);
   const parsingReviewRoute = `/bom/projects/${bomProjectId}/parsing-review`;
   const reviewRoute = `/bom/projects/${bomProjectId}/matching/review`;
-  const { confirmCancelUpload } = useBomCancelUpload(bomProjectId);
   const { confirmFinishImport } = useBomFinishImport({
     bomProjectId,
     uploadState,
@@ -222,14 +228,6 @@ export function BomMatchingPage() {
     [matchResults, persist],
   );
 
-  const handleSkip = useCallback(
-    (row: BomMatchResult) => {
-      persist(matchResults.map((r) => (r.itemId === row.itemId ? { ...r, lineStatus: 'skipped' } : r)));
-      message.info('Line skipped.');
-    },
-    [matchResults, persist],
-  );
-
   const handleChoose = useCallback(
     (row: BomMatchResult) => {
       openChoose(row.itemId);
@@ -240,6 +238,19 @@ export function BomMatchingPage() {
   const handleSelectSku = useCallback((row: BomMatchResult) => {
     setSkuRowId(row.itemId);
   }, []);
+
+  const handleReviewRow = useCallback(
+    (row: BomMatchResult) => {
+      persist(
+        matchResults.map((r) =>
+          r.itemId === row.itemId ? { ...r, lineStatus: 'pending' as const } : r,
+        ),
+      );
+      navigate(reviewRoute, { state: uploadState });
+      message.info('Returned to guided review for this part.');
+    },
+    [matchResults, navigate, persist, reviewRoute, uploadState],
+  );
 
   const skuMatchRow = useMemo(
     () => (skuRowId ? matchResults.find((r) => r.itemId === skuRowId) ?? null : null),
@@ -267,22 +278,12 @@ export function BomMatchingPage() {
     () =>
       buildMatchingResultsColumns((itemId) => rowNumbers.get(itemId), {
         onConfirm: handleConfirm,
-        onSkip: handleSkip,
         onChoose: handleChoose,
         onSelectSku: handleSelectSku,
+        onReview: handleReviewRow,
       }),
-    [handleChoose, handleConfirm, handleSelectSku, handleSkip, rowNumbers],
+    [handleChoose, handleConfirm, handleReviewRow, handleSelectSku, rowNumbers],
   );
-
-  function handleAcceptAllHighAndSkipRest() {
-    const { next, acceptedCount, skippedCount } = applyAcceptAllHighSkipRest(matchResults);
-    if (acceptedCount === 0 && skippedCount === 0) {
-      message.info('No pending lines to update.');
-      return;
-    }
-    persist(next);
-    message.success(bulkAcceptHighSkipRestMessage(acceptedCount, skippedCount));
-  }
 
   if (bomProjectId && bomProjectId !== 'new' && !projectMeta) {
     return (
@@ -313,19 +314,17 @@ export function BomMatchingPage() {
         stepsComplete={allLinesReviewed}
       />
       <BomPageHeader
-        title="All match results"
-        description={`Optional table view of every line for ${projectTitle}. Guided review is the recommended way to confirm matches and import.`}
+        title="Matching results summary"
+        description={`Summary of every imported line for ${projectTitle} after guided review. Confirm or fix any remaining lines, then save and import.`}
         actions={
           <Flex gap={token.marginXS} align="center" wrap="wrap">
             <Button
               size="large"
               icon={<UnorderedListOutlined />}
+              type={stats.pending > 0 ? 'primary' : 'default'}
               onClick={() => navigate(reviewRoute, { state: uploadState })}
             >
-              Guided review
-            </Button>
-            <Button size="large" onClick={() => confirmCancelUpload('match')}>
-              Cancel upload
+              Back to guided review
             </Button>
             <Button
               type="primary"
@@ -333,24 +332,41 @@ export function BomMatchingPage() {
               disabled={stats.pending > 0}
               title={
                 stats.pending > 0
-                  ? `${stats.pending} part${stats.pending === 1 ? '' : 's'} still pending in guided review`
+                  ? `Complete ${stats.pending} pending part${stats.pending === 1 ? '' : 's'} before importing.`
                   : undefined
               }
               onClick={confirmFinishImport}
             >
-              Finish review &amp; import
+              Save and import to BOM
             </Button>
           </Flex>
         }
       />
 
-      <BomMatchingStatsStrip
-        total={stats.total}
-        accepted={stats.accepted}
-        pending={stats.pending}
-        skipped={stats.skipped}
-        matchConfidence={matchConfidence}
-      />
+      {showReviewCompleteBanner ? (
+        <Alert
+          type="success"
+          showIcon
+          message="Guided part review complete"
+          description={`${reviewSummary.confirmed} confirmed · ${reviewSummary.chosen} chosen · ${reviewSummary.skipped} skipped · ${reviewSummary.unresolved} unresolved · ${reviewSummary.needsSku} need SKU. Scan the table below before you import.`}
+          action={
+            reviewSummary.skipped > 0 ? (
+              <Button
+                size="small"
+                onClick={() => {
+                  setSkippedOnly(true);
+                  setReviewStatusFilter('skipped');
+                  setPage(1);
+                }}
+              >
+                Review incomplete items
+              </Button>
+            ) : undefined
+          }
+        />
+      ) : null}
+
+      <BomMatchingStatsStrip summary={reviewSummary} matchConfidence={matchConfidence} />
 
       <Card styles={{ body: { padding: 0 } }}>
         <Flex
@@ -380,26 +396,37 @@ export function BomMatchingPage() {
                 { value: 'low', label: 'Low' },
               ]}
             />
-            <Button
-              type={skippedOnly ? 'primary' : 'default'}
-              ghost={skippedOnly}
-              disabled={skippedCount === 0 && !skippedOnly}
-              onClick={() => {
-                setSkippedOnly((v) => !v);
+            <Select<ReviewStatusFilter>
+              value={reviewStatusFilter}
+              onChange={(v) => {
+                setReviewStatusFilter(v);
                 setPage(1);
               }}
-            >
-              {skippedOnly ? 'Showing skipped' : `Review skipped (${skippedCount})`}
-            </Button>
+              style={{ width: 180 }}
+              options={[
+                { value: 'all', label: 'All review statuses' },
+                { value: 'confirmed', label: 'Confirmed' },
+                { value: 'chosen', label: 'Chosen' },
+                { value: 'skipped', label: 'Skipped' },
+                { value: 'unresolved', label: 'Unresolved' },
+                { value: 'needs-sku', label: 'Needs SKU' },
+                { value: 'ready-to-confirm', label: 'Ready to confirm' },
+              ]}
+            />
+            {skippedCount > 0 ? (
+              <Button
+                type={skippedOnly ? 'primary' : 'default'}
+                ghost={skippedOnly}
+                onClick={() => {
+                  setSkippedOnly((v) => !v);
+                  setReviewStatusFilter(skippedOnly ? 'all' : 'skipped');
+                  setPage(1);
+                }}
+              >
+                {skippedOnly ? 'Showing skipped' : `Skipped (${skippedCount})`}
+              </Button>
+            ) : null}
           </Flex>
-          <Button
-            type="primary"
-            ghost
-            disabled={stats.pending === 0}
-            onClick={handleAcceptAllHighAndSkipRest}
-          >
-            Accept all high matches and skip rest
-          </Button>
         </Flex>
         <Table<BomMatchResult>
           rowKey="itemId"
@@ -441,14 +468,14 @@ export function BomMatchingPage() {
         </Flex>
       </Card>
 
-      <BomChoosePartDrawer
+      <BomChoosePartModal
         open={chooseOpen}
         matchRow={chooseMatchRow}
         onClose={closeChoose}
         onSelectPart={handleSelectPart}
       />
 
-      <BomSkuVariantDrawer
+      <BomSkuVariantModal
         open={skuRowId !== null}
         matchRow={skuMatchRow}
         onClose={() => setSkuRowId(null)}
@@ -476,15 +503,6 @@ export function BomMatchingPage() {
               }
             : undefined
         }
-        onSkip={
-          detailMatchRow?.lineStatus === 'pending'
-            ? () => {
-                handleSkip(detailMatchRow);
-                setDetailItemId(null);
-              }
-            : undefined
-        }
-        chooseLabel="Choose"
       />
     </Space>
   );

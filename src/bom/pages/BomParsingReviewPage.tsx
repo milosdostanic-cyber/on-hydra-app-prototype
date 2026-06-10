@@ -1,3 +1,4 @@
+import { EyeOutlined } from '@ant-design/icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -10,10 +11,7 @@ import {
   bomMappingSummaryRoute,
   parsingReviewColumnProfile,
 } from '../bomFieldMappingUtils';
-import {
-  buildParsingReviewReadOnlyColumns,
-  parsingReviewRowStyle,
-} from '../bomParsingReviewColumns';
+import { buildParsingReviewReadOnlyColumns } from '../bomParsingReviewColumns';
 import {
   countParsingReviewWarnings,
   filterParsingReviewLowConfidenceRows,
@@ -33,13 +31,13 @@ import { useBomCancelUpload } from '../hooks/useBomCancelUpload';
 import { useBomImportSession } from '../hooks/useBomImportSession';
 import type { BomItem } from '../data/types';
 import {
-  Alert,
   Button,
   Card,
   Flex,
   Pagination,
   Space,
   Table,
+  Typography,
   message,
   theme,
 } from '../../ui/antd';
@@ -179,19 +177,6 @@ export function BomParsingReviewPage() {
       <Button size="large" onClick={() => confirmCancelUpload('review')}>
         Cancel upload
       </Button>
-      {lowConfidenceOnly ? (
-        <Button size="large" onClick={handleShowAllRows}>
-          Show all rows
-        </Button>
-      ) : (
-        <Button
-          size="large"
-          disabled={lowConfidenceCount === 0}
-          onClick={handleReviewLowConfidence}
-        >
-          Show lines that may not match well
-        </Button>
-      )}
       <Button type="primary" size="large" disabled={rows.length === 0} onClick={handleCommitParsingReview}>
         Continue with current data
       </Button>
@@ -221,7 +206,7 @@ export function BomParsingReviewPage() {
       <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
         <BomUploadFlowStepChrome
           backTo={mappingSummaryRoute}
-          backLabel="Back to column mapping"
+          backLabel="Back to column check"
           backState={uploadState}
           fileName={uploadFileName}
           currentStep={1}
@@ -259,7 +244,7 @@ export function BomParsingReviewPage() {
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <BomUploadFlowStepChrome
         backTo={mappingSummaryRoute}
-        backLabel="Back to column mapping"
+        backLabel="Back to column check"
         backState={uploadState}
         fileName={uploadFileName}
         currentStep={1}
@@ -268,32 +253,51 @@ export function BomParsingReviewPage() {
       />
       <BomPageHeader
         title="Parsed data review"
-        description="We show what we could parse from your file. Highlighted rows may not match well — fixing them is optional."
+        description="We show what we could parse from your file. You can add missing details on any row, but it is optional."
         actions={headerActions}
       />
 
       <BomParsingReviewQualityAlert rows={rows} profile={columnProfile} />
 
-      {lowConfidenceOnly ? (
-        <Alert
-          type="info"
-          showIcon
-          message={`Showing ${visibleRows.length} line${visibleRows.length === 1 ? '' : 's'} that may not match well`}
-          description="Use Add info to fill in missing details, or Show all rows when you are done."
-        />
-      ) : null}
-
       <div ref={tableRef}>
         <Card styles={{ body: { padding: 0 } }}>
+          <Flex
+            align="center"
+            justify="space-between"
+            gap={token.marginSM}
+            wrap="wrap"
+            style={{
+              paddingInline: token.paddingMD,
+              paddingBlock: token.paddingSM,
+              borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+              background: token.colorFillAlter,
+            }}
+          >
+            <Typography.Text type="secondary">
+              {lowConfidenceOnly
+                ? `Showing ${visibleRows.length} line${visibleRows.length === 1 ? '' : 's'} that may not match well`
+                : `${rows.length} line${rows.length === 1 ? '' : 's'} from your file`}
+            </Typography.Text>
+            {lowConfidenceOnly ? (
+              <Button icon={<EyeOutlined />} onClick={handleShowAllRows}>
+                Show all rows
+              </Button>
+            ) : (
+              <Button
+                disabled={lowConfidenceCount === 0}
+                icon={<EyeOutlined />}
+                onClick={handleReviewLowConfidence}
+              >
+                Show lines that may not match well
+              </Button>
+            )}
+          </Flex>
           <Table<BomItem>
             rowKey="id"
             columns={columns}
             dataSource={pagedParsedItems}
             pagination={false}
             scroll={{ x: 'max-content' }}
-            onRow={(record) => ({
-              style: parsingReviewRowStyle(record, token, columnProfile),
-            })}
             styles={{
               header: {
                 cell: {

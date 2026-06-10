@@ -1,4 +1,5 @@
-import type { BomItem, BomItemMatchStatus } from './data/types';
+import { getSkuVariantsForFigure } from './data/ascSkuVariants';
+import type { AscCatalogPart, BomItem, BomItemMatchStatus } from './data/types';
 
 /** Demo submittal PDF used when no figure-specific demo document is available. */
 export const BOM_DEMO_SUBMITTAL_PDF_URL =
@@ -15,6 +16,16 @@ const BOM_DEMO_SUBMITTAL_BY_FIGURE: Record<string, string> = {
   'CV-400-GR': 'https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf',
 };
 
+/** Demo catalog thumbnails keyed by figure family for guided matching review. */
+const BOM_DEMO_IMAGE_BY_FIGURE: Record<string, string> = {
+  FP7450: '/assets/catalog/featured-tiles/groove-group.png',
+  'ASC-SR-155-TH': '/assets/catalog/featured-tiles/sf-17-thumbnail.png',
+  'ASC-GV-600-FL': '/assets/catalog/figma-featured-parts/600-f.png',
+  'GV-600-FL': '/assets/catalog/figma-featured-parts/600-f.png',
+  'CV-400-GR': '/assets/catalog/figma-featured-parts/300-c.png',
+  'AHV-250-TH': '/assets/catalog/featured-tiles/angle-hose-valve.png',
+};
+
 /** Demo submittal document for a figure family (falls back to the generic dummy PDF). */
 /** Demo product page URL for verifying a figure family in the catalog. */
 export function demoProductUrlForFigure(figureNumber: string | undefined): string | undefined {
@@ -27,6 +38,29 @@ export function demoSubmittalUrlForFigure(figureNumber: string | undefined): str
   const key = figureNumber?.trim();
   if (key && BOM_DEMO_SUBMITTAL_BY_FIGURE[key]) return BOM_DEMO_SUBMITTAL_BY_FIGURE[key];
   return BOM_DEMO_SUBMITTAL_PDF_URL;
+}
+
+export function demoCatalogImageForFigure(figureNumber: string | undefined): string | undefined {
+  const key = figureNumber?.trim();
+  if (!key) return undefined;
+  return BOM_DEMO_IMAGE_BY_FIGURE[key];
+}
+
+export function demoCatalogImageForPart(part: AscCatalogPart): string | undefined {
+  if (part.imageUrl?.trim()) return part.imageUrl.trim();
+  return demoCatalogImageForFigure(part.figureNumber ?? part.partNumber);
+}
+
+/** Demo domestic/import label for ASC suggestion cards. */
+export function demoDomesticImportForPart(part: AscCatalogPart): 'Domestic' | 'Import' | undefined {
+  const figure = part.figureNumber ?? part.partNumber;
+  const variants = getSkuVariantsForFigure(figure);
+  if (variants.length > 0) {
+    const skuMatch = variants.find((variant) => variant.sku === part.partNumber);
+    if (skuMatch?.domesticImport) return skuMatch.domesticImport;
+    return variants[0].domesticImport;
+  }
+  return part.partNumber.endsWith('1') || part.partNumber.endsWith('3') ? 'Domestic' : 'Import';
 }
 
 export function workspaceRowReviewStatus(row: BomItem): BomItemMatchStatus {

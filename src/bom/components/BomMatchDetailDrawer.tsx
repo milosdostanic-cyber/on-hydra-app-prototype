@@ -2,6 +2,10 @@ import { FilePdfOutlined, PictureOutlined } from '@ant-design/icons';
 
 import { matchScoreBand } from '../data/bomImportFlowSeed';
 import {
+  reviewDetailPrimaryLabel,
+  reviewSecondaryCtaLabel,
+} from '../bomMatchingReviewCtas';
+import {
   isReadyToConfirmMatch,
   matchRequiresSkuSelection,
   resolveFigureNumber,
@@ -33,9 +37,7 @@ type BomMatchDetailDrawerProps = {
   onConfirm: () => void;
   onChoose: () => void;
   onSkip?: () => void;
-  onNext?: () => void;
   onPickVariant?: () => void;
-  chooseLabel?: string;
 };
 
 export function BomMatchDetailDrawer({
@@ -46,9 +48,7 @@ export function BomMatchDetailDrawer({
   onConfirm,
   onChoose,
   onSkip,
-  onNext,
   onPickVariant,
-  chooseLabel = 'Choose',
 }: BomMatchDetailDrawerProps) {
   const { token } = theme.useToken();
 
@@ -64,6 +64,8 @@ export function BomMatchDetailDrawer({
   const productUrl = demoProductUrlForFigure(figureRef);
   const selectedSku =
     matchRow.selectedVariantId && matchRow.matchLevel !== 'figure' ? top.partNumber : undefined;
+  const secondaryLabel = reviewSecondaryCtaLabel(matchRow);
+  const primaryLabel = reviewDetailPrimaryLabel(matchRow);
 
   function handleConfirm() {
     onConfirm();
@@ -92,29 +94,26 @@ export function BomMatchDetailDrawer({
       }}
       footer={
         <Flex justify="space-between" align="center" wrap="wrap" gap={token.marginSM}>
-          <Flex gap={token.marginXS} wrap="wrap">
-            {onSkip ? (
-              <Button size="large" onClick={() => { onClose(); onSkip(); }}>
-                Skip
-              </Button>
-            ) : null}
-            {onNext ? (
-              <Button size="large" onClick={() => { onClose(); onNext(); }}>
-                Next part
-              </Button>
-            ) : null}
-          </Flex>
-          <Flex gap={token.marginXS} wrap="wrap">
-            <Button size="large" onClick={handleChoose}>
-              {chooseLabel}
+          {onSkip ? (
+            <Button type="link" size="large" onClick={() => { onClose(); onSkip(); }}>
+              Skip for now
             </Button>
+          ) : (
+            <span />
+          )}
+          <Flex gap={token.marginXS} wrap="wrap" justify="flex-end">
+            {secondaryLabel ? (
+              <Button size="large" onClick={handleChoose}>
+                {secondaryLabel}
+              </Button>
+            ) : null}
             {needsSku && onPickVariant ? (
               <Button type="primary" size="large" onClick={() => { onClose(); onPickVariant(); }}>
-                Pick variant
+                {primaryLabel}
               </Button>
             ) : (
               <Button type="primary" size="large" disabled={!confirmReady} onClick={handleConfirm}>
-                Confirm match
+                {primaryLabel}
               </Button>
             )}
           </Flex>

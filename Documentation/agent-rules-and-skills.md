@@ -4,6 +4,8 @@ For each entry: **name**, **location**, **purpose**, **what it does**, **how to 
 
 In chat: `@` + name or file path.
 
+**Plain-language guide (non-technical):** [`skills-and-rules-catalog.md`](./skills-and-rules-catalog.md)
+
 ---
 
 # RULES
@@ -352,4 +354,4 @@ Audit and fix P0/P1. Allowed files: [from scope]
 
 ---
 
-*Update this file when adding a new rule or skill.*
+*Update this file when adding a new rule or skill. See also [`skills-and-rules-catalog.md`](./skills-and-rules-catalog.md) for the same catalog in plain English (2 paragraphs per entry).*

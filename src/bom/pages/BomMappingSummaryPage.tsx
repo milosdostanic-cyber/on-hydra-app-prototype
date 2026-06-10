@@ -22,7 +22,11 @@ import { BomUploadFlowStepChrome } from '../components/BomUploadFlowStepChrome';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { bomProjectById } from '../data/mockData';
 import { useBomCancelUpload } from '../hooks/useBomCancelUpload';
-import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
+import {
+  hydraBaseNormal,
+  hydraBaseStrong,
+  hydraTextStyleToReactCss,
+} from '../../theme/hydraTypography';
 import {
   Alert,
   Button,
@@ -43,32 +47,58 @@ function confidenceAlertCopy(
     if (duplicateCount > 0) {
       return {
         type: 'error',
-        message: 'We need you to fix the column mapping',
+        message: 'We need you to fix your column links',
         description:
-          'Two or more ASC fields point to the same BOM column. Open Review mapping to adjust duplicates before continuing.',
+          'Two or more fields point to the same spreadsheet column. Open Review columns to fix duplicates before continuing.',
       };
     }
     return {
       type: 'error',
       message: 'Required columns are missing',
       description:
-        'Part Number, Description, and Quantity must be mapped before we can parse your file. Open Review mapping to complete the required fields.',
+        'Part Number, Description, and Quantity must be linked before we can read your file. Open Review columns to complete the required fields.',
     };
   }
   if (confidence === 'partial') {
     return {
       type: 'warning',
-      message: `${mappedCount} of ${ASC_FIELD_MAPPING_TOTAL} fields matched from your column names`,
+      message: `${mappedCount} of ${ASC_FIELD_MAPPING_TOTAL} columns linked`,
       description:
-        'Some optional columns were not recognised by name. You can continue with the current mapping or open Review mapping to adjust.',
+        'Some optional columns were not recognised by name. Review them quickly, then continue when you are ready.',
     };
   }
   return {
     type: 'success',
-    message: `${mappedCount} of ${ASC_FIELD_MAPPING_TOTAL} fields matched from your column names`,
-    description:
-      'We matched these based on your column names — give them a quick look. Continue to review parsed rows, or open Review mapping to double-check.',
+    message: `${mappedCount} of ${ASC_FIELD_MAPPING_TOTAL} columns linked`,
+    description: '',
   };
+}
+
+function mappingSummaryPageDescription(
+  confidence: ReturnType<typeof evaluateMappingConfidence>,
+): string {
+  if (confidence === 'high') {
+    return 'We matched your columns to ASC fields automatically. If the links below look right, continue — otherwise use Review columns to adjust them.';
+  }
+  if (confidence === 'partial') {
+    return 'We matched some columns from your file to ASC fields. Review the links below before continuing.';
+  }
+  return 'Link the required columns from your file to ASC fields before you can continue.';
+}
+
+function HighConfidenceConfirmAlertDescription() {
+  const bodyStyle = hydraTextStyleToReactCss(hydraBaseNormal);
+  const emphasisStyle = hydraTextStyleToReactCss(hydraBaseStrong);
+
+  return (
+    <Typography.Paragraph style={{ ...bodyStyle, marginBottom: 0 }}>
+      Here&apos;s how we think your spreadsheet columns match our ASC fields. We linked these
+      automatically based on your column names.
+      <br />
+      If this looks right, <span style={emphasisStyle}>continue</span>. Otherwise, use{' '}
+      <span style={emphasisStyle}>Review columns</span> to adjust any links.
+    </Typography.Paragraph>
+  );
 }
 
 export function BomMappingSummaryPage() {
@@ -107,7 +137,7 @@ export function BomMappingSummaryPage() {
 
   function handleContinue() {
     if (!canContinue) {
-      message.warning('Complete required mapping before continuing.');
+      message.warning('Complete required column links before continuing.');
       return;
     }
     const nextState: BomUploadFlowLocationState = {
@@ -148,15 +178,15 @@ export function BomMappingSummaryPage() {
       />
 
       <BomPageHeader
-        title="Smart mapping summary"
-        description="We mapped your uploaded BOM columns to ASC fields automatically. Give it a quick look, then continue."
+        title="Review your columns"
+        description={mappingSummaryPageDescription(confidence)}
         actions={
           <Flex gap={token.marginXS} align="center" wrap="wrap">
             <Button size="large" onClick={() => confirmCancelUpload('map')}>
               Cancel upload
             </Button>
             <Button size="large" onClick={handleReviewMapping}>
-              Review mapping
+              Review columns
             </Button>
             <Button type="primary" size="large" disabled={!canContinue} onClick={handleContinue}>
               Continue
@@ -169,7 +199,13 @@ export function BomMappingSummaryPage() {
         type={alertCopy.type}
         showIcon
         message={alertCopy.message}
-        description={alertCopy.description}
+        description={
+          confidence === 'high' ? (
+            <HighConfidenceConfirmAlertDescription />
+          ) : (
+            alertCopy.description
+          )
+        }
       />
 
       {isConcatenatedUpload ? (
@@ -177,7 +213,7 @@ export function BomMappingSummaryPage() {
           type="warning"
           showIcon
           message="Single combined column detected"
-          description="Your file appears to have one column with mixed part information. We mapped it to Description by default. Match accuracy may be lower until you add more detail or refine mapping."
+          description="Your file appears to have one column with mixed part information. We matched it to Description by default. Match accuracy may be lower until you add more detail or use Review columns to adjust."
         />
       ) : null}
 
@@ -190,9 +226,13 @@ export function BomMappingSummaryPage() {
               strong
               style={{ ...hydraTextStyleToReactCss(hydraBaseStrong), color: token.colorTextSecondary }}
             >
-              Mapped columns
+              Linked columns
             </Typography.Text>
-            <Tag color={confidenceTagColor}>{mappingConfidenceLabel(confidence)}</Tag>
+            {confidence === 'high' ? (
+              <Tag color={confidenceTagColor}>Matched with high confidence</Tag>
+            ) : (
+              <Tag color={confidenceTagColor}>{mappingConfidenceLabel(confidence)}</Tag>
+            )}
           </>
         }
       />

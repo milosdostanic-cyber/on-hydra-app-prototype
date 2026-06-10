@@ -13,7 +13,7 @@ import {
   parseSizeInches,
   readOnlyTableText,
 } from './bomImportTableCells';
-import { Button, Typography, theme } from '../ui/antd';
+import { Button, Typography } from '../ui/antd';
 import type { TableColumnsType } from '../ui/antd';
 
 export const PARSING_REVIEW_COLUMN_WIDTHS = {
@@ -74,16 +74,11 @@ function actionsColumn(
   return {
     title: '',
     key: 'actions',
-    width: PARSING_REVIEW_COLUMN_WIDTHS.actions,
+    width: 112,
     render: (_, record) => {
       const needsInfo = isParsingReviewLowConfidenceRow(record, profile);
       return (
-        <Button
-          type="link"
-          size="small"
-          style={{ padding: 0, height: 'auto' }}
-          onClick={() => onEditRow(record)}
-        >
+        <Button type={needsInfo ? 'primary' : 'default'} size="small" onClick={() => onEditRow(record)}>
           {needsInfo ? 'Add info' : 'Edit'}
         </Button>
       );
@@ -238,21 +233,8 @@ export function buildParsingReviewReadOnlyColumns(
   ];
 }
 
-/** Row background when parsed data is thin — informational warning, not a blocker. */
-export function parsingReviewRowStyle(
-  row: BomItem,
-  token: ReturnType<typeof theme.useToken>['token'],
-  profile?: BomParsingReviewColumnProfile,
-): CSSProperties | undefined {
-  if (profile && isParsingReviewLowConfidenceRow(row, profile)) {
-    return { background: token.colorWarningBg };
-  }
-  if (row.confidence === 'low') {
-    return { background: token.colorWarningBg };
-  }
-  if (row.confidence === 'medium') {
-    return { background: token.colorFillAlter };
-  }
+/** Row background — uniform rows; quality is shown in the Quality column and Add info action. */
+export function parsingReviewRowStyle(): CSSProperties | undefined {
   return undefined;
 }
 

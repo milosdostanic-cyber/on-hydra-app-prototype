@@ -1,8 +1,8 @@
 import type { BomItem, BomMatchResult, BomMatchScoreBand } from './types';
 import { mockAscParts } from './mockData';
 
-export const PARSING_REVIEW_MIN_ROWS = 15;
-export const PARSING_REVIEW_MAX_ROWS = 40;
+export const PARSING_REVIEW_MIN_ROWS = 6;
+export const PARSING_REVIEW_MAX_ROWS = 10;
 
 type ParsingReviewTemplate = Omit<BomItem, 'id' | 'rowNumber'>;
 
@@ -170,23 +170,32 @@ export function parsedItemsNeedExpansion(parsedItems: BomItem[] | undefined): bo
   return !parsedItems?.length || parsedItems.length < PARSING_REVIEW_MIN_ROWS;
 }
 
-/** Ensure upload sessions always carry 15–40 parsed lines (upgrade legacy 5-row demos). */
+/** Ensure upload sessions carry 6–10 parsed lines (upgrade undersized legacy demos). */
 export function normalizeParsedItemsForUpload(
   parsedItems: BomItem[] | undefined,
   fileName?: string,
 ): BomItem[] {
-  if (!parsedItemsNeedExpansion(parsedItems)) {
-    return parsedItems!;
+  const source = !parsedItemsNeedExpansion(parsedItems)
+    ? parsedItems!
+    : createParsingReviewRows(fileName);
+
+  if (source.length <= PARSING_REVIEW_MAX_ROWS) {
+    return source;
   }
-  return createParsingReviewRows(fileName);
+
+  return source.slice(0, PARSING_REVIEW_MAX_ROWS).map((row, index) => ({
+    ...row,
+    rowNumber: index + 1,
+    id: `item-${index + 1}`,
+  }));
 }
 
 const PARSING_REVIEW_TEMPLATE_COUNT = PARSING_REVIEW_TEMPLATES.length;
 
-/** Deterministic row count (15–40) from upload file name for prototype demos. */
+/** Deterministic row count (6–10) from upload file name for prototype demos. */
 export function resolveParsingReviewRowCount(fileName?: string): number {
   if (!fileName?.trim()) {
-    return 24;
+    return 8;
   }
   let hash = 0;
   const normalized = fileName.trim().toLowerCase();
@@ -197,7 +206,7 @@ export function resolveParsingReviewRowCount(fileName?: string): number {
   return PARSING_REVIEW_MIN_ROWS + (Math.abs(hash) % span);
 }
 
-/** Simulated parse output after upload — always between 15 and 40 lines per file. */
+/** Simulated parse output after upload — always between 6 and 10 lines per file. */
 export function createParsingReviewRows(fileName?: string): BomItem[] {
   const count = resolveParsingReviewRowCount(fileName);
   return Array.from({ length: count }, (_, index) => {

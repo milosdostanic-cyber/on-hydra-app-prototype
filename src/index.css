@@ -21,3 +21,14 @@ body {
   --ant-btn-color-hover: var(--hydra-brand-primary-hover);
   --ant-btn-color-active: var(--hydra-brand-primary-active);
 }
+
+/*
+ * Alert headline — Figma `Large/Strong` (16/24, semibold) + `colorText`.
+ * Vars set in `applyHydraAlertTitleCssVars` (`brandColors.ts`).
+ */
+.ant-alert .ant-alert-title {
+  font-size: var(--hydra-alert-title-font-size);
+  line-height: var(--hydra-alert-title-line-height);
+  font-weight: var(--hydra-alert-title-font-weight);
+  color: var(--hydra-alert-title-color);
+}

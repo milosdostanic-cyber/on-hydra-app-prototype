@@ -3,9 +3,9 @@ import { Flex, Steps, Tag, Typography, theme } from '../../ui/antd';
 
 /** Figma Progress Bar `5102:15683` — shown on every BOM file upload flow step. */
 export const BOM_UPLOAD_FLOW_STEPS = [
-  { title: 'Map Columns' },
-  { title: 'Review Parsed Rows' },
-  { title: 'Match parts' },
+  { title: 'Link your columns' },
+  { title: 'Check your file' },
+  { title: 'Match your parts' },
 ] as const;
 
 export type BomUploadFlowStepIndex = 0 | 1 | 2;

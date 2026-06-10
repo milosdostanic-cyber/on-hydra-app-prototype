@@ -325,9 +325,90 @@ Some Figma frames place UI **between the breadcrumb bar and the page `Content` p
 - [ ] Screenshot: no white strip between breadcrumb and chrome
 - [ ] Screenshot: gap chrome → back button matches Figma `Content` `paddingTop`
 
+## BOM Flow V3 — screen order (left → right)
+
+### Canonical flow board (arranged on canvas)
+
+**Frame:** `5233:58434` — **BOM Import Flow (left → right)**  
+[Open in Figma](https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5233-58434)
+
+Ten child frames are **renamed and positioned left → right** to match repo navigation (`BomSiteProjectsPage` → upload modal → `mapping-summary` → `field-mapping` → `parsing-review`). Spacing: **1842px** frame width + **40px** gap.
+
+| # | Figma frame name | Node | Repo |
+|---|------------------|------|------|
+| 01 | **BOM Projects Hub** | `5233:26479` | `BomSiteProjectsPage.tsx` |
+| 02 | **BOM Projects Hub · Bulk Selection** | `5233:25838` | Hub branch (2 selected) |
+| 03 | **BOM Projects Hub · Delete Confirmation** | `5233:25152` | Hub branch (bulk delete modal) |
+| 04 | **Upload Destination Modal** | `5233:24431` | Upload modal on hub |
+| 05 | **Smart Mapping Summary** | `5233:23928` | `BomMappingSummaryPage.tsx` |
+| 06 | **Advanced Field Mapping** | `5233:22752` | `BomFieldMappingPage.tsx` |
+| 07 | **Advanced Field Mapping (layout duplicate)** | `5233:23340` | Same as 06 — dedupe when syncing |
+| 08 | **Parsing Review · List** | `5233:21874` | `BomParsingReviewPage.tsx` |
+| 09 | **Parsing Review · Row Detail (high confidence)** | `5233:20836` | Parsing row expanded state |
+| 10 | **Parsing Review · Row Detail (needs attention)** | `5233:19782` | Parsing row expanded state |
+
+**Not on this board yet (add frames to the right when designed):** guided match review (`BomProgressiveMatchingPage`), matching table, workspace, export — see legacy section `5022:23065` below.
+
+---
+
+### Legacy section inventory (`5022:23065`)
+
+**Section:** `5022:23065` — **BOM Flow V3 Milos** in [BOM-SPEC — ASC-Connected v2](https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5022-23065) (`Ht3Up5MlRAKjK7eCuAy05L`).
+
+**Authority:** User journey order below follows **repo routes + navigation** (`BomRoutes.tsx`, `bomImportProgressState.ts`, `BomSiteProjectsPage` → `mapping-summary` → …). Figma canvas **x** positions in this older section are **not** flow order (variants sit on a second row). Prefer **`5233:58434`** for import-flow layout; use this table for matching/workspace/export frames.
+
+### Primary happy path (user journey)
+
+| # | Clear screen name | Repo route | Repo page | Figma frame (node) | Upload step |
+|---|-------------------|------------|-----------|-------------------|-------------|
+| 1 | **BOM Projects Hub** | `/bom/site/:constructionProjectId` | `BomSiteProjectsPage.tsx` | `01 - BOM Flow / Landing / Project List` — `5022:23179` | Entry |
+| 2 | **Upload destination modal** | (modal on hub) | `BomSiteProjectsPage.tsx` | `Modal` (new vs append) — `5022:24346`, `5022:24347` | Entry |
+| 3 | **Smart mapping summary** | `/bom/projects/:id/mapping-summary` | `BomMappingSummaryPage.tsx` | *(no dedicated V3 frame — repo-only today)* | Step 1 — Map columns |
+| 4 | **Advanced field mapping** *(optional)* | `/bom/projects/:id/field-mapping` | `BomFieldMappingPage.tsx` | **Rename:** `02 - BOM Flow / Ingestion / Field Mapping` — `5022:23824` *(currently blank name `" "`)*; alt audited frame `5054:22784` | Step 1 — Map columns |
+| 5 | **Parsing review** | `/bom/projects/:id/parsing-review` | `BomParsingReviewPage.tsx` | `03 - BOM Flow / Ingestion / Parsing Review / …` — pick variant by mapped column: `5022:23894` (DESCRIPTION), `5022:24023` (SKU only), `5022:24115` / `5039:100223` (UPC, no DESCRIPTION) | Step 2 — Review parsed rows |
+| 6 | **Guided match review** *(default after parsing)* | `/bom/projects/:id/matching/review` | `BomProgressiveMatchingPage.tsx` | *(no standalone V3 frame — progressive card UI is repo-led; reuse matching chrome from `5026:21396` / progress bar `5102:15683`)* | Step 3 — Match parts |
+| 7 | **Matching results table** | `/bom/projects/:id/matching/table` | `BomMatchingPage.tsx` | `12 - BOM Flow / Matching Results` — `5026:21396` | Step 3 — Match parts |
+| 8 | **Matching results — all reviewed** | same route, complete state | `BomMatchingPage.tsx` | `12 - BOM Flow / Matching Results - Confirmed` — `5026:21993` | Step 3 complete |
+| 9 | **Workspace dashboard** | `/bom/projects/:id/workspace` | `BomWorkspacePage.tsx` | `07 - BOM Flow / Workspace / Main \| …` — `5080:17098` (1 pending upload), `5079:52504` (3 pending, collapsed), `5080:16558` (3 pending, expanded) | Post-import hub |
+| 10 | **Export & routes preview** | `/bom/projects/:id/export` | `BomExportPage.tsx` | `13 - BOM Flow / Export / Routes & Preview` — `5022:23736` | Exit |
+
+**3-step progress bar labels** (all import screens 3–8): `Map Columns` → `Review Parsed Rows` → `Match parts` (`BomUploadProgressBar`, Figma `5102:15683`).
+
+### Branch & overlay screens (same flow, not main spine)
+
+| Clear screen name | Repo route / component | Figma frame (node) | When |
+|-------------------|------------------------|-------------------|------|
+| **Bulk row selection** | `BomMatchingPage.tsx` (table mode) | `05 - BOM Flow / Matching / Bulk Selection` — `5022:23273` | Multi-select in matching table |
+| **Delete match confirmation** | modal in matching | `06 - BOM Flow / Matching / Delete Confirmation` — `5022:23382` | Delete row action |
+| **Replacement / choose part picker** | `/matching/items/:itemId/replacement`, `BomChoosePartModal`, `BomSuggestedPartsModal` | `11 - BOM Flow / Recommendation / Replacement Picker` — `5026:90934` | Manual swap / no match → Choose |
+| **SKU variant picker** | `BomSkuVariantModal` | *(modal — no full-page V3 frame)* | Multiple SKUs for one figure |
+| **Match detail drawer** | `BomMatchDetailDrawer` | *(drawer — no full-page V3 frame)* | View match metadata |
+| **Review & approve feedback** | workspace modal | `07c - BOM Flow / Workspace / Modal / Review & Approve Feedback` — `5022:23823` | Workspace approval feedback |
+
+### Legacy / mislabeled Figma frames (ignore for flow order)
+
+| Frame | Node | Note |
+|-------|------|------|
+| `04 - BOM Flow / Matching / Default` | `5022:23066` | Canvas shows **hub upload cards**, not matching — mislabeled; do **not** treat as step 6 |
+| `4859:171*` duplicates | various | Older V3 copies — prefer `5022:` / `5026:` / `5080:` IDs |
+
+### Recommended section layout (left → right on canvas)
+
+Arrange **main spine** frames in this order when syncing or commenting the section (sub-rows: parsing variants stack under step 5; workspace variants stack under step 9):
+
+```
+01 Hub → Upload modals → [Smart mapping — gap] → 02 Field mapping → 03 Parsing variants →
+06 Guided review (repo) / 12 Matching table → 12 Confirmed → 11 Replacement picker →
+07 Workspace variants → 13 Export
+```
+
+**Rename rule:** Frame `5022:23824` must be labeled **`02 - BOM Flow / Ingestion / Field Mapping`** (not blank `" "`).
+
+---
+
 ## Multi-step BOM upload flow (back + progress chrome)
 
-When implementing or syncing **BOM file upload** steps (field mapping → parsing review → matching), **every step screen** must use the same top chrome order and position:
+When implementing or syncing **BOM file upload** steps (smart mapping → field mapping → parsing review → matching), **every step screen** must use the same top chrome order and position:
 
 1. **Back button** — same shell row as other BOM pages (`PageBackButton` pattern: default button, left icon). Step 1 → back to BOM hub; step 2 → back to field mapping; step 3 → back to parsing review. Preserve `location.state` on back navigation.
 2. **Progress Bar** — Figma **`5102:15683`**, always **directly below** the back button (never above title-only content without back). **Gap back → stepper:** `token.marginLG` (24px) — owned inside `BomUploadFlowStepChrome`, not parent `Space` children.

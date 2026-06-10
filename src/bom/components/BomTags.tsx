@@ -1,15 +1,22 @@
 import type { BadgeProps } from 'antd';
 
+import {
+  deriveReviewDisplayStatus,
+  reviewDisplayStatusLabel,
+  type BomReviewDisplayStatus,
+} from '../bomMatchingReviewStatus';
 import type {
   BomItemConfidence,
   BomItemMatchStatus,
   BomMatchLineStatus,
+  BomMatchResult,
   BomProjectStatus,
   AscSubstitutionRisk,
 } from '../data/types';
 import { HydraTag, type HydraTagTone } from '../../ui/HydraTag';
 import { Badge } from '../../ui/antd';
 import { CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { hydraBaseNormal, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type AntBadgeStatus = NonNullable<BadgeProps['status']>;
 
@@ -57,22 +64,35 @@ export function BomConfidenceTag({
   confidence,
   showIcon = false,
   percent,
+  size = 'sm',
 }: {
   confidence: BomItemConfidence;
   showIcon?: boolean;
-  /** When set, renders e.g. "High 94%" in a single tag. */
+  /** When set, renders e.g. "High · 94%" in a single tag. */
   percent?: number;
+  /** `base` uses 14px (Figma Base/Normal); default `sm` keeps compact table tags. */
+  size?: 'sm' | 'base';
 }) {
   const tone: HydraTagTone = confidence === 'high' ? 'success' : confidence === 'medium' ? 'warning' : 'error';
   const label =
     percent != null && percent > 0
-      ? `${confidenceLabel[confidence]} ${percent}%`
+      ? `${confidenceLabel[confidence]} · ${percent}%`
       : confidenceLabel[confidence];
   return (
-    <HydraTag tone={tone} icon={showIcon ? confidenceIcon(confidence) : undefined}>
+    <HydraTag
+      tone={tone}
+      icon={showIcon ? confidenceIcon(confidence) : undefined}
+      style={size === 'base' ? hydraTextStyleToReactCss(hydraBaseNormal) : undefined}
+    >
       {label}
     </HydraTag>
   );
+}
+
+export function BomMatchLevelTag({ level }: { level: 'figure' | 'sku' | 'none' }) {
+  if (level === 'none') return null;
+  const label = level === 'figure' ? 'Product family' : 'Exact product';
+  return <HydraTag tone={level === 'figure' ? 'processing' : 'success'}>{label}</HydraTag>;
 }
 
 const matchStatusLabel: Record<BomItemMatchStatus, string> = {
@@ -118,4 +138,22 @@ function matchLineBadgeStatus(status: BomMatchLineStatus): AntBadgeStatus {
 
 export function BomMatchLineStatusTag({ status }: { status: BomMatchLineStatus }) {
   return <BomStatusBadge status={matchLineBadgeStatus(status)} text={lineStatusLabel[status]} />;
+}
+
+function reviewDisplayBadgeStatus(status: BomReviewDisplayStatus): AntBadgeStatus {
+  if (status === 'confirmed' || status === 'chosen') return 'success';
+  if (status === 'skipped') return 'warning';
+  if (status === 'unresolved' || status === 'needs-sku') return 'error';
+  return 'processing';
+}
+
+/** Derived guided-review status for matching summary table rows. */
+export function BomReviewDisplayStatusTag({ row }: { row: BomMatchResult }) {
+  const status = deriveReviewDisplayStatus(row);
+  return (
+    <BomStatusBadge
+      status={reviewDisplayBadgeStatus(status)}
+      text={reviewDisplayStatusLabel[status]}
+    />
+  );
 }

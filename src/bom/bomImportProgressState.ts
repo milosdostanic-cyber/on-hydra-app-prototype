@@ -25,11 +25,11 @@ export function routeForImportStep(bomProjectId: string, step: BomImportStep): s
 export function stepLabel(step: BomImportStep): string {
   switch (step) {
     case 'map':
-      return 'Map columns';
+      return 'Link your columns';
     case 'review':
-      return 'Review parsed rows';
+      return 'Check your file';
     case 'match':
-      return 'Match parts';
+      return 'Match your parts';
     case 'done':
       return 'Complete';
     default:

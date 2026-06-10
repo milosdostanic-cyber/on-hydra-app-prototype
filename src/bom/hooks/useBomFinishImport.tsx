@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useActiveProject, useBomHubPath } from '../../context/ActiveProjectContext';
 import { useBomWorkspace } from '../../context/BomWorkspaceContext';
 import { buildImportedWorkspaceRows, resolveImportBomProjectId } from '../bomFinishImport';
+import { computeMatchingReviewSummary } from '../bomMatchingReviewStatus';
 import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
 import type { BomImportSession } from '../bomImportProgressState';
 import { useBomImportFlow } from '../context/BomImportFlowContext';
@@ -95,29 +96,58 @@ export function useBomFinishImport({
   ]);
 
   const confirmFinishImport = useCallback(() => {
-    if (stats.pending > 0) {
+    const reviewSummary = computeMatchingReviewSummary(matchResults);
+
+    if (reviewSummary.pending > 0) {
+      const detailParts: string[] = [];
+      if (reviewSummary.unresolved > 0) {
+        detailParts.push(
+          `${reviewSummary.unresolved} unresolved (no part selected)`,
+        );
+      }
+      if (reviewSummary.needsSku > 0) {
+        detailParts.push(`${reviewSummary.needsSku} need a SKU variant`);
+      }
+      if (reviewSummary.readyToConfirm > 0) {
+        detailParts.push(`${reviewSummary.readyToConfirm} ready to confirm`);
+      }
+      const detail =
+        detailParts.length > 0 ? ` ${detailParts.join(' · ')}.` : '';
       message.warning(
-        `Review ${stats.pending} pending part${stats.pending === 1 ? '' : 's'} before importing.`,
+        `Review ${reviewSummary.pending} incomplete part${reviewSummary.pending === 1 ? '' : 's'} before importing.${detail}`,
       );
       return;
     }
 
-    const confirmedCount = stats.accepted + stats.manual;
+    const confirmedCount = reviewSummary.confirmed + reviewSummary.chosen;
     if (confirmedCount === 0) {
       message.warning('Confirm at least one match before importing.');
       return;
     }
 
-    if (stats.skipped > 0) {
+    const incompleteCount = reviewSummary.skipped;
+    if (incompleteCount > 0) {
       modal.confirm({
-        title: `Import without ${stats.skipped} skipped line${stats.skipped === 1 ? '' : 's'}?`,
+        title: `${incompleteCount} part${incompleteCount === 1 ? '' : 's'} not ready to import`,
         icon: <ExclamationCircleOutlined style={{ color: token.colorWarning }} />,
-        content: `Skipped lines will not be added to your BOM. Import ${confirmedCount} confirmed match${confirmedCount === 1 ? '' : 'es'} now, or review skipped lines first.`,
-        okText: 'Import to BOM',
-        cancelText: onReviewSkipped ? 'Review skipped first' : 'Go back',
+        content: (
+          <>
+            {incompleteCount} skipped line{incompleteCount === 1 ? '' : 's'} will not be added to your BOM and may not
+            translate correctly. {confirmedCount} confirmed match{confirmedCount === 1 ? '' : 'es'} can be imported if
+            you continue. You can go back and complete the review first.
+          </>
+        ),
+        okText: 'Stay and review',
+        cancelText: 'Continue anyway',
         centered: true,
-        onOk: runImport,
-        onCancel: onReviewSkipped,
+        onOk: () => {
+          onReviewSkipped?.();
+        },
+        cancelButtonProps: {
+          onClick: () => {
+            runImport();
+          },
+        },
       });
       return;
     }
@@ -131,13 +161,10 @@ export function useBomFinishImport({
       onOk: runImport,
     });
   }, [
+    matchResults,
     modal,
     onReviewSkipped,
     runImport,
-    stats.accepted,
-    stats.manual,
-    stats.pending,
-    stats.skipped,
     token.colorWarning,
   ]);
 

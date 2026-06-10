@@ -15,6 +15,10 @@ export type BomUploadFlowLocationState = {
   /** Step-back target for field mapping chrome (upload entry — not hub when resuming from workspace). */
   uploadFlowBackTo?: string;
   uploadFlowBackLabel?: string;
+  /** Set when guided review finishes — table view can show a summary banner. */
+  guidedReviewComplete?: boolean;
+  /** Table view: filter to skipped lines on arrival. */
+  focusSkipped?: boolean;
 };
 
 export function resolveUploadDestination(
