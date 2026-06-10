@@ -8,3 +8,4 @@ dist
 Documents/Bom/*.pdf
 Documents/Bom/*.zip
 .claude/
+.vercel
