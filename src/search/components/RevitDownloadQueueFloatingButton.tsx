@@ -32,7 +32,7 @@ export function RevitDownloadQueueFloatingButton() {
           shape="round"
           icon={<DownloadOutlined />}
           onClick={() => {
-            message.success(`${queueCount} Revit file${queueCount === 1 ? '' : 's'} ready to download (stub).`);
+            message.success(`${queueCount} file${queueCount === 1 ? '' : 's'} ready to download (stub).`);
             clearQueue();
           }}
         >

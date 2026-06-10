@@ -1,4 +1,4 @@
-import { DownloadOutlined, PictureOutlined } from '@ant-design/icons';
+import { PictureOutlined } from '@ant-design/icons';
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
@@ -12,8 +12,6 @@ import {
 } from '../theme/hydraTypography';
 import { PageBackButton } from '../shell/PageBackButton';
 import {
-  App,
-  Button,
   Card,
   Col,
   Empty,
@@ -27,6 +25,7 @@ import {
 } from '../ui/antd';
 
 import { UnifiedPartActions } from './UnifiedPartActions';
+import { PartVariantActions } from './components/PartVariantActions';
 import { partDetailContentFor, type PartVariationRow } from './partDetailDemoData';
 import { unifiedPartByKey } from './unifiedSearchData';
 
@@ -53,7 +52,6 @@ function SpecField({ label, value }: { label: string; value: string }) {
 
 export function UnifiedPartDetailPage() {
   const { token } = theme.useToken();
-  const { message } = App.useApp();
   const { partId } = useParams<{ partId: string }>();
 
   const part = partId ? unifiedPartByKey(partId) : undefined;
@@ -113,18 +111,12 @@ export function UnifiedPartDetailPage() {
       width: 140,
     },
     {
-      title: 'Download',
-      key: 'download',
-      width: 96,
+      title: 'Add to',
+      key: 'actions',
+      width: 112,
       align: 'center',
-      render: (_, row) => (
-        <Button
-          type="text"
-          icon={<DownloadOutlined />}
-          aria-label={`Download ${row.sku}`}
-          onClick={() => message.info(`Download queued for ${row.sku} (stub).`)}
-        />
-      ),
+      render: (_, row) =>
+        part ? <PartVariantActions partKey={part.key} variation={row} /> : null,
     },
   ];
 

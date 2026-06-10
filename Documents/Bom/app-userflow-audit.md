@@ -172,11 +172,17 @@ Discovery is open (view metadata with no project). Primary CTA is a single **Add
 ```
 /search/parts/:partId
   ├─► [Add to ▼]
-  │     ├─► BOM → (project gate if needed) → AddToBomModal → pick/create BOM → workspace
+  │     ├─► BOM → (no project) project picker → BOM in same modal → workspace
+  │     │         (has project) AddToBomModal → pick/create BOM → workspace
   │     ├─► Add Revit File → (project gate if needed) → Revit download queue + floating cart
   │     ├─► Quick Download Revit File → (project gate if needed) → immediate .rfa stub download
-  │     └─► Submittal Manager → (project gate if needed) → AddToPackageModal → package confirm
-  │           └─► Gate (ProjectRequiredModal): select or create project → pending action resumes
+  │     └─► Submittal Manager → (no project) project picker → package in same modal → add part
+  │               (has project) AddToPackageModal → pick/create package → add part
+  │           └─► Gate (ProjectRequiredModal): Project → BOM or Submittal Package (no sub-projects)
+  │     Variations table (per variant row — no Submittal Manager):
+  │       ├─► BOM → (no project) project picker → BOM → workspace
+  │       │         (has project) AddToBomModal → pick/create BOM → workspace
+  │       └─► Download Drawing Files → (project gate if needed) → file type picker → download queue
   └─► Back → /dashboard (part detail hero)
 ```
 

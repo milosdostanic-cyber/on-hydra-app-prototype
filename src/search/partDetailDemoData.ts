@@ -4,7 +4,10 @@ export type PartVariationRow = {
   key: string;
   name: string;
   sku: string;
+  /** Display label in the table, e.g. "PDF, DWG". */
   fileTypes: string;
+  /** Selectable drawing file types for the download queue picker. */
+  drawingFileTypes: string[];
 };
 
 export type PartSpecField = {
@@ -27,9 +30,27 @@ export function partDetailContentFor(part: CatalogPartRow): PartDetailContent {
     description: `${part.description}. This prototype entry summarizes typical catalog metadata for ASC engineered solutions parts — dimensions, ratings, and compatible systems vary by configuration.`,
     regulatory: 'Listing and approval references are shown for submittal use. Confirm the governing code and local AHJ requirements before specification.',
     variations: [
-      { key: `${part.key}-v1`, name: part.description, sku: part.sku, fileTypes: 'PDF, DWG' },
-      { key: `${part.key}-v2`, name: `${part.description} — alternate finish`, sku: `${baseSku}-ALT`, fileTypes: 'PDF' },
-      { key: `${part.key}-v3`, name: `${part.description} — metric sizing`, sku: `${baseSku}-M`, fileTypes: 'PDF, DWG, STEP' },
+      {
+        key: `${part.key}-v1`,
+        name: part.description,
+        sku: part.sku,
+        fileTypes: 'PDF, DWG',
+        drawingFileTypes: ['PDF', 'DWG'],
+      },
+      {
+        key: `${part.key}-v2`,
+        name: `${part.description} — alternate finish`,
+        sku: `${baseSku}-ALT`,
+        fileTypes: 'PDF',
+        drawingFileTypes: ['PDF'],
+      },
+      {
+        key: `${part.key}-v3`,
+        name: `${part.description} — metric sizing`,
+        sku: `${baseSku}-M`,
+        fileTypes: 'PDF, DWG, STEP',
+        drawingFileTypes: ['PDF', 'DWG', 'STEP'],
+      },
     ],
     specifications: [
       { key: 'manufacturer', label: 'Manufacturer', value: 'ASC Engineered Solutions' },
