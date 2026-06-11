@@ -37,17 +37,6 @@ export function SubmittalDestinationFields({
 
   return (
     <>
-      {packages.length > 0 && (
-        <Radio.Group
-          value={mode}
-          onChange={(e) => onModeChange(e.target.value as SubmittalDestinationMode)}
-          style={{ marginBottom: token.margin }}
-        >
-          <Radio.Button value="existing">Existing package</Radio.Button>
-          <Radio.Button value="new">New package</Radio.Button>
-        </Radio.Group>
-      )}
-
       {mode === 'existing' && packages.length > 0 ? (
         <Radio.Group
           value={selectedId}

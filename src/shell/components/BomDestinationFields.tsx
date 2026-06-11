@@ -37,17 +37,6 @@ export function BomDestinationFields({
 
   return (
     <>
-      {boms.length > 0 && (
-        <Radio.Group
-          value={mode}
-          onChange={(e) => onModeChange(e.target.value as BomDestinationMode)}
-          style={{ marginBottom: token.margin }}
-        >
-          <Radio.Button value="existing">Existing BOM</Radio.Button>
-          <Radio.Button value="new">New BOM</Radio.Button>
-        </Radio.Group>
-      )}
-
       {mode === 'existing' && boms.length > 0 ? (
         <Radio.Group
           value={selectedId}
