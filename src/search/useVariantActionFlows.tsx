@@ -1,21 +1,19 @@
-import { DownOutlined } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { AddToBomModal } from '../../bom/components/AddToBomModal';
-import { useActiveProject } from '../../context/ActiveProjectContext';
+import { AddToBomModal } from '../bom/components/AddToBomModal';
+import { useActiveProject } from '../context/ActiveProjectContext';
 import {
   ProjectRequiredModal,
   type ProjectResolution,
-} from '../../shell/ProjectRequiredModal';
-import { App, Button, Dropdown } from '../../ui/antd';
-import type { MenuProps } from '../../ui/antd';
-import type { PartVariationRow } from '../partDetailDemoData';
-import { useRevitDownloadQueue } from '../revitDownloadQueue';
-import { DrawingFileTypesModal } from './DrawingFileTypesModal';
+} from '../shell/ProjectRequiredModal';
+import { App } from '../ui/antd';
+import type { PartVariationRow } from './partDetailDemoData';
+import { useRevitDownloadQueue } from './revitDownloadQueue';
+import { DrawingFileTypesModal } from './components/DrawingFileTypesModal';
 
 /** Add `'spec'` when Add to Spec ships. */
-type VariantActionId = 'bom' | 'drawing';
+export type VariantActionId = 'bom' | 'drawing';
 
 const VARIANT_ACTION_OPTIONS: { key: VariantActionId; label: string; gateDescription: string }[] = [
   {
@@ -41,37 +39,34 @@ function isBomResolution(
   return 'bomProjectId' in result && 'bomProjectName' in result;
 }
 
-type Props = {
-  partKey: string;
-  variation: PartVariationRow;
-};
-
-/**
- * Per-row “Add to” dropdown for part variant files (sizes & variations table).
- * BOM + drawing queue only — Submittal Manager is figure-level, not variant-level.
- */
-export function PartVariantActions({ partKey, variation }: Props) {
+/** Variant-level BOM + drawing queue orchestration (no Submittal at variant level). */
+export function useVariantActionFlows(partKey: string, variation: PartVariationRow | null) {
   const { message } = App.useApp();
   const navigate = useNavigate();
   const { projectId, projects, setProjectId } = useActiveProject();
   const { addDrawingFilesToQueue } = useRevitDownloadQueue();
 
   const [pending, setPending] = useState<VariantActionId | null>(null);
+  const [pendingFileType, setPendingFileType] = useState<string | null>(null);
   const [gateOpen, setGateOpen] = useState(false);
   const [addBomProjectId, setAddBomProjectId] = useState<string | null>(null);
   const [drawingModalOpen, setDrawingModalOpen] = useState(false);
   const [drawingProjectId, setDrawingProjectId] = useState<string | null>(null);
 
   const partPayload = useMemo(
-    () => ({
-      partKey: variation.key,
-      sku: variation.sku,
-      displayName: `${variation.sku} — ${variation.name}`,
-    }),
+    () =>
+      variation
+        ? {
+            partKey: variation.key,
+            sku: variation.sku,
+            displayName: `${variation.sku} — ${variation.name}`,
+          }
+        : null,
     [variation],
   );
 
   const finishBomAdd = (bomProjectId: string, bomProjectName: string) => {
+    if (!variation) return;
     message.success(`${variation.sku} added to “${bomProjectName}”.`);
     navigate(`/bom/projects/${bomProjectId}/workspace`);
   };
@@ -82,6 +77,7 @@ export function PartVariantActions({ partKey, variation }: Props) {
   };
 
   const queueDrawingFiles = (pid: string, fileTypes: string[]) => {
+    if (!variation || fileTypes.length === 0) return;
     addDrawingFilesToQueue({
       projectId: pid,
       partKey,
@@ -97,7 +93,19 @@ export function PartVariantActions({ partKey, variation }: Props) {
     setDrawingProjectId(null);
   };
 
+  const queueSingleFileType = (fileType: string) => {
+    if (!variation) return;
+    const pid = projectId;
+    if (!pid) {
+      setPendingFileType(fileType);
+      setGateOpen(true);
+      return;
+    }
+    queueDrawingFiles(pid, [fileType]);
+  };
+
   const execute = (id: VariantActionId, pid: string) => {
+    if (!variation) return;
     switch (id) {
       case 'bom':
         setAddBomProjectId(pid);
@@ -114,6 +122,7 @@ export function PartVariantActions({ partKey, variation }: Props) {
   };
 
   const requestAction = (id: VariantActionId) => {
+    if (!variation) return;
     if (projectId) {
       execute(id, projectId);
     } else {
@@ -125,6 +134,14 @@ export function PartVariantActions({ partKey, variation }: Props) {
   const handleResolved = (result: ProjectResolution) => {
     setProjectId(result.projectId);
     setGateOpen(false);
+
+    if (pendingFileType) {
+      const fileType = pendingFileType;
+      setPendingFileType(null);
+      queueDrawingFiles(result.projectId, [fileType]);
+      return;
+    }
+
     const resume = pending;
     setPending(null);
     if (!resume) return;
@@ -150,36 +167,35 @@ export function PartVariantActions({ partKey, variation }: Props) {
 
   const pendingDef = pending ? VARIANT_ACTION_OPTIONS.find((o) => o.key === pending) : undefined;
 
-  const menuItems: MenuProps['items'] = VARIANT_ACTION_OPTIONS.map((opt) => ({
-    key: opt.key,
-    label: opt.label,
-    onClick: () => requestAction(opt.key),
-  }));
+  const gateActionLabel = pendingFileType
+    ? `Add ${pendingFileType} to Downloads`
+    : pending
+      ? GATE_LABELS[pending]
+      : 'Continue';
 
-  return (
+  const modals = (
     <>
-      <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-        <Button type="primary" size="small">
-          Add to <DownOutlined />
-        </Button>
-      </Dropdown>
-
       <ProjectRequiredModal
         open={gateOpen}
-        actionLabel={pending ? GATE_LABELS[pending] : 'Continue'}
-        actionDescription={pendingDef?.gateDescription}
+        actionLabel={gateActionLabel}
+        actionDescription={
+          pendingFileType
+            ? 'Drawing downloads are scoped to a project. Pick a project to queue this file.'
+            : pendingDef?.gateDescription
+        }
         destinationRequirement={pending === 'bom' ? 'bom' : undefined}
         onResolved={handleResolved}
         onCancel={() => {
           setGateOpen(false);
           setPending(null);
+          setPendingFileType(null);
         }}
       />
 
       <AddToBomModal
         open={addBomProjectId !== null}
         projectId={addBomProjectId ?? ''}
-        part={addBomProjectId ? partPayload : null}
+        part={addBomProjectId && partPayload ? partPayload : null}
         onAdded={handleAddedToBom}
         onCancel={() => setAddBomProjectId(null)}
       />
@@ -195,4 +211,20 @@ export function PartVariantActions({ partKey, variation }: Props) {
       />
     </>
   );
+
+  const pillActions = useMemo(
+    () =>
+      VARIANT_ACTION_OPTIONS.map(({ key, label }) => ({
+        id: key,
+        label: key === 'bom' ? `Add to ${label}` : label,
+      })),
+    [],
+  );
+
+  return {
+    requestAction,
+    queueSingleFileType,
+    modals,
+    pillActions,
+  };
 }

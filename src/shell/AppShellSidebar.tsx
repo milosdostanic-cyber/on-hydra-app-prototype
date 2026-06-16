@@ -7,7 +7,7 @@ import {
   LeftOutlined,
   RightOutlined,
   ReadOutlined,
-  SolutionOutlined,
+  SearchOutlined,
   UnorderedListOutlined,
 } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
@@ -29,7 +29,7 @@ import { getLastScopedProjectId } from './lastProjectScope';
 const { Sider } = Layout;
 
 function primarySideKey(pathname: string): string {
-  if (pathname.startsWith('/projects/reframing-proposal')) return 'reframing';
+  if (pathname.startsWith('/search')) return 'part-search';
   if (pathname.startsWith('/catalog')) return 'catalog';
   if (pathname.startsWith('/bom')) return 'bom';
   if (pathname.startsWith('/dashboard')) return 'dash';
@@ -55,17 +55,14 @@ export function AppShellSidebar() {
   const primaryMenuItems: MenuProps['items'] = useMemo(
     () => [
       { key: 'dash', icon: <HomeOutlined />, label: 'Homepage' },
+      { key: 'part-search', icon: <SearchOutlined />, label: 'Part Search' },
       { key: 'seis', icon: <CalculatorOutlined />, label: 'SeisBrace' },
       { key: 'spec', icon: <FileTextOutlined />, label: 'Spec' },
       { key: 'submittal', icon: <InboxOutlined />, label: 'Submittal' },
       { key: 'catalog', icon: <GlobalOutlined />, label: 'Catalog' },
       { key: 'bom', icon: <UnorderedListOutlined />, label: 'BOM' },
-      { key: 'content', icon: <ReadOutlined />, label: 'Content' },
+      { key: 'content', icon: <ReadOutlined />, label: 'Download Center' },
     ],
-    [],
-  );
-  const bottomMenuItems: MenuProps['items'] = useMemo(
-    () => [{ key: 'reframing', icon: <SolutionOutlined />, label: 'Project Reframing Proposal' }],
     [],
   );
 
@@ -75,19 +72,18 @@ export function AppShellSidebar() {
     const pid = getLastScopedProjectId();
     const projectScoped = key === 'seis' || key === 'spec' || key === 'submittal' || key === 'content';
     if (projectScoped && !pid) {
-      // No project scoped yet — send the user home to pick or create one first.
       navigate('/dashboard');
       return;
     }
     const routes: Record<string, string> = {
       dash: '/dashboard',
+      'part-search': '/search/results?q=all',
       seis: `/projects/${pid}/seis-brace`,
       spec: `/projects/${pid}/sales-brace`,
       submittal: `/projects/${pid}/submittal`,
       catalog: '/catalog',
       bom: '/bom',
       content: `/projects/${pid}/content`,
-      reframing: '/projects/reframing-proposal',
     };
     const path = routes[key];
     if (path) navigate(path);
@@ -140,19 +136,6 @@ export function AppShellSidebar() {
             mode="inline"
             selectedKeys={selectedMenuKeys}
             items={primaryMenuItems}
-            onClick={onMenuClick}
-            style={{ borderInlineEnd: 'none', background: 'transparent' }}
-            styles={{
-              item: { borderRadius: hydraMenuItemBorderRadius },
-            }}
-          />
-        </div>
-        <div style={{ flexShrink: 0, paddingBlock: token.paddingXXS }}>
-          <Menu
-            theme="dark"
-            mode="inline"
-            selectedKeys={selectedMenuKeys}
-            items={bottomMenuItems}
             onClick={onMenuClick}
             style={{ borderInlineEnd: 'none', background: 'transparent' }}
             styles={{

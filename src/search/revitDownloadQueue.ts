@@ -10,15 +10,27 @@ export type DownloadQueueItem = {
   partKey: string;
   sku: string;
   fileName: string;
-  /** Drawing queue entries only. */
   fileType?: string;
   variationKey?: string;
+};
+
+export type DownloadHistoryEntry = {
+  id: string;
+  kind: DownloadQueueItemKind;
+  projectId: string;
+  partKey: string;
+  sku: string;
+  fileName: string;
+  fileType?: string;
+  variationKey?: string;
+  queuedAt: string;
 };
 
 /** @deprecated Use {@link DownloadQueueItem}. */
 export type RevitDownloadQueueItem = DownloadQueueItem;
 
 const STORAGE_KEY = 'hydra-revit-download-queue';
+const HISTORY_STORAGE_KEY = 'hydra-download-history';
 
 function readQueue(): DownloadQueueItem[] {
   if (typeof sessionStorage === 'undefined') return [];
@@ -36,9 +48,29 @@ function readQueue(): DownloadQueueItem[] {
   }
 }
 
+function readHistory(): DownloadHistoryEntry[] {
+  if (typeof sessionStorage === 'undefined') return [];
+  try {
+    const raw = sessionStorage.getItem(HISTORY_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as DownloadHistoryEntry[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 function writeQueue(items: DownloadQueueItem[]) {
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  } catch {
+    /* ignore */
+  }
+}
+
+function writeHistory(items: DownloadHistoryEntry[]) {
+  try {
+    sessionStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(items));
   } catch {
     /* ignore */
   }
@@ -49,44 +81,82 @@ function drawingFileName(sku: string, fileType: string): string {
 }
 
 let queueCache = readQueue();
-const listeners = new Set<() => void>();
+let historyCache = readHistory();
+const queueListeners = new Set<() => void>();
+const historyListeners = new Set<() => void>();
 
-function emit() {
-  listeners.forEach((l) => l());
+function emitQueue() {
+  queueListeners.forEach((l) => l());
+}
+
+function emitHistory() {
+  historyListeners.forEach((l) => l());
+}
+
+function appendHistory(entries: Omit<DownloadHistoryEntry, 'queuedAt'>[]) {
+  if (entries.length === 0) return;
+  const stamped = entries.map((e) => ({ ...e, queuedAt: new Date().toISOString() }));
+  historyCache = [...stamped, ...historyCache];
+  writeHistory(historyCache);
+  emitHistory();
 }
 
 function setQueue(updater: (prev: DownloadQueueItem[]) => DownloadQueueItem[]) {
   queueCache = updater(queueCache);
   writeQueue(queueCache);
-  emit();
+  emitQueue();
 }
 
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
+function subscribeQueue(listener: () => void) {
+  queueListeners.add(listener);
+  return () => queueListeners.delete(listener);
 }
 
-function getSnapshot() {
+function subscribeHistory(listener: () => void) {
+  historyListeners.add(listener);
+  return () => historyListeners.delete(listener);
+}
+
+function getQueueSnapshot() {
   return queueCache;
 }
 
-function getServerSnapshot() {
+function getHistorySnapshot() {
+  return historyCache;
+}
+
+function getQueueServerSnapshot() {
+  return [];
+}
+
+function getHistoryServerSnapshot() {
   return [];
 }
 
 /** Module-level session queue — same external-store pattern as SubmittalPackagesContext cart slice. */
 export function useRevitDownloadQueue() {
-  const items = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const items = useSyncExternalStore(subscribeQueue, getQueueSnapshot, getQueueServerSnapshot);
 
   const queueCount = items.length;
 
   const addToQueue = useCallback(
     (input: { projectId: string; partKey: string; sku: string }) => {
       const fileName = `${input.sku}.rfa`;
+      const id = `rfa-${Date.now()}`;
       setQueue((prev) => [
         ...prev,
         {
-          id: `rfa-${Date.now()}`,
+          id,
+          kind: 'revit',
+          projectId: input.projectId,
+          partKey: input.partKey,
+          sku: input.sku,
+          fileName,
+        },
+      ]);
+      appendHistory([
+        {
+          id,
           kind: 'revit',
           projectId: input.projectId,
           partKey: input.partKey,
@@ -108,19 +178,29 @@ export function useRevitDownloadQueue() {
     }) => {
       if (input.fileTypes.length === 0) return;
       const stamp = Date.now();
-      setQueue((prev) => [
-        ...prev,
-        ...input.fileTypes.map((fileType, index) => ({
-          id: `draw-${stamp}-${index}`,
-          kind: 'drawing' as const,
-          projectId: input.projectId,
-          partKey: input.partKey,
-          variationKey: input.variationKey,
-          sku: input.sku,
+      const queueItems: DownloadQueueItem[] = input.fileTypes.map((fileType, index) => ({
+        id: `draw-${stamp}-${index}`,
+        kind: 'drawing' as const,
+        projectId: input.projectId,
+        partKey: input.partKey,
+        variationKey: input.variationKey,
+        sku: input.sku,
+        fileType,
+        fileName: drawingFileName(input.sku, fileType),
+      }));
+      setQueue((prev) => [...prev, ...queueItems]);
+      appendHistory(
+        queueItems.map(({ id, kind, projectId, partKey, sku, fileName, fileType, variationKey }) => ({
+          id,
+          kind,
+          projectId,
+          partKey,
+          sku,
+          fileName,
           fileType,
-          fileName: drawingFileName(input.sku, fileType),
+          variationKey,
         })),
-      ]);
+      );
     },
     [],
   );
@@ -130,4 +210,15 @@ export function useRevitDownloadQueue() {
   }, []);
 
   return { items, queueCount, addToQueue, addDrawingFilesToQueue, clearQueue };
+}
+
+export function useDownloadHistory() {
+  const history = useSyncExternalStore(subscribeHistory, getHistorySnapshot, getHistoryServerSnapshot);
+
+  const historyForProject = useCallback(
+    (projectId: string) => history.filter((h) => h.projectId === projectId),
+    [history],
+  );
+
+  return { history, historyForProject };
 }

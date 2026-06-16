@@ -1,13 +1,16 @@
 import { FilePdfOutlined, FolderOpenOutlined, UploadOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { useDownloadHistory } from '../search/revitDownloadQueue';
 import { PageBackButton } from './PageBackButton';
 import { projectTitleById } from './projectSeed';
 import {
   Button,
   Card,
   Col,
+  Empty,
   Flex,
+  List,
   Row,
   Space,
   Typography,
@@ -22,7 +25,7 @@ export function SalesBraceModule() {
       <PageBackButton to={`/projects/${projectId}/content`}>Back to project workspace</PageBackButton>
       <Typography.Paragraph style={{ margin: 0, color: token.colorTextSecondary }}>
         Sales brace (stub): this level will show design names and brace visuals — a different layout than
-        Submittal / Content, by product design.
+        Submittal / Download Center, by product design.
       </Typography.Paragraph>
     </Space>
   );
@@ -33,16 +36,45 @@ export function ContentModule() {
   const { projectId = '' } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const title = projectTitleById(projectId) ?? 'Project';
+  const { historyForProject } = useDownloadHistory();
+  const projectHistory = historyForProject(projectId);
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to="/dashboard">Back to home</PageBackButton>
       <Typography.Title level={3} style={{ margin: 0 }}>
-        {title}
+        Download Center
       </Typography.Title>
       <Typography.Text type="secondary">
-        Client workspace · ID {projectId}
+        {title} · Content downloads require project context before queuing.
       </Typography.Text>
+
+      <Card title="Download history" size="small">
+        {projectHistory.length === 0 ? (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description="No downloads queued yet for this project. Add files from part detail or search."
+          />
+        ) : (
+          <List
+            size="small"
+            dataSource={projectHistory.slice(0, 20)}
+            renderItem={(item) => (
+              <List.Item>
+                <Flex vertical gap={2} style={{ minWidth: 0 }}>
+                  <Typography.Text strong ellipsis>
+                    {item.fileName}
+                  </Typography.Text>
+                  <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+                    {item.kind === 'revit' ? 'Revit' : 'Drawing'} · SKU {item.sku}
+                    {item.variationKey ? ` · variant ${item.variationKey}` : ''}
+                  </Typography.Text>
+                </Flex>
+              </List.Item>
+            )}
+          />
+        )}
+      </Card>
 
       <Row gutter={[token.marginMD, token.marginMD]}>
         <Col xs={24} md={8}>
@@ -79,20 +111,12 @@ export function ContentModule() {
         </Col>
       </Row>
 
-      <Card title="Recent activity" size="small">
-        <Space orientation="vertical" size={token.marginSM}>
-          <Typography.Text>BOM &quot;Mechanical Piping&quot; — 85% matched</Typography.Text>
-          <Typography.Text type="secondary">Submittal Rev 2 — exported 2h ago</Typography.Text>
-          <Typography.Text type="secondary">SeisBrace layout — draft saved</Typography.Text>
-        </Space>
-      </Card>
-
       <Card title="Quick actions" size="small">
         <Flex gap={token.marginSM} wrap="wrap">
           <Button icon={<UploadOutlined />} onClick={() => navigate('/bom')}>
             Upload BOM
           </Button>
-          <Button onClick={() => navigate('/catalog')}>Browse catalog</Button>
+          <Button onClick={() => navigate('/search/results?q=all')}>Part Search</Button>
           <Button icon={<FolderOpenOutlined />} onClick={() => navigate(`/projects/${projectId}/submittal`)}>
             New submittal
           </Button>

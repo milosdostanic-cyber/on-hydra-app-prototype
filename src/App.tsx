@@ -8,7 +8,6 @@ import {
   ContentModule,
   SalesBraceModule,
 } from './shell/ProjectModuleStubs';
-import { ProjectReframingProposalPage } from './shell/ProjectReframingProposalPage';
 import { BomRoutes } from './bom/BomRoutes';
 import { HomeHubPage } from './shell/HomeHubPage';
 import { ProjectWorkspaceLayout } from './shell/ProjectWorkspaceLayout';
@@ -51,7 +50,6 @@ export function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<HomeHubPage />} />
         <Route path="/projects" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/projects/reframing-proposal" element={<ProjectReframingProposalPage />} />
         <Route path="/search" element={<Navigate to="/search/results?q=all" replace />} />
         <Route path="/search/results" element={<UnifiedSearchResultsPage />} />
         <Route path="/search/parts/:partId" element={<UnifiedPartDetailPage />} />

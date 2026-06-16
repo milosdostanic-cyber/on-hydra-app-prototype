@@ -1,6 +1,6 @@
-import { PictureOutlined } from '@ant-design/icons';
-import { useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { ExportOutlined, LinkOutlined, PictureOutlined } from '@ant-design/icons';
+import { useEffect, useMemo, useState } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 import {
   hydraBaseNormal,
@@ -12,22 +12,24 @@ import {
 } from '../theme/hydraTypography';
 import { PageBackButton } from '../shell/PageBackButton';
 import {
+  Button,
   Card,
   Col,
   Empty,
   Flex,
   Row,
   Space,
-  Table,
   Typography,
   theme,
-  type TableColumnsType,
 } from '../ui/antd';
 
-import { UnifiedPartActions } from './UnifiedPartActions';
-import { PartVariantActions } from './components/PartVariantActions';
-import { partDetailContentFor, type PartVariationRow } from './partDetailDemoData';
+import { ActionsPanel } from './components/ActionsPanel';
+import { VariantSelectSection } from './components/VariantSelectSection';
+import { partDetailContentFor, variationByKey } from './partDetailDemoData';
 import { unifiedPartByKey } from './unifiedSearchData';
+
+/** Fixed width for the image + actions column (aligned edges). */
+const PART_DETAIL_LEFT_COLUMN_WIDTH = 280;
 
 function SpecField({ label, value }: { label: string; value: string }) {
   const { token } = theme.useToken();
@@ -53,197 +55,232 @@ function SpecField({ label, value }: { label: string; value: string }) {
 export function UnifiedPartDetailPage() {
   const { token } = theme.useToken();
   const { partId } = useParams<{ partId: string }>();
+  const [searchParams] = useSearchParams();
+  const deepLinkVariant = searchParams.get('variant');
 
   const part = partId ? unifiedPartByKey(partId) : undefined;
   const detail = useMemo(() => (part ? partDetailContentFor(part) : null), [part]);
-  const sku = part?.sku ?? partId ?? '—';
-  const partTitle = part?.description ?? `Part ${sku}`;
+  const figureNumber = part?.sku ?? partId ?? '—';
+
+  const [selectedVariantKey, setSelectedVariantKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (deepLinkVariant && detail?.variations.some((v) => v.key === deepLinkVariant)) {
+      setSelectedVariantKey(deepLinkVariant);
+    }
+  }, [deepLinkVariant, detail]);
+
+  const selectedVariation = useMemo(
+    () => variationByKey(detail, selectedVariantKey),
+    [detail, selectedVariantKey],
+  );
 
   const cardShellStyle = {
     background: token.colorBgContainer,
     borderRadius: token.borderRadiusLG,
     border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
     boxShadow: token.boxShadowTertiary,
-    overflow: 'hidden' as const,
   };
 
-  const cardTitleStyle = {
+  const leftColumnStyle = {
+    width: PART_DETAIL_LEFT_COLUMN_WIDTH,
+    maxWidth: '100%',
+    flexShrink: 0,
+  };
+
+  const sectionTitleStyle = {
     margin: 0,
     ...hydraTextStyleToReactCss(hydraTitleHeading4),
+    color: token.colorTextHeading,
   };
 
-  const variationColumns: TableColumnsType<PartVariationRow> = [
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-      render: (name: string) => (
-        <Flex align="center" gap={token.marginSM} style={{ minWidth: 0 }}>
-          <Flex
-            align="center"
-            justify="center"
-            style={{
-              flexShrink: 0,
-              width: token.controlHeightLG,
-              height: token.controlHeightLG,
-              borderRadius: token.borderRadius,
-              border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-              background: token.colorFillAlter,
-              color: token.colorTextQuaternary,
-            }}
-          >
-            <PictureOutlined aria-hidden />
-          </Flex>
-          <Typography.Text ellipsis={{ tooltip: name }}>{name}</Typography.Text>
-        </Flex>
-      ),
-    },
-    {
-      title: 'SKU',
-      dataIndex: 'sku',
-      key: 'sku',
-      width: 120,
-    },
-    {
-      title: 'File types',
-      dataIndex: 'fileTypes',
-      key: 'fileTypes',
-      width: 140,
-    },
-    {
-      title: 'Add to',
-      key: 'actions',
-      width: 112,
-      align: 'center',
-      render: (_, row) =>
-        part ? <PartVariantActions partKey={part.key} variation={row} /> : null,
-    },
-  ];
+  const actionsTitleStyle = {
+    ...sectionTitleStyle,
+    color: token.colorTextSecondary,
+  };
+
+  const actionPayload = part
+    ? {
+        partKey: part.key,
+        sku: part.sku,
+        displayName: `${part.sku} — ${part.description}`,
+        figureNumber: part.sku,
+      }
+    : null;
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to="/dashboard">Back to home</PageBackButton>
 
-      {/* Header: title stack + actions (left) · product image (right) */}
-      <Flex align="flex-start" justify="space-between" gap={token.marginLG} wrap="wrap">
-        <Flex vertical gap={token.marginSM} style={{ flex: '1 1 320px', minWidth: 0 }}>
-          <Typography.Title level={2} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading2) }}>
-            {partTitle}
-          </Typography.Title>
-          <Typography.Text strong style={hydraTextStyleToReactCss(hydraSmallStrong)}>
-            {sku}
-          </Typography.Text>
-          {part ? <UnifiedPartActions part={part} /> : null}
-        </Flex>
-
-        <Card
-          styles={{ body: { padding: token.padding } }}
-          style={{
-            ...cardShellStyle,
-            flex: '0 0 auto',
-            width: 280,
-            maxWidth: '100%',
-          }}
-        >
-          <Flex
-            align="center"
-            justify="center"
-            style={{
-              width: '100%',
-              aspectRatio: '1',
-              borderRadius: token.borderRadius,
-              background: token.colorFillAlter,
-              color: token.colorTextQuaternary,
-            }}
-          >
-            <Space orientation="vertical" align="center" size={token.marginXS}>
-              <PictureOutlined style={{ fontSize: token.fontSizeHeading2 }} />
-              <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-                Product image
-              </Typography.Text>
-            </Space>
-          </Flex>
-        </Card>
-      </Flex>
-
       {!part ? (
         <Empty description="This part is not in the demo catalog. Try another result from search." />
-      ) : detail ? (
+      ) : detail && actionPayload ? (
         <>
-          {/* Product description */}
-          <Card
-            title={<Typography.Text style={cardTitleStyle}>Product description</Typography.Text>}
-            styles={{ header: { borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}` } }}
-            style={cardShellStyle}
-          >
-            <Typography.Paragraph style={{ marginBottom: token.marginLG, ...hydraTextStyleToReactCss(hydraBaseNormal) }}>
-              {detail.description}
-            </Typography.Paragraph>
-            <Typography.Text strong style={{ display: 'block', marginBottom: token.marginXS, ...hydraTextStyleToReactCss(hydraSmallStrong) }}>
-              Regulatory
-            </Typography.Text>
-            <Typography.Paragraph style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}>
-              {detail.regulatory}
-            </Typography.Paragraph>
-          </Card>
-
-          {/* Sizes & variations table */}
-          <Card
-            title={<Typography.Text style={cardTitleStyle}>Available sizes &amp; variations</Typography.Text>}
-            styles={{
-              header: { borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}` },
-              body: { padding: 0 },
-            }}
-            style={cardShellStyle}
-          >
-            <Typography.Paragraph
-              type="secondary"
-              style={{
-                margin: 0,
-                padding: `${token.paddingSM}px ${token.paddingLG}px`,
-                borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-                ...hydraTextStyleToReactCss(hydraSmallNormal),
-              }}
-            >
-              Download cut sheets and CAD for each listed configuration.
-            </Typography.Paragraph>
-            <Table<PartVariationRow>
-              rowKey="key"
-              size="middle"
-              columns={variationColumns}
-              dataSource={detail.variations}
-              pagination={false}
-              styles={{
-                header: {
-                  cell: {
+          <Flex align="flex-start" gap={token.marginLG} wrap="wrap">
+            {/* Fixed left column: image + actions share one width */}
+            <Flex vertical gap={token.marginMD} style={leftColumnStyle}>
+              <Card
+                styles={{ body: { padding: token.padding } }}
+                style={{ ...cardShellStyle, width: '100%' }}
+              >
+                <Flex
+                  align="center"
+                  justify="center"
+                  style={{
+                    width: '100%',
+                    aspectRatio: '1',
+                    borderRadius: token.borderRadius,
                     background: token.colorFillAlter,
-                    borderBottomColor: token.colorBorderSecondary,
-                    fontWeight: token.fontWeightStrong,
-                  },
-                },
-                body: { cell: { borderBottomColor: token.colorBorderSecondary } },
-              }}
-            />
-          </Card>
+                    color: token.colorTextQuaternary,
+                  }}
+                >
+                  <Space orientation="vertical" align="center" size={token.marginXS}>
+                    <PictureOutlined style={{ fontSize: token.fontSizeHeading2 }} />
+                    <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
+                      Product image
+                    </Typography.Text>
+                  </Space>
+                </Flex>
+              </Card>
 
-          {/* Technical specifications grid */}
-          <Card
-            title={
-              <Typography.Text style={cardTitleStyle}>
-                Part information &amp; technical specifications
-              </Typography.Text>
-            }
-            styles={{ header: { borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}` } }}
-            style={cardShellStyle}
-          >
-            <Row gutter={[token.marginLG, token.marginSM]}>
-              {detail.specifications.map((field) => (
-                <Col key={field.key} xs={24} sm={12} md={8}>
-                  <SpecField label={field.label} value={field.value} />
+              <Card
+                title={<Typography.Text style={actionsTitleStyle}>Actions</Typography.Text>}
+                styles={{
+                  header: { borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}` },
+                  body: { padding: token.paddingMD },
+                }}
+                style={{ ...cardShellStyle, width: '100%' }}
+              >
+                <ActionsPanel
+                  partKey={part.key}
+                  payload={actionPayload}
+                  selectedVariation={selectedVariation ?? null}
+                />
+              </Card>
+            </Flex>
+
+            {/* Fluid right column: figure info, variations, product info, specs */}
+            <Flex vertical gap={token.marginMD} style={{ flex: '1 1 360px', minWidth: 0 }}>
+              <div>
+                <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
+                  Figure Number
+                </Typography.Text>
+                <Typography.Title
+                  level={2}
+                  style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading2) }}
+                >
+                  {figureNumber}
+                </Typography.Title>
+              </div>
+
+              <Card styles={{ body: { padding: token.paddingLG } }} style={cardShellStyle}>
+                <VariantSelectSection
+                  detail={detail}
+                  selectedVariantKey={selectedVariantKey}
+                  onChange={setSelectedVariantKey}
+                />
+              </Card>
+
+              <Row gutter={[token.marginLG, token.marginLG]} align="stretch">
+                <Col xs={24} md={12}>
+                  <Card
+                    title={<Typography.Text style={sectionTitleStyle}>Product Info</Typography.Text>}
+                    styles={{
+                      header: {
+                        borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+                      },
+                      body: { padding: token.paddingLG },
+                    }}
+                    style={{ ...cardShellStyle, height: '100%' }}
+                  >
+                    <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
+                      <div>
+                        <Typography.Text
+                          strong
+                          style={{
+                            display: 'block',
+                            marginBottom: token.marginXXS,
+                            ...hydraTextStyleToReactCss(hydraSmallStrong),
+                          }}
+                        >
+                          Product Description
+                        </Typography.Text>
+                        <Typography.Paragraph style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}>
+                          {part.description}
+                        </Typography.Paragraph>
+                      </div>
+
+                      <div>
+                        <Typography.Text
+                          strong
+                          style={{
+                            display: 'block',
+                            marginBottom: token.marginXXS,
+                            ...hydraTextStyleToReactCss(hydraSmallStrong),
+                          }}
+                        >
+                          Part Info
+                        </Typography.Text>
+                        <Typography.Paragraph style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}>
+                          {detail.description}
+                        </Typography.Paragraph>
+                      </div>
+
+                      <div>
+                        <Typography.Text
+                          strong
+                          style={{
+                            display: 'block',
+                            marginBottom: token.marginXXS,
+                            ...hydraTextStyleToReactCss(hydraSmallStrong),
+                          }}
+                        >
+                          Regulatory
+                        </Typography.Text>
+                        <Typography.Paragraph style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}>
+                          {detail.regulatory}
+                        </Typography.Paragraph>
+                      </div>
+
+                      <Flex gap={token.marginMD} wrap="wrap">
+                        <Button type="link" icon={<LinkOutlined />} style={{ padding: 0, height: 'auto' }}>
+                          View Submittal
+                        </Button>
+                        <Button type="link" icon={<ExportOutlined />} style={{ padding: 0, height: 'auto' }}>
+                          View Product Page
+                        </Button>
+                      </Flex>
+                    </Space>
+                  </Card>
                 </Col>
-              ))}
-            </Row>
-          </Card>
+
+                <Col xs={24} md={12}>
+                  <Card
+                    title={
+                      <Typography.Text style={sectionTitleStyle}>
+                        Part Information &amp; Technical Specifications
+                      </Typography.Text>
+                    }
+                    styles={{
+                      header: {
+                        borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+                      },
+                      body: { padding: token.paddingLG },
+                    }}
+                    style={{ ...cardShellStyle, height: '100%' }}
+                  >
+                    <Row gutter={[token.marginMD, token.marginSM]}>
+                      {detail.specifications.map((field) => (
+                        <Col key={field.key} xs={24} sm={12}>
+                          <SpecField label={field.label} value={field.value} />
+                        </Col>
+                      ))}
+                    </Row>
+                  </Card>
+                </Col>
+              </Row>
+            </Flex>
+          </Flex>
         </>
       ) : null}
     </Space>

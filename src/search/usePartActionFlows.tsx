@@ -1,4 +1,3 @@
-import { DownOutlined } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,47 +10,49 @@ import {
   type ProjectResolution,
 } from '../shell/ProjectRequiredModal';
 import { AddToPackageModal } from '../submittal/components/AddToPackageModal';
-import { SubmittalPackageCartFloatingButton } from '../submittal/components/SubmittalPackageCartFloatingButton';
-import { RevitDownloadQueueFloatingButton } from './components/RevitDownloadQueueFloatingButton';
+import { App, Button } from '../ui/antd';
 import { useRevitDownloadQueue } from './revitDownloadQueue';
-import { App, Button, Dropdown } from '../ui/antd';
-import type { MenuProps } from '../ui/antd';
-import type { CatalogPartRow } from '../catalog/catalogDemoData';
 
-/** Extensible menu keys — add `spec` later without restructuring. */
-type AddToActionId = 'bom' | 'revit-queue' | 'revit-quick' | 'submittal';
+export type FigureActionId = 'bom' | 'revit-queue' | 'revit-quick' | 'submittal';
 
-const ADD_TO_OPTIONS: { key: AddToActionId; label: string; gateDescription: string }[] = [
+export type PartActionPayload = {
+  partKey: string;
+  sku: string;
+  displayName: string;
+  figureNumber: string;
+};
+
+const ACTION_OPTIONS: { key: FigureActionId; label: string; gateDescription: string }[] = [
   {
     key: 'bom',
-    label: 'BOM',
-    gateDescription: 'Pick a project and BOM to add this part — both in the project picker.',
+    label: 'Add to BOM',
+    gateDescription: 'Pick a project and BOM to add this figure — both in the project picker.',
   },
   {
     key: 'revit-queue',
-    label: 'Add Revit File',
+    label: 'Add Revit File to Downloads',
     gateDescription: 'Revit downloads are scoped to a project. Pick a project to queue this file.',
   },
   {
     key: 'revit-quick',
     label: 'Quick Download Revit File',
-    gateDescription: 'Quick downloads are scoped to a project. Pick a project to download this file.',
+    gateDescription: '',
   },
   {
     key: 'submittal',
-    label: 'Submittal Manager',
+    label: 'Add to Submittal Package',
     gateDescription: 'Pick a project and submittal package — both in the project picker.',
   },
 ];
 
-const GATE_LABELS: Record<AddToActionId, string> = {
-  bom: 'BOM',
-  'revit-queue': 'Add Revit File',
+const GATE_LABELS: Record<FigureActionId, string> = {
+  bom: 'Add to BOM',
+  'revit-queue': 'Add Revit File to Downloads',
   'revit-quick': 'Quick Download Revit File',
-  submittal: 'Submittal Manager',
+  submittal: 'Add to Submittal Package',
 };
 
-function destinationRequirementForAction(id: AddToActionId): ProjectDestinationRequirement | undefined {
+function destinationRequirementForAction(id: FigureActionId): ProjectDestinationRequirement | undefined {
   if (id === 'bom') return 'bom';
   if (id === 'submittal') return 'submittal';
   return undefined;
@@ -69,34 +70,31 @@ function isSubmittalResolution(
   return 'packageId' in result && 'packageName' in result;
 }
 
-/**
- * Part detail primary CTA — single “Add to” dropdown with project-gated flows.
- * When no project is active, BOM and submittal pick project + destination in {@link ProjectRequiredModal}.
- */
-export function UnifiedPartActions({ part }: { part: CatalogPartRow }) {
+/** Shared figure-level BOM / Revit / Submittal orchestration for the part detail page. */
+export function usePartActionFlows(payload: PartActionPayload) {
   const { message, notification } = App.useApp();
   const navigate = useNavigate();
   const { projectId, projects, setProjectId } = useActiveProject();
   const { addCartItem, addPartToPackage } = useSubmittalPackages();
   const { addToQueue } = useRevitDownloadQueue();
 
-  const [pending, setPending] = useState<AddToActionId | null>(null);
+  const [pending, setPending] = useState<FigureActionId | null>(null);
   const [gateOpen, setGateOpen] = useState(false);
   const [addBomProjectId, setAddBomProjectId] = useState<string | null>(null);
   const [addPackageProjectId, setAddPackageProjectId] = useState<string | null>(null);
 
   const partPayload = useMemo(
     () => ({
-      partKey: part.key,
-      sku: part.sku,
-      displayName: `${part.sku} — ${part.description}`,
-      figureNumber: part.sku,
+      partKey: payload.partKey,
+      sku: payload.sku,
+      displayName: payload.displayName,
+      figureNumber: payload.figureNumber,
     }),
-    [part],
+    [payload],
   );
 
   const finishBomAdd = (bomProjectId: string, bomProjectName: string) => {
-    message.success(`${part.sku} added to “${bomProjectName}”.`);
+    message.success(`${payload.sku} added to “${bomProjectName}”.`);
     navigate(`/bom/projects/${bomProjectId}/workspace`);
   };
 
@@ -108,15 +106,15 @@ export function UnifiedPartActions({ part }: { part: CatalogPartRow }) {
   ) => {
     if (!options?.partAlreadyAdded) {
       addPartToPackage(packageId, {
-        partKey: part.key,
-        displayName: partPayload.displayName,
-        figureNumber: partPayload.figureNumber,
+        partKey: payload.partKey,
+        displayName: payload.displayName,
+        figureNumber: payload.figureNumber,
       });
     }
-    addCartItem({ partKey: part.key, packageId });
+    addCartItem({ partKey: payload.partKey, packageId });
     notification.success({
       message: 'Added to submittal package',
-      description: `${part.sku} cut sheet added to “${packageName}”.`,
+      description: `${payload.sku} cut sheet added to “${packageName}”.`,
       btn: (
         <Button
           type="primary"
@@ -132,24 +130,23 @@ export function UnifiedPartActions({ part }: { part: CatalogPartRow }) {
     });
   };
 
-  const execute = (id: AddToActionId, pid: string) => {
+  const execute = (id: FigureActionId, pid: string) => {
     const projectName = projects.find((p) => p.key === pid)?.name ?? 'project';
     switch (id) {
       case 'bom':
         setAddBomProjectId(pid);
         break;
       case 'revit-queue':
-        addToQueue({ projectId: pid, partKey: part.key, sku: part.sku });
-        message.success(`${part.sku}.rfa added to download queue · ${projectName}.`);
+        addToQueue({ projectId: pid, partKey: payload.partKey, sku: payload.sku });
+        message.success(`${payload.sku}.rfa added to download queue · ${projectName}.`);
         break;
       case 'revit-quick':
         console.info('[unified-search] revit-quick-download', {
-          partKey: part.key,
-          sku: part.sku,
-          fileName: `${part.sku}.rfa`,
-          projectId: pid,
+          partKey: payload.partKey,
+          sku: payload.sku,
+          fileName: `${payload.sku}.rfa`,
         });
-        message.success(`Downloading ${part.sku}.rfa · ${projectName} (stub).`);
+        message.success(`Downloading ${payload.sku}.rfa (stub).`);
         break;
       case 'submittal':
         setAddPackageProjectId(pid);
@@ -168,7 +165,11 @@ export function UnifiedPartActions({ part }: { part: CatalogPartRow }) {
     if (pid) finishSubmittalAdd(pid, packageId, packageName, { partAlreadyAdded: true });
   };
 
-  const requestAction = (id: AddToActionId) => {
+  const requestAction = (id: FigureActionId) => {
+    if (id === 'revit-quick') {
+      execute(id, projectId ?? '');
+      return;
+    }
     if (projectId) {
       execute(id, projectId);
     } else {
@@ -197,24 +198,10 @@ export function UnifiedPartActions({ part }: { part: CatalogPartRow }) {
     execute(resume, result.projectId);
   };
 
-  const pendingDef = pending ? ADD_TO_OPTIONS.find((o) => o.key === pending) : undefined;
+  const pendingDef = pending ? ACTION_OPTIONS.find((o) => o.key === pending) : undefined;
 
-  const menuItems: MenuProps['items'] = ADD_TO_OPTIONS.map((opt) => ({
-    key: opt.key,
-    label: opt.label,
-    onClick: () => requestAction(opt.key),
-  }));
-
-  return (
+  const modals = (
     <>
-      <div style={{ alignSelf: 'flex-start', width: 'fit-content' }}>
-        <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-          <Button type="primary">
-            Add to <DownOutlined />
-          </Button>
-        </Dropdown>
-      </div>
-
       <ProjectRequiredModal
         open={gateOpen}
         actionLabel={pending ? GATE_LABELS[pending] : 'Continue'}
@@ -239,13 +226,12 @@ export function UnifiedPartActions({ part }: { part: CatalogPartRow }) {
         open={addPackageProjectId !== null}
         projectId={addPackageProjectId ?? ''}
         part={addPackageProjectId ? partPayload : null}
-        title="Submittal Manager"
+        title="Add to Submittal Package"
         onAdded={handleAddedToPackage}
         onCancel={() => setAddPackageProjectId(null)}
       />
-
-      <RevitDownloadQueueFloatingButton />
-      <SubmittalPackageCartFloatingButton />
     </>
   );
+
+  return { requestAction, modals, actionLabels: ACTION_OPTIONS.map((o) => ({ id: o.key, label: o.label })) };
 }

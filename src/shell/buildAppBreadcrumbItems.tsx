@@ -77,7 +77,7 @@ export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] 
     const hub = `/projects/${projectId}/content`;
     if (pathname === hub) {
       segs.push({ label: pTitle });
-      segs.push({ label: 'Content' });
+      segs.push({ label: 'Download Center' });
       return toItems(segs);
     }
     segs.push({ label: pTitle, to: hub });

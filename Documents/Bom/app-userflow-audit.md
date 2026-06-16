@@ -76,7 +76,7 @@ Submittal Manager surface (ported from the Content ZIP, reframed to Hydra). List
 | Rename (footer) | Opens `PackageCreateEditModal` (edit) | `updatePackage` |
 | Delete (footer) | `Popconfirm` → delete | `deletePackage` |
 
-**Add to submittal (from a part):** Catalog/search Part detail → `UnifiedPartActions` "Add to submittal" (project-gated) → `AddToPackageModal` (pick existing or create-and-add) → success notification with "Go to packages" + session-cart floating button (`SubmittalPackageCartFloatingButton`) → `/projects/:projectId/submittal`.
+**Add to submittal (from a part):** Catalog/search Part detail → Figure actions **Add to Submittal Package** (project-gated) → `AddToPackageModal` (pick existing or create-and-add) → success notification with "Go to packages" + session-cart floating button (`SubmittalPackageCartFloatingButton`) → `/projects/:projectId/submittal`.
 
 > The earlier flat `SubmittalDraftContext` draft-lines stub has been replaced by this package-based model; the context was retired.
 
@@ -166,25 +166,24 @@ SeisBrace return preview rows that prove the multi-domain model.
   └─► Refine search input → updates ?q=
 ```
 
-### `/search/parts/:partId` (`UnifiedPartDetailPage` + `UnifiedPartActions`)
-Discovery is open (view metadata with no project). Primary CTA is a single **Add to** dropdown.
+### `/search/parts/:partId` (`UnifiedPartDetailPage`)
+Discovery is open (view metadata with no project). Page stack:
 
 ```
 /search/parts/:partId
-  ├─► [Add to ▼]
-  │     ├─► BOM → (no project) project picker → BOM in same modal → workspace
-  │     │         (has project) AddToBomModal → pick/create BOM → workspace
-  │     ├─► Add Revit File → (project gate if needed) → Revit download queue + floating cart
-  │     ├─► Quick Download Revit File → (project gate if needed) → immediate .rfa stub download
-  │     └─► Submittal Manager → (no project) project picker → package in same modal → add part
-  │               (has project) AddToPackageModal → pick/create package → add part
-  │           └─► Gate (ProjectRequiredModal): Project → BOM or Submittal Package (no sub-projects)
-  │     Variations table (per variant row — no Submittal Manager):
-  │       ├─► BOM → (no project) project picker → BOM → workspace
-  │       │         (has project) AddToBomModal → pick/create BOM → workspace
-  │       └─► Download Drawing Files → (project gate if needed) → file type picker → download queue
-  └─► Back → /dashboard (part detail hero)
+  Top: Product image + Figure Number + Product Description
+  → Part Info + Tech Specs
+  → Available sizes & variations (dropdown; organic = no pre-select; ?variant= deep link pre-selects)
+  → Selected variation panel (when chosen): image, SKU, specs, variant pill CTAs + file-type icons
+  → Figure actions (four bold CTAs):
+        Add to BOM | Add Revit File to Downloads | Quick Download Revit File | Add to Submittal Package
+  ├─► BOM / Submittal / Revit queue → project gate + Project → BOM/Package when needed
+  ├─► Quick Download Revit File → immediate stub (no project gate)
+  ├─► Variant BOM / drawing queue → existing variant rules (no Submittal at variant level)
+  └─► Back → /dashboard
 ```
+
+Shell nav: **Part Search** → `/search/results?q=all`; **Download Center** (was Content) → `/projects/:id/content` with session download history.
 
 ### `/catalog` (`CatalogHome`) — browse entry into unified search
 

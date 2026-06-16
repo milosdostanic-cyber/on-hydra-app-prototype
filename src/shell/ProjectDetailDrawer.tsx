@@ -40,8 +40,8 @@ type ModuleLink = {
 const PROJECT_MODULES: ModuleLink[] = [
   {
     key: 'content',
-    label: 'Content',
-    description: 'Browse content, manage downloads',
+    label: 'Download Center',
+    description: 'Browse downloads and manage your download history',
     icon: <FolderOpenOutlined />,
     getPath: (id) => `/projects/${id}/content`,
   },
