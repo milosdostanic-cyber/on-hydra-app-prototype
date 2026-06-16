@@ -20,7 +20,7 @@ import { MAX_UPLOAD_BYTES, VALID_UPLOAD_TYPES } from '../constants/uploadLimits'
 import { bomProjectById, bomProjectTitleById } from '../data/mockData';
 import type { BomItem, BomProject } from '../data/types';
 import { BomConfidenceTag } from '../components/BomTags';
-import { BomChoosePartModal } from '../components/BomChoosePartModal';
+import { createAdHocCompetitorMatchSession } from '../bomAdHocMatchSession';
 import { BomEditProjectModal } from '../components/BomEditProjectModal';
 import { AscProductsDrawer } from '../components/AscProductsDrawer';
 import { buildBomWorkspaceColumns } from '../bomWorkspaceColumns';
@@ -158,7 +158,6 @@ export function BomWorkspacePage() {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [competitorEntryOpen, setCompetitorEntryOpen] = useState(false);
   const [competitorEntryText, setCompetitorEntryText] = useState('');
-  const [competitorChooseOpen, setCompetitorChooseOpen] = useState(false);
 
   useEffect(() => {
     if (project) setEditProject(project);
@@ -1074,8 +1073,14 @@ export function BomWorkspacePage() {
               type="primary"
               disabled={!competitorEntryText.trim()}
               onClick={() => {
+                const text = competitorEntryText.trim();
+                if (!text) return;
+                const session = createAdHocCompetitorMatchSession(bomProjectId, text);
                 setCompetitorEntryOpen(false);
-                setCompetitorChooseOpen(true);
+                setCompetitorEntryText('');
+                navigate(`/bom/projects/${bomProjectId}/matching/review`, {
+                  state: { uploadId: session.uploadId, uploadFileName: 'Manual entry' },
+                });
               }}
             >
               Find match
@@ -1085,7 +1090,7 @@ export function BomWorkspacePage() {
       >
         <Space orientation="vertical" style={{ width: '100%' }} size={token.marginSM}>
           <Typography.Text type="secondary">
-            Paste a part number, brand, or description. We&apos;ll search the ASC catalog for a match.
+            Paste a part number, brand, or description. We&apos;ll run BOM matching for this line.
           </Typography.Text>
           <Input.TextArea
             autoFocus
@@ -1096,41 +1101,6 @@ export function BomWorkspacePage() {
           />
         </Space>
       </Modal>
-
-      <BomChoosePartModal
-        open={competitorChooseOpen}
-        matchRow={null}
-        initialQuery={competitorEntryText}
-        onClose={() => {
-          setCompetitorChooseOpen(false);
-          setCompetitorEntryText('');
-        }}
-        onSelectPart={(p) => {
-          setRows((prev) =>
-            renumberRows([
-              ...prev,
-              {
-                id: `ws-competitor-${Date.now()}`,
-                rowNumber: prev.length + 1,
-                originalInput: competitorEntryText || p.ascNumber,
-                parsedDescription: p.description,
-                size: p.size,
-                pressureClass: '',
-                connectionType: '',
-                quantity: p.qty || 1,
-                confidence: 'medium',
-                category: p.partType,
-                unit: 'EA',
-                status: 'needs-review',
-                matchSource: 'manual',
-              },
-            ]),
-          );
-          setCompetitorChooseOpen(false);
-          setCompetitorEntryText('');
-          message.success('Part added from competitor search.');
-        }}
-      />
       </Space>
     </>
   );

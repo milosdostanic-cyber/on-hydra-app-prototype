@@ -197,19 +197,11 @@ function BomSourceCell({
             width: '100%',
             ...(mutedSelectText ? { color: token.colorTextTertiary } : {}),
           }}
-          styles={{
-            ...(mutedSelectText
+          styles={
+            mutedSelectText
               ? { placeholder: { color: token.colorTextTertiary } }
-              : {}),
-            selector: {
-              paddingInline: token.paddingSM,
-              paddingBlock: 0,
-              minHeight: 0,
-              height: '100%',
-              background: 'transparent',
-              boxShadow: 'none',
-            },
-          }}
+              : undefined
+          }
           status={isDuplicate ? 'warning' : undefined}
           options={BOM_SOURCE_FIELDS.map((f) => ({ value: f, label: f }))}
         />

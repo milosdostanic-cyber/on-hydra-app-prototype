@@ -14,6 +14,7 @@ import { BomReplacementPickerPage } from './pages/BomReplacementPickerPage';
 import { BomNarrowPage } from './pages/BomNarrowPage';
 import { BomParsingReviewPage } from './pages/BomParsingReviewPage';
 import { BomRecommendPage } from './pages/BomRecommendPage';
+import { BomCompetitorSearchResultsPage } from './pages/BomCompetitorSearchResultsPage';
 import { BomSearchPage } from './pages/BomSearchPage';
 import { BomServiceRequestPage } from './pages/BomServiceRequestPage';
 import { BomTranslatePage } from './pages/BomTranslatePage';
@@ -29,6 +30,7 @@ export function BomRoutes() {
         <Route index element={<BomIndexRedirect />} />
         <Route path="site/:constructionProjectId" element={<BomSiteProjectsPage />} />
         <Route path="search" element={<BomSearchPage />} />
+        <Route path="search/results" element={<BomCompetitorSearchResultsPage />} />
         <Route path="projects/:bomProjectId/parsing-review" element={<BomParsingReviewPage />} />
         <Route path="projects/:bomProjectId/matching" element={<BomMatchingIndexRedirect />} />
         <Route path="projects/:bomProjectId/matching/review" element={<BomProgressiveMatchingPage />} />

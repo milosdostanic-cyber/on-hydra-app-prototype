@@ -19,6 +19,8 @@ export type BomUploadFlowLocationState = {
   guidedReviewComplete?: boolean;
   /** Table view: filter to skipped lines on arrival. */
   focusSkipped?: boolean;
+  /** Guided review: open a specific match row (e.g. Resolve from summary table). */
+  focusItemId?: string;
 };
 
 export function resolveUploadDestination(

@@ -407,7 +407,7 @@ export function BomSiteProjectsPage() {
                   flexDirection: 'column',
                 },
               }}
-              onClick={() => navigate('/bom/search')}
+              onClick={() => navigate('/bom/search?mode=competitor')}
               onMouseEnter={() => setHoveredQuickAction('search')}
               onMouseLeave={() => setHoveredQuickAction(null)}
             >
@@ -415,14 +415,14 @@ export function BomSiteProjectsPage() {
                 <Flex align="center" gap={token.marginSM}>
                   <FileSearchOutlined style={{ fontSize: hydraTitleHeading4.fontSize, color: token.colorPrimary }} />
                   <Typography.Title level={4} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading4) }}>
-                    Search Catalogue Parts
+                    Search parts
                   </Typography.Title>
                 </Flex>
                 <Typography.Paragraph
                   type="secondary"
                   style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
                 >
-                  Validate descriptions against the catalog before you commit lines to a BOM.
+                  Match competitor lines to ASC parts, or search the ASC catalog directly.
                 </Typography.Paragraph>
               </Flex>
             </Card>

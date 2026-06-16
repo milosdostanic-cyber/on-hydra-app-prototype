@@ -1,4 +1,3 @@
-import { TableOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -21,6 +20,7 @@ import { computeMatchingReviewSummary } from '../bomMatchingReviewStatus';
 import { guidedMatchingStepStatusLabel } from '../bomUploadFlowStatus';
 import { getSkuVariantsForFigure } from '../data/ascSkuVariants';
 import { BomChoosePartModal } from '../components/BomChoosePartModal';
+import { BomGuidedReviewCompletePanel } from '../components/BomGuidedReviewCompletePanel';
 import { BomMatchingReviewPartPanel } from '../components/BomMatchingReviewPartPanel';
 import { BomMatchingReviewQualityAlert } from '../components/BomMatchingReviewQualityAlert';
 import { BomUploadFlowStepChrome } from '../components/BomUploadFlowStepChrome';
@@ -38,11 +38,26 @@ import {
   Card,
   Flex,
   Progress,
-  Space,
   Typography,
   message,
   theme,
 } from '../../ui/antd';
+
+function firstPendingLineIndex(results: BomMatchResult[]): number {
+  const idx = results.findIndex((row) => row.lineStatus === 'pending');
+  return idx >= 0 ? idx : results.length;
+}
+
+function resolveGuidedReviewIndex(
+  results: BomMatchResult[],
+  focusItemId?: string,
+): number {
+  if (focusItemId) {
+    const focused = results.findIndex((row) => row.itemId === focusItemId);
+    if (focused >= 0) return focused;
+  }
+  return firstPendingLineIndex(results);
+}
 
 export function BomProgressiveMatchingPage() {
   const { token } = theme.useToken();
@@ -59,39 +74,38 @@ export function BomProgressiveMatchingPage() {
     persist,
   );
 
-  const queue = useMemo(
-    () => matchResults.filter((r) => r.lineStatus === 'pending'),
-    [matchResults],
-  );
+  const queue = matchResults;
 
   const [index, setIndex] = useState(0);
   const [lastReviewed, setLastReviewed] = useState<BomMatchResult | undefined>();
-  const current: BomMatchResult | undefined = queue[index];
-  const processed = stats.total - stats.pending;
-  const allDone = queue.length === 0;
+  const current: BomMatchResult | undefined = index < queue.length ? queue[index] : undefined;
+  const allDone = index >= queue.length;
   const reviewSummary = useMemo(() => computeMatchingReviewSummary(matchResults), [matchResults]);
   const displayMatch = current ?? (allDone ? lastReviewed : undefined);
   const parsedItem = displayMatch
     ? bomItemById(displayMatch.itemId) ?? session?.parsedItems.find((i) => i.id === displayMatch.itemId)
     : undefined;
   const totalParts = matchResults.length;
-  const reviewingPosition = useMemo(() => {
-    if (allDone) return totalParts;
-    if (!current) return 1;
-    const lineIndex = matchResults.findIndex((row) => row.itemId === current.itemId);
-    return lineIndex >= 0 ? lineIndex + 1 : 1;
-  }, [allDone, current, matchResults, totalParts]);
+  const reviewingPosition = allDone ? totalParts : index + 1;
   const matchingProgressStatus = guidedMatchingStepStatusLabel(reviewingPosition, totalParts, allDone);
+  const processed = Math.min(index, totalParts);
 
   const parsingReviewRoute = `/bom/projects/${bomProjectId}/parsing-review`;
 
   useEffect(() => {
-    setIndex(0);
-  }, [uploadId]);
+    setIndex(resolveGuidedReviewIndex(matchResults, uploadState.focusItemId));
+  }, [uploadId, location.key, uploadState.focusItemId, matchResults.length]);
 
-  useEffect(() => {
-    if (index >= queue.length && queue.length > 0) setIndex(0);
-  }, [queue.length, index]);
+  function reopenSkippedInGuided() {
+    const firstSkippedIdx = matchResults.findIndex((row) => row.lineStatus === 'skipped');
+    if (firstSkippedIdx < 0) return;
+    persist(
+      matchResults.map((row) =>
+        row.lineStatus === 'skipped' ? { ...row, lineStatus: 'pending' as const } : row,
+      ),
+    );
+    setIndex(firstSkippedIdx);
+  }
 
   function goToMatchingSummary() {
     navigate(tableRoute, {
@@ -105,14 +119,13 @@ export function BomProgressiveMatchingPage() {
   }
 
   function advanceAfterAction() {
-    if (index < queue.length - 1) setIndex((i) => i + 1);
-    else setIndex(0);
+    if (current) setLastReviewed(current);
+    setIndex((i) => i + 1);
   }
 
   function handleConfirm() {
     if (!current) return;
     if (!current.topMatch) {
-      setLastReviewed(current);
       patchCurrent({ lineStatus: 'skipped' });
       message.info('No match to confirm — you can choose a part later from the summary table.');
       advanceAfterAction();
@@ -122,7 +135,6 @@ export function BomProgressiveMatchingPage() {
       message.info('Pick the exact product before you confirm this match.');
       return;
     }
-    setLastReviewed(current);
     patchCurrent({ lineStatus: 'accepted', source: current.source === 'manual' ? 'manual' : 'auto' });
     if (matchRequiresSkuSelection(current)) {
       message.info('Match saved at product family level — you can pick the exact product later.');
@@ -134,7 +146,6 @@ export function BomProgressiveMatchingPage() {
 
   function handleSkip() {
     if (!current) return;
-    setLastReviewed(current);
     patchCurrent({ lineStatus: 'skipped' });
     message.info('Part skipped — you can review skipped items before import.');
     advanceAfterAction();
@@ -168,14 +179,9 @@ export function BomProgressiveMatchingPage() {
     message.success('SKU variant selected.');
   }
 
-  function goReviewIncomplete() {
-    navigate(tableRoute, {
-      state: { ...uploadState, guidedReviewComplete: true, focusSkipped: reviewSummary.skipped > 0 },
-    });
-  }
 
+  if (matchResults.length === 0) return null;
   if (!allDone && !current) return null;
-  if (allDone && !displayMatch) return null;
 
   const ctaState = current ? resolveReviewItemCtaState(current) : null;
   const headerPrimaryLabel = current
@@ -189,7 +195,24 @@ export function BomProgressiveMatchingPage() {
       ? false
       : Boolean(current.topMatch) && !reviewCanConfirm(current)
     : false;
-  const hasIncompleteItems = reviewSummary.skipped > 0;
+  const hasSkippedItems = reviewSummary.skipped > 0;
+  const readyCount = reviewSummary.confirmed + reviewSummary.chosen;
+
+  const matchingHeaderDescription = useMemo(() => {
+    if (allDone) {
+      return hasSkippedItems
+        ? `${readyCount} ready to import · ${reviewSummary.skipped} skipped for ${projectTitle}.`
+        : `All ${reviewSummary.total} parts reviewed for ${projectTitle}.`;
+    }
+    if (!current) return '';
+    if (!current.topMatch) {
+      return 'No automatic match for this line. Choose an ASC part or skip — you can finish from the summary table.';
+    }
+    if (matchRequiresSkuSelection(current)) {
+      return `Pick the exact SKU for this product family, then confirm for ${projectTitle}.`;
+    }
+    return `Confirm each suggested part for ${projectTitle}. Skip lines you are not ready to decide on — you can finish them from the summary table.`;
+  }, [allDone, current, hasSkippedItems, projectTitle, readyCount, reviewSummary]);
 
   function handleHeaderPrimary() {
     if (!current) return;
@@ -207,9 +230,13 @@ export function BomProgressiveMatchingPage() {
       gap={token.marginMD}
       style={{
         width: '100%',
-        minHeight: `calc(100vh - ${token.sizeXXL * 4}px)`,
-        maxHeight: `calc(100vh - ${token.sizeXXL * 4}px)`,
-        overflow: 'hidden',
+        ...(allDone
+          ? undefined
+          : {
+              minHeight: `calc(100vh - ${token.sizeXXL * 4}px)`,
+              maxHeight: `calc(100vh - ${token.sizeXXL * 4}px)`,
+              overflow: 'hidden',
+            }),
       }}
     >
       <div style={{ flexShrink: 0 }}>
@@ -227,31 +254,10 @@ export function BomProgressiveMatchingPage() {
 
       <div style={{ flexShrink: 0 }}>
       <BomPageHeader
-        title={allDone ? 'Part matching complete' : 'Match parts from your file'}
-        description={
-          allDone
-            ? `${reviewSummary.confirmed} confirmed · ${reviewSummary.chosen} chosen · ${reviewSummary.skipped} skipped for ${projectTitle}.`
-            : `Confirm each suggested part for ${projectTitle}. Skip lines you are not ready to decide on — you can finish them from the summary table.`
-        }
+        title={allDone ? 'Guided review complete' : 'Match parts from your file'}
+        description={matchingHeaderDescription}
         actions={
-          allDone ? (
-            <Flex gap={token.marginXS} align="center" wrap="wrap">
-              {hasIncompleteItems ? (
-                <>
-                  <Button type="primary" size="large" onClick={goReviewIncomplete}>
-                    Review incomplete items
-                  </Button>
-                  <Button size="large" icon={<TableOutlined />} onClick={goToMatchingSummary}>
-                    Continue to summary
-                  </Button>
-                </>
-              ) : (
-                <Button type="primary" size="large" icon={<TableOutlined />} onClick={goToMatchingSummary}>
-                  Continue to summary
-                </Button>
-              )}
-            </Flex>
-          ) : current ? (
+          allDone ? null : current ? (
             <Flex gap={token.marginXS} align="center" wrap="wrap" justify="flex-end">
               <Button type="link" size="large" onClick={handleSkip}>
                 Skip for now
@@ -281,48 +287,12 @@ export function BomProgressiveMatchingPage() {
       </div>
 
       {allDone ? (
-        <Card styles={{ body: { padding: token.paddingMD } }} style={{ flexShrink: 0 }}>
-          <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
-            <Typography.Text strong style={hydraTextStyleToReactCss(hydraLargeStrong)}>
-              Review summary
-            </Typography.Text>
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-              {hasIncompleteItems
-                ? 'Some parts were skipped. Review them in the summary table, or continue to scan every line before you import.'
-                : 'Every part has been reviewed. Continue to the matching results summary, then save and import when you are ready.'}
-            </Typography.Text>
-            <Flex gap={token.marginSM} wrap="wrap">
-              {[
-                { label: 'Total parts', value: reviewSummary.total },
-                { label: 'Confirmed', value: reviewSummary.confirmed },
-                { label: 'Chosen', value: reviewSummary.chosen },
-                { label: 'Skipped', value: reviewSummary.skipped },
-                { label: 'Unresolved', value: reviewSummary.unresolved },
-                { label: 'Needs exact product', value: reviewSummary.needsSku },
-              ].map((stat) => (
-                <Flex
-                  key={stat.label}
-                  vertical
-                  gap={token.marginXXS}
-                  style={{
-                    minWidth: 120,
-                    padding: token.paddingSM,
-                    background: token.colorFillAlter,
-                    borderRadius: token.borderRadiusLG,
-                    border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-                  }}
-                >
-                  <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-                    {stat.label}
-                  </Typography.Text>
-                  <Typography.Text strong style={hydraTextStyleToReactCss(hydraLargeStrong)}>
-                    {stat.value}
-                  </Typography.Text>
-                </Flex>
-              ))}
-            </Flex>
-          </Space>
-        </Card>
+        <BomGuidedReviewCompletePanel
+          projectTitle={projectTitle}
+          summary={reviewSummary}
+          onContinueToSummary={goToMatchingSummary}
+          onReviewSkipped={reopenSkippedInGuided}
+        />
       ) : null}
 
       {!allDone && current ? (
