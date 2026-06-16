@@ -31,6 +31,7 @@ import { useBomChoosePartDrawer } from '../hooks/useBomChoosePartDrawer';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { normalizeParsedItemsForUpload } from '../data/bomImportFlowSeed';
 import { bomItemById, bomProjectById, bomProjectTitleById } from '../data/mockData';
+import { demoSubmittalUrlForFigure } from '../bomWorkspaceDashboard';
 import { useBomFinishImport } from '../hooks/useBomFinishImport';
 import { useBomMatchingData } from '../hooks/useBomMatchingData';
 import type { BomMatchResult } from '../data/types';
@@ -274,15 +275,46 @@ export function BomMatchingPage() {
     [matchResults, persist],
   );
 
+  const handleViewOriginal = useCallback(
+    (row: BomMatchResult) => {
+      setDetailItemId(row.itemId);
+    },
+    [],
+  );
+
+  const handleDeleteRow = useCallback(
+    (row: BomMatchResult) => {
+      persist(matchResults.filter((r) => r.itemId !== row.itemId));
+      message.success('Line removed from matching.');
+    },
+    [matchResults, persist],
+  );
+
+  const resolveSubmittalUrl = useCallback(
+    (row: BomMatchResult): string | undefined => {
+      if (row.topMatch?.figureNumber) return demoSubmittalUrlForFigure(row.topMatch.figureNumber);
+      if (row.figureNumber) return demoSubmittalUrlForFigure(row.figureNumber);
+      return undefined;
+    },
+    [],
+  );
+
   const columns = useMemo(
     () =>
-      buildMatchingResultsColumns((itemId) => rowNumbers.get(itemId), {
-        onConfirm: handleConfirm,
-        onChoose: handleChoose,
-        onSelectSku: handleSelectSku,
-        onReview: handleReviewRow,
-      }),
-    [handleChoose, handleConfirm, handleReviewRow, handleSelectSku, rowNumbers],
+      buildMatchingResultsColumns(
+        (itemId) => rowNumbers.get(itemId),
+        {
+          onConfirm: handleConfirm,
+          onChoose: handleChoose,
+          onSelectSku: handleSelectSku,
+          onReview: handleReviewRow,
+          onViewOriginal: handleViewOriginal,
+          onDelete: handleDeleteRow,
+          resolveSubmittalUrl,
+        },
+        showReviewCompleteBanner,
+      ),
+    [handleChoose, handleConfirm, handleDeleteRow, handleReviewRow, handleSelectSku, handleViewOriginal, resolveSubmittalUrl, rowNumbers, showReviewCompleteBanner],
   );
 
   if (bomProjectId && bomProjectId !== 'new' && !projectMeta) {
@@ -305,7 +337,7 @@ export function BomMatchingPage() {
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <BomUploadFlowStepChrome
         backTo={parsingReviewRoute}
-        backLabel="Back to parsing review"
+        backLabel="Back to file check"
         backState={uploadState}
         fileName={uploadFileName}
         currentStep={2}
@@ -314,14 +346,19 @@ export function BomMatchingPage() {
         stepsComplete={allLinesReviewed}
       />
       <BomPageHeader
-        title="Matching results summary"
-        description={`Summary of every imported line for ${projectTitle} after guided review. Confirm or fix any remaining lines, then save and import.`}
+        title="Matching results"
+        description={
+          stats.pending > 0
+            ? `${stats.pending} part${stats.pending === 1 ? '' : 's'} still need a decision before you can import. Resolve below, or send back to guided review.`
+            : reviewSummary.skipped > 0
+              ? `${reviewSummary.confirmed + reviewSummary.chosen} of ${reviewSummary.total} parts matched for ${projectTitle}. ${reviewSummary.skipped} skipped — they will not be imported.`
+              : `All ${reviewSummary.total} parts matched for ${projectTitle}. Save and import when you are ready.`
+        }
         actions={
           <Flex gap={token.marginXS} align="center" wrap="wrap">
             <Button
               size="large"
               icon={<UnorderedListOutlined />}
-              type={stats.pending > 0 ? 'primary' : 'default'}
               onClick={() => navigate(reviewRoute, { state: uploadState })}
             >
               Back to guided review
@@ -332,7 +369,7 @@ export function BomMatchingPage() {
               disabled={stats.pending > 0}
               title={
                 stats.pending > 0
-                  ? `Complete ${stats.pending} pending part${stats.pending === 1 ? '' : 's'} before importing.`
+                  ? `Resolve ${stats.pending} part${stats.pending === 1 ? '' : 's'} before importing.`
                   : undefined
               }
               onClick={confirmFinishImport}
@@ -344,26 +381,45 @@ export function BomMatchingPage() {
       />
 
       {showReviewCompleteBanner ? (
-        <Alert
-          type="success"
-          showIcon
-          message="Guided part review complete"
-          description={`${reviewSummary.confirmed} confirmed · ${reviewSummary.chosen} chosen · ${reviewSummary.skipped} skipped · ${reviewSummary.unresolved} unresolved · ${reviewSummary.needsSku} need SKU. Scan the table below before you import.`}
-          action={
-            reviewSummary.skipped > 0 ? (
-              <Button
-                size="small"
-                onClick={() => {
-                  setSkippedOnly(true);
-                  setReviewStatusFilter('skipped');
-                  setPage(1);
-                }}
-              >
-                Review incomplete items
+        stats.pending > 0 ? (
+          <Alert
+            type="warning"
+            showIcon
+            message={`${stats.pending} part${stats.pending === 1 ? '' : 's'} still need attention`}
+            description={`${reviewSummary.skipped} skipped · ${reviewSummary.unresolved} without a match · ${reviewSummary.needsSku} need exact product. Resolve below, or jump back to guided review.`}
+            action={
+              <Flex gap={token.marginXS} align="center" wrap="wrap">
+                {reviewSummary.skipped > 0 && !skippedOnly ? (
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      setSkippedOnly(true);
+                      setReviewStatusFilter('skipped');
+                      setPage(1);
+                    }}
+                  >
+                    Show {reviewSummary.skipped} skipped
+                  </Button>
+                ) : null}
+                <Button type="link" onClick={() => navigate(reviewRoute, { state: uploadState })}>
+                  Back to guided review
+                </Button>
+              </Flex>
+            }
+          />
+        ) : (
+          <Alert
+            type="success"
+            showIcon
+            message="All parts matched"
+            description={`${reviewSummary.confirmed} confirmed · ${reviewSummary.chosen} chosen. Save and import to add them to your BOM.`}
+            action={
+              <Button type="primary" size="small" onClick={confirmFinishImport}>
+                Save and import
               </Button>
-            ) : undefined
-          }
-        />
+            }
+          />
+        )
       ) : null}
 
       <BomMatchingStatsStrip summary={reviewSummary} matchConfidence={matchConfidence} />

@@ -1,3 +1,4 @@
+import { MoreOutlined } from '@ant-design/icons';
 import { matchRequiresSkuSelection } from './bomMatchSkuUtils';
 import {
   reviewCanConfirm,
@@ -7,8 +8,8 @@ import { matchScoreBand } from './data/bomImportFlowSeed';
 import type { BomMatchResult } from './data/types';
 import { BomTableRowActions, type BomTableRowAction } from './components/BomTableRowActions';
 import { BomConfidenceTag, BomManualTag, BomReviewDisplayStatusTag } from './components/BomTags';
-import { Space, Typography } from '../ui/antd';
-import type { TableColumnsType } from '../ui/antd';
+import { Button, Dropdown, Flex, Space, Typography } from '../ui/antd';
+import type { MenuProps, TableColumnsType } from '../ui/antd';
 
 /** Figma `5026:21449` — Matching results table column widths. */
 export const MATCHING_RESULTS_COLUMN_WIDTHS = {
@@ -25,6 +26,9 @@ type MatchRowActions = {
   onChoose: (row: BomMatchResult) => void;
   onSelectSku: (row: BomMatchResult) => void;
   onReview: (row: BomMatchResult) => void;
+  onViewOriginal?: (row: BomMatchResult) => void;
+  onDelete?: (row: BomMatchResult) => void;
+  resolveSubmittalUrl?: (row: BomMatchResult) => string | undefined;
 };
 
 type RowNumberLookup = (itemId: string) => number | undefined;
@@ -32,6 +36,7 @@ type RowNumberLookup = (itemId: string) => number | undefined;
 export function buildMatchingResultsColumns(
   rowNumberFor: RowNumberLookup,
   actions: MatchRowActions,
+  guidedReviewComplete = false,
 ): TableColumnsType<BomMatchResult> {
   return [
     {
@@ -98,7 +103,9 @@ export function buildMatchingResultsColumns(
       title: 'Action',
       key: 'actions',
       width: MATCHING_RESULTS_COLUMN_WIDTHS.actions,
-      render: (_, row) => <MatchActionsCell row={row} actions={actions} />,
+      render: (_, row) => (
+        <MatchActionsCell row={row} actions={actions} guidedReviewComplete={guidedReviewComplete} />
+      ),
     },
   ];
 }
@@ -106,16 +113,56 @@ export function buildMatchingResultsColumns(
 function MatchActionsCell({
   row,
   actions,
+  guidedReviewComplete,
 }: {
   row: BomMatchResult;
   actions: MatchRowActions;
+  guidedReviewComplete: boolean;
 }) {
+  const submittalUrl = actions.resolveSubmittalUrl?.(row);
+  const isAcceptedAfterGuided = guidedReviewComplete && row.lineStatus === 'accepted';
+
+  const menuItems: MenuProps['items'] = [
+    ...(actions.onViewOriginal
+      ? [{ key: 'view-original', label: 'View original info', onClick: () => actions.onViewOriginal!(row) }]
+      : []),
+    ...(submittalUrl
+      ? [{ key: 'submittal', label: 'Go to submittal', onClick: () => window.open(submittalUrl, '_blank', 'noopener,noreferrer') }]
+      : []),
+    // Accepted rows already passed guided review — keep "Change match" available for edge cases,
+    // but tucked into the menu so it does not look like a required step.
+    ...(isAcceptedAfterGuided
+      ? [
+          { type: 'divider' as const },
+          { key: 'change-match', label: 'Change match', onClick: () => actions.onChoose(row) },
+        ]
+      : []),
+    ...(actions.onDelete
+      ? [
+          { type: 'divider' as const },
+          { key: 'delete', label: 'Delete', danger: true, onClick: () => actions.onDelete!(row) },
+        ]
+      : []),
+  ];
+
+  const moreButton = menuItems.length > 0 ? (
+    <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
+      <Button size="small" icon={<MoreOutlined />} />
+    </Dropdown>
+  ) : null;
+
+  // Confirmed / chosen rows are done — Status column already shows the badge,
+  // so the actions cell is intentionally quiet (only the overflow menu).
+  if (isAcceptedAfterGuided) {
+    return moreButton;
+  }
+
   const label = summaryTableRowActionLabel(row);
-  if (!label) return null;
+  if (!label) return moreButton;
 
   let action: BomTableRowAction;
   if (row.lineStatus === 'skipped') {
-    action = { key: 'review', label, onClick: () => actions.onReview(row) };
+    action = { key: 'review', label: 'Resolve', onClick: () => actions.onReview(row) };
   } else if (!row.topMatch) {
     action = { key: 'choose', label, onClick: () => actions.onChoose(row) };
   } else if (matchRequiresSkuSelection(row)) {
@@ -131,5 +178,10 @@ function MatchActionsCell({
     };
   }
 
-  return <BomTableRowActions nowrap maxVisible={1} actions={[action]} />;
+  return (
+    <Flex gap={4} align="center">
+      <BomTableRowActions nowrap maxVisible={1} actions={[action]} />
+      {moreButton}
+    </Flex>
+  );
 }

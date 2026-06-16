@@ -14,7 +14,7 @@ import type {
   AscSubstitutionRisk,
 } from '../data/types';
 import { HydraTag, type HydraTagTone } from '../../ui/HydraTag';
-import { Badge } from '../../ui/antd';
+import { Badge, Tooltip } from '../../ui/antd';
 import { CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { hydraBaseNormal, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
@@ -89,10 +89,21 @@ export function BomConfidenceTag({
   );
 }
 
+const matchLevelTooltip: Record<'figure' | 'sku', string> = {
+  figure: 'Parent product family — select a specific SKU before saving',
+  sku: 'Exact sellable part — ready to add to your workspace',
+};
+
 export function BomMatchLevelTag({ level }: { level: 'figure' | 'sku' | 'none' }) {
   if (level === 'none') return null;
   const label = level === 'figure' ? 'Product family' : 'Exact product';
-  return <HydraTag tone={level === 'figure' ? 'processing' : 'success'}>{label}</HydraTag>;
+  return (
+    <Tooltip title={matchLevelTooltip[level]}>
+      <span>
+        <HydraTag tone={level === 'figure' ? 'processing' : 'success'}>{label}</HydraTag>
+      </span>
+    </Tooltip>
+  );
 }
 
 const matchStatusLabel: Record<BomItemMatchStatus, string> = {

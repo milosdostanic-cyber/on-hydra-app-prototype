@@ -32,8 +32,8 @@ export function BomParsingReviewQualityAlert({ rows, profile }: BomParsingReview
         message={banner.message}
         description={
           <Typography.Paragraph style={{ ...bodyStyle, marginBottom: 0 }}>
-            We parsed <AlertEmphasis>{outlook.total}</AlertEmphasis> line
-            {outlook.total === 1 ? '' : 's'} from your file.{' '}
+            We found <AlertEmphasis>{outlook.total}</AlertEmphasis> row
+            {outlook.total === 1 ? '' : 's'} in your file.{' '}
             <AlertEmphasis>Continue with current data</AlertEmphasis> when you are ready — no fixes required.
           </Typography.Paragraph>
         }
@@ -48,8 +48,8 @@ export function BomParsingReviewQualityAlert({ rows, profile }: BomParsingReview
       message={banner.message}
       description={
         <Typography.Paragraph style={{ ...bodyStyle, marginBottom: 0 }}>
-          We parsed <AlertEmphasis>{outlook.total}</AlertEmphasis> line
-          {outlook.total === 1 ? '' : 's'} from your upload.{' '}
+          We found <AlertEmphasis>{outlook.total}</AlertEmphasis> row
+          {outlook.total === 1 ? '' : 's'} in your file.{' '}
           <AlertEmphasis>
             {outlook.ready} {outlook.ready === 1 ? 'has' : 'have'} enough detail
           </AlertEmphasis>{' '}

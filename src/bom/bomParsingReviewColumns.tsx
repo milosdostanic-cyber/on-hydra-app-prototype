@@ -1,5 +1,7 @@
 import type { CSSProperties } from 'react';
+import type { GlobalToken } from 'antd/es/theme/interface';
 
+import { BomImportedValueCell, bomImportedColumnHeaderStyle } from './bomImportedDataEmphasis';
 import type { BomItem, BomParsingReviewColumnProfile } from './data/types';
 import {
   isParsingReviewLowConfidenceRow,
@@ -34,6 +36,18 @@ export const PARSING_REVIEW_COLUMN_WIDTHS = {
 
 type RowUpdater = (rowId: string, patch: Partial<BomItem>) => void;
 
+function originalInputColumn(token: GlobalToken): TableColumnsType<BomItem>[number] {
+  return {
+    title: 'From your file',
+    dataIndex: 'originalInput',
+    key: 'originalInput',
+    width: PARSING_REVIEW_COLUMN_WIDTHS.originalDescription,
+    ellipsis: true,
+    onHeaderCell: () => ({ style: bomImportedColumnHeaderStyle(token) }),
+    render: (v: string) => <BomImportedValueCell value={v} />,
+  };
+}
+
 function readOnlyAttentionText(value: string | undefined, needsAttention: boolean) {
   const hasValue = Boolean(value?.trim());
   const display = hasValue ? value!.trim() : needsAttention ? '?' : '—';
@@ -41,7 +55,7 @@ function readOnlyAttentionText(value: string | undefined, needsAttention: boolea
     <Typography.Text
       type={needsAttention && !hasValue ? 'warning' : undefined}
       strong={needsAttention && !hasValue}
-      ellipsis={{ tooltip: hasValue ? display : 'Missing — we could not parse this' }}
+      ellipsis={{ tooltip: hasValue ? display : 'Missing — we could not read this' }}
       style={{ display: 'block' }}
     >
       {display}
@@ -119,6 +133,7 @@ function readOnlyMiddleColumns(profile: BomParsingReviewColumnProfile): TableCol
 export function buildParsingReviewReadOnlyColumns(
   profile: BomParsingReviewColumnProfile,
   onEditRow: (row: BomItem) => void,
+  token: GlobalToken,
 ): TableColumnsType<BomItem> {
   const base: TableColumnsType<BomItem> = [
     {
@@ -132,17 +147,16 @@ export function buildParsingReviewReadOnlyColumns(
 
   if (profile === 'description') {
     return [
-      ...base,
       {
-        title: 'Original',
-        dataIndex: 'originalInput',
-        key: 'originalInput',
-        width: PARSING_REVIEW_COLUMN_WIDTHS.originalDescription,
-        ellipsis: true,
-        render: (v: string) => readOnlyTableText(v),
+        title: '#',
+        dataIndex: 'rowNumber',
+        key: 'rowNumber',
+        width: PARSING_REVIEW_COLUMN_WIDTHS.rowNumber,
       },
+      originalInputColumn(token),
+      qualityColumn(),
       {
-        title: 'Parsed description',
+        title: 'How we read this',
         dataIndex: 'parsedDescription',
         key: 'parsedDescription',
         width: PARSING_REVIEW_COLUMN_WIDTHS.parsedDescription,
@@ -181,6 +195,7 @@ export function buildParsingReviewReadOnlyColumns(
   if (profile === 'sku-only') {
     return [
       ...base,
+      originalInputColumn(token),
       {
         title: 'SKU',
         dataIndex: 'sku',
@@ -204,6 +219,7 @@ export function buildParsingReviewReadOnlyColumns(
 
   return [
     ...base,
+    originalInputColumn(token),
     {
       title: 'UPC',
       dataIndex: 'upc',
@@ -311,7 +327,7 @@ export function buildParsingReviewEditableFields(
   if (profile === 'description') {
     fields.push({
       key: 'parsedDescription',
-      label: 'Parsed description',
+      label: 'How we read this',
       node: editableTableText({
         value: row.parsedDescription,
         needsAttention: parsingReviewFieldNeedsAttention(row, 'parsedDescription', profile),
@@ -425,7 +441,7 @@ export function buildParsingReviewColumns(
         render: (v: string) => readOnlyTableText(v),
       },
       {
-        title: 'Parsed Description',
+        title: 'How we read this',
         dataIndex: 'parsedDescription',
         key: 'parsedDescription',
         width: PARSING_REVIEW_COLUMN_WIDTHS.parsedDescription,

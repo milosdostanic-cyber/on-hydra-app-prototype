@@ -6,7 +6,7 @@ import { BomCardTitle } from '../components/BomCardTitle';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { useBomHubPath } from '../../context/ActiveProjectContext';
 import { PageBackButton } from '../../shell/PageBackButton';
-import { AppSearchInput, Button, Card, Space, Typography, message, theme } from '../../ui/antd';
+import { AppSearchInput, Button, Card, Flex, Space, Typography, message, theme } from '../../ui/antd';
 
 export function BomSearchPage() {
   const { token } = theme.useToken();
@@ -29,8 +29,8 @@ export function BomSearchPage() {
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to={bomHubPath}>Back to BOM</PageBackButton>
       <BomPageHeader
-        title="Natural language search"
-        description="Search for parts using competitor part numbers, generic descriptions, or natural language."
+        title="Search for a competitor or unknown part"
+        description="Enter a competitor part number, generic description, or plain language and we'll find the closest ASC match."
         actions={
           <Button type="primary" size="large" icon={<SearchOutlined />} onClick={() => goCatalog()}>
             Search catalog
@@ -50,10 +50,16 @@ export function BomSearchPage() {
             onPressEnter={() => goCatalog()}
             style={{ width: '100%', maxWidth: token.screenLG }}
           />
-          <Typography.Text type="secondary">
-            Tip: Use competitor part number first, then plain language if no direct hit.
-          </Typography.Text>
-          <Space wrap>
+          <Flex align="center" justify="space-between" wrap="wrap" gap={token.marginXS}>
+            <Typography.Text type="secondary">
+              Tip: Use competitor part number first, then plain language if no direct hit.
+            </Typography.Text>
+            <Typography.Link onClick={() => navigate('/catalog')}>
+              Looking for an ASC part? Browse the catalog →
+            </Typography.Link>
+          </Flex>
+          <Space wrap align="center">
+            <Typography.Text type="secondary">Try an example:</Typography.Text>
             {exampleQueries.map((example) => (
               <Button key={example} size="small" onClick={() => setQ(example)}>
                 {example}

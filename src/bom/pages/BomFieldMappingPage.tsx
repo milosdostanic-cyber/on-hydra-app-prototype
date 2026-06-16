@@ -9,7 +9,9 @@ import {
   countMappedAscFields,
   evaluateMappingConfidence,
   findDuplicateBomColumns,
+  getMissingRequiredFieldLabels,
   hasRequiredFieldMapping,
+  isConcatenatedFieldMapping,
   deriveFieldMappingForUpload,
 } from '../bomFieldMappingUtils';
 import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
@@ -18,7 +20,12 @@ import { BomFieldMappingTable } from '../components/BomFieldMappingTable';
 import { BomUploadFlowStepChrome } from '../components/BomUploadFlowStepChrome';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { bomProjectById } from '../data/mockData';
-import { App, Button, Flex, Space, message, theme } from '../../ui/antd';
+import { useBomImportSession } from '../hooks/useBomImportSession';
+import {
+  hydraBaseStrong,
+  hydraTextStyleToReactCss,
+} from '../../theme/hydraTypography';
+import { App, Alert, Button, Flex, Space, Tag, Tooltip, Typography, message, theme } from '../../ui/antd';
 
 export function BomFieldMappingPage() {
   const { token } = theme.useToken();
@@ -53,7 +60,27 @@ export function BomFieldMappingPage() {
   const mappedCount = countMappedAscFields(aliasMap);
   const duplicateBomColumns = useMemo(() => findDuplicateBomColumns(aliasMap), [aliasMap]);
   const hasRequired = hasRequiredFieldMapping(aliasMap);
+  const missingRequired = useMemo(() => getMissingRequiredFieldLabels(aliasMap), [aliasMap]);
+  const requiredHeaderLabels = useMemo(
+    () =>
+      (isConcatenatedFieldMapping(aliasMap)
+        ? ['Description']
+        : ['Part Number', 'Description', 'Quantity']
+      )
+        .join(', ')
+        .toUpperCase(),
+    [aliasMap],
+  );
+  const saveDisabled = !isDirty || !hasRequired || duplicateBomColumns.size > 0;
+  const saveDisabledReason = !isDirty
+    ? 'Change a column link before saving.'
+    : !hasRequired
+      ? `Link ${missingRequired.join(', ')} before you can save.`
+      : duplicateBomColumns.size > 0
+        ? 'Each file column can link to only one part detail. Fix duplicates first.'
+        : undefined;
   const bomBackTarget = bomSitePath(projectId);
+  const { uploadId } = useBomImportSession(bomProjectId);
 
   function returnToMappingSummary(fieldMapping: BomFieldAliasMap) {
     const confidence = evaluateMappingConfidence(fieldMapping);
@@ -62,6 +89,7 @@ export function BomFieldMappingPage() {
         ...uploadState,
         fieldMapping,
         mappingConfidence: confidence,
+        uploadId: uploadId ?? uploadState.uploadId,
       },
     });
   }
@@ -124,24 +152,48 @@ export function BomFieldMappingPage() {
       />
 
       <BomPageHeader
-        title="Review mapping"
-        description="Adjust how columns from your uploaded BOM map to ASC fields. Only change rows that look wrong."
+        title="Review column links"
+        description="Link the required part details to columns from your file. Optional rows can stay as Skip — you only need to change what looks wrong."
         actions={
           <Flex gap={token.marginXS} align="center" wrap="wrap">
             <Button size="large" onClick={handleStopEditing}>
               Stop editing
             </Button>
-            <Button
-              type="primary"
-              size="large"
-              onClick={handleSave}
-              disabled={!hasRequired || duplicateBomColumns.size > 0}
-            >
-              Save
-            </Button>
+            <Tooltip title={saveDisabled ? saveDisabledReason : undefined}>
+              <span>
+                <Button
+                  type="primary"
+                  size="large"
+                  onClick={handleSave}
+                  disabled={saveDisabled}
+                >
+                  Save
+                </Button>
+              </span>
+            </Tooltip>
           </Flex>
         }
       />
+
+      {!hasRequired ? (
+        <Alert
+          type="error"
+          showIcon
+          message={
+            missingRequired.length === 1
+              ? `${missingRequired[0]} must be linked before you can save`
+              : `Link ${missingRequired.join(', ')} before you can save`
+          }
+          description="Rows marked Required below must point to a column in your file. Everything else is optional."
+        />
+      ) : !isDirty ? (
+        <Alert
+          type="info"
+          showIcon
+          message="No changes yet"
+          description="Adjust a column link above when something looks wrong, then save."
+        />
+      ) : null}
 
       <BomFieldMappingTable
         mode="edit"
@@ -151,6 +203,21 @@ export function BomFieldMappingPage() {
           setAliasMap((prev) => ({ ...prev, [ascKey]: bomColumn }))
         }
         onResetDefaults={handleResetDefaults}
+        topStrip={
+          <Flex align="center" gap={token.marginSM} wrap="wrap">
+            <Typography.Text
+              strong
+              style={{ ...hydraTextStyleToReactCss(hydraBaseStrong), color: token.colorTextSecondary }}
+            >
+              REQUIRED: {requiredHeaderLabels}
+            </Typography.Text>
+            {missingRequired.length > 0 ? (
+              <Tag color="error">{missingRequired.length} still to link</Tag>
+            ) : (
+              <Tag color="success">Required links complete</Tag>
+            )}
+          </Flex>
+        }
       />
     </Space>
   );

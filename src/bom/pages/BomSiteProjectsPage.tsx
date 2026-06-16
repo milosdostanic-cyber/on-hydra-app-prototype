@@ -7,7 +7,7 @@ import {
 } from '@ant-design/icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import type { Key } from 'react';
+import type { CSSProperties, Key } from 'react';
 
 import { useActiveProject, useBomHubPath } from '../../context/ActiveProjectContext';
 import { BomCreateProjectModal } from '../components/BomCreateProjectModal';
@@ -325,19 +325,18 @@ export function BomSiteProjectsPage() {
     }, 900);
   };
 
-  const cardFlatStyle = {
-    background: token.colorBgContainer,
-    borderRadius: token.borderRadiusLG,
-    border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-    cursor: 'pointer' as const,
+  const getQuickActionStyle = (kind: 'upload' | 'search'): CSSProperties => {
+    const isHovered = hoveredQuickAction === kind;
+    return {
+      background: token.colorBgContainer,
+      borderRadius: token.borderRadiusLG,
+      border: `${token.lineWidth * 2}px ${token.lineType} ${isHovered ? token.colorPrimaryBorderHover : token.colorPrimaryBorder}`,
+      boxShadow: isHovered ? token.boxShadow : token.boxShadowTertiary,
+      transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
+      cursor: 'pointer',
+      transition: `border-color ${token.motionDurationMid}, box-shadow ${token.motionDurationMid}, transform ${token.motionDurationMid}`,
+    };
   };
-
-  const getQuickActionStyle = (kind: 'upload' | 'search') => ({
-    ...cardFlatStyle,
-    borderColor: hoveredQuickAction === kind ? token.colorPrimaryBorderHover : token.colorBorderSecondary,
-    boxShadow: 'none',
-    transition: `border-color ${token.motionDurationMid}`,
-  });
 
   const tableShellStyle = {
     background: token.colorBgContainer,

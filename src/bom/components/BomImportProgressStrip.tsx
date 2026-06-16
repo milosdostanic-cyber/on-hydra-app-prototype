@@ -108,7 +108,7 @@ export function BomImportProgressStrip({
 
       {onContinue ? (
         <Button type="primary" onClick={onContinue} style={{ flexShrink: 0 }}>
-          Continue
+          Continue upload
         </Button>
       ) : null}
     </Flex>

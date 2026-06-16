@@ -1,3 +1,4 @@
+import { MoreOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 
 import {
@@ -9,12 +10,11 @@ import {
   workspaceSkuDisplayLabel,
 } from './bomWorkspaceDashboard';
 import { bomWorkspaceTableColumnWidths } from './data/bomWorkspaceSeed';
-import { BomTableRowActions, type BomTableRowAction } from './components/BomTableRowActions';
 import { BomConfidenceTag, BomManualTag, BomMatchStatusTag } from './components/BomTags';
 import type { BomItem } from './data/types';
 import { hydraBaseNormal, hydraTextStyleToReactCss } from '../theme/hydraTypography';
-import { Flex, Space, Typography } from '../ui/antd';
-import type { TableColumnsType } from '../ui/antd';
+import { Button, Dropdown, Flex, Space, Typography } from '../ui/antd';
+import type { MenuProps, TableColumnsType } from '../ui/antd';
 
 export type BomWorkspaceRowActions = {
   bomProjectId: string;
@@ -43,13 +43,7 @@ function FigureLink({ row, bomProjectId }: { row: BomItem; bomProjectId: string 
   );
 }
 
-function ImportedPartCell({
-  row,
-  onViewOriginal,
-}: {
-  row: BomItem;
-  onViewOriginal: (row: BomItem) => void;
-}) {
+function ImportedPartCell({ row }: { row: BomItem }) {
   const label = row.originalInput?.trim() || '—';
 
   if (!row.originalInput?.trim()) {
@@ -57,16 +51,9 @@ function ImportedPartCell({
   }
 
   return (
-    <Typography.Link
-      ellipsis
-      title={row.originalInput}
-      onClick={(e) => {
-        e.stopPropagation();
-        onViewOriginal(row);
-      }}
-    >
+    <Typography.Text ellipsis title={row.originalInput}>
       {label}
-    </Typography.Link>
+    </Typography.Text>
   );
 }
 
@@ -83,9 +70,7 @@ export function buildBomWorkspaceColumns(actions: BomWorkspaceRowActions): Table
       key: 'importedPart',
       width: bomWorkspaceTableColumnWidths.importedPart,
       ellipsis: true,
-      render: (_, row) => (
-        <ImportedPartCell row={row} onViewOriginal={actions.onViewOriginal} />
-      ),
+      render: (_, row) => <ImportedPartCell row={row} />,
     },
     {
       title: 'SKU / variant',
@@ -152,30 +137,41 @@ function WorkspaceActionsCell({
 }) {
   const submittalUrl = resolveWorkspaceSubmittalUrl(row);
   const confirmed = actions.isConfirmed(row);
-  const rowActions: BomTableRowAction[] = [];
 
-  if (!confirmed) {
-    rowActions.push({
-      key: 'review',
-      label: 'Review',
-      onClick: () => actions.onReview(row),
-    });
-  }
+  const menuItems: MenuProps['items'] = [
+    {
+      key: 'view-original',
+      label: 'View original info',
+      onClick: () => actions.onViewOriginal(row),
+    },
+    ...(submittalUrl
+      ? [
+          {
+            key: 'submittal',
+            label: 'Go to submittal',
+            onClick: () => window.open(submittalUrl, '_blank', 'noopener,noreferrer'),
+          },
+        ]
+      : []),
+    { type: 'divider' as const },
+    {
+      key: 'delete',
+      label: 'Delete',
+      danger: true,
+      onClick: () => actions.onDelete(row),
+    },
+  ];
 
-  if (submittalUrl) {
-    rowActions.push({
-      key: 'submittal',
-      label: 'Submittal',
-      onClick: () => window.open(submittalUrl, '_blank', 'noopener,noreferrer'),
-    });
-  }
-
-  rowActions.push({
-    key: 'delete',
-    label: 'Delete',
-    danger: true,
-    onClick: () => actions.onDelete(row),
-  });
-
-  return <BomTableRowActions actions={rowActions} />;
+  return (
+    <Flex gap={4} align="center">
+      {!confirmed ? (
+        <Button size="small" onClick={() => actions.onReview(row)}>
+          Review
+        </Button>
+      ) : null}
+      <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
+        <Button size="small" icon={<MoreOutlined />} />
+      </Dropdown>
+    </Flex>
+  );
 }

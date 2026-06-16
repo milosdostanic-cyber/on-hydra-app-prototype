@@ -323,56 +323,63 @@ export function BomProgressiveMatchingPage() {
             </Flex>
           </Space>
         </Card>
-      ) : (
-        <Card
-          style={{ flexShrink: 0 }}
-          styles={{ body: { padding: `${token.paddingSM}px ${token.paddingMD}px` } }}
-        >
-          <Flex align="center" gap={token.marginMD}>
-            <Flex vertical gap={token.marginXXS} style={{ flexShrink: 0 }}>
-              <Typography.Text strong style={hydraTextStyleToReactCss(hydraLargeStrong)}>
-                {reviewingPosition}/{totalParts} reviewed
-              </Typography.Text>
-              <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-                {stats.pending} remaining · {stats.skipped} skipped
-              </Typography.Text>
-            </Flex>
-            <Progress
-              percent={totalParts ? Math.round((processed / totalParts) * 100) : 0}
-              showInfo={false}
-              strokeColor={token.colorPrimary}
-              style={{ flex: 1, margin: 0 }}
-            />
-          </Flex>
-        </Card>
-      )}
-
-      {!allDone && current ? (
-        <div style={{ flexShrink: 0 }}>
-          <BomMatchingReviewQualityAlert matchRow={current} />
-        </div>
       ) : null}
 
       {!allDone && current ? (
-        <Card
-          style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
-          styles={{
-            body: {
-              padding: token.paddingMD,
-              flex: 1,
-              minHeight: 0,
-              display: 'flex',
-              flexDirection: 'column',
-            },
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: token.marginMD,
           }}
         >
-          <BomMatchingReviewPartPanel
-            matchRow={current}
-            parsedItem={parsedItem}
-            onSelectCandidate={handleSelectCandidate}
-            onSelectVariant={handleSelectVariant}
-          />
-        </Card>
+          <Card
+            style={{ flexShrink: 0 }}
+            styles={{ body: { padding: `${token.paddingSM}px ${token.paddingMD}px` } }}
+          >
+            <Flex align="center" gap={token.marginMD}>
+              <Flex vertical gap={token.marginXXS} style={{ flexShrink: 0 }}>
+                <Typography.Text strong style={hydraTextStyleToReactCss(hydraLargeStrong)}>
+                  {reviewingPosition}/{totalParts} reviewed
+                </Typography.Text>
+                <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+                  {stats.pending} remaining · {stats.skipped} skipped
+                </Typography.Text>
+              </Flex>
+              <Progress
+                percent={totalParts ? Math.round((processed / totalParts) * 100) : 0}
+                showInfo={false}
+                strokeColor={token.colorPrimary}
+                style={{ flex: 1, margin: 0 }}
+              />
+            </Flex>
+          </Card>
+
+          <BomMatchingReviewQualityAlert matchRow={current} />
+
+          <Card
+            style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
+            styles={{
+              body: {
+                padding: token.paddingMD,
+                flex: 1,
+                minHeight: 0,
+                display: 'flex',
+                flexDirection: 'column',
+              },
+            }}
+          >
+            <BomMatchingReviewPartPanel
+              matchRow={current}
+              parsedItem={parsedItem}
+              onSelectCandidate={handleSelectCandidate}
+              onSelectVariant={handleSelectVariant}
+              onChoosePart={handleChoosePart}
+            />
+          </Card>
+        </div>
       ) : null}
 
       <BomChoosePartModal

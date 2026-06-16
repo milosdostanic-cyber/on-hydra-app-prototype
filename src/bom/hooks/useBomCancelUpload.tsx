@@ -22,7 +22,7 @@ const CANCEL_UPLOAD_COPY: Record<
   },
   review: {
     title: 'Cancel upload and lose progress?',
-    content: 'All parsing progress for this file will be lost.',
+    content: 'All progress reviewing this file will be lost.',
     cancelText: 'Keep editing',
   },
   match: {

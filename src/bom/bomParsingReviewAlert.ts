@@ -156,11 +156,11 @@ export function figmaParsingReviewAlert(
     const review = countParsingReviewWarnings(rows);
     const count = rows.length;
     if (review === 0) {
-      return { type: 'info', message: `${count} items parsed`, description: 'All rows parsed with high confidence.' };
+      return { type: 'info', message: `${count} parts found`, description: 'All rows read successfully.' };
     }
     return {
       type: 'warning',
-      message: `${count} items parsed`,
+      message: `${count} parts found`,
       description: `${review} rows may need attention.`,
     };
   }
@@ -188,8 +188,8 @@ type IssueKey =
   | 'quantity is zero';
 
 const ISSUE_LABEL: Record<IssueKey, string> = {
-  'low confidence': 'low parse confidence',
-  'missing parsed description': 'missing parsed description',
+  'low confidence': 'low confidence',
+  'missing parsed description': 'missing description',
   'missing SKU': 'missing SKU',
   'missing UPC': 'missing UPC',
   'missing figure number': 'missing figure number',
@@ -242,7 +242,7 @@ export function summarizeParsingReviewAlert(
   profile: BomParsingReviewColumnProfile,
 ): ParsingReviewAlertContent {
   const count = rows.length;
-  const message = `${count} item${count === 1 ? '' : 's'} parsed`;
+  const message = `${count} part${count === 1 ? '' : 's'} found`;
 
   const issueCounts = new Map<IssueKey, number>();
   let rowsWithIssues = 0;

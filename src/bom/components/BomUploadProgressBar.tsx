@@ -44,9 +44,9 @@ export function BomUploadProgressBar({
           background: token.colorSuccessBg,
         }
       : {
-          color: token.colorWarning,
-          borderColor: token.colorWarningBorder,
-          background: token.colorWarningBg,
+          color: token.colorWarningText,
+          borderColor: token.colorWarningBorderHover,
+          background: token.colorBgContainer,
         };
 
   return (
@@ -56,7 +56,8 @@ export function BomUploadProgressBar({
         width: '100%',
         paddingBlock: token.paddingSM,
         borderRadius: token.borderRadiusLG,
-        background: token.colorFillTertiary,
+        background: token.colorWarningBg,
+        border: `${token.lineWidth}px ${token.lineType} ${token.colorWarningBorder}`,
       }}
     >
       <Flex

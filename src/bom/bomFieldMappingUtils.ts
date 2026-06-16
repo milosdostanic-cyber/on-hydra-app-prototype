@@ -15,7 +15,12 @@ export type MappingSummaryEntry = {
   ascKey: string;
   ascLabel: string;
   bomColumn: string;
+  isMapped: boolean;
+  isRequired: boolean;
 };
+
+/** ASC field keys that MUST be mapped before an import can proceed (mirrors hasRequiredFieldMapping). */
+export const REQUIRED_ASC_FIELD_KEYS = new Set(['PART NUMBER', 'DESCRIPTION', 'QTY']);
 
 export function normalizeFieldMappingSkip(val: string | undefined): string | undefined {
   if (!val || val === BOM_FIELD_SKIP_VALUE || val === '— Skip —') return undefined;
@@ -50,6 +55,32 @@ function concatenatedColumnFieldMapping(): BomFieldAliasMap {
   };
 }
 
+/**
+ * Simulates what a real auto-mapper finds on a first-time upload: common column names like
+ * Description, Figure Number, Manufacturer and Finish are recognised, but Part Number and
+ * Quantity are not found because customer files typically use non-standard names for those
+ * (e.g. "Item No", "item_number", "qty ordered"). This produces 'blocked' confidence so the
+ * user is sent to Review Columns before they can proceed.
+ */
+function autoDetectedFieldMapping(): BomFieldAliasMap {
+  const skip = BOM_FIELD_SKIP_VALUE;
+  return {
+    'PART NUMBER': skip,        // not auto-detected — customer files vary widely
+    DESCRIPTION: 'DESCRIPTION', // recognised ✓
+    SKU: skip,
+    UPC: skip,
+    'FIGURE NUM': 'FIGURE NUM', // recognised ✓
+    FINISH: 'FINISH',           // recognised ✓
+    'MFR NUM': skip,
+    'INSTALL TYPE': skip,
+    MANUFACTURER: 'MANUFACTURER', // recognised ✓
+    QTY: skip,                  // not auto-detected — too many variants (qty, quantity, qty_ord)
+    BRAND: skip,
+    MATERIAL: 'MATERIAL',       // recognised ✓
+    UNIT: skip,
+  };
+}
+
 export function deriveFieldMappingForUpload(
   fileName?: string,
   saved?: BomFieldAliasMap,
@@ -63,7 +94,7 @@ export function deriveFieldMappingForUpload(
   if (isConcatenatedColumnUpload(fileName)) {
     return concatenatedColumnFieldMapping();
   }
-  return deriveDefaultFieldMapping();
+  return autoDetectedFieldMapping();
 }
 
 export function resolveFieldMapping(saved?: BomFieldAliasMap): BomFieldAliasMap {
@@ -93,6 +124,18 @@ export function hasRequiredFieldMapping(fieldMapping: BomFieldAliasMap): boolean
   );
 }
 
+/** User-facing labels for required ASC fields that are still not linked. */
+export function getMissingRequiredFieldLabels(fieldMapping: BomFieldAliasMap): string[] {
+  if (isConcatenatedFieldMapping(fieldMapping)) {
+    return normalizeFieldMappingSkip(fieldMapping.DESCRIPTION) ? [] : ['Description'];
+  }
+  const missing: string[] = [];
+  if (!normalizeFieldMappingSkip(fieldMapping['PART NUMBER'])) missing.push('Part Number');
+  if (!normalizeFieldMappingSkip(fieldMapping.DESCRIPTION)) missing.push('Description');
+  if (!normalizeFieldMappingSkip(fieldMapping.QTY)) missing.push('Quantity');
+  return missing;
+}
+
 export function findDuplicateBomColumns(fieldMapping: BomFieldAliasMap): Set<string> {
   const counts = new Map<string, number>();
   for (const v of Object.values(fieldMapping)) {
@@ -115,13 +158,16 @@ export function evaluateMappingConfidence(fieldMapping: BomFieldAliasMap): BomMa
 }
 
 export function buildMappingSummaryEntries(fieldMapping: BomFieldAliasMap): MappingSummaryEntry[] {
-  const entries: MappingSummaryEntry[] = [];
-  for (const { key, label } of ASC_DEST_FIELDS) {
-    const bomColumn = normalizeFieldMappingSkip(fieldMapping[key]);
-    if (!bomColumn) continue;
-    entries.push({ ascKey: key, ascLabel: label, bomColumn });
-  }
-  return entries;
+  return ASC_DEST_FIELDS.map(({ key, label }) => {
+    const bomColumn = normalizeFieldMappingSkip(fieldMapping[key]) ?? '';
+    return {
+      ascKey: key,
+      ascLabel: label,
+      bomColumn,
+      isMapped: Boolean(bomColumn),
+      isRequired: REQUIRED_ASC_FIELD_KEYS.has(key),
+    };
+  });
 }
 
 export function bomMappingSummaryRoute(bomProjectId: string): string {
@@ -139,7 +185,7 @@ export function mappingConfidenceLabel(confidence: BomMappingConfidence): string
     case 'partial':
       return 'Some columns need review';
     case 'blocked':
-      return 'Needs your review';
+      return 'Required fields missing';
     default:
       return confidence;
   }

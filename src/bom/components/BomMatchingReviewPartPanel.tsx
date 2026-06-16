@@ -3,8 +3,10 @@ import {
   ExportOutlined,
   FilePdfOutlined,
   PictureOutlined,
+  SearchOutlined,
 } from '@ant-design/icons';
 import { useMemo, useState, type ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { matchScoreBand } from '../data/bomImportFlowSeed';
 import { matchRequiresSkuSelection, resolveFigureNumber } from '../bomMatchSkuUtils';
@@ -28,6 +30,7 @@ import {
 import {
   Button,
   Divider,
+  Empty,
   Flex,
   Select,
   Space,
@@ -41,6 +44,7 @@ type BomMatchingReviewPartPanelProps = {
   parsedItem?: BomItem;
   onSelectCandidate: (part: AscCatalogPart) => void;
   onSelectVariant: (variantId: string) => void;
+  onChoosePart?: () => void;
 };
 
 type TypeFilter = 'all' | 'Domestic' | 'Import';
@@ -306,11 +310,13 @@ function PanelColumnShell({
   background,
   width,
   flex,
+  emphasized,
 }: {
   children: ReactNode;
   background: string;
   width?: string;
   flex?: string;
+  emphasized?: boolean;
 }) {
   const { token } = theme.useToken();
 
@@ -326,6 +332,9 @@ function PanelColumnShell({
         padding: token.paddingMD,
         borderRadius: token.borderRadiusLG,
         border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+        borderLeft: emphasized
+          ? `${token.lineWidth * 3}px solid ${token.colorPrimaryBorder}`
+          : `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
         background,
       }}
     >
@@ -339,8 +348,10 @@ export function BomMatchingReviewPartPanel({
   parsedItem,
   onSelectCandidate,
   onSelectVariant,
+  onChoosePart,
 }: BomMatchingReviewPartPanelProps) {
   const { token } = theme.useToken();
+  const navigate = useNavigate();
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
 
   const candidates = useMemo(
@@ -374,9 +385,9 @@ export function BomMatchingReviewPartPanel({
 
   return (
     <Flex gap={token.marginMD} align="stretch" style={{ flex: 1, minHeight: 0, height: '100%' }}>
-      <PanelColumnShell background={token.colorFillAlter} width="280px" flex="0 0 280px">
+      <PanelColumnShell background={token.colorFillAlter} width="280px" flex="0 0 280px" emphasized>
         <PanelColumnHeaderBlock
-          title="Your part"
+          title="YOUR PART"
           subtitle="Imported line from your file"
         />
         <Space orientation="vertical" size={token.marginXXS} style={{ width: '100%' }}>
@@ -394,7 +405,7 @@ export function BomMatchingReviewPartPanel({
         {candidates.length > 0 ? (
           <>
             <PanelColumnHeaderBlock
-              title={`ASC equivalents (${candidates.length})`}
+              title={`HOW WE MATCHED IT (${candidates.length})`}
               subtitle={
                 candidates.length > 1
                   ? `Showing ${filteredCandidates.length} of ${candidates.length} matches`
@@ -448,17 +459,26 @@ export function BomMatchingReviewPartPanel({
         ) : (
           <>
             <PanelColumnHeaderBlock
-              title="ASC equivalents"
+              title="HOW WE MATCHED IT"
               subtitle="No catalog matches for this line"
             />
-            <Flex vertical gap={token.marginSM} justify="center" style={{ flex: 1, minHeight: 80 }}>
-              <Typography.Text strong style={hydraTextStyleToReactCss(hydraLargeStrong)}>
-                No suggested match
-              </Typography.Text>
-              <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-                We could not suggest a product for this line. Use &ldquo;Choose a part&rdquo; above to continue
-                manually.
-              </Typography.Text>
+            <Flex vertical align="center" justify="center" style={{ flex: 1, minHeight: 80 }}>
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="No match found for this part"
+                style={{ padding: `${token.paddingMD}px 0` }}
+              >
+                <Space>
+                  {onChoosePart ? (
+                    <Button icon={<SearchOutlined />} onClick={onChoosePart}>
+                      Browse ASC parts
+                    </Button>
+                  ) : null}
+                  <Button type="link" onClick={() => navigate('/bom/search')}>
+                    Search manually
+                  </Button>
+                </Space>
+              </Empty>
             </Flex>
           </>
         )}

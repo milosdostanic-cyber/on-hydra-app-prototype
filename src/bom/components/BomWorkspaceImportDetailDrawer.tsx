@@ -39,7 +39,7 @@ export function BomWorkspaceImportDetailDrawer({
             <Descriptions.Item label="Import row">{row.importedRowNumber}</Descriptions.Item>
           ) : null}
           <Descriptions.Item label="Original line">{row.originalInput || '—'}</Descriptions.Item>
-          <Descriptions.Item label="Parsed description">
+          <Descriptions.Item label="How we read this">
             {row.importedDescription?.trim() || '—'}
           </Descriptions.Item>
           <Descriptions.Item label="Manufacturer">{row.manufacturer?.trim() || '—'}</Descriptions.Item>
@@ -54,7 +54,7 @@ export function BomWorkspaceImportDetailDrawer({
         </Descriptions>
 
         <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-          Fields above were used during parsing and matching. The selected ASC figure and SKU in the
+          Fields above are from your original upload. The ASC figure and SKU in the
           workspace table reflect your confirmed match.
         </Typography.Text>
       </Space>

@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { parsingReviewIssueLabels } from '../bomParsingReviewAlert';
 import { buildParsingReviewEditableFields } from '../bomParsingReviewColumns';
 import { BomConfidenceTag } from './BomTags';
+import { bomImportedDataShellStyle } from '../bomImportedDataEmphasis';
 import type { BomItem, BomParsingReviewColumnProfile } from '../data/types';
 import {
   hydraBaseNormal,
@@ -96,12 +97,18 @@ export function BomParsingReviewRowDrawer({
               marginBottom: token.marginXXS,
             }}
           >
-            Original import
+            From your file
           </Typography.Text>
-          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-            {draftRow.originalInput}
-          </Typography.Text>
+          <div style={bomImportedDataShellStyle(token)}>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+              {draftRow.originalInput}
+            </Typography.Text>
+          </div>
         </div>
+
+        <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+          How we split this to match our catalog
+        </Typography.Text>
 
         <Form layout="vertical">
           {fields.map(({ key, label, node }) => (

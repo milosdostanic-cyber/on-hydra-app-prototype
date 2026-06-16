@@ -20,6 +20,7 @@ import { MAX_UPLOAD_BYTES, VALID_UPLOAD_TYPES } from '../constants/uploadLimits'
 import { bomProjectById, bomProjectTitleById } from '../data/mockData';
 import type { BomItem, BomProject } from '../data/types';
 import { BomConfidenceTag } from '../components/BomTags';
+import { BomChoosePartModal } from '../components/BomChoosePartModal';
 import { BomEditProjectModal } from '../components/BomEditProjectModal';
 import { AscProductsDrawer } from '../components/AscProductsDrawer';
 import { buildBomWorkspaceColumns } from '../bomWorkspaceColumns';
@@ -36,8 +37,10 @@ import {
   Card,
   Descriptions,
   Divider,
+  Dropdown,
   Empty,
   Flex,
+  Input,
   Modal,
   Progress,
   Select,
@@ -153,6 +156,9 @@ export function BomWorkspacePage() {
   const [editProject, setEditProject] = useState<BomProject | null>(project ?? null);
   const [importDetailRow, setImportDetailRow] = useState<BomItem | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+  const [competitorEntryOpen, setCompetitorEntryOpen] = useState(false);
+  const [competitorEntryText, setCompetitorEntryText] = useState('');
+  const [competitorChooseOpen, setCompetitorChooseOpen] = useState(false);
 
   useEffect(() => {
     if (project) setEditProject(project);
@@ -664,7 +670,7 @@ export function BomWorkspacePage() {
                 />
               ) : null
             }
-            description="Upload a file to parse your BOM, browse ASC products, or use the quick picker."
+            description="Upload a BOM file to import parts, browse the ASC catalog, or add items one by one."
             actions={
               <Space wrap>
                 <Button size="large" type="primary" icon={<ExportOutlined />} onClick={handleExport}>
@@ -683,20 +689,33 @@ export function BomWorkspacePage() {
                 <Space orientation="vertical" size={token.marginXS}>
                   <Typography.Text strong>No BOM items yet</Typography.Text>
                   <Typography.Text type="secondary">
-                    Upload a file to parse your BOM, browse ASC products, or use the quick picker.
+                    Upload a BOM file to import parts, browse the ASC catalog, or add items one by one.
                   </Typography.Text>
                 </Space>
               }
             >
               <Flex gap={token.marginSM} justify="center" wrap="wrap">
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={<PlusOutlined />}
-                  onClick={() => setAscDrawerOpen(true)}
+                <Dropdown
+                  trigger={['click']}
+                  menu={{
+                    items: [
+                      {
+                        key: 'asc',
+                        label: 'Find an ASC part',
+                        onClick: () => setAscDrawerOpen(true),
+                      },
+                      {
+                        key: 'competitor',
+                        label: 'Add competitor / unknown part',
+                        onClick: () => setCompetitorEntryOpen(true),
+                      },
+                    ],
+                  }}
                 >
-                  Add item
-                </Button>
+                  <Button type="primary" size="large" icon={<PlusOutlined />}>
+                    Add item
+                  </Button>
+                </Dropdown>
                 <Button
                   size="large"
                   icon={<UploadOutlined />}
@@ -772,6 +791,7 @@ export function BomWorkspacePage() {
       <BomPendingUploadsRegion
         sessions={pendingUploadSessions}
         onContinue={handleContinuePendingUpload}
+        defaultExpanded={pendingUploadSessions.length > 1}
       />
       <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to={bomHubPath}>Back to BOM projects</PageBackButton>
@@ -884,9 +904,27 @@ export function BomWorkspacePage() {
           ) : (
             <>
               <Space wrap size={token.marginXS}>
-                <Button type="primary" icon={<PlusOutlined />} onClick={() => setAscDrawerOpen(true)}>
-                  Add Item
-                </Button>
+                <Dropdown
+                  trigger={['click']}
+                  menu={{
+                    items: [
+                      {
+                        key: 'asc',
+                        label: 'Find an ASC part',
+                        onClick: () => setAscDrawerOpen(true),
+                      },
+                      {
+                        key: 'competitor',
+                        label: 'Add competitor / unknown part',
+                        onClick: () => setCompetitorEntryOpen(true),
+                      },
+                    ],
+                  }}
+                >
+                  <Button type="primary" icon={<PlusOutlined />}>
+                    Add Item
+                  </Button>
+                </Dropdown>
                 <Button icon={<UploadOutlined />} onClick={handleUpload}>
                   Upload file
                 </Button>
@@ -1012,6 +1050,85 @@ export function BomWorkspacePage() {
           setEditProject(updated);
           setEditModalOpen(false);
           message.success('Project name updated.');
+        }}
+      />
+
+      <Modal
+        open={competitorEntryOpen}
+        title="Add competitor or unknown part"
+        onCancel={() => {
+          setCompetitorEntryOpen(false);
+          setCompetitorEntryText('');
+        }}
+        footer={
+          <Flex justify="flex-end" gap={token.marginXS}>
+            <Button
+              onClick={() => {
+                setCompetitorEntryOpen(false);
+                setCompetitorEntryText('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              disabled={!competitorEntryText.trim()}
+              onClick={() => {
+                setCompetitorEntryOpen(false);
+                setCompetitorChooseOpen(true);
+              }}
+            >
+              Find match
+            </Button>
+          </Flex>
+        }
+      >
+        <Space orientation="vertical" style={{ width: '100%' }} size={token.marginSM}>
+          <Typography.Text type="secondary">
+            Paste a part number, brand, or description. We&apos;ll search the ASC catalog for a match.
+          </Typography.Text>
+          <Input.TextArea
+            autoFocus
+            rows={3}
+            placeholder="e.g. Grundfos CM5-8 centrifugal pump or competitor SKU"
+            value={competitorEntryText}
+            onChange={(e) => setCompetitorEntryText(e.target.value)}
+          />
+        </Space>
+      </Modal>
+
+      <BomChoosePartModal
+        open={competitorChooseOpen}
+        matchRow={null}
+        initialQuery={competitorEntryText}
+        onClose={() => {
+          setCompetitorChooseOpen(false);
+          setCompetitorEntryText('');
+        }}
+        onSelectPart={(p) => {
+          setRows((prev) =>
+            renumberRows([
+              ...prev,
+              {
+                id: `ws-competitor-${Date.now()}`,
+                rowNumber: prev.length + 1,
+                originalInput: competitorEntryText || p.ascNumber,
+                parsedDescription: p.description,
+                size: p.size,
+                pressureClass: '',
+                connectionType: '',
+                quantity: p.qty || 1,
+                confidence: 'medium',
+                category: p.partType,
+                unit: 'EA',
+                status: 'needs-review',
+                matchSource: 'manual',
+              },
+            ]),
+          );
+          setCompetitorChooseOpen(false);
+          setCompetitorEntryText('');
+          message.success('Part added from competitor search.');
         }}
       />
       </Space>

@@ -118,8 +118,8 @@ export function BomParsingReviewPage() {
   }, []);
 
   const columns = useMemo(
-    () => buildParsingReviewReadOnlyColumns(columnProfile, openEditRow),
-    [columnProfile, openEditRow],
+    () => buildParsingReviewReadOnlyColumns(columnProfile, openEditRow, token),
+    [columnProfile, openEditRow, token],
   );
 
   const pagedParsedItems = useMemo(() => {
@@ -133,7 +133,7 @@ export function BomParsingReviewPage() {
 
   function handleCommitParsingReview() {
     if (rows.length === 0) {
-      message.warning('No parsed items to continue.');
+      message.warning('No items found to continue.');
       return;
     }
     const nextMatchResults = createInitialMatchResults(rows);
@@ -214,7 +214,7 @@ export function BomParsingReviewPage() {
           statusTone={parsingStatusTone}
         />
         <BomPageHeader
-          title="Parsed data review"
+          title="Review your imported rows"
           description={`Check row quality before matching. Project: ${title}.`}
           actions={
             <Space wrap>
@@ -252,8 +252,8 @@ export function BomParsingReviewPage() {
         statusTone={parsingStatusTone}
       />
       <BomPageHeader
-        title="Parsed data review"
-        description="We show what we could parse from your file. You can add missing details on any row, but it is optional."
+        title="Review your imported rows"
+        description="Your original line comes first; the other columns show how we read it."
         actions={headerActions}
       />
 
@@ -275,8 +275,8 @@ export function BomParsingReviewPage() {
           >
             <Typography.Text type="secondary">
               {lowConfidenceOnly
-                ? `Showing ${visibleRows.length} line${visibleRows.length === 1 ? '' : 's'} that may not match well`
-                : `${rows.length} line${rows.length === 1 ? '' : 's'} from your file`}
+                ? `Showing ${visibleRows.length} part${visibleRows.length === 1 ? '' : 's'} that may not match well`
+                : `${rows.length} part${rows.length === 1 ? '' : 's'} we found in your file`}
             </Typography.Text>
             {lowConfidenceOnly ? (
               <Button icon={<EyeOutlined />} onClick={handleShowAllRows}>
@@ -288,7 +288,7 @@ export function BomParsingReviewPage() {
                 icon={<EyeOutlined />}
                 onClick={handleReviewLowConfidence}
               >
-                Show lines that may not match well
+                Show parts that may not match well
               </Button>
             )}
           </Flex>

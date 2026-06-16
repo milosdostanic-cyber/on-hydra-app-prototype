@@ -1,5 +1,5 @@
 import { PictureOutlined } from '@ant-design/icons';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   filterAscBrowserProducts,
@@ -36,6 +36,7 @@ type BomChoosePartModalProps = {
   matchRow: BomMatchResult | null;
   onClose: () => void;
   onSelectPart: (product: AscBrowserProductRow) => void;
+  initialQuery?: string;
 };
 
 const FEATURED_CATEGORY_LABEL: Record<AscBrowserProductRow['browserCategory'], string> = {
@@ -163,10 +164,18 @@ export function BomChoosePartModal({
   matchRow,
   onClose,
   onSelectPart,
+  initialQuery,
 }: BomChoosePartModalProps) {
   const { token } = theme.useToken();
   const [search, setSearch] = useState('');
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setSearch(initialQuery ?? '');
+      setSelectedKey(null);
+    }
+  }, [open, initialQuery]);
   const [page, setPage] = useState(1);
 
   const featured = useMemo(() => getBomChooseFeaturedProducts(), []);

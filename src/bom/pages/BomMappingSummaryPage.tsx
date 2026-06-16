@@ -14,6 +14,7 @@ import {
   hasRequiredFieldMapping,
   isConcatenatedColumnUpload,
   mappingConfidenceLabel,
+  normalizeFieldMappingSkip,
 } from '../bomFieldMappingUtils';
 import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
 import { readUploadFileName } from '../bomUploadFlowState';
@@ -22,6 +23,7 @@ import { BomUploadFlowStepChrome } from '../components/BomUploadFlowStepChrome';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { bomProjectById } from '../data/mockData';
 import { useBomCancelUpload } from '../hooks/useBomCancelUpload';
+import { useBomImportSession } from '../hooks/useBomImportSession';
 import {
   hydraBaseNormal,
   hydraBaseStrong,
@@ -33,6 +35,7 @@ import {
   Flex,
   Space,
   Tag,
+  Tooltip,
   Typography,
   message,
   theme,
@@ -42,6 +45,7 @@ function confidenceAlertCopy(
   confidence: ReturnType<typeof evaluateMappingConfidence>,
   mappedCount: number,
   duplicateCount: number,
+  fieldMapping: ReturnType<typeof deriveFieldMappingForUpload>,
 ): { type: 'success' | 'warning' | 'error'; message: string; description: string } {
   if (confidence === 'blocked') {
     if (duplicateCount > 0) {
@@ -52,11 +56,13 @@ function confidenceAlertCopy(
           'Two or more fields point to the same spreadsheet column. Open Review columns to fix duplicates before continuing.',
       };
     }
+    const missing = getMissingRequiredFieldNames(fieldMapping);
+    const missingList = missing.length > 0 ? missing.join(', ') : 'required columns';
+    const plural = missing.length !== 1;
     return {
       type: 'error',
-      message: 'Required columns are missing',
-      description:
-        'Part Number, Description, and Quantity must be linked before we can read your file. Open Review columns to complete the required fields.',
+      message: `${missingList} ${plural ? 'are' : 'is'} not linked — import is blocked.`,
+      description: `Link your ${missingList} column${plural ? 's' : ''} in Review columns to continue.`,
     };
   }
   if (confidence === 'partial') {
@@ -74,16 +80,26 @@ function confidenceAlertCopy(
   };
 }
 
+/** Returns user-friendly names of the fields that are actually causing the 'blocked' state.
+ *  Mirrors the requirements in hasRequiredFieldMapping() — do not change the logic there. */
+function getMissingRequiredFieldNames(fieldMapping: ReturnType<typeof deriveFieldMappingForUpload>): string[] {
+  const missing: string[] = [];
+  if (!normalizeFieldMappingSkip(fieldMapping['PART NUMBER'])) missing.push('Part Number');
+  if (!normalizeFieldMappingSkip(fieldMapping.DESCRIPTION)) missing.push('Description');
+  if (!normalizeFieldMappingSkip(fieldMapping.QTY)) missing.push('Quantity');
+  return missing;
+}
+
 function mappingSummaryPageDescription(
   confidence: ReturnType<typeof evaluateMappingConfidence>,
 ): string {
   if (confidence === 'high') {
-    return 'We matched your columns to ASC fields automatically. If the links below look right, continue — otherwise use Review columns to adjust them.';
+    return 'We found these columns in your file and linked them to ASC fields automatically. If the links look right, continue — or use Review columns to adjust.';
   }
   if (confidence === 'partial') {
-    return 'We matched some columns from your file to ASC fields. Review the links below before continuing.';
+    return 'We found these columns in your file — some need linking before you can continue. Review them below.';
   }
-  return 'Link the required columns from your file to ASC fields before you can continue.';
+  return "We couldn't link the required columns. Map them below to continue.";
 }
 
 function HighConfidenceConfirmAlertDescription() {
@@ -92,8 +108,8 @@ function HighConfidenceConfirmAlertDescription() {
 
   return (
     <Typography.Paragraph style={{ ...bodyStyle, marginBottom: 0 }}>
-      Here&apos;s how we think your spreadsheet columns match our ASC fields. We linked these
-      automatically based on your column names.
+      Here are the columns we found in your file and how we linked them to ASC fields. We matched
+      these automatically based on your column names.
       <br />
       If this looks right, <span style={emphasisStyle}>continue</span>. Otherwise, use{' '}
       <span style={emphasisStyle}>Review columns</span> to adjust any links.
@@ -123,7 +139,7 @@ export function BomMappingSummaryPage() {
   const confidence = evaluateMappingConfidence(fieldMapping);
   const duplicateColumns = findDuplicateBomColumns(fieldMapping);
   const canContinue = hasRequiredFieldMapping(fieldMapping) && duplicateColumns.size === 0;
-  const alertCopy = confidenceAlertCopy(confidence, mappedCount, duplicateColumns.size);
+  const alertCopy = confidenceAlertCopy(confidence, mappedCount, duplicateColumns.size, fieldMapping);
 
   const projectMeta = bomProjectById(bomProjectId);
   const bomBackTarget = bomSitePath(projectId);
@@ -131,6 +147,7 @@ export function BomMappingSummaryPage() {
   const flowBackLabel = uploadState.uploadFlowBackLabel ?? 'Back to BOM';
   const advancedMappingRoute = bomAdvancedFieldMappingRoute(bomProjectId);
   const { confirmCancelUpload } = useBomCancelUpload(bomProjectId);
+  const { uploadId } = useBomImportSession(bomProjectId);
 
   const confidenceTagColor =
     confidence === 'high' ? 'success' : confidence === 'partial' ? 'warning' : 'error';
@@ -144,6 +161,7 @@ export function BomMappingSummaryPage() {
       ...uploadState,
       fieldMapping,
       mappingConfidence: confidence,
+      uploadId: uploadId ?? uploadState.uploadId,
     };
     navigate(`/bom/projects/${bomProjectId}/parsing-review`, { state: nextState });
   }
@@ -185,12 +203,32 @@ export function BomMappingSummaryPage() {
             <Button size="large" onClick={() => confirmCancelUpload('map')}>
               Cancel upload
             </Button>
-            <Button size="large" onClick={handleReviewMapping}>
+            <Button
+              size="large"
+              type={confidence === 'blocked' ? 'primary' : 'default'}
+              danger={confidence === 'blocked'}
+              onClick={handleReviewMapping}
+            >
               Review columns
             </Button>
-            <Button type="primary" size="large" disabled={!canContinue} onClick={handleContinue}>
-              Continue
-            </Button>
+            <Tooltip
+              title={
+                confidence === 'blocked'
+                  ? 'Fix the required column mapping to continue'
+                  : undefined
+              }
+            >
+              <span>
+                <Button
+                  type="primary"
+                  size="large"
+                  disabled={!canContinue}
+                  onClick={canContinue ? handleContinue : undefined}
+                >
+                  Continue
+                </Button>
+              </span>
+            </Tooltip>
           </Flex>
         }
       />
@@ -220,13 +258,14 @@ export function BomMappingSummaryPage() {
       <BomFieldMappingTable
         mode="view"
         viewRows={mappingEntries}
+        cardStyle={{ opacity: 0.7 }}
         topStrip={
           <>
             <Typography.Text
               strong
               style={{ ...hydraTextStyleToReactCss(hydraBaseStrong), color: token.colorTextSecondary }}
             >
-              Linked columns
+              HOW WE LINKED YOUR COLUMNS
             </Typography.Text>
             {confidence === 'high' ? (
               <Tag color={confidenceTagColor}>Matched with high confidence</Tag>
