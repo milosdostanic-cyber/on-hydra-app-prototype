@@ -88,7 +88,8 @@ export function BomProgressiveMatchingPage() {
   const totalParts = matchResults.length;
   const reviewingPosition = allDone ? totalParts : index + 1;
   const matchingProgressStatus = guidedMatchingStepStatusLabel(reviewingPosition, totalParts, allDone);
-  const processed = Math.min(index, totalParts);
+  const reviewedCount = stats.accepted + stats.skipped;
+  const remainingCount = Math.max(totalParts - reviewedCount, 0);
 
   const parsingReviewRoute = `/bom/projects/${bomProjectId}/parsing-review`;
 
@@ -228,16 +229,7 @@ export function BomProgressiveMatchingPage() {
     <Flex
       vertical
       gap={token.marginMD}
-      style={{
-        width: '100%',
-        ...(allDone
-          ? undefined
-          : {
-              minHeight: `calc(100vh - ${token.sizeXXL * 4}px)`,
-              maxHeight: `calc(100vh - ${token.sizeXXL * 4}px)`,
-              overflow: 'hidden',
-            }),
-      }}
+      style={{ width: '100%' }}
     >
       <div style={{ flexShrink: 0 }}>
         <BomUploadFlowStepChrome
@@ -298,8 +290,6 @@ export function BomProgressiveMatchingPage() {
       {!allDone && current ? (
         <div
           style={{
-            flex: 1,
-            minHeight: 0,
             display: 'flex',
             flexDirection: 'column',
             gap: token.marginMD,
@@ -312,14 +302,14 @@ export function BomProgressiveMatchingPage() {
             <Flex align="center" gap={token.marginMD}>
               <Flex vertical gap={token.marginXXS} style={{ flexShrink: 0 }}>
                 <Typography.Text strong style={hydraTextStyleToReactCss(hydraLargeStrong)}>
-                  {reviewingPosition}/{totalParts} reviewed
+                  {reviewedCount}/{totalParts} reviewed
                 </Typography.Text>
                 <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-                  {stats.pending} remaining · {stats.skipped} skipped
+                  {remainingCount} remaining · {stats.skipped} skipped
                 </Typography.Text>
               </Flex>
               <Progress
-                percent={totalParts ? Math.round((processed / totalParts) * 100) : 0}
+                percent={totalParts ? Math.round((reviewedCount / totalParts) * 100) : 0}
                 showInfo={false}
                 strokeColor={token.colorPrimary}
                 style={{ flex: 1, margin: 0 }}
@@ -327,15 +317,12 @@ export function BomProgressiveMatchingPage() {
             </Flex>
           </Card>
 
-          <BomMatchingReviewQualityAlert matchRow={current} />
+          <BomMatchingReviewQualityAlert matchRow={current} parsedItem={parsedItem} />
 
           <Card
-            style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
             styles={{
               body: {
                 padding: token.paddingMD,
-                flex: 1,
-                minHeight: 0,
                 display: 'flex',
                 flexDirection: 'column',
               },

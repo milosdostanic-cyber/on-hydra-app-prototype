@@ -1,14 +1,18 @@
 import { currentPartMatchingReviewAlert } from '../bomMatchingReviewAlert';
-import type { BomMatchResult } from '../data/types';
+import type { BomItem, BomMatchResult } from '../data/types';
 import { hydraBaseNormal, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 import { Alert, Typography } from '../../ui/antd';
 
 type BomMatchingReviewQualityAlertProps = {
   matchRow: BomMatchResult;
+  parsedItem?: BomItem;
 };
 
-export function BomMatchingReviewQualityAlert({ matchRow }: BomMatchingReviewQualityAlertProps) {
-  const banner = currentPartMatchingReviewAlert(matchRow);
+export function BomMatchingReviewQualityAlert({
+  matchRow,
+  parsedItem,
+}: BomMatchingReviewQualityAlertProps) {
+  const banner = currentPartMatchingReviewAlert(matchRow, parsedItem);
 
   return (
     <Alert

@@ -8,6 +8,7 @@ import {
 import { useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { resolveImportedPartDisplayLabel } from '../bomMatchingReviewAlert';
 import { matchScoreBand } from '../data/bomImportFlowSeed';
 import { matchRequiresSkuSelection, resolveFigureNumber } from '../bomMatchSkuUtils';
 import { getSkuVariantsForFigure } from '../data/ascSkuVariants';
@@ -374,10 +375,7 @@ export function BomMatchingReviewPartPanel({
     return types.size > 1;
   }, [candidates]);
 
-  const description =
-    parsedItem?.parsedDescription?.trim() ||
-    parsedItem?.originalInput?.trim() ||
-    matchRow.originalRequest;
+  const description = resolveImportedPartDisplayLabel(matchRow, parsedItem);
   const material =
     parsedItem?.connectionType?.trim() ||
     parsedItem?.category?.trim() ||

@@ -2,7 +2,19 @@ import { resolveFigureNumber } from './bomMatchSkuUtils';
 import { resolveReviewItemCtaState } from './bomMatchingReviewCtas';
 import { matchScoreBand } from './data/bomImportFlowSeed';
 import { getSkuVariantsForFigure } from './data/ascSkuVariants';
-import type { BomMatchResult } from './data/types';
+import type { BomItem, BomMatchResult } from './data/types';
+
+/** Same label as the YOUR PART panel — parsed description first, then raw file text. */
+export function resolveImportedPartDisplayLabel(
+  row: BomMatchResult,
+  parsedItem?: BomItem,
+): string {
+  return (
+    parsedItem?.parsedDescription?.trim() ||
+    parsedItem?.originalInput?.trim() ||
+    row.originalRequest
+  );
+}
 
 export type MatchingReviewAlertContent = {
   type: 'success' | 'info' | 'warning';
@@ -24,8 +36,11 @@ function confidencePhrase(confidence: number): string {
 }
 
 /** Guided review alert for the part currently on screen — plain language, no jargon. */
-export function currentPartMatchingReviewAlert(row: BomMatchResult): MatchingReviewAlertContent {
-  const original = quotePartLabel(row.originalRequest);
+export function currentPartMatchingReviewAlert(
+  row: BomMatchResult,
+  parsedItem?: BomItem,
+): MatchingReviewAlertContent {
+  const original = quotePartLabel(resolveImportedPartDisplayLabel(row, parsedItem));
   const state = resolveReviewItemCtaState(row);
   const top = row.topMatch;
 
