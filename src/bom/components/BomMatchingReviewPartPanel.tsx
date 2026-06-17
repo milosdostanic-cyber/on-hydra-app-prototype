@@ -10,9 +10,15 @@ import { useNavigate } from 'react-router-dom';
 
 import { resolveImportedPartDisplayLabel } from '../bomMatchingReviewAlert';
 import { matchScoreBand } from '../data/bomImportFlowSeed';
-import { matchRequiresSkuSelection, resolveFigureNumber } from '../bomMatchSkuUtils';
+import {
+  figureLevelMatchCardTitle,
+  figureLevelMatchExplanation,
+  matchRequiresSkuSelection,
+  resolveFigureNumber,
+} from '../bomMatchSkuUtils';
 import { getSkuVariantsForFigure } from '../data/ascSkuVariants';
 import {
+  ascPartShowsCatalogLinks,
   demoCatalogImageForPart,
   demoDomesticImportForPart,
   demoProductUrlForFigure,
@@ -179,11 +185,15 @@ function AscEquivalentCard({
   const { token } = theme.useToken();
   const figureRef = part.figureNumber ?? part.partNumber;
   const domesticImport = demoDomesticImportForPart(part);
+  const showCatalogLinks = ascPartShowsCatalogLinks(part);
   const scoreBand = matchScoreBand(part.matchConfidence);
-  const productUrl = demoProductUrlForFigure(figureRef);
-  const submittalUrl = demoSubmittalUrlForFigure(figureRef);
+  const productUrl = showCatalogLinks ? demoProductUrlForFigure(figureRef) : undefined;
+  const submittalUrl = showCatalogLinks ? demoSubmittalUrlForFigure(figureRef) : undefined;
   const imageUrl = demoCatalogImageForPart(part);
   const matchLevel = part.matchLevel === 'figure' ? 'figure' : 'sku';
+  const skuOptionCount = matchLevel === 'figure' ? getSkuVariantsForFigure(figureRef).length : 0;
+  const displayTitle =
+    matchLevel === 'figure' ? figureLevelMatchCardTitle(part.description) : part.description;
   const thumbSize = token.controlHeightLG + token.sizeLG + token.marginXS;
 
   return (
@@ -228,7 +238,7 @@ function AscEquivalentCard({
                 wordBreak: 'break-word',
               }}
             >
-              {part.description}
+              {displayTitle}
             </Typography.Text>
             <Flex align="center" gap={token.marginXS} wrap="wrap" justify="flex-end" style={{ flexShrink: 0 }}>
               {domesticImport ? (
@@ -267,6 +277,19 @@ function AscEquivalentCard({
             <InlineMeta label="Size" value={part.dimensions} />
           </Flex>
 
+          {matchLevel === 'figure' ? (
+            <Typography.Text
+              type="secondary"
+              style={{
+                ...hydraTextStyleToReactCss(hydraBaseNormal),
+                display: 'block',
+                marginTop: token.marginXXS,
+              }}
+            >
+              {figureLevelMatchExplanation(figureRef, skuOptionCount)}
+            </Typography.Text>
+          ) : null}
+
           <Flex
             align="center"
             gap={token.marginMD}
@@ -287,18 +310,20 @@ function AscEquivalentCard({
                 View product <ExportOutlined aria-hidden />
               </Typography.Link>
             ) : null}
-            <Typography.Link
-              href={submittalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                ...hydraTextStyleToReactCss(hydraBaseNormal),
-                color: token.colorLink,
-              }}
-            >
-              <FilePdfOutlined aria-hidden /> View PDF
-            </Typography.Link>
+            {submittalUrl ? (
+              <Typography.Link
+                href={submittalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  ...hydraTextStyleToReactCss(hydraBaseNormal),
+                  color: token.colorLink,
+                }}
+              >
+                <FilePdfOutlined aria-hidden /> View PDF
+              </Typography.Link>
+            ) : null}
           </Flex>
         </Flex>
       </Flex>
@@ -487,6 +512,11 @@ export function BomMatchingReviewPartPanel({
           <PanelColumnHeaderBlock
             title="Select SKU"
             subtitle={`Figure ${figureRef} · ${skuVariantCount} option${skuVariantCount === 1 ? '' : 's'}`}
+            trailing={
+              <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+                Pick the exact sellable part
+              </Typography.Text>
+            }
           />
           <div
             style={{

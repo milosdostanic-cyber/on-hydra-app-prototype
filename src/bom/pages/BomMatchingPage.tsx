@@ -10,8 +10,6 @@ import {
   hydraTextStyleToReactCss,
   hydraTitleHeading3,
 } from '../../theme/hydraTypography';
-import { BomConfidenceTag } from '../components/BomTags';
-import type { BomItemConfidence } from '../data/types';
 import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
 import { readUploadFileName } from '../bomUploadFlowState';
 import { matchingStepStatusLabel } from '../bomUploadFlowStatus';
@@ -60,31 +58,19 @@ function rowConfidence(row: BomMatchResult): 'high' | 'medium' | 'low' | 'none' 
   return 'low';
 }
 
-/** KPI reflects accepted lines only — skipped medium/low are not treated as accepted matches. */
-function aggregateMatchConfidence(results: BomMatchResult[]): BomItemConfidence {
-  const accepted = results.filter((r) => r.lineStatus === 'accepted');
-  const source = accepted.length > 0 ? accepted : results.filter((r) => r.lineStatus === 'pending');
-  if (source.length === 0) return 'low';
-
-  const bands = source.map(rowConfidence);
-  if (bands.every((b) => b === 'high' || b === 'none')) return 'high';
-  if (bands.some((b) => b === 'low' || b === 'none')) return 'low';
-  return 'medium';
-}
-
 /** Figma `5026:21422` — review summary strip above matching table. */
 function BomMatchingStatsStrip({
   summary,
-  matchConfidence,
 }: {
   summary: ReturnType<typeof computeMatchingReviewSummary>;
-  matchConfidence: BomItemConfidence;
 }) {
   const { token } = theme.useToken();
+  const readyCount = summary.confirmed + summary.chosen;
+  const needsAttention = summary.incomplete;
 
   const cardShellStyle = (accentColor: string, flex?: string | number) => ({
     flex: flex ?? 1,
-    minWidth: 212,
+    minWidth: 200,
     height: 56,
     paddingLeft: token.paddingMD,
     paddingRight: token.paddingMD,
@@ -113,27 +99,13 @@ function BomMatchingStatsStrip({
         {statInner('Total parts', summary.total)}
       </Flex>
       <Flex align="center" style={cardShellStyle(token.colorSuccessBorder)}>
-        {statInner('Confirmed', summary.confirmed)}
-      </Flex>
-      <Flex align="center" style={cardShellStyle(token.colorSuccessBorder)}>
-        {statInner('Chosen', summary.chosen)}
+        {statInner('Ready to import', readyCount)}
       </Flex>
       <Flex align="center" style={cardShellStyle(token.colorWarning)}>
+        {statInner('Needs attention', needsAttention)}
+      </Flex>
+      <Flex align="center" style={cardShellStyle(token.colorWarningBorder)}>
         {statInner('Skipped', summary.skipped)}
-      </Flex>
-      <Flex align="center" style={cardShellStyle(token.colorError)}>
-        {statInner('Unresolved', summary.unresolved)}
-      </Flex>
-      <Flex align="center" style={cardShellStyle(token.colorWarning)}>
-        {statInner('Needs SKU', summary.needsSku)}
-      </Flex>
-      <Flex align="center" style={{ ...cardShellStyle(bluePrimaryPrimitiveLight[2], 'none'), minWidth: 368 }}>
-        <Flex align="center" justify="space-between" style={{ width: '100%', maxWidth: 326, height: 30 }}>
-          <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-            Match Confidence
-          </Typography.Text>
-          <BomConfidenceTag confidence={matchConfidence} showIcon />
-        </Flex>
       </Flex>
     </Flex>
   );
@@ -161,6 +133,7 @@ export function BomMatchingPage() {
   const { chooseOpen, chooseMatchRow, openChoose, closeChoose, handleSelectPart } = useBomChoosePartDrawer(
     matchResults,
     persist,
+    { autoAcceptOnSelect: true },
   );
 
   const rowNumbers = useMemo(() => {
@@ -198,7 +171,6 @@ export function BomMatchingPage() {
     return filteredResults.slice(start, start + shellLayout.tablePageSizeDefault);
   }, [filteredResults, page]);
 
-  const matchConfidence = aggregateMatchConfidence(matchResults);
   const allLinesReviewed = stats.pending === 0;
   const matchingProgressStatus = matchingStepStatusLabel(stats);
   const parsingReviewRoute = `/bom/projects/${bomProjectId}/parsing-review`;
@@ -269,17 +241,12 @@ export function BomMatchingPage() {
 
   const handleApplySkuVariant = useCallback(
     (next: BomMatchResult) => {
-      persist(matchResults.map((r) => (r.itemId === next.itemId ? next : r)));
-      message.success('SKU variant selected.');
+      const ready = isReadyToConfirmMatch(next);
+      const accepted = ready ? { ...next, lineStatus: 'accepted' as const } : next;
+      persist(matchResults.map((r) => (r.itemId === accepted.itemId ? accepted : r)));
+      message.success(ready ? 'SKU selected and match saved.' : 'SKU variant selected.');
     },
     [matchResults, persist],
-  );
-
-  const handleViewOriginal = useCallback(
-    (row: BomMatchResult) => {
-      setDetailItemId(row.itemId);
-    },
-    [],
   );
 
   const handleDeleteRow = useCallback(
@@ -308,13 +275,13 @@ export function BomMatchingPage() {
           onChoose: handleChoose,
           onSelectSku: handleSelectSku,
           onReview: handleReviewRow,
-          onViewOriginal: handleViewOriginal,
           onDelete: handleDeleteRow,
           resolveSubmittalUrl,
+          bomProjectId,
         },
         showReviewCompleteBanner,
       ),
-    [handleChoose, handleConfirm, handleDeleteRow, handleReviewRow, handleSelectSku, handleViewOriginal, resolveSubmittalUrl, rowNumbers, showReviewCompleteBanner],
+    [bomProjectId, handleChoose, handleConfirm, handleDeleteRow, handleReviewRow, handleSelectSku, resolveSubmittalUrl, rowNumbers, showReviewCompleteBanner],
   );
 
   if (bomProjectId && bomProjectId !== 'new' && !projectMeta) {
@@ -422,7 +389,7 @@ export function BomMatchingPage() {
         )
       ) : null}
 
-      <BomMatchingStatsStrip summary={reviewSummary} matchConfidence={matchConfidence} />
+      <BomMatchingStatsStrip summary={reviewSummary} />
 
       <Card styles={{ body: { padding: 0 } }}>
         <Flex
@@ -542,6 +509,7 @@ export function BomMatchingPage() {
         open={detailItemId !== null}
         matchRow={detailMatchRow}
         parsedItem={detailParsedItem}
+        bomProjectId={bomProjectId}
         onClose={() => setDetailItemId(null)}
         onConfirm={() => {
           if (detailMatchRow) handleConfirm(detailMatchRow);

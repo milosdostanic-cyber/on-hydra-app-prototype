@@ -1,37 +1,76 @@
 import { MoreOutlined } from '@ant-design/icons';
-import { matchRequiresSkuSelection } from './bomMatchSkuUtils';
+import { matchRequiresSkuSelection, figureLevelMatchTableHint, resolveFigureNumber } from './bomMatchSkuUtils';
 import {
   reviewCanConfirm,
   summaryTableRowActionLabel,
 } from './bomMatchingReviewCtas';
 import { matchScoreBand } from './data/bomImportFlowSeed';
 import type { BomMatchResult } from './data/types';
+import { BomAscFigureLink } from './components/BomAscFigureLink';
 import { BomTableRowActions, type BomTableRowAction } from './components/BomTableRowActions';
-import { BomConfidenceTag, BomManualTag, BomReviewDisplayStatusTag } from './components/BomTags';
+import { BomConfidenceTag, BomManualTag, BomMatchLevelTag, BomReviewDisplayStatusTag } from './components/BomTags';
 import { Button, Dropdown, Flex, Space, Typography } from '../ui/antd';
 import type { MenuProps, TableColumnsType } from '../ui/antd';
 
 /** Figma `5026:21449` — Matching results table column widths. */
 export const MATCHING_RESULTS_COLUMN_WIDTHS = {
   line: 56,
-  originalPart: 401,
+  originalPart: 280,
   ourPart: 392,
   matchScore: 120,
-  status: 101,
+  status: 210,
   actions: 168,
 } as const;
 
 type MatchRowActions = {
+  bomProjectId: string;
   onConfirm: (row: BomMatchResult) => void;
   onChoose: (row: BomMatchResult) => void;
   onSelectSku: (row: BomMatchResult) => void;
   onReview: (row: BomMatchResult) => void;
-  onViewOriginal?: (row: BomMatchResult) => void;
   onDelete?: (row: BomMatchResult) => void;
   resolveSubmittalUrl?: (row: BomMatchResult) => string | undefined;
 };
 
 type RowNumberLookup = (itemId: string) => number | undefined;
+
+function ourPartSkuLabel(row: BomMatchResult): string | undefined {
+  if (!row.topMatch || matchRequiresSkuSelection(row)) return undefined;
+  const sku = row.topMatch.partNumber?.trim();
+  if (!sku) return undefined;
+  const figure = resolveFigureNumber(row)?.trim();
+  if (figure && sku === figure) return undefined;
+  return sku;
+}
+
+function OurPartCell({ row, bomProjectId }: { row: BomMatchResult; bomProjectId: string }) {
+  const needsSku = matchRequiresSkuSelection(row);
+  const figureRef = resolveFigureNumber(row);
+  const sku = ourPartSkuLabel(row);
+
+  return (
+    <Space orientation="vertical" size={0}>
+      {figureRef ? (
+        <BomAscFigureLink bomProjectId={bomProjectId} figureNumber={figureRef} prefix="Fig. " />
+      ) : null}
+      {sku ? (
+        <Typography.Text>
+          <Typography.Text type="secondary">SKU </Typography.Text>
+          <Typography.Text strong>{sku}</Typography.Text>
+        </Typography.Text>
+      ) : null}
+      {row.topMatch?.description ? (
+        <Typography.Text type="secondary">{row.topMatch.description}</Typography.Text>
+      ) : null}
+      {needsSku ? (
+        <>
+          <BomMatchLevelTag level="figure" />
+          <Typography.Text type="secondary">{figureLevelMatchTableHint()}</Typography.Text>
+        </>
+      ) : null}
+    </Space>
+  );
+}
 
 export function buildMatchingResultsColumns(
   rowNumberFor: RowNumberLookup,
@@ -58,20 +97,7 @@ export function buildMatchingResultsColumns(
       width: MATCHING_RESULTS_COLUMN_WIDTHS.ourPart,
       render: (_, row) =>
         row.topMatch ? (
-          <Space orientation="vertical" size={0}>
-            {row.figureNumber ? (
-              <Typography.Text type="secondary">Fig. {row.figureNumber}</Typography.Text>
-            ) : null}
-            <Typography.Text strong>
-              {matchRequiresSkuSelection(row)
-                ? `${row.topMatch.partNumber} (figure)`
-                : row.topMatch.partNumber}
-            </Typography.Text>
-            <Typography.Text type="secondary">{row.topMatch.description}</Typography.Text>
-            {matchRequiresSkuSelection(row) ? (
-              <Typography.Text type="secondary">Select a SKU variant to confirm</Typography.Text>
-            ) : null}
-          </Space>
+          <OurPartCell row={row} bomProjectId={actions.bomProjectId} />
         ) : (
           <Typography.Text type="secondary">—</Typography.Text>
         ),
@@ -97,7 +123,11 @@ export function buildMatchingResultsColumns(
       title: 'Status',
       key: 'status',
       width: MATCHING_RESULTS_COLUMN_WIDTHS.status,
-      render: (_, row) => <BomReviewDisplayStatusTag row={row} />,
+      render: (_, row) => (
+        <span style={{ whiteSpace: 'nowrap' }}>
+          <BomReviewDisplayStatusTag row={row} />
+        </span>
+      ),
     },
     {
       title: 'Action',
@@ -123,23 +153,12 @@ function MatchActionsCell({
   const isAcceptedAfterGuided = guidedReviewComplete && row.lineStatus === 'accepted';
 
   const menuItems: MenuProps['items'] = [
-    ...(actions.onViewOriginal
-      ? [{ key: 'view-original', label: 'View original info', onClick: () => actions.onViewOriginal!(row) }]
-      : []),
     ...(submittalUrl
       ? [{ key: 'submittal', label: 'Go to submittal', onClick: () => window.open(submittalUrl, '_blank', 'noopener,noreferrer') }]
       : []),
-    // Accepted rows already passed guided review — keep "Change match" available for edge cases,
-    // but tucked into the menu so it does not look like a required step.
-    ...(isAcceptedAfterGuided
-      ? [
-          { type: 'divider' as const },
-          { key: 'change-match', label: 'Change match', onClick: () => actions.onChoose(row) },
-        ]
-      : []),
     ...(actions.onDelete
       ? [
-          { type: 'divider' as const },
+          ...(submittalUrl ? [{ type: 'divider' as const }] : []),
           { key: 'delete', label: 'Delete', danger: true, onClick: () => actions.onDelete!(row) },
         ]
       : []),
@@ -147,14 +166,20 @@ function MatchActionsCell({
 
   const moreButton = menuItems.length > 0 ? (
     <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
-      <Button size="small" icon={<MoreOutlined />} />
+      <Button size="small" icon={<MoreOutlined />} onClick={(e) => e.stopPropagation()} />
     </Dropdown>
   ) : null;
 
-  // Confirmed / chosen rows are done — Status column already shows the badge,
-  // so the actions cell is intentionally quiet (only the overflow menu).
+  const inlineAction = (action: BomTableRowAction) => (
+    <Flex gap={4} align="center">
+      <BomTableRowActions nowrap maxVisible={1} actions={[action]} />
+      {moreButton}
+    </Flex>
+  );
+
+  // Accepted after guided review — row click opens detail drawer; inline change + overflow for secondary items.
   if (isAcceptedAfterGuided) {
-    return moreButton;
+    return inlineAction({ key: 'change', label: 'Change match', onClick: () => actions.onChoose(row) });
   }
 
   const label = summaryTableRowActionLabel(row);
@@ -178,10 +203,5 @@ function MatchActionsCell({
     };
   }
 
-  return (
-    <Flex gap={4} align="center">
-      <BomTableRowActions nowrap maxVisible={1} actions={[action]} />
-      {moreButton}
-    </Flex>
-  );
+  return inlineAction(action);
 }

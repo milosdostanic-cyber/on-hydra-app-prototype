@@ -106,6 +106,12 @@ Verification of the short client checklist against the current branch **`bom-upl
 - Line-by-line **confirm** happens once in **guided review**, not again on the summary table for already-accepted rows.
 - Completion screen is a **single global** decision point before the scan-only summary table.
 - Skipped lines can re-enter guided review instead of forcing spreadsheet re-confirmation.
+- On the summary table, **Change match** or **Pick exact product** saves the row immediately — no extra **Confirm match** step (see **7b**).
+
+**Also (7b)**
+
+- [`src/bom/hooks/useBomChoosePartDrawer.tsx`](../src/bom/hooks/useBomChoosePartDrawer.tsx) — `autoAcceptOnSelect` on the table
+- [`src/bom/pages/BomMatchingPage.tsx`](../src/bom/pages/BomMatchingPage.tsx) — auto-accept after manual part change or SKU selection
 
 ---
 
@@ -177,6 +183,89 @@ Verification of the short client checklist against the current branch **`bom-upl
 
 ---
 
+## 7b. No redundant Confirm match after table edits
+
+| | |
+|---|---|
+| **Status** | Done |
+| **App route** | Matching results — [`/bom/projects/:bomProjectId/matching/table`](http://localhost:5173/bom/projects/new/matching/table) |
+
+**Code**
+
+- [`src/bom/hooks/useBomChoosePartDrawer.tsx`](../src/bom/hooks/useBomChoosePartDrawer.tsx) — optional `autoAcceptOnSelect` sets `lineStatus: 'accepted'` after part pick
+- [`src/bom/pages/BomMatchingPage.tsx`](../src/bom/pages/BomMatchingPage.tsx) — table uses `autoAcceptOnSelect: true`; SKU apply auto-accepts when ready
+
+**What changed**
+
+- After **Change match** or **Pick exact product** on the summary table, the row is saved immediately.
+- Guided review still requires explicit confirm per line (`autoAcceptOnSelect: false` there).
+
+---
+
+## 9. Hide ASC catalog links on Import suggestion cards
+
+| | |
+|---|---|
+| **Status** | Done |
+| **App route** | Guided match — [`/bom/projects/:bomProjectId/matching/review`](http://localhost:5173/bom/projects/new/matching/review) (**HOW WE MATCHED IT**) |
+| **Also** | Matching table detail drawer; figure-only SKU picker |
+
+**Code**
+
+- [`src/bom/bomWorkspaceDashboard.ts`](../src/bom/bomWorkspaceDashboard.ts) — `ascPartShowsCatalogLinks()`
+- [`src/bom/components/BomMatchingReviewPartPanel.tsx`](../src/bom/components/BomMatchingReviewPartPanel.tsx)
+- [`src/bom/components/BomMatchDetailDrawer.tsx`](../src/bom/components/BomMatchDetailDrawer.tsx)
+- [`src/bom/components/BomSkuVariantPicker.tsx`](../src/bom/components/BomSkuVariantPicker.tsx)
+
+**What changed**
+
+- **Import** badges no longer show **View product** / **View PDF** / **View submittal** — those parts have no ASC catalog page.
+- **Domestic** cards keep catalog links.
+
+---
+
+## 11. ASC figure links (ConnectED part listing)
+
+| | |
+|---|---|
+| **Status** | Done |
+| **App route** | Matching results — [`/bom/projects/:bomProjectId/matching/table`](http://localhost:5173/bom/projects/new/matching/table) (**Our Part** column) |
+| **Also** | Row detail drawer |
+
+**Code**
+
+- [`src/bom/components/BomAscFigureLink.tsx`](../src/bom/components/BomAscFigureLink.tsx)
+- [`src/bom/bomMatchingColumns.tsx`](../src/bom/bomMatchingColumns.tsx)
+- [`src/bom/components/BomMatchDetailDrawer.tsx`](../src/bom/components/BomMatchDetailDrawer.tsx)
+
+**What changed**
+
+- **Fig. {number}** in **Our Part** is a clickable underlined link to the ASC products browser (figure pre-filled in search).
+- **Original part** stays plain text. SKU lines are labelled **SKU** when shown.
+
+---
+
+## 12. Figure vs SKU — light UI cue and explanation
+
+| | |
+|---|---|
+| **Status** | Done |
+| **App route** | Guided match + matching table (figure-level rows) |
+
+**Code**
+
+- [`src/bom/bomMatchSkuUtils.ts`](../src/bom/bomMatchSkuUtils.ts) — shared copy helpers
+- [`src/bom/components/BomMatchingReviewPartPanel.tsx`](../src/bom/components/BomMatchingReviewPartPanel.tsx)
+- [`src/bom/bomMatchingColumns.tsx`](../src/bom/bomMatchingColumns.tsx)
+- [`src/bom/components/BomMatchDetailDrawer.tsx`](../src/bom/components/BomMatchDetailDrawer.tsx)
+
+**What changed**
+
+- Figure-only matches show **Product family** badge plus plain-language text explaining the user must pick an exact SKU variant.
+- Card titles append **— select SKU variant**; **Select SKU** panel appears on the right in guided review.
+
+---
+
 ## Quick test path (all items)
 
 1. Open [`/bom/site/3`](http://localhost:5173/bom/site/3) — upload/search cards.
@@ -196,4 +285,4 @@ Verification of the short client checklist against the current branch **`bom-upl
 
 ---
 
-*Last verified against branch `bom-upload-match-review-plan` at commit `cec21b9`.*
+*Last verified against branch `bom-upload-match-review-plan`.*

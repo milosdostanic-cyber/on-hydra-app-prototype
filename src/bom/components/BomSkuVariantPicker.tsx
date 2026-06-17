@@ -92,18 +92,20 @@ function SkuVariantCard({
           </Typography.Text>
         ) : null}
 
-        <Typography.Link
-          href={demoSubmittalUrlForFigure(variant.figureNumber)}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            ...hydraTextStyleToReactCss(hydraBaseNormal),
-            color: token.colorLink,
-          }}
-        >
-          <FilePdfOutlined aria-hidden /> View submittal
-        </Typography.Link>
+        {variant.domesticImport !== 'Import' ? (
+          <Typography.Link
+            href={demoSubmittalUrlForFigure(variant.figureNumber)}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              ...hydraTextStyleToReactCss(hydraBaseNormal),
+              color: token.colorLink,
+            }}
+          >
+            <FilePdfOutlined aria-hidden /> View submittal
+          </Typography.Link>
+        ) : null}
       </Flex>
     </button>
   );

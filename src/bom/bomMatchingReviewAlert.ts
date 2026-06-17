@@ -1,4 +1,4 @@
-import { resolveFigureNumber } from './bomMatchSkuUtils';
+import { figureLevelMatchExplanation, resolveFigureNumber } from './bomMatchSkuUtils';
 import { resolveReviewItemCtaState } from './bomMatchingReviewCtas';
 import { matchScoreBand } from './data/bomImportFlowSeed';
 import { getSkuVariantsForFigure } from './data/ascSkuVariants';
@@ -74,15 +74,11 @@ export function currentPartMatchingReviewAlert(
   if (state === 'figure-only') {
     const figure = resolveFigureNumber(row) ?? suggested;
     const optionCount = getSkuVariantsForFigure(figure).length;
-    const optionNote =
-      optionCount > 0
-        ? ` Choose one of ${optionCount} product option${optionCount === 1 ? '' : 's'} below, then confirm`
-        : ' Choose the exact product below, then confirm';
 
     return {
       type: 'info',
       message: 'Pick the exact product for this part',
-      description: `We matched ${original} to product family ${figure} with ${confidencePhrase(conf)}.${optionNote} — or choose a different part if this family is not right.`,
+      description: `${figureLevelMatchExplanation(figure, optionCount)} Or choose a different part if this family is not right.`,
     };
   }
 

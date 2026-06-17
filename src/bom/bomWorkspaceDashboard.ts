@@ -51,6 +51,14 @@ export function demoCatalogImageForPart(part: AscCatalogPart): string | undefine
   return demoCatalogImageForFigure(part.figureNumber ?? part.partNumber);
 }
 
+/**
+ * Returns true only for Domestic ASC parts that have a real catalog page.
+ * Import parts do not have ASC product/submittal pages — hide those links in matching UI.
+ */
+export function ascPartShowsCatalogLinks(part: AscCatalogPart): boolean {
+  return demoDomesticImportForPart(part) === 'Domestic';
+}
+
 /** Demo domestic/import label for ASC suggestion cards. */
 export function demoDomesticImportForPart(part: AscCatalogPart): 'Domestic' | 'Import' | undefined {
   const figure = part.figureNumber ?? part.partNumber;

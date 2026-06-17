@@ -63,3 +63,24 @@ export function variantMetadataLine(variant: AscSkuVariant): string {
     .filter(Boolean)
     .join(' · ');
 }
+
+/** Card title when the suggestion is a product family, not an exact SKU. */
+export function figureLevelMatchCardTitle(description: string): string {
+  const base = description.trim();
+  if (!base) return 'Product family match — select SKU variant';
+  return `${base} — select SKU variant`;
+}
+
+/** Inline copy explaining why the user must pick a SKU variant (James / Matt feedback). */
+export function figureLevelMatchExplanation(figureNumber: string, optionCount: number): string {
+  const figure = figureNumber.trim();
+  if (optionCount > 0) {
+    return `We matched your part to figure ${figure}. This is a product family — choose one of ${optionCount} sellable SKU option${optionCount === 1 ? '' : 's'} on the right before you confirm.`;
+  }
+  return `We matched your part to figure ${figure}. Pick the exact SKU variant before you confirm this line.`;
+}
+
+/** Short hint for matching table rows that still need a SKU. */
+export function figureLevelMatchTableHint(): string {
+  return 'Product family match — pick the exact SKU variant to finish this line.';
+}

@@ -1,16 +1,19 @@
 import { FilePdfOutlined, PictureOutlined } from '@ant-design/icons';
 
+import { getSkuVariantsForFigure } from '../data/ascSkuVariants';
 import { matchScoreBand } from '../data/bomImportFlowSeed';
 import {
   reviewDetailPrimaryLabel,
   reviewSecondaryCtaLabel,
 } from '../bomMatchingReviewCtas';
 import {
+  figureLevelMatchExplanation,
   isReadyToConfirmMatch,
   matchRequiresSkuSelection,
   resolveFigureNumber,
 } from '../bomMatchSkuUtils';
-import { demoProductUrlForFigure, demoSubmittalUrlForFigure } from '../bomWorkspaceDashboard';
+import { ascPartShowsCatalogLinks, demoProductUrlForFigure, demoSubmittalUrlForFigure } from '../bomWorkspaceDashboard';
+import { BomAscFigureLink } from './BomAscFigureLink';
 import { BomConfidenceTag, BomManualTag } from './BomTags';
 import type { BomItem, BomMatchResult } from '../data/types';
 import {
@@ -33,6 +36,7 @@ type BomMatchDetailDrawerProps = {
   open: boolean;
   matchRow: BomMatchResult | null;
   parsedItem?: BomItem;
+  bomProjectId?: string;
   onClose: () => void;
   onConfirm: () => void;
   onChoose: () => void;
@@ -44,6 +48,7 @@ export function BomMatchDetailDrawer({
   open,
   matchRow,
   parsedItem,
+  bomProjectId,
   onClose,
   onConfirm,
   onChoose,
@@ -60,8 +65,9 @@ export function BomMatchDetailDrawer({
   const confirmReady = isReadyToConfirmMatch(matchRow);
   const conf = top.matchConfidence ?? 0;
   const scoreBand = matchScoreBand(conf);
-  const submittalUrl = demoSubmittalUrlForFigure(figureRef);
-  const productUrl = demoProductUrlForFigure(figureRef);
+  const showCatalogLinks = ascPartShowsCatalogLinks(top);
+  const submittalUrl = showCatalogLinks ? demoSubmittalUrlForFigure(figureRef) : undefined;
+  const productUrl = showCatalogLinks ? demoProductUrlForFigure(figureRef) : undefined;
   const selectedSku =
     matchRow.selectedVariantId && matchRow.matchLevel !== 'figure' ? top.partNumber : undefined;
   const secondaryLabel = reviewSecondaryCtaLabel(matchRow);
@@ -127,10 +133,14 @@ export function BomMatchDetailDrawer({
       >
         {needsSku ? (
           <Alert
-            type="warning"
+            type="info"
             showIcon
-            message="Figure-level match"
-            description="Pick the exact SKU variant before you confirm this line."
+            message="Product family match"
+            description={
+              figureRef
+                ? figureLevelMatchExplanation(figureRef, getSkuVariantsForFigure(figureRef).length)
+                : 'Pick the exact SKU variant before you confirm this line.'
+            }
           />
         ) : null}
 
@@ -160,7 +170,13 @@ export function BomMatchDetailDrawer({
             </Flex>
 
             <Flex vertical gap={token.marginXXS}>
-              {figureRef ? (
+              {figureRef && bomProjectId ? (
+                <BomAscFigureLink
+                  bomProjectId={bomProjectId}
+                  figureNumber={figureRef}
+                  prefix="Figure "
+                />
+              ) : figureRef ? (
                 <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
                   Figure {figureRef}
                 </Typography.Text>
@@ -211,9 +227,11 @@ export function BomMatchDetailDrawer({
                   View product page
                 </Typography.Link>
               ) : null}
-              <Typography.Link href={submittalUrl} target="_blank" rel="noopener noreferrer">
-                <FilePdfOutlined aria-hidden /> View submittal / datasheet
-              </Typography.Link>
+              {submittalUrl ? (
+                <Typography.Link href={submittalUrl} target="_blank" rel="noopener noreferrer">
+                  <FilePdfOutlined aria-hidden /> View submittal / datasheet
+                </Typography.Link>
+              ) : null}
             </Space>
 
             <Divider style={{ margin: 0 }} />

@@ -8,6 +8,7 @@ import { message } from '../../ui/antd';
 export function useBomChoosePartDrawer(
   matchResults: BomMatchResult[],
   persist: (next: BomMatchResult[]) => void,
+  { autoAcceptOnSelect = false }: { autoAcceptOnSelect?: boolean } = {},
 ) {
   const [chooseItemId, setChooseItemId] = useState<string | null>(null);
 
@@ -36,7 +37,7 @@ export function useBomChoosePartDrawer(
         ...matchRow,
         topMatch,
         source: 'manual',
-        lineStatus: 'pending',
+        lineStatus: autoAcceptOnSelect ? 'accepted' : 'pending',
         matchLevel: 'sku',
         figureNumber: product.figureNumber,
         selectedVariantId: `manual-${product.key}`,
@@ -46,9 +47,7 @@ export function useBomChoosePartDrawer(
         ),
       };
       persist(matchResults.map((r) => (r.itemId === chooseItemId ? next : r)));
-      message.success(
-        hadSuggestion ? 'Part updated — confirm the match to continue.' : 'Part selected — confirm the match to continue.',
-      );
+      message.success(autoAcceptOnSelect ? 'Part saved.' : hadSuggestion ? 'Part updated — confirm the match to continue.' : 'Part selected — confirm the match to continue.');
       setChooseItemId(null);
     },
     [chooseItemId, matchResults, persist],

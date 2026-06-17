@@ -90,7 +90,8 @@ export function BomConfidenceTag({
 }
 
 const matchLevelTooltip: Record<'figure' | 'sku', string> = {
-  figure: 'Parent product family — select a specific SKU before saving',
+  figure:
+    'Matched at the product family (figure) level — pick the exact sellable SKU before saving this line',
   sku: 'Exact sellable part — ready to add to your workspace',
 };
 
