@@ -9,7 +9,7 @@ alwaysApply: false
 
 Use this workflow when you **add or change** UI in a Figma file (especially after **[figma-repo-to-screen-parity.mdc](./figma-repo-to-screen-parity.mdc)** or any layout sync from repo) and the user wants **designer-facing notes** left **in Figma** on the correct nodes.
 
-All automation uses **[figma-console-mcp.mdc](./figma-console-mcp.mdc)** only (`CallMcpTool` → **`server`: `user-figma-console`**). Read tool schemas before calling.
+**Requires explicit Figma Console MCP opt-in** — Official MCP has no comment-pin equivalent. User must request Console MCP; then follow **[figma-console-mcp.mdc](./figma-console-mcp.mdc)** (`CallMcpTool` → **`server`: `user-figma-console`**). Read tool schemas before calling.
 
 | Task | Tool |
 |------|------|

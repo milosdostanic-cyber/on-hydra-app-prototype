@@ -393,7 +393,7 @@ export function buildParsingReviewEditableFields(
     },
     {
       key: 'figureNumber',
-      label: 'Figure number',
+      label: 'Figure Number',
       node: editableTableText({
         value: row.figureNumber,
         needsAttention: parsingReviewFieldNeedsAttention(row, 'figureNumber', profile),

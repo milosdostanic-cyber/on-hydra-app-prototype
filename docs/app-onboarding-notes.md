@@ -245,7 +245,7 @@ All routes live inside `AppShell` (sidebar + top bar + breadcrumbs always visibl
 - Clicking **Continue**: restores `activeUploadId`, navigates to `routeForImportStep(projectId, currentStep)`
 - Sessions persist across page refresh via localStorage (`hydra_bom_import_sessions_v2`)
 
-**Demo behavior:** Project `3` (Office Complex HVAC Upgrade) is always seeded with 3 pending imports. Project `1` (Hospital Wing) is seeded with 1 pending import. This seeding re-runs every time `pendingForProject()` is called if the seed was dismissed.
+**Demo behavior:** Project `6` (Parking Garage Electrical Upgrade) is always seeded with 3 pending imports. Project `1` (Hospital Wing) is seeded with 1 pending import. This seeding re-runs every time `pendingForProject()` is called if the seed was dismissed.
 
 ---
 
@@ -516,7 +516,7 @@ Full description in Flow 2 above. Key details:
 
 8. **File limits:** 50MB max, types: `.xlsx`, `.xls`, `.csv`, `.pdf` (see `src/bom/constants/uploadLimits.ts`)
 
-9. **Demo seeding:** `ensureDemoPendingImports()` always re-seeds project `3` with 3 pending imports and project `1` with 1. This overrides user dismissals in the demo.
+9. **Demo seeding:** `ensureDemoPendingImports()` always re-seeds project `6` with 3 pending imports and project `1` with 1. This overrides user dismissals in the demo.
 
 10. **Upload flow location state:** The flow from upload → mapping → parsing → matching passes data forward via `location.state` as `BomUploadFlowLocationState`. This includes `uploadFileName`, `uploadDestination`, `appendTargetId`, `fieldMapping`, `mappingConfidence`, `uploadId`. Losing this state (e.g., direct URL navigation) degrades some functionality; hooks fall back to localStorage.
 
@@ -703,7 +703,7 @@ Layout metrics in `src/theme/hydraAlias.ts` → `shellLayout`:
 
 6. **Location state dependency:** The upload flow passes critical data (`uploadId`, `fieldMapping`, `uploadDestination`) via `location.state`. A user who refreshes mid-flow (e.g., on parsing-review page) may see degraded behavior. The app has fallback handling via `useBomImportSession`, but it's not guaranteed to recover all state.
 
-7. **Demo seed interference:** `ensureDemoPendingImports()` re-seeds projects 1 and 3 every time `pendingForProject()` is called. If a demo user dismisses the pending uploads, they come back on next visit. This creates a confusing demo experience.
+7. **Demo seed interference:** `ensureDemoPendingImports()` re-seeds projects 1 and 6 every time `pendingForProject()` is called. If a demo user dismisses the pending uploads, they come back on next visit. This creates a confusing demo experience.
 
 8. **Match table "Save and Import" is hard to enable:** Every line must be accepted or skipped — no partial save. The UX for skipping many lines at once (bulk skip) is only available as "Skip rest" which applies to all remaining pending lines simultaneously. No multi-select skip.
 
@@ -781,7 +781,7 @@ Verify these manually in the browser (`npm run dev`):
 - [ ] Status filter (Confirmed / Needs Review / Missing) filters correctly
 
 ### Resume Interrupted Import
-- [ ] Open project `3` (Office Complex HVAC Upgrade) workspace → 3 pending upload strips shown in yellow bar
+- [ ] Open project `6` (Parking Garage Electrical Upgrade) workspace → 3 pending upload strips shown in yellow bar
 - [ ] Open project `1` (Hospital Wing) workspace → 1 pending upload strip shown
 - [ ] Click "Continue" on a pending strip → navigates to correct step
 - [ ] Refresh page mid-flow → still able to resume from workspace

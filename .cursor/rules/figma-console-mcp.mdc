@@ -1,13 +1,15 @@
 ---
-description: Use Figma Console MCP (TJ Pitre) — not the official Figma plugin MCP — for all Figma automation
-alwaysApply: true
+description: Figma Console MCP (TJ Pitre / Desktop Bridge) — use ONLY when the user explicitly requests Console MCP
+alwaysApply: false
 ---
 
-# Figma Console MCP (default)
+# Figma Console MCP (opt-in)
 
 **Language:** English (unless the user explicitly asks for another language).
 
-For **any** Figma read/write task in this repo, use **Figma Console MCP** by **TJ Pitre** ([southleft/figma-console-mcp](https://github.com/southleft/figma-console-mcp)), **not** the official Cursor **Figma** plugin MCP.
+**Do not use this rule by default.** For all other Figma tasks, use **[figma-mcp-routing.mdc](./figma-mcp-routing.mdc)** (Official Figma MCP, `plugin-figma-figma`).
+
+Apply **this** rule **only** when the user **explicitly** asks for **Figma Console MCP**, **Desktop Bridge**, **TJ Pitre**, or **`user-figma-console`**.
 
 ## MCP server to call
 
@@ -17,13 +19,13 @@ For **any** Figma read/write task in this repo, use **Figma Console MCP** by **T
 
 Before each tool call, read the tool schema under the MCP descriptors folder for `user-figma-console`.
 
+Also load skill **`@figma-console-mcp`** (`.cursor/skills/figma-console-mcp/SKILL.md`).
+
 ## Prerequisites (user environment)
 
 1. **Figma Desktop** with the target file open.
 2. **Figma Console MCP — Desktop Bridge** plugin running in that file.
 3. If tools fail with “not connected”, ask the user to open the file in Desktop and start Desktop Bridge; use `figma_list_open_files` / `figma_navigate` to confirm the active file.
-
-Do **not** load or follow skills that **require** the official MCP (`figma-use`, `use_figma`, `get_design_context`, `generate_figma_design`, etc.) unless the user **explicitly** asks for the **official Figma MCP** for that step.
 
 ## Official MCP → Console mapping
 
@@ -45,28 +47,23 @@ Do **not** load or follow skills that **require** the official MCP (`figma-use`,
 
 ## Workflows
 
-### Design → code
+### Design → code (Console)
 
 1. `figma_navigate` to the Hydra / Ant Design file URL from `Documentation/*` if needed.
 2. `figma_get_component_for_development` with `nodeId` from the Figma URL (`node-id=1-2` → `1:2`) and `codebasePath` pointing at this repo’s component roots.
 3. Implement using **[hydra-design-to-code.mdc](./hydra-design-to-code.mdc)** and **[hydra-ui-tokens.mdc](./hydra-ui-tokens.mdc)**.
 4. Token/parity updates in Figma follow **[figma-repo-parity.mdc](./figma-repo-parity.mdc)** using Console tools above.
 
-### Code / tokens → Figma
+### Code / tokens → Figma (Console)
 
-For **repo link → selected Figma screen 1:1 parity** (selection-only, DS-only, no detach), follow **[figma-repo-to-screen-parity.mdc](./figma-repo-to-screen-parity.mdc)** end-to-end.
+For **repo link → selected Figma screen 1:1 parity** (selection-only, DS-only, no detach), follow **[figma-repo-to-screen-parity.mdc](./figma-repo-to-screen-parity.mdc)** end-to-end with Console tools.
 
 1. `figma_search_components` at session start (node IDs are not stable across sessions).
 2. Place new work inside a **Section** or **Frame**, not on blank canvas.
 3. Prefer batch variable tools for many token changes.
 4. **Validate:** after visual changes → `figma_capture_screenshot` → fix alignment/spacing → re-screenshot (up to 3 iterations).
 
-### When Console cannot do the job
-
-- **Code Connect** mapping APIs exist only on the **official** Figma MCP. Use official tools **only** if the user explicitly requests Code Connect; otherwise document manual mapping or skip.
-- If the user explicitly says “use official Figma MCP”, follow their instruction for that task only.
-
 ## Repo alignment
 
-- Hydra Figma ↔ code parity rules stay in **[figma-repo-parity.mdc](./figma-repo-parity.mdc)**; this rule only chooses **which MCP** executes Figma-side work.
-- Prior audits in this repo already used Console (`Documentation/old-ds-tokenization-audit-2026-04-08.md`).
+- Hydra Figma ↔ code parity rules stay in **[figma-repo-parity.mdc](./figma-repo-parity.mdc)**; this rule only applies when the user opts into Console MCP.
+- Prior audits in this repo used Console (`Documentation/old-ds-tokenization-audit-2026-04-08.md`).

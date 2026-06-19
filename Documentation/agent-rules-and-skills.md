@@ -164,7 +164,7 @@ Rules live in `.cursor/rules/*.mdc`. Cursor loads them automatically when `alway
   - Produces scope audit, gap table, phases, guardrails, acceptance checklist.
   - Writes plan: `Documents/plans/YYYY-MM-DD-<slug>-plan.md` (BOM: `Documents/Bom/…`).
   - **Embeds implementation invocation** — per-phase `@` skills and rules and copy-paste prompts for a later chat.
-  - Figma types use only `figma-console-mcp` — not official MCP.
+  - Figma types use Official MCP by default (`@figma-use`); Console only when user explicitly requests `@figma-console-mcp`.
   - **Only allowed file writes:** plans under `Documents/`. Does not touch `src/`, theme, or config.
 - **How to invoke:** `@plan-orchestrator` + task description + `Plan only. No implementation.`
 
@@ -179,15 +179,16 @@ Skills are folders with `SKILL.md`. Cursor loads them when attached or registere
 ## figma-console-mcp
 
 - **Location:** `.cursor/skills/figma-console-mcp/SKILL.md`
-- **Purpose:** **Only** allowed Figma MCP for this project — TJ Pitre Figma Console (`user-figma-console`), not official Figma MCP.
+- **Purpose:** **Opt-in** Figma Console MCP (`user-figma-console`) — only when the user explicitly requests Console instead of Official MCP.
 - **What it does:**
-  - All Figma read/write via `user-figma-console` (Desktop Bridge plugin).
-  - Forbids `get_design_context`, `use_figma`, `generate_figma_design`, and other official tools.
+  - Figma read/write via `user-figma-console` (Desktop Bridge plugin) when active.
+  - Forbids official tools for the same Console-scoped task.
   - Maps tasks to Console tools: `figma_get_component_for_development`, `figma_navigate`, `figma_get_design_changes`, `figma_take_screenshot`, etc.
-  - Before first call: `figma_get_status` (probe) — if disconnected, stops; does not fall back to official MCP.
+  - Before first call: `figma_get_status` (probe) — if disconnected, stops.
   - `node-id` format: `695:313` (colon), not hyphen.
-  - Limits scope to user-listed nodes or `figma_get_design_changes` output.
-- **How to invoke:** `@figma-console-mcp` — required for any Figma work in this repo
+- **How to invoke:** Only when you want Console: `@figma-console-mcp`
+
+**Default Figma routing:** see rule `figma-mcp-routing.mdc` and skill `figma-use` (`.cursor/skills/figma-use/`).
 
 ---
 
@@ -291,8 +292,9 @@ Skills are folders with `SKILL.md`. Cursor loads them when attached or registere
 
 | Avoid | Use instead |
 |-------|-------------|
-| Official Figma MCP (`plugin-figma-figma`) | `figma-console-mcp` skill |
-| Skills: `figma-implement-design`, `figma-use`, `figma-generate-design` | `figma-console-mcp` + `hydra-design-to-code` |
+| Official Figma MCP (`plugin-figma-figma`) — default | `figma-use` skill + `figma-mcp-routing` rule |
+| Skills: `figma-use`, `figma-generate-design` | `figma-use` + `hydra-design-to-code` |
+| Figma Console MCP (opt-in) | `figma-console-mcp` skill |
 
 **Console prerequisite:** Figma Desktop open + Desktop Bridge plugin in the file.
 

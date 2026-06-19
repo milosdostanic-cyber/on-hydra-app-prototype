@@ -125,6 +125,35 @@ export function parsingReviewIssueLabels(
   return issuesForRow(row, profile).map((key) => ISSUE_LABEL[key]);
 }
 
+const MISSING_FIELD_TAG_LABEL: Record<string, string> = {
+  'missing description': 'Description',
+  'missing SKU': 'SKU',
+  'missing UPC': 'UPC',
+  'missing figure number': 'Figure Number',
+  'missing manufacturer': 'Manufacturer',
+  'missing size': 'Size',
+  'quantity is 0': 'Quantity',
+};
+
+function formatEnglishList(items: string[]): string {
+  if (items.length <= 1) return items[0] ?? '';
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+}
+
+/** Warning tag above edit modal alert — Figma `Tag__Status` (`5506:187527`). */
+export function parsingReviewMissingFieldsTag(
+  row: BomItem,
+  profile: BomParsingReviewColumnProfile,
+): string | null {
+  const fields = parsingReviewIssueLabels(row, profile)
+    .filter((label) => label !== 'low confidence')
+    .map((label) => MISSING_FIELD_TAG_LABEL[label] ?? label);
+
+  if (fields.length === 0) return null;
+  return `Missing: ${formatEnglishList(fields)}`;
+}
+
 /** Primary parsing-review banner — non-blocking language per PRD / Matt transcript. */
 export function parsingReviewQualityAlert(
   rows: BomItem[],

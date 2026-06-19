@@ -153,7 +153,7 @@ export function createImportSession(
   fileName: string,
   fieldMapping?: Record<string, string | undefined>,
 ): BomImportSession {
-  const uploadId = `upload-${bomProjectId}-${Date.now()}`;
+  const uploadId = `upload-${bomProjectId}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   const parsedItems = createParsingReviewRows(fileName);
   const matchResults = createInitialMatchResults(parsedItems);
   const mapped = countMappedAscFields(fieldMapping);
@@ -274,13 +274,14 @@ export function dismissImportSession(uploadId: string): void {
   saveToStorage();
 }
 
-const DEMO_PENDING_SEED_VERSION = 5;
+const DEMO_PENDING_SEED_VERSION = 7;
 const demoPendingSeedKey = (bomProjectId: string) =>
   `hydra_bom_demo_pending_seed_v${DEMO_PENDING_SEED_VERSION}_${bomProjectId}`;
 
-/** Figma `5080:16558` — 3 pending uploads on Office Complex (all BOM-ExLine2.xlsx). */
+/** Figma `5080:16558` — 3 pending uploads (all BOM-ExLine2.xlsx). Demo: Parking Garage Electrical Upgrade. */
 function seedThreePendingImports(bomProjectId: string): void {
   const fileName = 'BOM-ExLine2.xlsx';
+  const rowCount = createParsingReviewRows(fileName).length;
   const configs: Array<{
     step: BomImportStep;
     mappedAscFields: number;
@@ -290,13 +291,19 @@ function seedThreePendingImports(bomProjectId: string): void {
   }> = [
     {
       step: 'match',
-      mappedAscFields: 11,
-      parsedRows: createParsingReviewRows(fileName).length,
-      acceptedCount: 1,
+      mappedAscFields: ASC_FIELD_MAPPING_TOTAL,
+      parsedRows: rowCount,
+      acceptedCount: 2,
       skippedCount: 0,
     },
-    { step: 'review', mappedAscFields: 11, parsedRows: 0, acceptedCount: 0, skippedCount: 0 },
-    { step: 'map', mappedAscFields: 6, parsedRows: 0, acceptedCount: 0, skippedCount: 0 },
+    {
+      step: 'review',
+      mappedAscFields: ASC_FIELD_MAPPING_TOTAL,
+      parsedRows: Math.round(rowCount * 0.65),
+      acceptedCount: 0,
+      skippedCount: 0,
+    },
+    { step: 'map', mappedAscFields: 7, parsedRows: 0, acceptedCount: 0, skippedCount: 0 },
   ];
 
   configs.forEach((cfg) => {
@@ -331,8 +338,8 @@ export function ensureDemoPendingImports(bomProjectId: string): void {
     const seeded = localStorage.getItem(seedKey);
     const pending = listPendingImportsForProject(bomProjectId);
 
-    // Office Complex HVAC Upgrade — 3 pending uploads (Figma `5080:16558`).
-    if (bomProjectId === '3') {
+    // Parking Garage Electrical Upgrade — 3 pending uploads (Figma `5080:16558`).
+    if (bomProjectId === '6') {
       if (seeded === '1' && pending.length === 3) return;
       clearPendingForProject(bomProjectId);
       seedThreePendingImports(bomProjectId);
@@ -352,7 +359,7 @@ export function ensureDemoPendingImports(bomProjectId: string): void {
     if (seeded === '1') return;
     if (pending.length > 0) return;
   } catch {
-    if (bomProjectId === '3') {
+    if (bomProjectId === '6') {
       clearPendingForProject(bomProjectId);
       seedThreePendingImports(bomProjectId);
     } else if (bomProjectId === '1' && listPendingImportsForProject(bomProjectId).length === 0) {

@@ -138,15 +138,25 @@ Plan only. No implementation.
 
 ---
 
+## figma-mcp-routing.mdc
+
+**Location:** `.cursor/rules/figma-mcp-routing.mdc`
+
+**Rule** that tells the agent to use **Official Figma MCP** (`plugin-figma-figma`) by default for all Figma work — load **`figma-use`** before `use_figma`, **`figma-generate-design`** for code → Figma screens, etc.
+
+**How to run:** Always active automatically. For Figma work attach: `@figma-use` (+ `@hydra-design-to-code` for design → code).
+
+---
+
 ## figma-console-mcp.mdc
 
 **Location:** `.cursor/rules/figma-console-mcp.mdc`
 
-**Rule** that tells the agent to use **Figma Console MCP** (TJ Pitre, Desktop Bridge) for all Figma work in this project — **not** the official Cursor Figma plugin MCP.
+**Opt-in rule** for **Figma Console MCP** (TJ Pitre, Desktop Bridge) — only when you **explicitly** ask for Console MCP.
 
-When reading or editing Figma, the agent calls server `user-figma-console`. You need Figma Desktop, the file open, and the Desktop Bridge plugin running. If disconnected, the agent asks you to connect — it does not silently fall back to the official MCP.
+When active, the agent calls server `user-figma-console`. You need Figma Desktop, the file open, and the Desktop Bridge plugin running.
 
-**How to run:** Always active automatically for Figma tasks in this repo. For Figma work, also attach: `@figma-console-mcp` (the skill below adds the detailed workflow)
+**How to run:** Say “use Figma Console MCP” or attach `@figma-console-mcp` when you want Console instead of Official.
 
 ---
 
@@ -158,7 +168,7 @@ After Figma edits, the agent can leave **canvas comments** (what changed and why
 
 It uses Figma Console MCP only (`figma_post_comment`, `figma_get_comments`). It does not comment empty screens or buttons that were not part of that edit session.
 
-**How to run:** When you want Figma changes documented/annotated: `@figma-layout-change-comments` (+ `@figma-console-mcp`)
+**How to run:** When you want Figma changes documented/annotated **and** you opted into Console MCP: `@figma-layout-change-comments` + `@figma-console-mcp`
 
 ---
 
@@ -170,7 +180,7 @@ Reverse of design-to-code: you have a **finished screen in code** and want the *
 
 The agent reads the repo implementation, uses DS components in Figma, and does not touch anything outside your selection. If nothing is selected, it stops and asks you to select a frame.
 
-**How to run:** Repo link + Figma selection: `@figma-repo-to-screen-parity` + `@figma-console-mcp`
+**How to run:** Repo link + Figma selection: `@figma-repo-to-screen-parity` + `@figma-use` (Official default); add `@figma-console-mcp` only if you want Console
 
 ---
 
@@ -208,19 +218,18 @@ Skills are folders with `SKILL.md`. Register in Cursor: **Settings → Skills** 
 
 **Location:** `.cursor/skills/figma-console-mcp/SKILL.md`
 
-**Skill** that explicitly routes all Figma work through **Figma Console MCP** (`user-figma-console`) instead of the official Figma MCP (`plugin-figma-figma`). This is the required path for this Hydra project.
+**Opt-in skill** for **Figma Console MCP** (`user-figma-console`) when you explicitly request Console instead of Official MCP.
 
-The agent uses Console tools (e.g. `figma_get_component_for_development`, `figma_navigate`, `figma_capture_screenshot`, batch variable updates). For Figma ↔ code sync it expects 1:1 visual parity and does not use forbidden official tools (`use_figma`, `get_design_context`, etc.) unless you explicitly request the official MCP.
+**How to run:** Only when you want Console: `@figma-console-mcp`. Example:
+
+```
+Use Figma Console MCP only.
+@figma-console-mcp
+```
+
+The agent uses Console tools (e.g. `figma_get_component_for_development`, `figma_navigate`, `figma_capture_screenshot`, batch variable updates). For Figma ↔ code sync it expects 1:1 visual parity.
 
 **Prerequisite:** Figma Desktop open + **Desktop Bridge** plugin in that file.
-
-**How to run:** `@figma-console-mcp` — required for any Figma task in this repo. Example:
-```
-@figma-console-mcp
-@hydra-design-to-code
-
-Implement the screen from this Figma URL: [link]
-```
 
 ---
 
@@ -324,8 +333,9 @@ Printable checklist version of UI constraints — same purpose as the `hydra-ui-
 
 | Avoid | Use instead |
 |-------|-------------|
-| Official Figma MCP (`plugin-figma-figma`) | `@figma-console-mcp` + rule `figma-console-mcp.mdc` |
-| Skills: `figma-use`, `figma-implement-design`, `figma-generate-design` | `@figma-console-mcp` + `@hydra-design-to-code` |
+| Official Figma MCP (`plugin-figma-figma`) — **default** | `@figma-use` + rule `figma-mcp-routing.mdc` |
+| Skills: `figma-use`, `figma-generate-design` | `@figma-use` + `@hydra-design-to-code` |
+| Figma Console MCP (opt-in) | `@figma-console-mcp` + rule `figma-console-mcp.mdc` |
 
 **Console prerequisite:** Figma Desktop + Desktop Bridge plugin in the active file.
 

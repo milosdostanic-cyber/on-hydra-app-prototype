@@ -7,6 +7,7 @@ import {
   buttonPrimaryShadow,
   buttonPrimaryShadowDark,
 } from './buttonPrimaryPalette';
+import { buttonDangerShadow, buttonDangerShadowDark } from './buttonDangerPalette';
 import {
   hydraMenuItemBorderRadius,
   hydraMenuItemMarginBlock,
@@ -125,6 +126,7 @@ export function createHydraAntdTheme(typographyMode: HydraTypographyMode = 'defa
         colorPrimaryTextHover: buttonPrimaryPalette.textHover,
         colorPrimaryTextActive: buttonPrimaryPalette.textActive,
         primaryShadow: buttonPrimaryShadow,
+        dangerShadow: buttonDangerShadow,
         controlOutline: buttonPrimaryControlOutline,
       },
     },
@@ -157,6 +159,7 @@ export function createHydraAntdThemeDark(typographyMode: HydraTypographyMode = '
         colorPrimaryTextHover: buttonPrimaryPaletteDark.textHover,
         colorPrimaryTextActive: buttonPrimaryPaletteDark.textActive,
         primaryShadow: buttonPrimaryShadowDark,
+        dangerShadow: buttonDangerShadowDark,
       },
     },
   };

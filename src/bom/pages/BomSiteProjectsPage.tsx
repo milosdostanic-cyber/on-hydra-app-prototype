@@ -391,7 +391,7 @@ export function BomSiteProjectsPage() {
                   type="secondary"
                   style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
                 >
-                  Excel, CSV, or PDF. We&apos;ll map your columns automatically, then guide you through review and matching.
+                  Excel, CSV, or PDF. We map your columns, then guide you through review and matching.
                 </Typography.Paragraph>
               </Flex>
             </Card>
@@ -422,7 +422,7 @@ export function BomSiteProjectsPage() {
                   type="secondary"
                   style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
                 >
-                  Match competitor lines to ASC parts, or search the ASC catalog directly.
+                  Competitor lines or ASC catalog. Match to parts or search and add to your project.
                 </Typography.Paragraph>
               </Flex>
             </Card>

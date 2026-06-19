@@ -101,7 +101,7 @@ These apply **while building** and **while reviewing**:
 7. **Functional** — every control does something logical; navigation matches capabilities map; state is consistent.
 8. **Consistent sizes** — buttons and adjacent controls use the **same antd `size` within each action group**; match sibling screens and golden references — never mix `large` / default / `small` in one toolbar or footer without reason.
 9. **Scope** — only requested files/flow; no shared component or token edits without explicit approval.
-10. **No generic DS** — never `ui-ux-pro-max`, Tailwind palettes, shadcn, or official Figma MCP in this repo.
+10. **No generic DS** — never `ui-ux-pro-max`, Tailwind palettes, or shadcn in this repo.
 
 ---
 
@@ -111,13 +111,13 @@ These apply **while building** and **while reviewing**:
 |-----------|-------------|
 | Always (implicit) | `ux-guardrails`, `hydra-ui-tokens`, `product-ux-rules` |
 | Building / reviewing UI | `@hydra-ui-tokens-and-components` |
-| Figma URL or visual target | `@figma-console-mcp` + `@hydra-design-to-code` |
+| Figma URL or visual target | `@figma-use` + `@hydra-design-to-code` (Official MCP per `@figma-mcp-routing`) |
 | New feature (plan first) | `@plan-orchestrator` or `@prd-ux-implementation-planner` |
 | DS-wide token drift | `@ds-parity-auditor` (not this skill) |
 | BOM | `@docs/prd/bom-prd.md` |
 | New screen / PRD | `@hydra-prd-ux-playbook` + `Documentation/hydra-app-capabilities.md` |
 
-**Never:** `ui-ux-pro-max`, `plugin-figma-figma`, `figma-use`, `figma-implement-design`.
+**Never:** `ui-ux-pro-max`. **Console MCP** (`@figma-console-mcp`) only when the user explicitly requests it.
 
 ---
 
@@ -400,12 +400,11 @@ Also: keyboard focus visible; clickable affordance consistent; `prefers-reduced-
 
 #### Layer 8 — Figma / design parity (when design reference exists)
 
-Via `@figma-console-mcp`:
+Via `@figma-use` + Official Figma MCP (default per `@figma-mcp-routing`), or `@figma-console-mcp` when user explicitly opted in:
 
-1. `figma_get_status` — stop if disconnected
-2. Screenshot or `figma_get_component_for_development` on target node
-3. Compare: region order, copy, spacing rhythm, component families, chrome
-4. Report deltas with node ID + code path
+1. `get_design_context` / `get_screenshot` (Official) or `figma_get_status` + `figma_get_component_for_development` (Console)
+2. Compare: region order, copy, spacing rhythm, component families, chrome
+3. Report deltas with node ID + code path
 
 Without Figma: if user gave screenshot, compare regions and hierarchy — still use tokens, not eyedropped hex.
 
@@ -519,7 +518,8 @@ Run when user says fix / implement / improve / audit and fix — or when **you i
 - Data shown contradicts summary counts
 - Editing `antdTheme.ts` during screen-only work
 - New shared `BomCustom*` / `HydraCustom*` wrappers
-- `ui-ux-pro-max`, Tailwind, shadcn, official Figma MCP
+- `ui-ux-pro-max`, Tailwind, shadcn
+- Console MCP without explicit user opt-in
 - PRD behavior removed to make UI “simpler”
 - User must read full table / all columns to know next step
 - Two or more primary-looking actions in one region
@@ -611,7 +611,7 @@ Fix all P0/P1 from the report. Scope: [files].
 |------|-----|
 | Plan before large feature | `@plan-orchestrator` |
 | DS token sync | `@ds-parity-auditor` |
-| Figma edits | `@figma-console-mcp` |
+| Figma edits | `@figma-use` (Official default); `@figma-console-mcp` only when user requests Console |
 | PRD gap analysis | `@prd-ux-implementation-planner` |
 
 ---

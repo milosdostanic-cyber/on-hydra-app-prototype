@@ -1,46 +1,36 @@
 ---
 name: figma-console-mcp
 description: >-
-  Routes all Figma work through Figma Console MCP (TJ Pitre / Desktop Bridge) via server
-  user-figma-console. Use when the user mentions Figma, design-to-code, screen sync,
-  implement from Figma, Figma URL, node-id, design changes, variables, or screenshots —
-  and whenever any other skill or rule would call the official Figma MCP. Supersedes
-  figma-implement-design, figma-use, and plugin-figma-figma tools for this project.
-  When syncing Figma → repo, every element must be 1:1 — layout, copy, spacing, typography,
-  and full visual spec (fills, strokes, radii, shadows, fixed width/height) including
-  custom/local compositions (KPI cards, stat strips, chips). No approximating with a
-  generic antd Card when Figma defines a specific frame. Repo-only UI must be removed
-  unless the user explicitly keeps it. Read all metrics from _deep export + variables;
-  final screenshot parity loop until identical (max 3 passes) or escalate.
+  Figma Console MCP (TJ Pitre / Desktop Bridge) via server user-figma-console — use ONLY when
+  the user explicitly requests Console MCP, Desktop Bridge, or TJ Pitre. Default Figma work
+  uses Official MCP (plugin-figma-figma) per figma-mcp-routing and figma-use skill. When
+  Console is active: sync Figma ↔ repo 1:1 — layout, copy, spacing, typography, and full
+  visual spec. Read metrics from _deep export + variables; screenshot parity loop (max 3 passes).
 ---
 
-# Figma Console MCP (TJ Pitre) — mandatory routing
+# Figma Console MCP (TJ Pitre) — opt-in only
 
 ## Authority
 
-For **any** Figma read/write task in this project:
+**Do not load this skill by default.** For all other Figma tasks, use **Official Figma MCP** per **[figma-mcp-routing.mdc](../../rules/figma-mcp-routing.mdc)** and skill **`figma-use`**.
+
+Load **this** skill only when the user **explicitly** requests **Figma Console MCP**, **Desktop Bridge**, **TJ Pitre**, or **`user-figma-console`**.
+
+When active:
 
 - **USE:** MCP server **`user-figma-console`** (Figma Console MCP by TJ Pitre, Desktop Bridge plugin).
-- **NEVER USE:** Official Figma MCP (`plugin-figma-figma`) or its tools.
+- **DO NOT USE:** Official Figma MCP (`plugin-figma-figma`) for the same edit pass.
 
-If both servers are enabled, **ignore** official Figma MCP entirely for this task.
+If both servers are enabled, **ignore** official Figma MCP for this Console-scoped task only.
 
-## Forbidden tools (official MCP)
+## Forbidden tools (official MCP) — while Console is active
 
-Do **not** call:
+Do **not** call on `plugin-figma-figma`:
 
-- `get_design_context`
-- `get_metadata`
-- `get_screenshot`
-- `get_code_connect_map`
-- `use_figma`
-- `generate_figma_design`
-- `create_new_file`
-- `generate_diagram`
-- `get_figjam`
-- Any other tool on server `plugin-figma-figma`
+- `get_design_context`, `get_metadata`, `get_screenshot`, `get_code_connect_map`
+- `use_figma`, `generate_figma_design`, `create_new_file`, `generate_diagram`, `get_figjam`
 
-Do **not** load or follow skills that require those tools (`figma-implement-design`, `figma-use`, `figma-generate-design`, `figma-generate-library`, `figma-create-new-file`, `figma-generate-diagram`) unless the user explicitly overrides Console routing for that message.
+Do **not** load `figma-use`, `figma-generate-design`, etc. while Console routing is active for this task.
 
 ## How to invoke Console tools
 
@@ -442,9 +432,9 @@ When syncing a Figma frame to repo, **user-visible strings must match Figma exac
 
 | Situation | Action |
 |-----------|--------|
-| Console not connected | Stop. Instruct user: open file + Desktop Bridge. **Do not** switch to official MCP. |
+| Console not connected | Stop. Instruct user: open file + Desktop Bridge. Do not switch to Official MCP unless user asks. |
 | Tool missing on Console | Use closest Console alternative from map above. Ask user if none fits. |
-| User explicitly says "official Figma MCP" | Only then may official MCP be used for that message. |
+| User did not request Console | Use Official MCP per `figma-mcp-routing.mdc` instead — do not load this skill. |
 
 ## Pairing skills (repo side)
 
