@@ -118,8 +118,8 @@ export function BomParsingReviewPage() {
   }, []);
 
   const columns = useMemo(
-    () => buildParsingReviewReadOnlyColumns(columnProfile, openEditRow, token),
-    [columnProfile, openEditRow, token],
+    () => buildParsingReviewReadOnlyColumns(columnProfile, openEditRow, token, uploadState.fieldMapping),
+    [columnProfile, openEditRow, token, uploadState.fieldMapping],
   );
 
   const pagedParsedItems = useMemo(() => {
@@ -333,6 +333,7 @@ export function BomParsingReviewPage() {
         open={editRowId != null}
         row={editRow}
         profile={columnProfile}
+        fieldMapping={uploadState.fieldMapping}
         onClose={() => setEditRowId(null)}
         onSave={updateRow}
       />

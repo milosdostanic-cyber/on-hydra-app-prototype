@@ -39,7 +39,7 @@ function mappingCellTextStyle(color: string) {
 
 type BomFieldMappingTableProps = {
   mode: 'view' | 'edit';
-  /** Summary view rows — all fields; unmapped rows have isMapped=false. */
+  /** Summary view rows — mapped fields only (unmapped / Skip are omitted). */
   viewRows?: { ascKey: string; ascLabel: string; bomColumn: string; isMapped?: boolean; isRequired?: boolean }[];
   /** Edit mode field map. */
   aliasMap?: BomFieldAliasMap;

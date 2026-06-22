@@ -11,8 +11,8 @@ import {
   findDuplicateBomColumns,
   getMissingRequiredFieldLabels,
   hasRequiredFieldMapping,
-  isConcatenatedFieldMapping,
   deriveFieldMappingForUpload,
+  PARSING_IDENTIFIER_MAPPING_TOOLTIP,
 } from '../bomFieldMappingUtils';
 import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
 import { readUploadFileName } from '../bomUploadFlowState';
@@ -61,21 +61,12 @@ export function BomFieldMappingPage() {
   const duplicateBomColumns = useMemo(() => findDuplicateBomColumns(aliasMap), [aliasMap]);
   const hasRequired = hasRequiredFieldMapping(aliasMap);
   const missingRequired = useMemo(() => getMissingRequiredFieldLabels(aliasMap), [aliasMap]);
-  const requiredHeaderLabels = useMemo(
-    () =>
-      (isConcatenatedFieldMapping(aliasMap)
-        ? ['Description']
-        : ['Part Number', 'Description', 'Quantity']
-      )
-        .join(', ')
-        .toUpperCase(),
-    [aliasMap],
-  );
+  const requiredHeaderLabels = useMemo(() => 'DESCRIPTION, SKU OR UPC', []);
   const saveDisabled = !isDirty || !hasRequired || duplicateBomColumns.size > 0;
   const saveDisabledReason = !isDirty
     ? 'Change a column link before saving.'
     : !hasRequired
-      ? `Link ${missingRequired.join(', ')} before you can save.`
+      ? PARSING_IDENTIFIER_MAPPING_TOOLTIP
       : duplicateBomColumns.size > 0
         ? 'Each file column can link to only one part detail. Fix duplicates first.'
         : undefined;
@@ -114,7 +105,7 @@ export function BomFieldMappingPage() {
 
   function handleSave() {
     if (!hasRequired) {
-      message.warning('Map Part Number, Description, and Quantity before saving.');
+      message.warning(PARSING_IDENTIFIER_MAPPING_TOOLTIP);
       return;
     }
     if (duplicateBomColumns.size > 0) {
@@ -153,7 +144,7 @@ export function BomFieldMappingPage() {
 
       <BomPageHeader
         title="Review column links"
-        description="Link the required part details to columns from your file. Optional rows can stay as Skip — you only need to change what looks wrong."
+        description="Link at least one of Description, SKU, or UPC to a column from your file. Optional rows can stay as Skip."
         actions={
           <Flex gap={token.marginXS} align="center" wrap="wrap">
             <Button size="large" onClick={handleStopEditing}>
@@ -179,12 +170,8 @@ export function BomFieldMappingPage() {
         <Alert
           type="error"
           showIcon
-          message={
-            missingRequired.length === 1
-              ? `${missingRequired[0]} must be linked before you can save`
-              : `Link ${missingRequired.join(', ')} before you can save`
-          }
-          description="Rows marked Required below must point to a column in your file. Everything else is optional."
+          message="Link at least Description, SKU, or UPC before you can save"
+          description="At least one of the rows marked Required below must point to a column in your file. Everything else is optional."
         />
       ) : !isDirty ? (
         <Alert

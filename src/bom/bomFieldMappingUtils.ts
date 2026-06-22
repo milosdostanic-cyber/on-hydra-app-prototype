@@ -19,8 +19,20 @@ export type MappingSummaryEntry = {
   isRequired: boolean;
 };
 
-/** ASC field keys that MUST be mapped before an import can proceed (mirrors hasRequiredFieldMapping). */
-export const REQUIRED_ASC_FIELD_KEYS = new Set(['PART NUMBER', 'DESCRIPTION', 'QTY']);
+/** ASC fields where at least one must be linked before parsing (Description, SKU, or UPC). */
+export const PARSING_IDENTIFIER_FIELD_KEYS = ['DESCRIPTION', 'SKU', 'UPC'] as const;
+
+/** Used for required indicators in mapping tables (mirrors {@link hasRequiredFieldMapping}). */
+export const REQUIRED_ASC_FIELD_KEYS = new Set<string>(PARSING_IDENTIFIER_FIELD_KEYS);
+
+export const PARSING_IDENTIFIER_MAPPING_TOOLTIP =
+  'You need at least Description, SKU or UPC column';
+
+export function hasParsingIdentifierMapping(fieldMapping: BomFieldAliasMap): boolean {
+  return PARSING_IDENTIFIER_FIELD_KEYS.some((key) =>
+    Boolean(normalizeFieldMappingSkip(fieldMapping[key])),
+  );
+}
 
 export function normalizeFieldMappingSkip(val: string | undefined): string | undefined {
   if (!val || val === BOM_FIELD_SKIP_VALUE || val === '— Skip —') return undefined;
@@ -114,26 +126,13 @@ export function isConcatenatedFieldMapping(fieldMapping: BomFieldAliasMap): bool
 }
 
 export function hasRequiredFieldMapping(fieldMapping: BomFieldAliasMap): boolean {
-  if (isConcatenatedFieldMapping(fieldMapping)) {
-    return Boolean(normalizeFieldMappingSkip(fieldMapping.DESCRIPTION));
-  }
-  return (
-    Boolean(normalizeFieldMappingSkip(fieldMapping['PART NUMBER'])) &&
-    Boolean(normalizeFieldMappingSkip(fieldMapping.DESCRIPTION)) &&
-    Boolean(normalizeFieldMappingSkip(fieldMapping.QTY))
-  );
+  return hasParsingIdentifierMapping(fieldMapping);
 }
 
-/** User-facing labels for required ASC fields that are still not linked. */
+/** User-facing labels when no parsing identifier column is linked. */
 export function getMissingRequiredFieldLabels(fieldMapping: BomFieldAliasMap): string[] {
-  if (isConcatenatedFieldMapping(fieldMapping)) {
-    return normalizeFieldMappingSkip(fieldMapping.DESCRIPTION) ? [] : ['Description'];
-  }
-  const missing: string[] = [];
-  if (!normalizeFieldMappingSkip(fieldMapping['PART NUMBER'])) missing.push('Part Number');
-  if (!normalizeFieldMappingSkip(fieldMapping.DESCRIPTION)) missing.push('Description');
-  if (!normalizeFieldMappingSkip(fieldMapping.QTY)) missing.push('Quantity');
-  return missing;
+  if (hasParsingIdentifierMapping(fieldMapping)) return [];
+  return ['Description, SKU or UPC'];
 }
 
 export function findDuplicateBomColumns(fieldMapping: BomFieldAliasMap): Set<string> {
@@ -167,7 +166,7 @@ export function buildMappingSummaryEntries(fieldMapping: BomFieldAliasMap): Mapp
       isMapped: Boolean(bomColumn),
       isRequired: REQUIRED_ASC_FIELD_KEYS.has(key),
     };
-  });
+  }).filter((entry) => entry.isMapped);
 }
 
 export function bomMappingSummaryRoute(bomProjectId: string): string {
@@ -192,6 +191,14 @@ export function mappingConfidenceLabel(confidence: BomMappingConfidence): string
 }
 
 /** Which parsing-review table variant to show based on field mapping (Figma 03a / 03b / 03c). */
+export function isAscFieldMapped(
+  fieldMapping: Record<string, string | undefined> | undefined,
+  ascKey: string,
+): boolean {
+  if (!fieldMapping) return true;
+  return Boolean(normalizeFieldMappingSkip(fieldMapping[ascKey]));
+}
+
 export function parsingReviewColumnProfile(
   fieldMapping: Record<string, string | undefined> | undefined,
 ): BomParsingReviewColumnProfile {

@@ -2,6 +2,8 @@ import type { CSSProperties } from 'react';
 import type { GlobalToken } from 'antd/es/theme/interface';
 
 import { BomImportedValueCell, bomImportedColumnHeaderStyle } from './bomImportedDataEmphasis';
+import type { BomFieldAliasMap } from './bomFieldMappingConfig';
+import { isAscFieldMapped } from './bomFieldMappingUtils';
 import type { BomItem, BomParsingReviewColumnProfile } from './data/types';
 import {
   isParsingReviewLowConfidenceRow,
@@ -100,33 +102,46 @@ function actionsColumn(
   };
 }
 
-function readOnlyMiddleColumns(profile: BomParsingReviewColumnProfile): TableColumnsType<BomItem> {
-  return [
-    {
+function readOnlyMiddleColumns(
+  profile: BomParsingReviewColumnProfile,
+  fieldMapping?: BomFieldAliasMap,
+): TableColumnsType<BomItem> {
+  const columns: TableColumnsType<BomItem> = [];
+
+  if (isAscFieldMapped(fieldMapping, 'DESCRIPTION')) {
+    columns.push({
       title: 'Size',
       dataIndex: 'size',
       key: 'size',
       width: PARSING_REVIEW_COLUMN_WIDTHS.sizeInches,
       render: (v: string, record) =>
         readOnlyAttentionText(v, parsingReviewFieldNeedsAttention(record, 'size', profile)),
-    },
-    {
+    });
+  }
+
+  if (isAscFieldMapped(fieldMapping, 'MANUFACTURER')) {
+    columns.push({
       title: 'Manufacturer',
       dataIndex: 'manufacturer',
       key: 'manufacturer',
       width: PARSING_REVIEW_COLUMN_WIDTHS.manufacturer,
       render: (v: string | undefined, record) =>
         readOnlyAttentionText(v, parsingReviewFieldNeedsAttention(record, 'manufacturer', profile)),
-    },
-    {
+    });
+  }
+
+  if (isAscFieldMapped(fieldMapping, 'FIGURE NUM')) {
+    columns.push({
       title: 'Figure Number',
       dataIndex: 'figureNumber',
       key: 'figureNumber',
       width: PARSING_REVIEW_COLUMN_WIDTHS.figureNumber,
       render: (v: string | undefined, record) =>
         readOnlyAttentionText(v, parsingReviewFieldNeedsAttention(record, 'figureNumber', profile)),
-    },
-  ];
+    });
+  }
+
+  return columns;
 }
 
 /** Read-only parsing table — editing opens from row action (drawer), not inline cells. */
@@ -134,6 +149,7 @@ export function buildParsingReviewReadOnlyColumns(
   profile: BomParsingReviewColumnProfile,
   onEditRow: (row: BomItem) => void,
   token: GlobalToken,
+  fieldMapping?: BomFieldAliasMap,
 ): TableColumnsType<BomItem> {
   const base: TableColumnsType<BomItem> = [
     {
@@ -145,8 +161,17 @@ export function buildParsingReviewReadOnlyColumns(
     qualityColumn(),
   ];
 
+  const qtyColumnDef: TableColumnsType<BomItem>[number] = {
+    title: 'Qty',
+    dataIndex: 'quantity',
+    key: 'quantity',
+    width: PARSING_REVIEW_COLUMN_WIDTHS.qty,
+    render: (v: number, record) =>
+      readOnlyQty(v, parsingReviewFieldNeedsAttention(record, 'quantity', profile)),
+  };
+
   if (profile === 'description') {
-    return [
+    const columns: TableColumnsType<BomItem> = [
       {
         title: '#',
         dataIndex: 'rowNumber',
@@ -155,45 +180,53 @@ export function buildParsingReviewReadOnlyColumns(
       },
       originalInputColumn(token),
       qualityColumn(),
-      {
+    ];
+
+    if (isAscFieldMapped(fieldMapping, 'DESCRIPTION')) {
+      columns.push({
         title: 'How we read this',
         dataIndex: 'parsedDescription',
         key: 'parsedDescription',
         width: PARSING_REVIEW_COLUMN_WIDTHS.parsedDescription,
         render: (v: string, record) =>
           readOnlyAttentionText(v, parsingReviewFieldNeedsAttention(record, 'parsedDescription', profile)),
-      },
-      {
+      });
+    }
+
+    if (isAscFieldMapped(fieldMapping, 'SKU')) {
+      columns.push({
         title: 'SKU',
         dataIndex: 'sku',
         key: 'sku',
         width: PARSING_REVIEW_COLUMN_WIDTHS.sku,
         render: (v: string | undefined, record) =>
           readOnlyAttentionText(v, parsingReviewFieldNeedsAttention(record, 'sku', profile)),
-      },
-      ...readOnlyMiddleColumns(profile),
-      {
+      });
+    }
+
+    columns.push(...readOnlyMiddleColumns(profile, fieldMapping));
+
+    if (isAscFieldMapped(fieldMapping, 'UPC')) {
+      columns.push({
         title: 'UPC',
         dataIndex: 'upc',
         key: 'upc',
         width: PARSING_REVIEW_COLUMN_WIDTHS.upc,
         render: (v: string | undefined, record) =>
           readOnlyAttentionText(v, parsingReviewFieldNeedsAttention(record, 'upc', profile)),
-      },
-      {
-        title: 'Qty',
-        dataIndex: 'quantity',
-        key: 'quantity',
-        width: PARSING_REVIEW_COLUMN_WIDTHS.qty,
-        render: (v: number, record) =>
-          readOnlyQty(v, parsingReviewFieldNeedsAttention(record, 'quantity', profile)),
-      },
-      actionsColumn(profile, onEditRow),
-    ];
+      });
+    }
+
+    if (isAscFieldMapped(fieldMapping, 'QTY')) {
+      columns.push(qtyColumnDef);
+    }
+
+    columns.push(actionsColumn(profile, onEditRow));
+    return columns;
   }
 
   if (profile === 'sku-only') {
-    return [
+    const columns: TableColumnsType<BomItem> = [
       ...base,
       originalInputColumn(token),
       {
@@ -204,20 +237,18 @@ export function buildParsingReviewReadOnlyColumns(
         render: (v: string | undefined, record) =>
           readOnlyAttentionText(v, parsingReviewFieldNeedsAttention(record, 'sku', profile)),
       },
-      ...readOnlyMiddleColumns(profile),
-      {
-        title: 'Qty',
-        dataIndex: 'quantity',
-        key: 'quantity',
-        width: PARSING_REVIEW_COLUMN_WIDTHS.qty,
-        render: (v: number, record) =>
-          readOnlyQty(v, parsingReviewFieldNeedsAttention(record, 'quantity', profile)),
-      },
-      actionsColumn(profile, onEditRow),
+      ...readOnlyMiddleColumns(profile, fieldMapping),
     ];
+
+    if (isAscFieldMapped(fieldMapping, 'QTY')) {
+      columns.push(qtyColumnDef);
+    }
+
+    columns.push(actionsColumn(profile, onEditRow));
+    return columns;
   }
 
-  return [
+  const columns: TableColumnsType<BomItem> = [
     ...base,
     originalInputColumn(token),
     {
@@ -228,25 +259,27 @@ export function buildParsingReviewReadOnlyColumns(
       render: (v: string | undefined, record) =>
         readOnlyAttentionText(v, parsingReviewFieldNeedsAttention(record, 'upc', profile)),
     },
-    {
+  ];
+
+  if (isAscFieldMapped(fieldMapping, 'SKU')) {
+    columns.push({
       title: 'SKU',
       dataIndex: 'sku',
       key: 'sku',
       width: PARSING_REVIEW_COLUMN_WIDTHS.sku,
       render: (v: string | undefined, record) =>
         readOnlyAttentionText(v, parsingReviewFieldNeedsAttention(record, 'sku', profile)),
-    },
-    ...readOnlyMiddleColumns(profile),
-    {
-      title: 'Qty',
-      dataIndex: 'quantity',
-      key: 'quantity',
-      width: PARSING_REVIEW_COLUMN_WIDTHS.qty,
-      render: (v: number, record) =>
-        readOnlyQty(v, parsingReviewFieldNeedsAttention(record, 'quantity', profile)),
-    },
-    actionsColumn(profile, onEditRow),
-  ];
+    });
+  }
+
+  columns.push(...readOnlyMiddleColumns(profile, fieldMapping));
+
+  if (isAscFieldMapped(fieldMapping, 'QTY')) {
+    columns.push(qtyColumnDef);
+  }
+
+  columns.push(actionsColumn(profile, onEditRow));
+  return columns;
 }
 
 /** Row background — uniform rows; quality is shown in the Quality column and Add info action. */
@@ -321,10 +354,11 @@ export function buildParsingReviewEditableFields(
   profile: BomParsingReviewColumnProfile,
   row: BomItem,
   updateRow: RowUpdater,
+  fieldMapping?: BomFieldAliasMap,
 ): { key: string; label: string; node: React.ReactNode }[] {
   const fields: { key: string; label: string; node: React.ReactNode }[] = [];
 
-  if (profile === 'description') {
+  if (profile === 'description' && isAscFieldMapped(fieldMapping, 'DESCRIPTION')) {
     fields.push({
       key: 'parsedDescription',
       label: 'How we read this',
@@ -336,7 +370,7 @@ export function buildParsingReviewEditableFields(
     });
   }
 
-  if (profile === 'upc') {
+  if (profile === 'upc' && isAscFieldMapped(fieldMapping, 'UPC')) {
     fields.push({
       key: 'upc',
       label: 'UPC',
@@ -348,7 +382,10 @@ export function buildParsingReviewEditableFields(
     });
   }
 
-  if (profile === 'description' || profile === 'sku-only' || profile === 'upc') {
+  if (
+    (profile === 'description' || profile === 'sku-only' || profile === 'upc') &&
+    isAscFieldMapped(fieldMapping, 'SKU')
+  ) {
     fields.push({
       key: 'sku',
       label: 'SKU',
@@ -360,7 +397,7 @@ export function buildParsingReviewEditableFields(
     });
   }
 
-  if (profile === 'description') {
+  if (profile === 'description' && isAscFieldMapped(fieldMapping, 'UPC')) {
     fields.push({
       key: 'upc',
       label: 'UPC',
@@ -372,8 +409,8 @@ export function buildParsingReviewEditableFields(
     });
   }
 
-  fields.push(
-    {
+  if (isAscFieldMapped(fieldMapping, 'DESCRIPTION')) {
+    fields.push({
       key: 'size',
       label: 'Size',
       node: editableTableText({
@@ -381,8 +418,11 @@ export function buildParsingReviewEditableFields(
         needsAttention: parsingReviewFieldNeedsAttention(row, 'size', profile),
         onChange: (next) => updateRow(row.id, { size: next }),
       }),
-    },
-    {
+    });
+  }
+
+  if (isAscFieldMapped(fieldMapping, 'MANUFACTURER')) {
+    fields.push({
       key: 'manufacturer',
       label: 'Manufacturer',
       node: editableTableText({
@@ -390,8 +430,11 @@ export function buildParsingReviewEditableFields(
         needsAttention: parsingReviewFieldNeedsAttention(row, 'manufacturer', profile),
         onChange: (next) => updateRow(row.id, { manufacturer: next }),
       }),
-    },
-    {
+    });
+  }
+
+  if (isAscFieldMapped(fieldMapping, 'FIGURE NUM')) {
+    fields.push({
       key: 'figureNumber',
       label: 'Figure Number',
       node: editableTableText({
@@ -399,8 +442,11 @@ export function buildParsingReviewEditableFields(
         needsAttention: parsingReviewFieldNeedsAttention(row, 'figureNumber', profile),
         onChange: (next) => updateRow(row.id, { figureNumber: next }),
       }),
-    },
-    {
+    });
+  }
+
+  if (isAscFieldMapped(fieldMapping, 'QTY')) {
+    fields.push({
       key: 'quantity',
       label: 'Quantity',
       node: editableTableNumber({
@@ -409,8 +455,8 @@ export function buildParsingReviewEditableFields(
         min: 1,
         onChange: (n) => updateRow(row.id, { quantity: typeof n === 'number' ? n : row.quantity }),
       }),
-    },
-  );
+    });
+  }
 
   return fields;
 }

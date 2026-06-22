@@ -11,10 +11,11 @@ import {
   deriveFieldMappingForUpload,
   evaluateMappingConfidence,
   findDuplicateBomColumns,
+  getMissingRequiredFieldLabels,
   hasRequiredFieldMapping,
   isConcatenatedColumnUpload,
   mappingConfidenceLabel,
-  normalizeFieldMappingSkip,
+  PARSING_IDENTIFIER_MAPPING_TOOLTIP,
 } from '../bomFieldMappingUtils';
 import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
 import { readUploadFileName } from '../bomUploadFlowState';
@@ -56,13 +57,12 @@ function confidenceAlertCopy(
           'Two or more fields point to the same spreadsheet column. Open Review columns to fix duplicates before continuing.',
       };
     }
-    const missing = getMissingRequiredFieldNames(fieldMapping);
-    const missingList = missing.length > 0 ? missing.join(', ') : 'required columns';
-    const plural = missing.length !== 1;
+    const missing = getMissingRequiredFieldLabels(fieldMapping);
+    const missingList = missing.length > 0 ? missing.join(', ') : 'Description, SKU or UPC';
     return {
       type: 'error',
-      message: `${missingList} ${plural ? 'are' : 'is'} not linked — import is blocked.`,
-      description: `Link your ${missingList} column${plural ? 's' : ''} in Review columns to continue.`,
+      message: `${missingList} ${missing.length !== 1 ? 'are' : 'is'} not linked — import is blocked.`,
+      description: `Link at least one of Description, SKU, or UPC in Review columns to continue.`,
     };
   }
   if (confidence === 'partial') {
@@ -78,16 +78,6 @@ function confidenceAlertCopy(
     message: `${mappedCount} of ${ASC_FIELD_MAPPING_TOTAL} columns linked`,
     description: '',
   };
-}
-
-/** Returns user-friendly names of the fields that are actually causing the 'blocked' state.
- *  Mirrors the requirements in hasRequiredFieldMapping() — do not change the logic there. */
-function getMissingRequiredFieldNames(fieldMapping: ReturnType<typeof deriveFieldMappingForUpload>): string[] {
-  const missing: string[] = [];
-  if (!normalizeFieldMappingSkip(fieldMapping['PART NUMBER'])) missing.push('Part Number');
-  if (!normalizeFieldMappingSkip(fieldMapping.DESCRIPTION)) missing.push('Description');
-  if (!normalizeFieldMappingSkip(fieldMapping.QTY)) missing.push('Quantity');
-  return missing;
 }
 
 function mappingSummaryPageDescription(
@@ -139,6 +129,13 @@ export function BomMappingSummaryPage() {
   const confidence = evaluateMappingConfidence(fieldMapping);
   const duplicateColumns = findDuplicateBomColumns(fieldMapping);
   const canContinue = hasRequiredFieldMapping(fieldMapping) && duplicateColumns.size === 0;
+  const continueDisabledTooltip = !canContinue
+    ? duplicateColumns.size > 0
+      ? 'Fix duplicate column links before continuing'
+      : !hasRequiredFieldMapping(fieldMapping)
+        ? PARSING_IDENTIFIER_MAPPING_TOOLTIP
+        : undefined
+    : undefined;
   const alertCopy = confidenceAlertCopy(confidence, mappedCount, duplicateColumns.size, fieldMapping);
 
   const projectMeta = bomProjectById(bomProjectId);
@@ -211,13 +208,7 @@ export function BomMappingSummaryPage() {
             >
               Review columns
             </Button>
-            <Tooltip
-              title={
-                confidence === 'blocked'
-                  ? 'Fix the required column mapping to continue'
-                  : undefined
-              }
-            >
+            <Tooltip title={continueDisabledTooltip}>
               <span>
                 <Button
                   type="primary"

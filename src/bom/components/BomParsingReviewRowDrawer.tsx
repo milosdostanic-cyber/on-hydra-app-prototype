@@ -5,6 +5,7 @@ import {
   parsingReviewMissingFieldsTag,
 } from '../bomParsingReviewAlert';
 import { buildParsingReviewEditableFields } from '../bomParsingReviewColumns';
+import type { BomFieldAliasMap } from '../bomFieldMappingConfig';
 import type { BomItem, BomParsingReviewColumnProfile } from '../data/types';
 import { HydraTag } from '../../ui/HydraTag';
 import {
@@ -21,6 +22,7 @@ type BomParsingReviewRowDrawerProps = {
   open: boolean;
   row: BomItem | null;
   profile: BomParsingReviewColumnProfile;
+  fieldMapping?: BomFieldAliasMap;
   onClose: () => void;
   onSave: (rowId: string, patch: Partial<BomItem>) => void;
 };
@@ -61,6 +63,7 @@ export function BomParsingReviewRowDrawer({
   open,
   row,
   profile,
+  fieldMapping,
   onClose,
   onSave,
 }: BomParsingReviewRowDrawerProps) {
@@ -97,7 +100,7 @@ export function BomParsingReviewRowDrawer({
     onClose();
   }
 
-  const fields = buildParsingReviewEditableFields(profile, draft, handleFieldUpdate);
+  const fields = buildParsingReviewEditableFields(profile, draft, handleFieldUpdate, fieldMapping);
   const fieldRows = chunkFields(fields, 2);
 
   return (
