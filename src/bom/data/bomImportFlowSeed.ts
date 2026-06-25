@@ -273,7 +273,27 @@ function matchForItem(item: BomItem): BomMatchResult {
         { ...pool[0], matchLevel: 'sku', figureNumber: 'FP7450', partNumber: '4371000570' },
         94,
       );
-      return base(top, [top, ...pool.filter((p) => p.partNumber !== top.partNumber)], 'pending', 'auto', {
+      const mediumAlt = withConfidence(
+        {
+          ...pool[2],
+          matchLevel: 'sku',
+          figureNumber: 'ASC-GV-600-FL',
+          partNumber: '4371000821',
+          description: 'Gate Valve, Flanged, Class 150',
+        },
+        74,
+      );
+      const lowAlt = withConfidence(
+        {
+          ...pool[1],
+          matchLevel: 'sku',
+          figureNumber: 'ASC-SR-155-TH',
+          partNumber: '8821042195',
+          description: 'Standard Response Pendent Sprinkler, 155°F, Flat Black',
+        },
+        58,
+      );
+      return base(top, [top, mediumAlt, lowAlt], 'pending', 'auto', {
         matchLevel: 'sku',
         figureNumber: 'FP7450',
       });
@@ -289,7 +309,27 @@ function matchForItem(item: BomItem): BomMatchResult {
         },
         92,
       );
-      return base(top, [top, ...pool.filter((p) => p.partNumber !== top.partNumber)], 'pending', 'auto', {
+      const mediumAlt = withConfidence(
+        {
+          ...pool[0],
+          matchLevel: 'sku',
+          figureNumber: 'FP7450',
+          partNumber: '4371000570',
+          description: 'FireLock Grooved Coupling, Style 005',
+        },
+        76,
+      );
+      const lowAlt = withConfidence(
+        {
+          ...pool[2],
+          matchLevel: 'sku',
+          figureNumber: 'ASC-GV-600-FL',
+          partNumber: '4371000822',
+          description: 'Gate Valve, Flanged, OS&Y, Class 150',
+        },
+        55,
+      );
+      return base(top, [top, mediumAlt, lowAlt], 'pending', 'auto', {
         matchLevel: 'figure',
         figureNumber: 'ASC-SR-155-TH',
       });
@@ -305,7 +345,27 @@ function matchForItem(item: BomItem): BomMatchResult {
         },
         78,
       );
-      return base(top, [top, ...pool.filter((p) => p.partNumber !== top.partNumber)], 'pending', 'auto', {
+      const highAlt = withConfidence(
+        {
+          ...pool[0],
+          matchLevel: 'sku',
+          figureNumber: 'FP7450',
+          partNumber: '4371000570',
+          description: 'FireLock Grooved Coupling, Style 005',
+        },
+        91,
+      );
+      const lowAlt = withConfidence(
+        {
+          ...pool[1],
+          matchLevel: 'sku',
+          figureNumber: 'ASC-SR-155-TH',
+          partNumber: '8821042193',
+          description: 'Standard Response Pendent Sprinkler, 155°F, Chrome',
+        },
+        52,
+      );
+      return base(top, [highAlt, top, lowAlt], 'pending', 'auto', {
         matchLevel: 'figure',
         figureNumber: 'ASC-GV-600-FL',
       });
@@ -325,8 +385,29 @@ function matchForItem(item: BomItem): BomMatchResult {
       });
     }
     default: {
-      const top = withConfidence(pool[0], 88);
-      return base(top, pool, 'pending');
+      const top = withConfidence(
+        { ...pool[0], matchLevel: 'sku', figureNumber: 'FP7450', partNumber: '4371000570' },
+        88,
+      );
+      const mediumAlt = withConfidence(
+        {
+          ...pool[2],
+          matchLevel: 'sku',
+          figureNumber: 'ASC-GV-600-FL',
+          partNumber: '4371000821',
+        },
+        71,
+      );
+      const lowAlt = withConfidence(
+        {
+          ...pool[1],
+          matchLevel: 'sku',
+          figureNumber: 'ASC-SR-155-TH',
+          partNumber: '8821042194',
+        },
+        49,
+      );
+      return base(top, [top, mediumAlt, lowAlt], 'pending');
     }
   }
 }

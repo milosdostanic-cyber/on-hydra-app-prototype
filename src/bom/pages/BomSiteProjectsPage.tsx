@@ -15,6 +15,7 @@ import { BomUploadDestinationModal } from '../components/BomUploadDestinationMod
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { mockBomProjects } from '../data/mockData';
 import { MAX_UPLOAD_BYTES, VALID_UPLOAD_TYPES } from '../constants/uploadLimits';
+import { resolveBomProjectStatus } from '../bomProjectStatus';
 import { BomProjectStatusTag } from '../components/BomTags';
 import type { BomProject } from '../data/types';
 import { shellLayout } from '../../theme/hydraAlias';
@@ -46,12 +47,8 @@ import type { TableColumnsType } from '../../ui/antd';
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All statuses' },
-  { value: 'draft', label: 'Draft' },
-  { value: 'in-progress', label: 'In Progress' },
+  { value: 'ready', label: 'Ready' },
   { value: 'needs-review', label: 'Needs Review' },
-  { value: 'partial', label: 'Partial' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'failed', label: 'Failed' },
 ];
 
 const SORT_OPTIONS = [
@@ -104,6 +101,12 @@ export function BomSiteProjectsPage() {
     [constructionProjectId, deletedIds, projectsListKey],
   );
 
+  useEffect(() => {
+    for (const project of projectBoms) {
+      resolveBomProjectStatus(project.id);
+    }
+  }, [projectBoms]);
+
   const filteredProjects = useMemo(() => {
     let list = [...projectBoms];
     if (searchText.trim()) {
@@ -111,7 +114,7 @@ export function BomSiteProjectsPage() {
       list = list.filter((p) => p.name.toLowerCase().includes(q));
     }
     if (statusFilter !== 'all') {
-      list = list.filter((p) => p.status === statusFilter);
+      list = list.filter((p) => resolveBomProjectStatus(p.id) === statusFilter);
     }
     list.sort((a, b) => {
       const diff = new Date(b.lastEdited).getTime() - new Date(a.lastEdited).getTime();
@@ -242,7 +245,9 @@ export function BomSiteProjectsPage() {
       dataIndex: 'status',
       key: 'status',
       align: 'left',
-      render: (s: BomProject['status']) => <BomProjectStatusTag status={s} />,
+      render: (_status: BomProject['status'], row: BomProject) => (
+        <BomProjectStatusTag status={resolveBomProjectStatus(row.id)} />
+      ),
     },
     {
       title: 'Actions',
@@ -391,7 +396,9 @@ export function BomSiteProjectsPage() {
                   type="secondary"
                   style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
                 >
-                  Excel, CSV, or PDF. We map your columns, then guide you through review and matching.
+                  {hasNoProjects
+                    ? 'Excel or CSV with the columns and quantities you pick.'
+                    : 'Excel, CSV, or PDF. We map your columns, then guide you through review and matching.'}
                 </Typography.Paragraph>
               </Flex>
             </Card>
@@ -415,15 +422,17 @@ export function BomSiteProjectsPage() {
                 <Flex align="center" gap={token.marginSM}>
                   <FileSearchOutlined style={{ fontSize: hydraTitleHeading4.fontSize, color: token.colorPrimary }} />
                   <Typography.Title level={4} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading4) }}>
-                    Search parts
+                    Search catalogue parts
                   </Typography.Title>
                 </Flex>
-                <Typography.Paragraph
-                  type="secondary"
-                  style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
-                >
-                  Competitor lines or ASC catalog. Match to parts or search and add to your project.
-                </Typography.Paragraph>
+                {!hasNoProjects ? (
+                  <Typography.Paragraph
+                    type="secondary"
+                    style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
+                  >
+                    Competitor lines or ASC catalog. Match to parts or search and add to your project.
+                  </Typography.Paragraph>
+                ) : null}
               </Flex>
             </Card>
           </Col>
@@ -445,25 +454,20 @@ export function BomSiteProjectsPage() {
                 <Empty
                   description={
                     <Space orientation="vertical" size={token.marginXS}>
-                      <Typography.Text strong>No BOM projects yet</Typography.Text>
+                      <Typography.Text strong>No projects yet</Typography.Text>
                       <Typography.Text type="secondary">
-                        Create your first BOM project or upload a file to get started.
+                        Upload a file, search parts, or start from scratch to create your first BOM.
                       </Typography.Text>
                     </Space>
                   }
                 >
-                  <Flex gap={token.marginSM} justify="center" wrap="wrap">
-                    <Button
-                      type="primary"
-                      icon={<PlusOutlined />}
-                      onClick={() => setCreateModalOpen(true)}
-                    >
-                      Create New BOM Project
-                    </Button>
-                    <Button icon={<UploadOutlined />} onClick={triggerUpload}>
-                      Upload a file
-                    </Button>
-                  </Flex>
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => setCreateModalOpen(true)}
+                  >
+                    New BOM Project
+                  </Button>
                 </Empty>
               </Flex>
             ) : hasNoResults ? (

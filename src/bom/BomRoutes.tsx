@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { BomLayout } from './layout/BomLayout';
 import { BomAscProductsPage } from './pages/BomAscProductsPage';
+import { BomAscCatalogPartDetailPage } from './pages/BomAscCatalogPartDetailPage';
 import { BomExportPage } from './pages/BomExportPage';
 import { BomFieldMappingPage } from './pages/BomFieldMappingPage';
 import { BomMappingSummaryPage } from './pages/BomMappingSummaryPage';
@@ -47,6 +48,14 @@ export function BomRoutes() {
         <Route path="projects/:bomProjectId/items/:itemId/recommend" element={<BomRecommendPage />} />
         <Route path="projects/:bomProjectId/workspace" element={<BomWorkspacePage />} />
         <Route path="projects/:bomProjectId/asc-products" element={<BomAscProductsPage />} />
+        <Route
+          path="projects/:bomProjectId/asc-products/part/:productKey"
+          element={<BomAscCatalogPartDetailPage />}
+        />
+        <Route
+          path="projects/:bomProjectId/asc-products/sku"
+          element={<Navigate to="../asc-products" replace />}
+        />
         <Route path="projects/:bomProjectId/catalog" element={<Navigate to="../asc-products" replace />} />
         <Route path="projects/:bomProjectId/translate" element={<BomTranslatePage />} />
         <Route path="projects/:bomProjectId/mapping-summary" element={<BomMappingSummaryPage />} />

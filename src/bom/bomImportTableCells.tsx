@@ -59,5 +59,8 @@ export function parseSizeInches(size: string): number | undefined {
 
 export function formatSizeInches(n: number | null, fallback: string): string {
   if (typeof n !== 'number' || Number.isNaN(n)) return fallback;
-  return `${n} inch`;
+  const suffixMatch = fallback.match(/\s*inch\b(.*)$/i);
+  const suffix = suffixMatch?.[1] ?? '';
+  const display = Number.isInteger(n) ? String(n) : String(n);
+  return `${display} inch${suffix}`;
 }

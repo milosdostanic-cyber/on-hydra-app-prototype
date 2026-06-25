@@ -1,44 +1,38 @@
 import {
   CopyOutlined,
-  ExportOutlined,
   FilePdfOutlined,
+  LinkOutlined,
   PictureOutlined,
-  SearchOutlined,
 } from '@ant-design/icons';
 import { useMemo, useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { resolveImportedPartDisplayLabel } from '../bomMatchingReviewAlert';
-import { matchScoreBand } from '../data/bomImportFlowSeed';
+import { buildMatchReviewSkuCards, matchRowMatchesSkuCard, type SkuMatchCardItem } from '../bomMatchSkuUtils';
 import {
-  figureLevelMatchCardTitle,
-  figureLevelMatchExplanation,
-  matchRequiresSkuSelection,
-  resolveFigureNumber,
-} from '../bomMatchSkuUtils';
-import { getSkuVariantsForFigure } from '../data/ascSkuVariants';
-import {
-  ascPartShowsCatalogLinks,
   demoCatalogImageForPart,
   demoDomesticImportForPart,
   demoProductUrlForFigure,
   demoSubmittalUrlForFigure,
+  demoUpcForCatalogPart,
 } from '../bomWorkspaceDashboard';
-import type { AscCatalogPart, BomItem, BomMatchResult } from '../data/types';
-import { BomConfidenceTag, BomManualTag, BomMatchLevelTag } from './BomTags';
-import { BomSkuVariantPicker, matchingReviewSelectableCardStyle } from './BomSkuVariantPicker';
+import type { BomItem, BomMatchResult } from '../data/types';
+import { matchScoreBand } from '../data/bomImportFlowSeed';
+import { BomConfidenceTag, BomManualTag } from './BomTags';
 import { HydraTag } from '../../ui/HydraTag';
 import {
   hydraBaseNormal,
-  hydraBaseStrong,
   hydraLargeStrong,
   hydraTextStyleToReactCss,
+  hydraTitleHeading5,
 } from '../../theme/hydraTypography';
+import { matchingReviewSelectableCardStyle } from './BomSkuVariantPicker';
 import {
   Button,
+  Col,
   Divider,
   Empty,
   Flex,
+  Row,
   Select,
   Space,
   Typography,
@@ -49,18 +43,12 @@ import {
 type BomMatchingReviewPartPanelProps = {
   matchRow: BomMatchResult;
   parsedItem?: BomItem;
-  onSelectCandidate: (part: AscCatalogPart) => void;
-  onSelectVariant: (variantId: string) => void;
-  onChoosePart?: () => void;
+  onSelectSku: (item: SkuMatchCardItem) => void;
 };
 
 type TypeFilter = 'all' | 'Domestic' | 'Import';
 
 const COLUMN_LABEL_WIDTH = 104;
-
-function candidateKey(part: AscCatalogPart): string {
-  return part.figureNumber ?? part.partNumber;
-}
 
 function copyToClipboard(value: string, label: string) {
   void navigator.clipboard?.writeText(value).then(
@@ -72,11 +60,13 @@ function copyToClipboard(value: string, label: string) {
 function PanelColumnHeaderBlock({
   title,
   subtitle,
+  detail,
   titleExtra,
   trailing,
 }: {
   title: string;
   subtitle?: string;
+  detail?: string;
   titleExtra?: ReactNode;
   trailing?: ReactNode;
 }) {
@@ -93,8 +83,13 @@ function PanelColumnHeaderBlock({
             {titleExtra}
           </Flex>
           {subtitle ? (
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+            <Typography.Text strong style={hydraTextStyleToReactCss(hydraBaseNormal)}>
               {subtitle}
+            </Typography.Text>
+          ) : null}
+          {detail ? (
+            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+              {detail}
             </Typography.Text>
           ) : null}
         </Flex>
@@ -156,174 +151,162 @@ function DetailRow({
   );
 }
 
-function InlineMeta({ label, value }: { label: string; value?: string }) {
-  const { token } = theme.useToken();
-  const display = value?.trim();
-  if (!display) return null;
+function SkuMetaInline({ label, value }: { label: string; value?: string }) {
+  const display = value?.trim() || '—';
 
   return (
-    <Typography.Text style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+    <Typography.Text
+      ellipsis={{ tooltip: `${label}: ${display}` }}
+      style={{ ...hydraTextStyleToReactCss(hydraBaseNormal), flexShrink: 0 }}
+    >
       <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
         {label}:{' '}
       </Typography.Text>
-      <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraBaseNormal), color: token.colorText }}>
-        {display}
-      </Typography.Text>
+      {display}
     </Typography.Text>
   );
 }
 
-function AscEquivalentCard({
-  part,
+function SkuMatchCard({
+  item,
   selected,
   onSelect,
 }: {
-  part: AscCatalogPart;
+  item: SkuMatchCardItem;
   selected: boolean;
   onSelect: () => void;
 }) {
   const { token } = theme.useToken();
-  const figureRef = part.figureNumber ?? part.partNumber;
-  const domesticImport = demoDomesticImportForPart(part);
-  const showCatalogLinks = ascPartShowsCatalogLinks(part);
-  const scoreBand = matchScoreBand(part.matchConfidence);
-  const productUrl = showCatalogLinks ? demoProductUrlForFigure(figureRef) : undefined;
-  const submittalUrl = showCatalogLinks ? demoSubmittalUrlForFigure(figureRef) : undefined;
+  const { catalogPart: part, parentPart } = item;
+  const figureRef = part.figureNumber ?? parentPart.figureNumber ?? parentPart.partNumber;
+  const domesticImport = demoDomesticImportForPart(part) ?? 'Import';
+  const productUrl = demoProductUrlForFigure(figureRef);
+  const submittalUrl = demoSubmittalUrlForFigure(figureRef);
   const imageUrl = demoCatalogImageForPart(part);
-  const matchLevel = part.matchLevel === 'figure' ? 'figure' : 'sku';
-  const skuOptionCount = matchLevel === 'figure' ? getSkuVariantsForFigure(figureRef).length : 0;
-  const displayTitle =
-    matchLevel === 'figure' ? figureLevelMatchCardTitle(part.description) : part.description;
-  const thumbSize = token.controlHeightLG + token.sizeLG + token.marginXS;
+  const upc = demoUpcForCatalogPart(part);
+  const thumbnailSize = token.controlHeightLG + token.paddingLG;
+  const matchConfidence = item.parentPart.matchConfidence;
+  const scoreBand = matchScoreBand(matchConfidence);
 
   return (
     <button
       type="button"
       onClick={onSelect}
-      style={matchingReviewSelectableCardStyle(token, selected)}
+      style={{
+        ...matchingReviewSelectableCardStyle(token, selected),
+        width: '100%',
+        minWidth: 0,
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: token.paddingMD,
+        boxShadow: selected ? 'none' : token.boxShadowTertiary,
+      }}
     >
-      <Flex gap={token.marginMD} align="flex-start">
-        <Flex
-          align="center"
-          justify="center"
-          style={{
-            width: thumbSize,
-            height: thumbSize,
-            flexShrink: 0,
-            background: token.colorFillAlter,
-            borderRadius: token.borderRadiusLG,
-            border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-            overflow: 'hidden',
-          }}
-        >
-          {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt=""
-              style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+      <Flex
+        align="center"
+        justify="center"
+        style={{
+          width: thumbnailSize,
+          height: thumbnailSize,
+          flexShrink: 0,
+          background: token.colorFillAlter,
+          borderRadius: token.borderRadiusLG,
+          border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+          overflow: 'hidden',
+        }}
+      >
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt=""
+            style={{ width: '100%', height: '100%', objectFit: 'contain', padding: token.paddingXXS }}
+          />
+        ) : (
+          <PictureOutlined style={{ color: token.colorTextQuaternary, fontSize: token.fontSizeHeading5 }} />
+        )}
+      </Flex>
+
+      <Flex vertical gap={token.marginSM} style={{ flex: 1, minWidth: 0 }}>
+        <Flex align="center" justify="space-between" gap={token.marginXS} wrap="wrap">
+          <Flex align="center" gap={token.marginXXS} style={{ minWidth: 0 }}>
+            <Typography.Text
+              ellipsis={{ tooltip: part.partNumber }}
+              style={{
+                ...hydraTextStyleToReactCss(hydraTitleHeading5),
+                color: token.colorText,
+              }}
+            >
+              {part.partNumber}
+            </Typography.Text>
+            <Button
+              type="text"
+              size="small"
+              aria-label="Copy SKU"
+              icon={<CopyOutlined />}
+              onClick={(e) => {
+                e.stopPropagation();
+                copyToClipboard(part.partNumber, 'SKU');
+              }}
+              style={{ color: token.colorTextDescription, margin: 0, padding: token.paddingXXS, height: 'auto', flexShrink: 0 }}
             />
-          ) : (
-            <PictureOutlined style={{ color: token.colorTextQuaternary, fontSize: token.fontSizeHeading4 }} />
-          )}
+          </Flex>
+          <Flex align="center" gap={token.marginXS} wrap="wrap" justify="flex-end" style={{ flexShrink: 0 }}>
+            {scoreBand !== 'processing' && matchConfidence > 0 ? (
+              <BomConfidenceTag
+                confidence={scoreBand === 'high' ? 'high' : scoreBand === 'medium' ? 'medium' : 'low'}
+                percent={matchConfidence}
+                bandWithPercent
+                size="base"
+              />
+            ) : null}
+            <HydraTag tone={domesticImport === 'Domestic' ? 'processing' : 'default'}>
+              {domesticImport}
+            </HydraTag>
+            <HydraTag tone="success">Exact Product</HydraTag>
+          </Flex>
         </Flex>
 
-        <Flex vertical gap={token.marginXS} style={{ flex: 1, minWidth: 0, paddingBlock: token.paddingXXS }}>
-          <Flex align="center" justify="space-between" gap={token.marginSM}>
-            <Typography.Text
-              style={{
-                ...hydraTextStyleToReactCss(hydraBaseStrong),
-                color: token.colorTextHeading,
-                flex: 1,
-                minWidth: 0,
-                wordBreak: 'break-word',
-              }}
-            >
-              {displayTitle}
-            </Typography.Text>
-            <Flex align="center" gap={token.marginXS} wrap="wrap" justify="flex-end" style={{ flexShrink: 0 }}>
-              {domesticImport ? (
-                <HydraTag tone={domesticImport === 'Domestic' ? 'processing' : 'default'}>
-                  {domesticImport}
-                </HydraTag>
-              ) : null}
-              {scoreBand !== 'processing' && part.matchConfidence > 0 ? (
-                <BomConfidenceTag
-                  confidence={scoreBand === 'high' ? 'high' : scoreBand === 'medium' ? 'medium' : 'low'}
-                  percent={part.matchConfidence}
-                />
-              ) : null}
-              <BomMatchLevelTag level={matchLevel} />
-            </Flex>
-          </Flex>
-
-          <Flex align="center" gap={token.marginMD} wrap="wrap" style={{ marginTop: token.marginXXS }}>
-            <InlineMeta label="Brand" value={part.productFamily} />
-            {part.partNumber ? (
-              <Flex align="center" gap={token.marginXXS}>
-                <InlineMeta label="SKU" value={part.partNumber} />
-                <Button
-                  type="text"
-                  size="small"
-                  aria-label="Copy SKU"
-                  icon={<CopyOutlined />}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    copyToClipboard(part.partNumber, 'SKU');
-                  }}
-                  style={{ color: token.colorTextDescription, margin: 0, padding: 0, height: 'auto' }}
-                />
-              </Flex>
-            ) : null}
-            <InlineMeta label="Size" value={part.dimensions} />
-          </Flex>
-
-          {matchLevel === 'figure' ? (
-            <Typography.Text
-              type="secondary"
-              style={{
-                ...hydraTextStyleToReactCss(hydraBaseNormal),
-                display: 'block',
-                marginTop: token.marginXXS,
-              }}
-            >
-              {figureLevelMatchExplanation(figureRef, skuOptionCount)}
-            </Typography.Text>
-          ) : null}
-
-          <Flex
-            align="center"
-            gap={token.marginMD}
-            wrap="wrap"
-            style={{ marginTop: token.marginXXS, paddingTop: token.paddingXXS }}
+        <Flex vertical gap={token.marginXS} style={{ width: '100%' }}>
+          <Typography.Text
+            ellipsis={{ tooltip: part.description }}
+            style={{
+              ...hydraTextStyleToReactCss(hydraBaseNormal),
+              color: token.colorText,
+              display: 'block',
+            }}
           >
+            {part.description}
+          </Typography.Text>
+
+          <Flex align="center" gap={token.paddingLG} wrap="wrap" style={{ width: '100%' }}>
+            <SkuMetaInline label="Fig" value={figureRef} />
+            <SkuMetaInline label="Brand" value={part.productFamily} />
+            <SkuMetaInline label="UPC" value={upc} />
+          </Flex>
+
+          <Flex align="center" gap={token.marginSM} wrap="wrap">
             {productUrl ? (
               <Typography.Link
                 href={productUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                style={{
-                  ...hydraTextStyleToReactCss(hydraBaseNormal),
-                  color: token.colorLink,
-                }}
+                style={{ ...hydraTextStyleToReactCss(hydraBaseNormal), color: token.colorPrimaryText }}
               >
-                View product <ExportOutlined aria-hidden />
+                <LinkOutlined aria-hidden /> View Product
               </Typography.Link>
             ) : null}
-            {submittalUrl ? (
-              <Typography.Link
-                href={submittalUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                  ...hydraTextStyleToReactCss(hydraBaseNormal),
-                  color: token.colorLink,
-                }}
-              >
-                <FilePdfOutlined aria-hidden /> View PDF
-              </Typography.Link>
-            ) : null}
+            <Typography.Link
+              href={submittalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              style={{ ...hydraTextStyleToReactCss(hydraBaseNormal), color: token.colorPrimaryText }}
+            >
+              <FilePdfOutlined aria-hidden /> View PDF
+            </Typography.Link>
           </Flex>
         </Flex>
       </Flex>
@@ -337,12 +320,15 @@ function PanelColumnShell({
   width,
   flex,
   emphasized,
+  shellPadding,
 }: {
   children: ReactNode;
   background: string;
   width?: string;
   flex?: string;
   emphasized?: boolean;
+  /** Override default panel inset; defaults to theme `paddingMD`. */
+  shellPadding?: number;
 }) {
   const { token } = theme.useToken();
 
@@ -355,7 +341,7 @@ function PanelColumnShell({
         minHeight: 0,
         display: 'flex',
         flexDirection: 'column',
-        padding: token.paddingMD,
+        padding: shellPadding ?? token.paddingMD,
         borderRadius: token.borderRadiusLG,
         border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
         borderLeft: emphasized
@@ -369,36 +355,57 @@ function PanelColumnShell({
   );
 }
 
+function SkuCardGrid({
+  items,
+  isSkuSelected,
+  onSelectSku,
+}: {
+  items: SkuMatchCardItem[];
+  isSkuSelected: (item: SkuMatchCardItem) => boolean;
+  onSelectSku: (item: SkuMatchCardItem) => void;
+}) {
+  const { token } = theme.useToken();
+
+  return (
+    <Row gutter={[token.marginMD, token.marginMD]} style={{ width: '100%' }}>
+      {items.map((item) => (
+        <Col key={item.key} span={12} style={{ display: 'flex', minWidth: 0 }}>
+          <SkuMatchCard
+            item={item}
+            selected={isSkuSelected(item)}
+            onSelect={() => onSelectSku(item)}
+          />
+        </Col>
+      ))}
+    </Row>
+  );
+}
+
 export function BomMatchingReviewPartPanel({
   matchRow,
   parsedItem,
-  onSelectCandidate,
-  onSelectVariant,
-  onChoosePart,
+  onSelectSku,
 }: BomMatchingReviewPartPanelProps) {
   const { token } = theme.useToken();
-  const navigate = useNavigate();
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
 
-  const candidates = useMemo(
-    () => matchRow.suggestedParts.filter(Boolean),
-    [matchRow.suggestedParts],
-  );
-  const selectedKey = matchRow.topMatch ? candidateKey(matchRow.topMatch) : undefined;
-  const needsSku = matchRequiresSkuSelection(matchRow);
-  const figureRef = resolveFigureNumber(matchRow);
-  const skuVariantCount = figureRef ? getSkuVariantsForFigure(figureRef).length : 0;
-  const showSkuPanel = needsSku && Boolean(figureRef) && skuVariantCount > 0;
+  const skuCards = useMemo(() => buildMatchReviewSkuCards(matchRow), [matchRow]);
 
-  const filteredCandidates = useMemo(() => {
-    if (typeFilter === 'all') return candidates;
-    return candidates.filter((part) => demoDomesticImportForPart(part) === typeFilter);
-  }, [candidates, typeFilter]);
+  const filteredSkuCards = useMemo(() => {
+    if (typeFilter === 'all') return skuCards;
+    return skuCards.filter((item) => demoDomesticImportForPart(item.catalogPart) === typeFilter);
+  }, [skuCards, typeFilter]);
 
   const hasMixedTypes = useMemo(() => {
-    const types = new Set(candidates.map((part) => demoDomesticImportForPart(part)).filter(Boolean));
+    const types = new Set(
+      skuCards.map((item) => demoDomesticImportForPart(item.catalogPart)).filter(Boolean),
+    );
     return types.size > 1;
-  }, [candidates]);
+  }, [skuCards]);
+
+  function isSkuSelected(item: SkuMatchCardItem): boolean {
+    return matchRowMatchesSkuCard(matchRow, item);
+  }
 
   const description = resolveImportedPartDisplayLabel(matchRow, parsedItem);
   const material =
@@ -407,7 +414,11 @@ export function BomMatchingReviewPartPanel({
     parsedItem?.pressureClass?.trim();
 
   return (
-    <Flex gap={token.marginMD} align="stretch" style={{ flex: 1, minHeight: 0, height: '100%' }}>
+    <Flex
+      gap={token.marginMD}
+      align="stretch"
+      style={{ flex: 1, minHeight: 0, minWidth: 0, width: '100%', overflow: 'hidden' }}
+    >
       <PanelColumnShell background={token.colorFillAlter} width="280px" flex="0 0 280px" emphasized>
         <PanelColumnHeaderBlock
           title="YOUR PART"
@@ -424,118 +435,80 @@ export function BomMatchingReviewPartPanel({
         </Space>
       </PanelColumnShell>
 
-      <PanelColumnShell background={token.colorBgContainer} flex={showSkuPanel ? '1 1 320px' : '1 1 0'}>
-        {candidates.length > 0 ? (
+      <PanelColumnShell background={token.colorBgContainer} flex="1 1 0" shellPadding={0}>
+        {skuCards.length > 0 ? (
           <>
-            <PanelColumnHeaderBlock
-              title={`HOW WE MATCHED IT (${candidates.length})`}
-              subtitle={
-                candidates.length > 1
-                  ? `Showing ${filteredCandidates.length} of ${candidates.length} matches`
-                  : 'Best match from the ASC catalog'
-              }
-              titleExtra={matchRow.source === 'manual' && matchRow.topMatch ? <BomManualTag /> : undefined}
-              trailing={
-                hasMixedTypes ? (
-                  <Select<TypeFilter>
-                    value={typeFilter}
-                    onChange={setTypeFilter}
-                    style={{ minWidth: 128 }}
-                    options={[
-                      { value: 'all', label: 'All types' },
-                      { value: 'Domestic', label: 'Domestic' },
-                      { value: 'Import', label: 'Import' },
-                    ]}
-                  />
-                ) : undefined
-              }
-            />
+            <div style={{ padding: `${token.paddingMD}px ${token.paddingLG}px 0` }}>
+              <PanelColumnHeaderBlock
+                title={`HOW WE MATCHED IT (${skuCards.length})`}
+                subtitle={
+                  skuCards.length > 1
+                    ? `${filteredSkuCards.length} of ${skuCards.length} options — best match pre-selected`
+                    : 'Best match pre-selected'
+                }
+                titleExtra={matchRow.source === 'manual' && matchRow.topMatch ? <BomManualTag /> : undefined}
+                trailing={
+                  hasMixedTypes ? (
+                    <Select<TypeFilter>
+                      value={typeFilter}
+                      onChange={setTypeFilter}
+                      style={{ minWidth: 128 }}
+                      options={[
+                        { value: 'all', label: 'All types' },
+                        { value: 'Domestic', label: 'Domestic' },
+                        { value: 'Import', label: 'Import' },
+                      ]}
+                    />
+                  ) : undefined
+                }
+              />
+            </div>
 
             <div
               style={{
                 flex: 1,
                 minHeight: 0,
                 overflowY: 'auto',
-                paddingRight: token.paddingXXS,
+                overflowX: 'hidden',
+                width: '100%',
+                padding: token.paddingLG,
               }}
             >
-              <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
-                {filteredCandidates.map((part) => {
-                  const key = candidateKey(part);
-                  return (
-                    <AscEquivalentCard
-                      key={key}
-                      part={part}
-                      selected={selectedKey === key}
-                      onSelect={() => onSelectCandidate(part)}
-                    />
-                  );
-                })}
-                {filteredCandidates.length === 0 ? (
-                  <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-                    No matches for this filter. Try &ldquo;All types&rdquo;.
-                  </Typography.Text>
-                ) : null}
-              </Space>
+              {filteredSkuCards.length === 0 ? (
+                <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+                  No SKU options for this filter. Try &ldquo;All types&rdquo;.
+                </Typography.Text>
+              ) : (
+                <SkuCardGrid
+                  items={filteredSkuCards}
+                  isSkuSelected={isSkuSelected}
+                  onSelectSku={onSelectSku}
+                />
+              )}
             </div>
           </>
         ) : (
-          <>
-            <PanelColumnHeaderBlock
-              title="HOW WE MATCHED IT"
-              subtitle="No catalog matches for this line"
-            />
-            <Flex vertical align="center" justify="center" style={{ flex: 1, minHeight: 80 }}>
+          <div style={{ padding: token.paddingLG, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+            <PanelColumnHeaderBlock title="HOW WE MATCHED IT" subtitle="No catalog options" />
+            <Flex vertical align="center" justify="center" style={{ flex: 1, paddingBlock: token.paddingLG }}>
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="No match found for this part"
-                style={{ padding: `${token.paddingMD}px 0` }}
-              >
-                <Space>
-                  {onChoosePart ? (
-                    <Button icon={<SearchOutlined />} onClick={onChoosePart}>
-                      Browse ASC parts
-                    </Button>
-                  ) : null}
-                  <Button type="link" onClick={() => navigate('/bom/search')}>
-                    Search manually
-                  </Button>
-                </Space>
-              </Empty>
+                description={
+                  <Space orientation="vertical" size={token.marginXS} style={{ maxWidth: 420 }}>
+                    <Typography.Text style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+                      No catalog options for this line.
+                    </Typography.Text>
+                    <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+                      Choose a part from the catalog, search unknown parts, or skip for now — use the
+                      buttons at the top of this page.
+                    </Typography.Text>
+                  </Space>
+                }
+              />
             </Flex>
-          </>
+          </div>
         )}
       </PanelColumnShell>
-
-      {showSkuPanel && figureRef ? (
-        <PanelColumnShell background={token.colorFillAlter} width="300px" flex="0 0 300px">
-          <PanelColumnHeaderBlock
-            title="Select SKU"
-            subtitle={`Figure ${figureRef} · ${skuVariantCount} option${skuVariantCount === 1 ? '' : 's'}`}
-            trailing={
-              <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-                Pick the exact sellable part
-              </Typography.Text>
-            }
-          />
-          <div
-            style={{
-              flex: 1,
-              minHeight: 0,
-              overflowY: 'auto',
-              paddingRight: token.paddingXXS,
-            }}
-          >
-            <BomSkuVariantPicker
-              figureNumber={figureRef}
-              figureDescription={matchRow.topMatch?.description}
-              selectedVariantId={matchRow.selectedVariantId}
-              onChange={onSelectVariant}
-              layout="stack"
-            />
-          </div>
-        </PanelColumnShell>
-      ) : null}
     </Flex>
   );
 }

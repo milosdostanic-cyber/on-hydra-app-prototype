@@ -1,5 +1,5 @@
 import { UnorderedListOutlined } from '@ant-design/icons';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useBomHubPath } from '../../context/ActiveProjectContext';
@@ -21,11 +21,17 @@ import {
   type BomReviewDisplayStatus,
 } from '../bomMatchingReviewStatus';
 import { buildMatchingResultsColumns } from '../bomMatchingColumns';
-import { BomChoosePartModal } from '../components/BomChoosePartModal';
+import { buildBomChoosePartSearchQuery } from '../bomChoosePartUtils';
+import {
+  applyCatalogPickToMatchResult,
+  catalogPickSuccessMessage,
+  catalogProductByKey,
+  matchingCatalogPickRoute,
+  readCatalogPickReturn,
+} from '../bomCatalogPickNavigation';
 import { BomMatchDetailDrawer } from '../components/BomMatchDetailDrawer';
 import { BomSkuVariantModal } from '../components/BomSkuVariantModal';
 import { BomUploadFlowStepChrome } from '../components/BomUploadFlowStepChrome';
-import { useBomChoosePartDrawer } from '../hooks/useBomChoosePartDrawer';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { normalizeParsedItemsForUpload } from '../data/bomImportFlowSeed';
 import { bomItemById, bomProjectById, bomProjectTitleById } from '../data/mockData';
@@ -130,11 +136,8 @@ export function BomMatchingPage() {
   const [detailItemId, setDetailItemId] = useState<string | null>(null);
 
   const { session, uploadId, matchResults, persist, stats } = useBomMatchingData(bomProjectId);
-  const { chooseOpen, chooseMatchRow, openChoose, closeChoose, handleSelectPart } = useBomChoosePartDrawer(
-    matchResults,
-    persist,
-    { autoAcceptOnSelect: true },
-  );
+
+  const tableRoute = `/bom/projects/${bomProjectId}/matching/table`;
 
   const rowNumbers = useMemo(() => {
     const parsed = normalizeParsedItemsForUpload(
@@ -175,6 +178,30 @@ export function BomMatchingPage() {
   const matchingProgressStatus = matchingStepStatusLabel(stats);
   const parsingReviewRoute = `/bom/projects/${bomProjectId}/parsing-review`;
   const reviewRoute = `/bom/projects/${bomProjectId}/matching/review`;
+
+  useEffect(() => {
+    const applied = readCatalogPickReturn(location.state);
+    if (!applied) return;
+
+    const matchRow = matchResults.find((row) => row.itemId === applied.itemId);
+    const product = catalogProductByKey(applied.productKey);
+    if (!matchRow || !product) return;
+
+    const hadSuggestion = Boolean(matchRow.topMatch);
+    const picked = applyCatalogPickToMatchResult(matchRow, product, applied.variantId);
+    const next = { ...picked, lineStatus: 'accepted' as const };
+    persist(matchResults.map((row) => (row.itemId === applied.itemId ? next : row)));
+    message.success(
+      applied.variantId
+        ? 'Part and SKU saved.'
+        : catalogPickSuccessMessage(hadSuggestion, false).replace('confirm the match to continue', 'saved'),
+    );
+
+    navigate(tableRoute, {
+      replace: true,
+      state: uploadState,
+    });
+  }, [location.state]);
   const { confirmFinishImport } = useBomFinishImport({
     bomProjectId,
     uploadState,
@@ -203,9 +230,26 @@ export function BomMatchingPage() {
 
   const handleChoose = useCallback(
     (row: BomMatchResult) => {
-      openChoose(row.itemId);
+      const parsedItem =
+        bomItemById(row.itemId) ?? session?.parsedItems.find((i) => i.id === row.itemId);
+      const searchQuery = buildBomChoosePartSearchQuery(row, parsedItem);
+      navigate(matchingCatalogPickRoute(bomProjectId), {
+        state: {
+          matchingPickItemId: row.itemId,
+          returnTo: tableRoute,
+          returnLabel: 'Back to matching summary',
+          uploadFlowState: uploadState,
+          catalogSearch: searchQuery || undefined,
+          pickSource: {
+            partNumber: row.topMatch?.partNumber ?? parsedItem?.sku,
+            description: parsedItem?.parsedDescription ?? row.originalRequest,
+            size: parsedItem?.size,
+            category: parsedItem?.category,
+          },
+        },
+      });
     },
-    [openChoose],
+    [bomProjectId, navigate, session?.parsedItems, tableRoute, uploadState],
   );
 
   const handleSelectSku = useCallback((row: BomMatchResult) => {
@@ -490,13 +534,6 @@ export function BomMatchingPage() {
           />
         </Flex>
       </Card>
-
-      <BomChoosePartModal
-        open={chooseOpen}
-        matchRow={chooseMatchRow}
-        onClose={closeChoose}
-        onSelectPart={handleSelectPart}
-      />
 
       <BomSkuVariantModal
         open={skuRowId !== null}

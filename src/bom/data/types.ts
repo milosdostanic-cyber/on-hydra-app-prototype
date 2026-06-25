@@ -1,6 +1,6 @@
 /** Domain types for the BOM module (aligned with PM prototype data shapes; Hydra app uses mock data only). */
 
-export type BomProjectStatus = 'draft' | 'in-progress' | 'completed' | 'needs-review' | 'failed' | 'partial';
+export type BomProjectStatus = 'ready' | 'needs-review';
 
 export interface BomProject {
   id: string;
@@ -44,6 +44,10 @@ export interface BomItem {
   importedDescription?: string;
   /** Source row number from the uploaded BOM file. */
   importedRowNumber?: number;
+  /** In-progress upload preview — not imported into the BOM yet. */
+  pendingUploadId?: string;
+  pendingUploadFileName?: string;
+  importMatchLineStatus?: BomMatchLineStatus;
 }
 
 export type BomParsingReviewColumnProfile = 'description' | 'sku-only' | 'upc';

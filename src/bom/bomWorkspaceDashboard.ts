@@ -51,6 +51,17 @@ export function demoCatalogImageForPart(part: AscCatalogPart): string | undefine
   return demoCatalogImageForFigure(part.figureNumber ?? part.partNumber);
 }
 
+/** Stable demo UPC for ASC SKU cards in guided matching review. */
+export function demoUpcForCatalogPart(part: AscCatalogPart): string {
+  const sku = part.partNumber?.trim() ?? '';
+  if (/^\d{10,14}$/.test(sku)) return sku.padStart(12, '0').slice(0, 12);
+  let hash = 0;
+  for (let i = 0; i < sku.length; i += 1) {
+    hash = (hash * 31 + sku.charCodeAt(i)) >>> 0;
+  }
+  return String(100000000000 + (hash % 900000000000));
+}
+
 /**
  * Returns true only for Domestic ASC parts that have a real catalog page.
  * Import parts do not have ASC product/submittal pages — hide those links in matching UI.

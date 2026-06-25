@@ -2,11 +2,13 @@ import { PictureOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
 
 import {
+  excludeSuggestedBrowserProducts,
   filterAscBrowserProducts,
+  getBomChooseAlternativeProducts,
   getBomChooseFeaturedProducts,
 } from '../bomChoosePartUtils';
 import { ASC_BROWSER_PRODUCTS, type AscBrowserProductRow } from '../data/ascBrowserProducts';
-import type { BomMatchResult } from '../data/types';
+import type { BomItem, BomMatchResult } from '../data/types';
 import { HydraTag } from '../../ui/HydraTag';
 import {
   hydraBaseNormal,
@@ -14,7 +16,6 @@ import {
   hydraLargeStrong,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
-import { shellLayout } from '../../theme/hydraAlias';
 import {
   AppSearchInput,
   Button,
@@ -24,7 +25,6 @@ import {
   Empty,
   Flex,
   Modal,
-  Pagination,
   Row,
   Space,
   Typography,
@@ -34,9 +34,11 @@ import {
 type BomChoosePartModalProps = {
   open: boolean;
   matchRow: BomMatchResult | null;
+  parsedItem?: BomItem;
   onClose: () => void;
   onSelectPart: (product: AscBrowserProductRow) => void;
-  initialQuery?: string;
+  /** Footer back link — defaults to matching-flow copy. */
+  backLabel?: string;
 };
 
 const FEATURED_CATEGORY_LABEL: Record<AscBrowserProductRow['browserCategory'], string> = {
@@ -49,10 +51,12 @@ function ChoosePartCard({
   product,
   selected,
   onSelect,
+  compact,
 }: {
   product: AscBrowserProductRow;
   selected: boolean;
   onSelect: () => void;
+  compact?: boolean;
 }) {
   const { token } = theme.useToken();
 
@@ -62,17 +66,16 @@ function ChoosePartCard({
       size="small"
       onClick={onSelect}
       styles={{
-        body: { padding: token.paddingSM },
+        body: { padding: compact ? token.paddingXS : token.paddingSM },
       }}
       style={{
         borderColor: selected ? token.colorPrimary : token.colorBorderSecondary,
         background: selected ? token.colorPrimaryBgSubtle : token.colorBgContainer,
         boxShadow: selected ? token.boxShadowSecondary : token.boxShadowTertiary,
         cursor: 'pointer',
-        height: '100%',
       }}
     >
-      <Flex vertical gap={token.marginXS} style={{ minHeight: 108 }}>
+      <Flex vertical gap={token.marginXXS}>
         <Flex align="center" justify="space-between" gap={token.marginXS}>
           <HydraTag tone={selected ? 'processing' : 'default'}>{product.partType}</HydraTag>
           <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
@@ -162,42 +165,56 @@ function FeaturedCategoryCard({
 export function BomChoosePartModal({
   open,
   matchRow,
+  parsedItem,
   onClose,
   onSelectPart,
-  initialQuery,
+  backLabel = 'Back to review',
 }: BomChoosePartModalProps) {
   const { token } = theme.useToken();
   const [search, setSearch] = useState('');
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
+  const hasSuggestion = Boolean(matchRow?.topMatch);
+  const suggestedParts = useMemo(
+    () => matchRow?.suggestedParts.filter(Boolean) ?? [],
+    [matchRow?.suggestedParts],
+  );
+  const isSearching = search.trim().length > 0;
+
   useEffect(() => {
     if (open) {
-      setSearch(initialQuery ?? '');
+      setSearch('');
       setSelectedKey(null);
     }
-  }, [open, initialQuery]);
-  const [page, setPage] = useState(1);
+  }, [open, matchRow?.itemId]);
 
   const featured = useMemo(() => getBomChooseFeaturedProducts(), []);
-  const isSearching = search.trim().length > 0;
-  const filtered = useMemo(() => filterAscBrowserProducts(search), [search]);
+  const alternativeProposals = useMemo(
+    () => getBomChooseAlternativeProducts(matchRow, parsedItem, suggestedParts),
+    [matchRow, parsedItem, suggestedParts],
+  );
 
-  const paged = useMemo(() => {
-    const start = (page - 1) * shellLayout.tablePageSizeDefault;
-    return filtered.slice(start, start + shellLayout.tablePageSizeDefault);
-  }, [filtered, page]);
+  const searchResults = useMemo(() => {
+    if (!isSearching) return [];
+    const queried = filterAscBrowserProducts(search);
+    return hasSuggestion ? excludeSuggestedBrowserProducts(queried, suggestedParts) : queried;
+  }, [hasSuggestion, isSearching, search, suggestedParts]);
 
   const selectedProduct = useMemo(
     () => (selectedKey ? ASC_BROWSER_PRODUCTS.find((p) => p.key === selectedKey) ?? null : null),
     [selectedKey],
   );
 
-  const hasSuggestion = Boolean(matchRow?.topMatch);
+  const showFeatured = !hasSuggestion && !isSearching;
+  const showAlternativeProposals = hasSuggestion && !isSearching;
+  const showSearchResults = isSearching;
+
+  const modalBodyMaxHeight = token.controlHeightLG * 11;
+  const scrollAreaMaxHeight = token.controlHeightLG * 5;
 
   function resetState() {
     setSearch('');
     setSelectedKey(null);
-    setPage(1);
   }
 
   function handleClose() {
@@ -217,16 +234,24 @@ export function BomChoosePartModal({
 
   return (
     <Modal
-      title="Choose a part"
+      title={hasSuggestion ? 'Choose a different part' : 'Choose a part'}
       open={open}
       onCancel={handleClose}
       width={760}
       centered
       destroyOnClose
+      styles={{
+        body: {
+          maxHeight: modalBodyMaxHeight,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+        },
+      }}
       footer={
         <Flex align="center" justify="space-between" wrap="wrap" gap={token.marginSM}>
           <Button type="link" size="large" onClick={handleClose}>
-            Back to review
+            {backLabel}
           </Button>
           <Flex vertical align="flex-end" gap={token.marginXXS} style={{ flex: 1, minWidth: 200 }}>
             {selectedProduct ? (
@@ -247,13 +272,14 @@ export function BomChoosePartModal({
         </Flex>
       }
     >
-      <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
+      <Flex vertical gap={token.marginMD} style={{ minHeight: 0, flex: 1 }}>
         {matchRow ? (
           <Flex
             vertical
             gap={token.marginXXS}
             style={{
-              padding: token.paddingMD,
+              flexShrink: 0,
+              padding: token.paddingSM,
               borderRadius: token.borderRadiusLG,
               background: token.colorFillAlter,
               border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
@@ -268,9 +294,34 @@ export function BomChoosePartModal({
           </Flex>
         ) : null}
 
-        {!isSearching ? (
+        {showAlternativeProposals ? (
+          <div style={{ flexShrink: 0 }}>
+            <Typography.Text strong style={hydraTextStyleToReactCss(hydraBaseStrong)}>
+              Other options
+            </Typography.Text>
+            <Typography.Paragraph
+              type="secondary"
+              style={{ ...hydraTextStyleToReactCss(hydraBaseNormal), marginBottom: token.marginSM }}
+            >
+              Pick one of these catalog matches, or search below if none fit.
+            </Typography.Paragraph>
+            <Space orientation="vertical" size={token.marginXS} style={{ width: '100%' }}>
+              {alternativeProposals.map((product) => (
+                <ChoosePartCard
+                  key={product.key}
+                  product={product}
+                  selected={selectedKey === product.key}
+                  onSelect={() => handleSelectProduct(product)}
+                  compact
+                />
+              ))}
+            </Space>
+          </div>
+        ) : null}
+
+        {showFeatured ? (
           <>
-            <div>
+            <div style={{ flexShrink: 0 }}>
               <Typography.Text strong style={hydraTextStyleToReactCss(hydraBaseStrong)}>
                 Popular starting points
               </Typography.Text>
@@ -292,65 +343,61 @@ export function BomChoosePartModal({
                 ))}
               </Row>
             </div>
-            <Divider style={{ margin: 0 }} />
+            <Divider style={{ margin: 0, flexShrink: 0 }} />
           </>
         ) : null}
 
-        <div>
+        <div style={{ flexShrink: 0 }}>
           <Typography.Text strong style={hydraTextStyleToReactCss(hydraBaseStrong)}>
-            {isSearching ? 'Search results' : 'Search the catalog'}
+            {showSearchResults ? 'Search results' : 'Search the catalog'}
           </Typography.Text>
           <AppSearchInput
             allowClear
             size="large"
             placeholder="Search part number, figure, description, or manufacturer"
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            style={{ marginTop: token.marginXS, marginBottom: token.marginMD }}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ marginTop: token.marginXS }}
           />
+        </div>
 
-          {isSearching ? (
-            filtered.length === 0 ? (
+        {showSearchResults ? (
+          <div
+            style={{
+              flex: 1,
+              minHeight: 0,
+              maxHeight: scrollAreaMaxHeight,
+              overflowY: 'auto',
+              paddingRight: token.paddingXXS,
+            }}
+          >
+            {searchResults.length === 0 ? (
               <Empty
                 description="No parts match your search. Try a figure number or a shorter description."
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
               />
             ) : (
-              <>
-                <Row gutter={[token.marginSM, token.marginSM]}>
-                  {paged.map((product) => (
-                    <Col key={product.key} xs={24} sm={12}>
-                      <ChoosePartCard
-                        product={product}
-                        selected={selectedKey === product.key}
-                        onSelect={() => handleSelectProduct(product)}
-                      />
-                    </Col>
-                  ))}
-                </Row>
-                {filtered.length > shellLayout.tablePageSizeDefault ? (
-                  <Flex justify="center" style={{ marginTop: token.marginMD }}>
-                    <Pagination
-                      current={page}
-                      pageSize={shellLayout.tablePageSizeDefault}
-                      total={filtered.length}
-                      onChange={setPage}
-                      showSizeChanger={false}
-                    />
-                  </Flex>
-                ) : null}
-              </>
-            )
-          ) : (
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-              Type above to find a specific ASC part, or choose one of the popular categories.
-            </Typography.Text>
-          )}
-        </div>
-      </Space>
+              <Space orientation="vertical" size={token.marginXS} style={{ width: '100%' }}>
+                {searchResults.map((product) => (
+                  <ChoosePartCard
+                    key={product.key}
+                    product={product}
+                    selected={selectedKey === product.key}
+                    onSelect={() => handleSelectProduct(product)}
+                    compact
+                  />
+                ))}
+              </Space>
+            )}
+          </div>
+        ) : (
+          <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+            {hasSuggestion
+              ? 'Type above to search the full catalog.'
+              : 'Type above to find a specific ASC part, or choose one of the popular categories.'}
+          </Typography.Text>
+        )}
+      </Flex>
     </Modal>
   );
 }

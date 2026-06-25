@@ -13,6 +13,7 @@ import type {
   BomProjectStatus,
   AscSubstitutionRisk,
 } from '../data/types';
+import { bomProjectStatusDescription } from '../bomProjectStatus';
 import { HydraTag, type HydraTagTone } from '../../ui/HydraTag';
 import { Badge, Tooltip } from '../../ui/antd';
 import { CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
@@ -26,25 +27,22 @@ export function BomStatusBadge({ status, text }: { status: AntBadgeStatus; text:
 }
 
 const bomProjectStatusLabel: Record<BomProjectStatus, string> = {
-  'in-progress': 'In Progress',
-  completed: 'Ready',
+  ready: 'Ready',
   'needs-review': 'Needs Review',
-  draft: 'Draft',
-  failed: 'Failed',
-  partial: 'Partial',
 };
 
 function bomProjectBadgeStatus(status: BomProjectStatus): AntBadgeStatus {
-  if (status === 'completed') return 'success';
-  if (status === 'needs-review' || status === 'partial') return 'warning';
-  if (status === 'failed') return 'error';
-  if (status === 'draft') return 'default';
-  return 'processing';
+  if (status === 'ready') return 'success';
+  return 'warning';
 }
 
 export function BomProjectStatusTag({ status }: { status: BomProjectStatus }) {
   return (
-    <BomStatusBadge status={bomProjectBadgeStatus(status)} text={bomProjectStatusLabel[status]} />
+    <Tooltip title={bomProjectStatusDescription(status)}>
+      <span>
+        <BomStatusBadge status={bomProjectBadgeStatus(status)} text={bomProjectStatusLabel[status]} />
+      </span>
+    </Tooltip>
   );
 }
 
@@ -64,19 +62,23 @@ export function BomConfidenceTag({
   confidence,
   showIcon = false,
   percent,
+  bandWithPercent = false,
   size = 'sm',
 }: {
   confidence: BomItemConfidence;
   showIcon?: boolean;
-  /** When set, renders e.g. "High · 94%" in a single tag. */
+  /** When set, renders percent only, or "High · 94%" when `bandWithPercent`. */
   percent?: number;
+  bandWithPercent?: boolean;
   /** `base` uses 14px (Figma Base/Normal); default `sm` keeps compact table tags. */
   size?: 'sm' | 'base';
 }) {
   const tone: HydraTagTone = confidence === 'high' ? 'success' : confidence === 'medium' ? 'warning' : 'error';
   const label =
     percent != null && percent > 0
-      ? `${confidenceLabel[confidence]} · ${percent}%`
+      ? bandWithPercent
+        ? `${confidenceLabel[confidence]} · ${percent}%`
+        : `${percent}%`
       : confidenceLabel[confidence];
   return (
     <HydraTag

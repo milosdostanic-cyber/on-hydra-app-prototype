@@ -48,7 +48,7 @@ export function currentPartMatchingReviewAlert(
     return {
       type: 'info',
       message: 'This part was skipped',
-      description: `You skipped ${original} earlier. Look at the options below, or skip again and finish this line later from the summary table.`,
+      description: `You skipped ${original} earlier. Review the options, or skip again to finish later from the summary table.`,
     };
   }
 
@@ -56,7 +56,7 @@ export function currentPartMatchingReviewAlert(
     return {
       type: 'warning',
       message: 'No suggestion for this part',
-      description: `We could not find a matching product for ${original}. Choose a part yourself, or skip this line and come back to it later.`,
+      description: `We could not find a matching product for ${original}.`,
     };
   }
 
@@ -78,7 +78,7 @@ export function currentPartMatchingReviewAlert(
     return {
       type: 'info',
       message: 'Pick the exact product for this part',
-      description: `${figureLevelMatchExplanation(figure, optionCount)} Or choose a different part if this family is not right.`,
+      description: figureLevelMatchExplanation(figure, optionCount),
     };
   }
 
@@ -86,7 +86,7 @@ export function currentPartMatchingReviewAlert(
     return {
       type: 'info',
       message: 'Confirm your part choice',
-      description: `You picked ${suggested} for ${original}. Confirm to keep this match, or change it if it is not right.`,
+      description: `You picked ${suggested} for ${original}.`,
     };
   }
 
@@ -95,13 +95,18 @@ export function currentPartMatchingReviewAlert(
     return {
       type: 'success',
       message: 'Ready to confirm this match',
-      description: `We suggested ${suggested} for ${original} with a strong match${conf > 0 ? ` (${conf}%)` : ''}. Confirm to accept, or choose a different part if needed.`,
+      description: `We suggested ${suggested} for ${original} — strong match${conf > 0 ? ` (${conf}%)` : ''}.`,
     };
   }
 
   return {
     type: 'warning',
     message: 'Check this match before you confirm',
-    description: `We suggested ${suggested} for ${original} with ${confidencePhrase(conf)}. Look at the details below, then confirm or pick another option.`,
+    description: `We suggested ${suggested} for ${original} with ${confidencePhrase(conf)}. Review the options, then confirm or pick another.`,
   };
+}
+
+/** Page-level alert — hidden when the right panel owns the full no-match guidance. */
+export function shouldShowGuidedReviewPageAlert(row: BomMatchResult): boolean {
+  return resolveReviewItemCtaState(row) !== 'no-match';
 }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import { resolveBomProjectStatus } from '../bomProjectStatus';
 import { BomProjectStatusTag } from './BomTags';
 import type { BomProject } from '../data/types';
 import { sortBomProjectsByLastEditedDesc } from '../bomUploadFlowState';
@@ -82,7 +83,7 @@ export function BomUploadDestinationModal({
               <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
                 {p.lastEdited}
               </Typography.Text>
-              <BomProjectStatusTag status={p.status} />
+              <BomProjectStatusTag status={resolveBomProjectStatus(p.id)} />
               <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
                 {p.items} items
               </Typography.Text>

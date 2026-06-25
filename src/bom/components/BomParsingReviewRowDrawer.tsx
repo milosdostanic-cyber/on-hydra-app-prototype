@@ -4,16 +4,15 @@ import {
   isParsingReviewLowConfidenceRow,
   parsingReviewMissingFieldsTag,
 } from '../bomParsingReviewAlert';
-import { buildParsingReviewEditableFields } from '../bomParsingReviewColumns';
+import { buildParsingReviewEditableFields, parsingReviewEditableRowPatch } from '../bomParsingReviewColumns';
 import type { BomFieldAliasMap } from '../bomFieldMappingConfig';
 import type { BomItem, BomParsingReviewColumnProfile } from '../data/types';
 import { HydraTag } from '../../ui/HydraTag';
 import {
   hydraBaseNormal,
-  hydraBaseStrong,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
-import { Alert, Button, Col, Flex, Form, Modal, Row, Space, Typography, theme } from '../../ui/antd';
+import { Alert, Button, Col, Flex, Form, Modal, Row, Space, Typography, message, theme } from '../../ui/antd';
 
 /** Figma modal body width (`5506:187558` → `🎰 modal` frame). */
 const PARSING_REVIEW_EDIT_MODAL_WIDTH = 681;
@@ -26,30 +25,6 @@ type BomParsingReviewRowDrawerProps = {
   onClose: () => void;
   onSave: (rowId: string, patch: Partial<BomItem>) => void;
 };
-
-function editableRowPatch(row: BomItem, profile: BomParsingReviewColumnProfile): Partial<BomItem> {
-  const patch: Partial<BomItem> = {
-    size: row.size,
-    manufacturer: row.manufacturer,
-    figureNumber: row.figureNumber,
-    quantity: row.quantity,
-  };
-
-  if (profile === 'description') {
-    patch.parsedDescription = row.parsedDescription;
-    patch.upc = row.upc;
-  }
-
-  if (profile === 'description' || profile === 'sku-only' || profile === 'upc') {
-    patch.sku = row.sku;
-  }
-
-  if (profile === 'upc') {
-    patch.upc = row.upc;
-  }
-
-  return patch;
-}
 
 function chunkFields<T>(items: T[], size: number): T[][] {
   const chunks: T[][] = [];
@@ -96,16 +71,17 @@ export function BomParsingReviewRowDrawer({
 
   function handleSave() {
     if (!draft) return;
-    onSave(draft.id, editableRowPatch(draft, profile));
+    onSave(draft.id, parsingReviewEditableRowPatch(draft, profile));
+    message.success('Row updated.');
     onClose();
   }
 
-  const fields = buildParsingReviewEditableFields(profile, draft, handleFieldUpdate, fieldMapping);
+  const fields = buildParsingReviewEditableFields(profile, fieldMapping);
   const fieldRows = chunkFields(fields, 2);
 
   return (
     <Modal
-      title={`Edit ${draft.originalInput}`}
+      title="Edit row"
       open={open}
       onCancel={onClose}
       width={PARSING_REVIEW_EDIT_MODAL_WIDTH}
@@ -142,43 +118,17 @@ export function BomParsingReviewRowDrawer({
           />
         ) : null}
 
-        <div
-          style={{
-            background: token.colorFillAlter,
-            borderRadius: token.borderRadius,
-            padding: token.paddingMD,
-          }}
-        >
-          <Typography.Text
-            type="secondary"
-            strong
-            style={{ ...hydraTextStyleToReactCss(hydraBaseStrong), display: 'block' }}
-          >
-            From your file
-          </Typography.Text>
-          <Typography.Text
-            strong
-            style={{
-              ...hydraTextStyleToReactCss(hydraBaseStrong),
-              display: 'block',
-              marginTop: token.marginXS,
-            }}
-          >
-            {draft.originalInput}
-          </Typography.Text>
-        </div>
-
         <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-          How we split this to match our catalog
+          Edit any value shown in the table for this row.
         </Typography.Text>
 
         <Form layout="vertical" requiredMark={false}>
           {fieldRows.map((pair, rowIndex) => (
             <Row key={rowIndex} gutter={[token.marginMD, 0]}>
-              {pair.map(({ key, label, node }) => (
+              {pair.map(({ key, label, render }) => (
                 <Col key={key} xs={24} sm={12}>
                   <Form.Item label={label} style={{ marginBottom: token.marginMD }}>
-                    {node}
+                    {render(draft, handleFieldUpdate)}
                   </Form.Item>
                 </Col>
               ))}

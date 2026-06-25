@@ -9,25 +9,35 @@ import {
   resolveReviewItemCtaState,
 } from '../bomMatchingReviewCtas';
 import {
-  applyVariantToMatch,
+  applyAutoMatchHighConfidence,
+  applySkuCardToMatchRow,
+  bestMatchReviewSkuCard,
+  countHighConfidenceAutoMatchableRows,
   matchRequiresSkuSelection,
-  resolveFigureNumber,
+  rowNeedsBestSkuAutoSelect,
+  type SkuMatchCardItem,
 } from '../bomMatchSkuUtils';
 import { useBomMatchingData } from '../hooks/useBomMatchingData';
 import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
 import { readUploadFileName } from '../bomUploadFlowState';
 import { computeMatchingReviewSummary } from '../bomMatchingReviewStatus';
 import { guidedMatchingStepStatusLabel } from '../bomUploadFlowStatus';
-import { getSkuVariantsForFigure } from '../data/ascSkuVariants';
-import { BomChoosePartModal } from '../components/BomChoosePartModal';
+import { buildBomChoosePartSearchQuery } from '../bomChoosePartUtils';
+import {
+  applyCatalogPickToMatchResult,
+  catalogPickSuccessMessage,
+  catalogProductByKey,
+  matchingCatalogPickRoute,
+  readCatalogPickReturn,
+} from '../bomCatalogPickNavigation';
 import { BomGuidedReviewCompletePanel } from '../components/BomGuidedReviewCompletePanel';
 import { BomMatchingReviewPartPanel } from '../components/BomMatchingReviewPartPanel';
 import { BomMatchingReviewQualityAlert } from '../components/BomMatchingReviewQualityAlert';
+import { shouldShowGuidedReviewPageAlert } from '../bomMatchingReviewAlert';
 import { BomUploadFlowStepChrome } from '../components/BomUploadFlowStepChrome';
-import { useBomChoosePartDrawer } from '../hooks/useBomChoosePartDrawer';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { bomItemById, bomProjectTitleById } from '../data/mockData';
-import type { AscCatalogPart, BomMatchResult } from '../data/types';
+import type { BomMatchResult } from '../data/types';
 import {
   hydraBaseNormal,
   hydraLargeStrong,
@@ -59,6 +69,10 @@ function resolveGuidedReviewIndex(
   return firstPendingLineIndex(results);
 }
 
+function autoMatchHighButtonLabel(count: number): string {
+  return `Accept all strong, skip rest (${count})`;
+}
+
 export function BomProgressiveMatchingPage() {
   const { token } = theme.useToken();
   const { bomProjectId = '' } = useParams<{ bomProjectId: string }>();
@@ -69,10 +83,6 @@ export function BomProgressiveMatchingPage() {
   const projectTitle = bomProjectTitleById(bomProjectId) ?? 'BOM project';
   const tableRoute = `/bom/projects/${bomProjectId}/matching/table`;
   const { session, uploadId, matchResults, persist, stats } = useBomMatchingData(bomProjectId);
-  const { chooseOpen, chooseMatchRow, openChoose, closeChoose, handleSelectPart } = useBomChoosePartDrawer(
-    matchResults,
-    persist,
-  );
 
   const queue = matchResults;
 
@@ -90,12 +100,49 @@ export function BomProgressiveMatchingPage() {
   const matchingProgressStatus = guidedMatchingStepStatusLabel(reviewingPosition, totalParts, allDone);
   const reviewedCount = stats.accepted + stats.skipped;
   const remainingCount = Math.max(totalParts - reviewedCount, 0);
+  const pendingCount = matchResults.filter((row) => row.lineStatus === 'pending').length;
+  const autoMatchableCount = useMemo(
+    () => countHighConfidenceAutoMatchableRows(matchResults),
+    [matchResults],
+  );
 
   const parsingReviewRoute = `/bom/projects/${bomProjectId}/parsing-review`;
 
   useEffect(() => {
     setIndex(resolveGuidedReviewIndex(matchResults, uploadState.focusItemId));
   }, [uploadId, location.key, uploadState.focusItemId, matchResults.length]);
+
+  useEffect(() => {
+    if (!current || !rowNeedsBestSkuAutoSelect(current)) return;
+    const best = bestMatchReviewSkuCard(current);
+    if (!best) return;
+    persist(
+      matchResults.map((row) =>
+        row.itemId === current.itemId ? applySkuCardToMatchRow(row, best) : row,
+      ),
+    );
+  }, [current?.itemId]);
+
+  useEffect(() => {
+    const applied = readCatalogPickReturn(location.state);
+    if (!applied) return;
+
+    const matchRow = matchResults.find((row) => row.itemId === applied.itemId);
+    const product = catalogProductByKey(applied.productKey);
+    if (!matchRow || !product) return;
+
+    const hadSuggestion = Boolean(matchRow.topMatch);
+    const next = applyCatalogPickToMatchResult(matchRow, product, applied.variantId);
+    persist(matchResults.map((row) => (row.itemId === applied.itemId ? next : row)));
+    message.success(
+      catalogPickSuccessMessage(hadSuggestion, Boolean(applied.variantId)),
+    );
+
+    navigate(location.pathname, {
+      replace: true,
+      state: { ...uploadState, focusItemId: applied.itemId },
+    });
+  }, [location.state]);
 
   function reopenSkippedInGuided() {
     const firstSkippedIdx = matchResults.findIndex((row) => row.lineStatus === 'skipped');
@@ -154,32 +201,48 @@ export function BomProgressiveMatchingPage() {
 
   function handleChoosePart() {
     if (!current) return;
-    openChoose(current.itemId);
-  }
-
-  function handleSelectCandidate(part: AscCatalogPart) {
-    if (!current) return;
-    const figure = part.figureNumber ?? part.partNumber;
-    const variantCount = getSkuVariantsForFigure(figure).length;
-    patchCurrent({
-      topMatch: part,
-      figureNumber: figure,
-      matchLevel: variantCount > 0 ? 'figure' : 'sku',
-      selectedVariantId: undefined,
-      source: 'auto',
+    const searchQuery = buildBomChoosePartSearchQuery(current, parsedItem);
+    navigate(matchingCatalogPickRoute(bomProjectId), {
+      state: {
+        matchingPickItemId: current.itemId,
+        returnTo: `/bom/projects/${bomProjectId}/matching/review`,
+        returnLabel: 'Back to matching review',
+        uploadFlowState: uploadState,
+        catalogSearch: searchQuery || undefined,
+        pickSource: {
+          partNumber: current.topMatch?.partNumber ?? parsedItem?.sku,
+          description: parsedItem?.parsedDescription ?? current.originalRequest,
+          size: parsedItem?.size,
+          category: parsedItem?.category,
+        },
+      },
     });
-    message.info('Match candidate updated.');
   }
 
-  function handleSelectVariant(variantId: string) {
+  function handleSelectSku(item: SkuMatchCardItem) {
     if (!current) return;
-    const variants = getSkuVariantsForFigure(resolveFigureNumber(current));
-    const variant = variants.find((entry) => entry.id === variantId);
-    if (!variant) return;
-    patchCurrent(applyVariantToMatch(current, variant));
-    message.success('SKU variant selected.');
+    patchCurrent(applySkuCardToMatchRow(current, item));
+    message.success('SKU selected.');
   }
 
+  function handleAutoMatchHigh() {
+    if (pendingCount === 0) {
+      message.info('All parts are already reviewed.');
+      return;
+    }
+    const beforePending = matchResults.filter((row) => row.lineStatus === 'pending');
+    const next = applyAutoMatchHighConfidence(matchResults);
+    const newlyAccepted = beforePending.filter(
+      (row) => next.find((entry) => entry.itemId === row.itemId)?.lineStatus === 'accepted',
+    ).length;
+    const newlySkipped = beforePending.length - newlyAccepted;
+    persist(next);
+    if (next.length > 0) setLastReviewed(next[next.length - 1]);
+    setIndex(next.length);
+    message.success(
+      `Accepted ${newlyAccepted} high-confidence part${newlyAccepted === 1 ? '' : 's'}. ${newlySkipped} skipped for manual review.`,
+    );
+  }
 
   if (matchResults.length === 0) return null;
   if (!allDone && !current) return null;
@@ -205,15 +268,8 @@ export function BomProgressiveMatchingPage() {
         ? `${readyCount} ready to import · ${reviewSummary.skipped} skipped for ${projectTitle}.`
         : `All ${reviewSummary.total} parts reviewed for ${projectTitle}.`;
     }
-    if (!current) return '';
-    if (!current.topMatch) {
-      return 'No automatic match for this line. Choose an ASC part or skip — you can finish from the summary table.';
-    }
-    if (matchRequiresSkuSelection(current)) {
-      return `Pick the exact SKU for this product family, then confirm for ${projectTitle}.`;
-    }
-    return `Confirm each suggested part for ${projectTitle}. Skip lines you are not ready to decide on — you can finish them from the summary table.`;
-  }, [allDone, current, hasSkippedItems, projectTitle, readyCount, reviewSummary]);
+    return `Part ${reviewingPosition} of ${totalParts} · ${projectTitle}`;
+  }, [allDone, hasSkippedItems, projectTitle, readyCount, reviewSummary, reviewingPosition, totalParts]);
 
   function handleHeaderPrimary() {
     if (!current) return;
@@ -254,7 +310,11 @@ export function BomProgressiveMatchingPage() {
               <Button type="link" size="large" onClick={handleSkip}>
                 Skip for now
               </Button>
-              {headerSecondaryLabel ? (
+              {ctaState === 'no-match' ? (
+                <Button type="link" size="large" onClick={() => navigate('/bom/search')}>
+                  Search unknown parts
+                </Button>
+              ) : headerSecondaryLabel ? (
                 <Button size="large" onClick={handleChoosePart}>
                   {headerSecondaryLabel}
                 </Button>
@@ -299,7 +359,7 @@ export function BomProgressiveMatchingPage() {
             style={{ flexShrink: 0 }}
             styles={{ body: { padding: `${token.paddingSM}px ${token.paddingMD}px` } }}
           >
-            <Flex align="center" gap={token.marginMD}>
+            <Flex align="center" gap={token.marginMD} wrap="wrap">
               <Flex vertical gap={token.marginXXS} style={{ flexShrink: 0 }}>
                 <Typography.Text strong style={hydraTextStyleToReactCss(hydraLargeStrong)}>
                   {reviewedCount}/{totalParts} reviewed
@@ -312,12 +372,26 @@ export function BomProgressiveMatchingPage() {
                 percent={totalParts ? Math.round((reviewedCount / totalParts) * 100) : 0}
                 showInfo={false}
                 strokeColor={token.colorPrimary}
-                style={{ flex: 1, margin: 0 }}
+                style={{ flex: 1, minWidth: 120, margin: 0 }}
               />
+              <Button
+                type="primary"
+                disabled={pendingCount === 0 || autoMatchableCount === 0}
+                onClick={handleAutoMatchHigh}
+                title={
+                  autoMatchableCount === 0
+                    ? 'No pending lines have a strong match to accept.'
+                    : 'Accept every strong match in one step and skip the rest for manual review.'
+                }
+              >
+                {autoMatchHighButtonLabel(autoMatchableCount)}
+              </Button>
             </Flex>
           </Card>
 
-          <BomMatchingReviewQualityAlert matchRow={current} parsedItem={parsedItem} />
+          {shouldShowGuidedReviewPageAlert(current) ? (
+            <BomMatchingReviewQualityAlert matchRow={current} parsedItem={parsedItem} />
+          ) : null}
 
           <Card
             styles={{
@@ -325,26 +399,20 @@ export function BomProgressiveMatchingPage() {
                 padding: token.paddingMD,
                 display: 'flex',
                 flexDirection: 'column',
+                minHeight: 0,
+                maxHeight: '60vh',
+                overflow: 'hidden',
               },
             }}
           >
             <BomMatchingReviewPartPanel
               matchRow={current}
               parsedItem={parsedItem}
-              onSelectCandidate={handleSelectCandidate}
-              onSelectVariant={handleSelectVariant}
-              onChoosePart={handleChoosePart}
+              onSelectSku={handleSelectSku}
             />
           </Card>
         </div>
       ) : null}
-
-      <BomChoosePartModal
-        open={chooseOpen}
-        matchRow={chooseMatchRow}
-        onClose={closeChoose}
-        onSelectPart={handleSelectPart}
-      />
 
     </Flex>
     </>

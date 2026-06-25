@@ -1,4 +1,5 @@
 import { buildWorkspaceMainRows, ensureWorkspaceRowDisplayFields } from './bomWorkspaceSeed';
+import { workspaceStatusAfterManualPick } from '../bomMatchingWorkspaceImport';
 import type {
   AscCatalogPart,
   BomItem,
@@ -8,17 +9,19 @@ import type {
   GuidedQuestion,
 } from './types';
 
-const bomProjectStatusCycle: BomProject['status'][] = [
-  'in-progress',
-  'completed',
-  'needs-review',
-  'draft',
-  'failed',
-  'partial',
-];
+/** Static seed default — use {@link resolveBomProjectStatus} for display (pending uploads only). */
+const bomProjectSeedStatus: BomProject['status'] = 'ready';
 
 /** Construction project IDs cycle for bulk seed rows. */
 const projectIdCycle: BomProject['projectId'][] = ['1', '2', '3', '4'];
+
+const WORKSPACE_READY_ROW_COUNT = buildWorkspaceMainRows().length;
+const WORKSPACE_ACTIVE_ROW_COUNT = 7; // mockWorkspaceItems template length
+
+function itemsCountForProjectSeed(readyWorkspace: boolean, empty: boolean): number {
+  if (empty) return 0;
+  return readyWorkspace ? WORKSPACE_READY_ROW_COUNT : WORKSPACE_ACTIVE_ROW_COUNT;
+}
 
 export const mockBomProjects: BomProject[] = [
   {
@@ -26,65 +29,60 @@ export const mockBomProjects: BomProject[] = [
     projectId: '1',
     name: 'Hospital Wing Renovation - Phase 2',
     lastEdited: '2026-03-15',
-    items: 142,
-    status: 'in-progress',
+    items: WORKSPACE_ACTIVE_ROW_COUNT,
+    status: 'ready',
   },
   {
     id: '2',
     projectId: '2',
     name: 'Industrial Plant Fire Protection',
     lastEdited: '2026-03-14',
-    items: 89,
-    status: 'completed',
+    items: WORKSPACE_READY_ROW_COUNT,
+    status: 'ready',
   },
   {
     id: '3',
     projectId: '1',
     name: 'Office Complex HVAC Upgrade',
     lastEdited: '2026-03-12',
-    items: 67,
-    status: 'needs-review',
+    items: WORKSPACE_ACTIVE_ROW_COUNT,
+    status: 'ready',
   },
   {
     id: '4',
     projectId: '3',
     name: 'Warehouse Sprinkler System',
     lastEdited: '2026-03-10',
-    items: 234,
-    status: 'draft',
+    items: 0,
+    status: 'ready',
   },
   {
     id: '5',
     projectId: '2',
     name: 'School Campus Fire Alarm Upgrade',
     lastEdited: '2026-03-05',
-    items: 178,
-    status: 'in-progress',
+    items: WORKSPACE_ACTIVE_ROW_COUNT,
+    status: 'ready',
   },
   {
     id: '6',
     projectId: '1',
     name: 'Parking Garage Electrical Upgrade',
     lastEdited: '2026-03-02',
-    items: 93,
-    status: 'completed',
+    items: WORKSPACE_READY_ROW_COUNT,
+    status: 'ready',
   },
   ...Array.from({ length: 24 }, (_, i): BomProject => {
     const idx = i + 7;
     const projectId = projectIdCycle[i % 4];
-    const status: BomProject['status'] =
-      projectId === '1'
-        ? idx % 3 === 0
-          ? 'needs-review'
-          : 'completed'
-        : bomProjectStatusCycle[i % 4];
+    const readyWorkspace = i % 2 === 0;
     return {
       id: String(idx),
       projectId,
       name: `Fire protection BOM — package ${idx}`,
       lastEdited: `2026-02-${String(15 + (i % 12)).padStart(2, '0')}`,
-      items: 50 + (idx * 11) % 180,
-      status,
+      items: itemsCountForProjectSeed(readyWorkspace, false),
+      status: bomProjectSeedStatus,
     };
   }),
 ];
@@ -373,7 +371,7 @@ export function addBomProject(
     description,
     lastEdited: new Date().toISOString().slice(0, 10),
     items: 0,
-    status: 'draft',
+    status: 'ready',
   };
   mockBomProjects.unshift(project);
   return project;
@@ -392,7 +390,7 @@ export function isBomItemFullyDefined(row: BomItem): boolean {
   return row.status === 'confirmed';
 }
 
-/** Translation pipeline still open at any step (pending → matched → needs-review). */
+/** Translation / workspace review still open (matched or needs-review, not yet confirmed). */
 export function isBomTranslationUnfinished(row: BomItem): boolean {
   return !isBomItemFullyDefined(row);
 }
@@ -414,72 +412,31 @@ function workspaceRowsForReadyProject(): BomItem[] {
   }));
 }
 
-/**
- * Needs-review projects: at least one BOM translation process unfinished (any pipeline step).
- * Seed mixes pending (not started), matched (in progress), and needs-review (awaiting sign-off).
- */
-function workspaceRowsForNeedsReviewProject(): BomItem[] {
-  const rows = cloneWorkspaceTemplate().map((row, index) => {
-    if (index === 0) {
-      return { ...row, status: 'confirmed' as const, confidence: 'high' as const };
-    }
-    if (index === 1) {
-      return {
-        ...row,
-        status: 'pending' as const,
-        confidence: 'low' as const,
-        originalInput: row.originalInput.replace(/^ASC-/, 'TY-'),
-      };
-    }
-    if (index === 2) {
-      return { ...row, status: 'matched' as const, confidence: 'medium' as const };
-    }
-    return { ...row, status: 'needs-review' as const };
-  });
-
-  if (hasUnfinishedBomTranslation(rows)) return rows;
-
-  return rows.map((row, index) =>
-    index === 0 ? row : { ...row, status: 'needs-review' as const },
-  );
-}
-
-/** In-progress / partial: mix of confirmed and open review lines. */
+/** Partial workspace sign-off — some lines confirmed, the rest awaiting manual review (`matched` / `needs-review`). */
 function workspaceRowsForInProgressProject(): BomItem[] {
-  return cloneWorkspaceTemplate().map((row, index) =>
-    index % 2 === 0
-      ? { ...row, status: 'confirmed' as const, confidence: 'high' as const }
-      : { ...row, status: 'needs-review' as const, confidence: 'medium' as const },
-  );
+  return cloneWorkspaceTemplate().map((row, index) => {
+    if (index % 2 === 0) {
+      return { ...row, status: 'confirmed' as const };
+    }
+    const confidence = row.confidence ?? 'medium';
+    return {
+      ...row,
+      status: workspaceStatusAfterManualPick(confidence),
+    };
+  });
 }
 
 /**
- * Initial workspace rows seeded from project list status.
- * Ready (`completed`) → all items fully defined; needs-review → open translation steps remain.
+ * Initial workspace rows seeded from project list (item count only — not project status).
+ * Line statuses (`confirmed` / `matched` / `needs-review`) are workspace-only and do not
+ * affect project Ready vs Needs Review on the list.
  */
 export function initialWorkspaceRowsForBomProject(bomProjectId: string): BomItem[] {
   if (bomProjectId === 'new') return [];
   const project = bomProjectById(bomProjectId);
   if (!project || project.items === 0) return [];
-
-  switch (project.status) {
-    case 'completed':
-      return workspaceRowsForReadyProject();
-    case 'needs-review':
-      return workspaceRowsForNeedsReviewProject();
-    case 'draft':
-      return [];
-    case 'in-progress':
-    case 'partial':
-      return workspaceRowsForInProgressProject();
-    default:
-      return workspaceRowsForNeedsReviewProject();
-  }
-}
-
-export function deriveBomProjectStatusFromRows(rows: BomItem[]): BomProject['status'] {
-  if (rows.length === 0) return 'draft';
-  return hasUnfinishedBomTranslation(rows) ? 'needs-review' : 'completed';
+  if (project.items >= WORKSPACE_READY_ROW_COUNT) return workspaceRowsForReadyProject();
+  return workspaceRowsForInProgressProject();
 }
 
 export function syncBomProjectFromWorkspaceRows(
@@ -489,7 +446,6 @@ export function syncBomProjectFromWorkspaceRows(
   const project = mockBomProjects.find((p) => p.id === bomProjectId);
   if (!project) return undefined;
   project.items = rows.length;
-  project.status = deriveBomProjectStatusFromRows(rows);
   project.lastEdited = new Date().toISOString().slice(0, 10);
   return project;
 }

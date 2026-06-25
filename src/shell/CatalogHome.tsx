@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+
+import { catalogPartReturnFrom } from '../catalog/catalogPartNavigation';
 import { FeaturedParts } from '../catalog/FeaturedParts';
 import {
   CATALOG_DEMO_PARTS,
@@ -19,6 +21,8 @@ const PREVIEW_ROWS = CATALOG_DEMO_PARTS.slice(0, 2);
 export function CatalogHome() {
   const { token } = theme.useToken();
   const navigate = useNavigate();
+  const location = useLocation();
+  const partReturnState = catalogPartReturnFrom(location.pathname);
   const [q, setQ] = useState('');
   const [previewPage, setPreviewPage] = useState(1);
 
@@ -29,7 +33,7 @@ export function CatalogHome() {
 
   const goResults = (query?: string) => {
     const next = (query ?? q).trim() || 'all';
-    navigate(`/search/results?q=${encodeURIComponent(next)}`);
+    navigate(`/catalog/results?q=${encodeURIComponent(next)}`);
   };
 
   const previewColumns: TableColumnsType<CatalogPartRow> = [
@@ -37,7 +41,9 @@ export function CatalogHome() {
       title: 'SKU',
       key: 'sku',
       render: (_, row) => (
-        <Link to={`/search/parts/${encodeURIComponent(row.key)}`}>{row.sku}</Link>
+        <Link to={`/catalog/parts/${encodeURIComponent(row.key)}`} state={partReturnState}>
+          {row.sku}
+        </Link>
       ),
     },
     {
@@ -49,13 +55,13 @@ export function CatalogHome() {
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <PageBackButton to="/dashboard">Back to home</PageBackButton>
+      <PageBackButton to="/projects">Back to projects</PageBackButton>
       <Typography.Title level={3} style={{ margin: 0 }}>
         Catalog
       </Typography.Title>
       <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
-        Browse the product catalog without creating or opening a project. When you download a part, add
-        it to a submittal, or add it to a BOM, we&apos;ll ask you to pick or create a project at that moment.
+        Search the product catalog without creating or opening a project. When you need submittals or
+        project-scoped downloads, we&apos;ll ask you to pick or create a project at that moment.
       </Typography.Paragraph>
 
       <Flex wrap="wrap" gap={token.margin} align="flex-end">
@@ -97,7 +103,8 @@ export function CatalogHome() {
           Catalog results preview
         </Typography.Title>
         <Typography.Paragraph type="secondary" style={{ marginTop: 0, marginBottom: token.marginSM }}>
-          Same data as full results — open a row to download, add to a submittal, or add to a BOM.
+          Sample table rows — open a SKU to try quick download or add a cut sheet to a submittal. Full results
+          use the same data as search.
         </Typography.Paragraph>
         <Table<CatalogPartRow>
           rowKey="key"

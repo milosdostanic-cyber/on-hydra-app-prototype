@@ -1,6 +1,11 @@
 import type { BomItem, BomItemConfidence, BomItemMatchStatus, BomMatchResult } from './data/types';
 import { ensureWorkspaceRowDisplayFields } from './data/bomWorkspaceSeed';
 
+/** Workspace status after picking a part from catalog in the BOM workspace (not import). */
+export function workspaceStatusAfterManualPick(confidence: BomItemConfidence): BomItemMatchStatus {
+  return confidence === 'low' ? 'needs-review' : 'matched';
+}
+
 export function buildWorkspaceRowFromMatch(
   result: BomMatchResult,
   parsedItem: BomItem | undefined,
@@ -21,10 +26,9 @@ export function buildWorkspaceRowFromMatch(
 
   const variantLabel = [match?.dimensions, match?.connectionType].filter(Boolean).join(' · ') || undefined;
 
-  // Imported lines have already been reviewed (skipped lines are excluded), so they
-  // land as "Matched". Low-confidence rows surface "Needs Review" so the workspace
-  // nudges a final human check instead of a misleading "Pending" state.
-  const status: BomItemMatchStatus = conf === 'low' ? 'needs-review' : 'matched';
+  // Accepted rows reached import only after explicit Confirm/Choose in matching — treat as
+  // workspace-confirmed. Manual catalog adds (not via this path) use workspaceStatusAfterManualPick.
+  const status: BomItemMatchStatus = 'confirmed';
 
   return ensureWorkspaceRowDisplayFields({
     id: `ws-import-${result.itemId}`,

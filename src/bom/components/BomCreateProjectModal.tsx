@@ -1,4 +1,3 @@
-import { useActiveProject } from '../../context/ActiveProjectContext';
 import { Form, Input, Modal } from '../../ui/antd';
 import { addBomProject } from '../data/mockData';
 import type { BomProject } from '../data/types';
@@ -16,12 +15,10 @@ type FormValues = {
 
 export function BomCreateProjectModal({ open, onClose, onCreate }: Props) {
   const [form] = Form.useForm<FormValues>();
-  const { projectId } = useActiveProject();
 
   function handleOk() {
     form.validateFields().then((values) => {
-      if (!projectId) return;
-      const project = addBomProject(projectId, values.name.trim(), values.description?.trim());
+      const project = addBomProject(values.name.trim(), values.description?.trim());
       form.resetFields();
       onCreate(project);
     });

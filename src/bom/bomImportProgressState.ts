@@ -261,6 +261,38 @@ export function updateImportSession(
   return session;
 }
 
+/** Remove one parsed/match line from an in-progress upload (workspace preview delete). */
+export function removeLineFromImportSession(
+  uploadId: string,
+  itemId: string,
+): BomImportSession | undefined {
+  const session = getImportSession(uploadId);
+  if (!session) return undefined;
+
+  const parsedItems = session.parsedItems.filter((item) => item.id !== itemId);
+  const matchResults = session.matchResults.filter((result) => result.itemId !== itemId);
+
+  if (parsedItems.length === 0) {
+    dismissImportSession(uploadId);
+    return undefined;
+  }
+
+  const acceptedCount = matchResults.filter((row) => row.lineStatus === 'accepted').length;
+  const skippedCount = matchResults.filter((row) => row.lineStatus === 'skipped').length;
+  const manualCount = matchResults.filter((row) => row.source === 'manual').length;
+
+  return updateImportSession(uploadId, {
+    parsedItems,
+    matchResults,
+    totalRows: parsedItems.length,
+    parsedRows: Math.min(session.progress.parsedRows, parsedItems.length),
+    acceptedCount,
+    skippedCount,
+    manualCount,
+    matchedRows: acceptedCount + skippedCount + manualCount,
+  });
+}
+
 export function dismissImportSession(uploadId: string): void {
   const session = sessionsByUploadId.get(uploadId);
   if (!session) return;
@@ -274,9 +306,21 @@ export function dismissImportSession(uploadId: string): void {
   saveToStorage();
 }
 
-const DEMO_PENDING_SEED_VERSION = 7;
+const DEMO_PENDING_SEED_VERSION = 8;
 const demoPendingSeedKey = (bomProjectId: string) =>
   `hydra_bom_demo_pending_seed_v${DEMO_PENDING_SEED_VERSION}_${bomProjectId}`;
+
+function patchMatchResultsProgress(
+  results: BomMatchResult[],
+  acceptedCount: number,
+  skippedCount: number,
+): BomMatchResult[] {
+  return results.map((row, index) => {
+    if (index < acceptedCount) return { ...row, lineStatus: 'accepted' as const };
+    if (index < acceptedCount + skippedCount) return { ...row, lineStatus: 'skipped' as const };
+    return row;
+  });
+}
 
 /** Figma `5080:16558` — 3 pending uploads (all BOM-ExLine2.xlsx). Demo: Parking Garage Electrical Upgrade. */
 function seedThreePendingImports(bomProjectId: string): void {
@@ -308,12 +352,17 @@ function seedThreePendingImports(bomProjectId: string): void {
 
   configs.forEach((cfg) => {
     const session = createImportSession(bomProjectId, fileName);
+    const matchResults =
+      cfg.step === 'match' && cfg.acceptedCount + cfg.skippedCount > 0
+        ? patchMatchResultsProgress(session.matchResults, cfg.acceptedCount, cfg.skippedCount)
+        : undefined;
     updateImportSession(session.uploadId, {
       currentStep: cfg.step,
       mappedAscFields: cfg.mappedAscFields,
       parsedRows: cfg.parsedRows,
       acceptedCount: cfg.acceptedCount,
       skippedCount: cfg.skippedCount,
+      ...(matchResults ? { matchResults } : {}),
     });
   });
 }
@@ -347,8 +396,8 @@ export function ensureDemoPendingImports(bomProjectId: string): void {
       return;
     }
 
-    // Hospital Wing — 1 interrupted upload strip.
-    if (bomProjectId === '1') {
+    // Office Complex HVAC Upgrade — 1 interrupted upload strip (Figma `5202:21559`).
+    if (bomProjectId === '3') {
       if (seeded === '1' && pending.length === 1) return;
       clearPendingForProject(bomProjectId);
       seedSinglePendingImport(bomProjectId);
@@ -362,7 +411,7 @@ export function ensureDemoPendingImports(bomProjectId: string): void {
     if (bomProjectId === '6') {
       clearPendingForProject(bomProjectId);
       seedThreePendingImports(bomProjectId);
-    } else if (bomProjectId === '1' && listPendingImportsForProject(bomProjectId).length === 0) {
+    } else if (bomProjectId === '3' && listPendingImportsForProject(bomProjectId).length === 0) {
       seedSinglePendingImport(bomProjectId);
     }
   }

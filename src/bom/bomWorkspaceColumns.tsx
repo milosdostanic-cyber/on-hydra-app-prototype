@@ -1,27 +1,21 @@
-import { MoreOutlined } from '@ant-design/icons';
+import { DeleteOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 
 import {
-  resolveWorkspaceSubmittalUrl,
   workspaceAscProductsPath,
   workspaceFigureLinkState,
-  workspaceQuantityLabel,
-  workspaceRowReviewStatus,
   workspaceSkuDisplayLabel,
 } from './bomWorkspaceDashboard';
 import { bomWorkspaceTableColumnWidths } from './data/bomWorkspaceSeed';
-import { BomConfidenceTag, BomManualTag, BomMatchStatusTag } from './components/BomTags';
 import type { BomItem } from './data/types';
 import { hydraBaseNormal, hydraTextStyleToReactCss } from '../theme/hydraTypography';
-import { Button, Dropdown, Flex, Space, Typography } from '../ui/antd';
-import type { MenuProps, TableColumnsType } from '../ui/antd';
+import { Button, InputNumber, Space, Typography } from '../ui/antd';
+import type { TableColumnsType } from '../ui/antd';
 
 export type BomWorkspaceRowActions = {
   bomProjectId: string;
-  onViewOriginal: (row: BomItem) => void;
-  onReview: (row: BomItem) => void;
   onDelete: (row: BomItem) => void;
-  isConfirmed: (row: BomItem) => boolean;
+  onQuantityChange: (row: BomItem, quantity: number) => void;
 };
 
 function FigureLink({ row, bomProjectId }: { row: BomItem; bomProjectId: string }) {
@@ -43,20 +37,6 @@ function FigureLink({ row, bomProjectId }: { row: BomItem; bomProjectId: string 
   );
 }
 
-function ImportedPartCell({ row }: { row: BomItem }) {
-  const label = row.originalInput?.trim() || '—';
-
-  if (!row.originalInput?.trim()) {
-    return <Typography.Text type="secondary">—</Typography.Text>;
-  }
-
-  return (
-    <Typography.Text ellipsis title={row.originalInput}>
-      {label}
-    </Typography.Text>
-  );
-}
-
 export function buildBomWorkspaceColumns(actions: BomWorkspaceRowActions): TableColumnsType<BomItem> {
   return [
     {
@@ -64,13 +44,6 @@ export function buildBomWorkspaceColumns(actions: BomWorkspaceRowActions): Table
       dataIndex: 'rowNumber',
       key: 'rowNumber',
       width: bomWorkspaceTableColumnWidths.rowNumber,
-    },
-    {
-      title: 'Imported part',
-      key: 'importedPart',
-      width: bomWorkspaceTableColumnWidths.importedPart,
-      ellipsis: true,
-      render: (_, row) => <ImportedPartCell row={row} />,
     },
     {
       title: 'SKU / variant',
@@ -97,81 +70,35 @@ export function buildBomWorkspaceColumns(actions: BomWorkspaceRowActions): Table
       key: 'quantity',
       width: bomWorkspaceTableColumnWidths.quantity,
       render: (_, row) => (
-        <Typography.Text style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-          {workspaceQuantityLabel(row)}
-        </Typography.Text>
+        <InputNumber
+          size="small"
+          min={1}
+          value={row.quantity}
+          onChange={(value) => {
+            if (value != null && value >= 1) {
+              actions.onQuantityChange(row, value);
+            }
+          }}
+          style={{ width: 72 }}
+        />
       ),
-    },
-    {
-      title: 'Match',
-      key: 'match',
-      width: bomWorkspaceTableColumnWidths.match,
-      render: (_, row) => (
-        <Flex gap={4} wrap="wrap" align="center">
-          <BomConfidenceTag confidence={row.confidence} />
-          {row.matchSource === 'manual' ? <BomManualTag /> : null}
-        </Flex>
-      ),
-    },
-    {
-      title: 'Status',
-      key: 'status',
-      width: bomWorkspaceTableColumnWidths.status,
-      render: (_, row) => <BomMatchStatusTag status={workspaceRowReviewStatus(row)} />,
     },
     {
       title: 'Actions',
       key: 'actions',
       width: bomWorkspaceTableColumnWidths.actions,
-      render: (_, row) => <WorkspaceActionsCell row={row} actions={actions} />,
-    },
-  ];
-}
-
-function WorkspaceActionsCell({
-  row,
-  actions,
-}: {
-  row: BomItem;
-  actions: BomWorkspaceRowActions;
-}) {
-  const submittalUrl = resolveWorkspaceSubmittalUrl(row);
-  const confirmed = actions.isConfirmed(row);
-
-  const menuItems: MenuProps['items'] = [
-    {
-      key: 'view-original',
-      label: 'View original info',
-      onClick: () => actions.onViewOriginal(row),
-    },
-    ...(submittalUrl
-      ? [
-          {
-            key: 'submittal',
-            label: 'Go to submittal',
-            onClick: () => window.open(submittalUrl, '_blank', 'noopener,noreferrer'),
-          },
-        ]
-      : []),
-    { type: 'divider' as const },
-    {
-      key: 'delete',
-      label: 'Delete',
-      danger: true,
-      onClick: () => actions.onDelete(row),
-    },
-  ];
-
-  return (
-    <Flex gap={4} align="center">
-      {!confirmed ? (
-        <Button size="small" onClick={() => actions.onReview(row)}>
-          Review
+      render: (_, row) => (
+        <Button
+          type="link"
+          danger
+          size="small"
+          icon={<DeleteOutlined />}
+          onClick={() => actions.onDelete(row)}
+          style={{ padding: 0 }}
+        >
+          Delete
         </Button>
-      ) : null}
-      <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
-        <Button size="small" icon={<MoreOutlined />} />
-      </Dropdown>
-    </Flex>
-  );
+      ),
+    },
+  ];
 }

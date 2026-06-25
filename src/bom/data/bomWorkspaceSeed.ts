@@ -6,10 +6,10 @@ export const bomWorkspaceTableColumnWidths = {
   importedPart: 200,
   skuVariant: 260,
   figureNumber: 140,
-  quantity: 88,
+  quantity: 120,
   match: 120,
   status: 110,
-  actions: 200,
+  actions: 88,
 } as const;
 
 /** Demo workspace rows with varied part, figure, SKU, and quantity values. */

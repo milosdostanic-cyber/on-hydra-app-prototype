@@ -6,7 +6,7 @@ import { App } from './App';
 import { ActiveProjectProvider } from './context/ActiveProjectContext';
 import { BomWorkspaceProvider } from './context/BomWorkspaceContext';
 import { HydraThemeProvider } from './context/HydraThemeContext';
-import { SubmittalPackagesProvider } from './context/SubmittalPackagesContext';
+import { SubmittalDraftProvider } from './context/SubmittalDraftContext';
 
 import './index.css';
 import 'antd/dist/reset.css';
@@ -17,9 +17,9 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <ActiveProjectProvider>
           <BomWorkspaceProvider>
-            <SubmittalPackagesProvider>
+            <SubmittalDraftProvider>
               <App />
-            </SubmittalPackagesProvider>
+            </SubmittalDraftProvider>
           </BomWorkspaceProvider>
         </ActiveProjectProvider>
       </BrowserRouter>

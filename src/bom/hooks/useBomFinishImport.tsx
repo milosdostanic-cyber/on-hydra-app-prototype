@@ -54,7 +54,7 @@ export function useBomFinishImport({
     const targetProjectId = resolveImportBomProjectId(
       bomProjectId,
       uploadState,
-      constructionProjectId ?? '1',
+      constructionProjectId,
       uploadFileName,
     );
     const parsedItems = session?.parsedItems ?? [];
@@ -154,7 +154,7 @@ export function useBomFinishImport({
 
     modal.confirm({
       title: 'Import confirmed matches to BOM?',
-      content: `${confirmedCount} part${confirmedCount === 1 ? '' : 's'} will be added to your BOM project. You can open the project from the list to review lines.`,
+      content: `${confirmedCount} part${confirmedCount === 1 ? '' : 's'} will be added to your BOM project as confirmed lines.`,
       okText: 'Import to BOM',
       cancelText: 'Not yet',
       centered: true,
