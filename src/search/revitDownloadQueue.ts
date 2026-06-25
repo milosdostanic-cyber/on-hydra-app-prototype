@@ -140,7 +140,7 @@ export function useRevitDownloadQueue() {
   const queueCount = items.length;
 
   const addToQueue = useCallback(
-    (input: { projectId: string; partKey: string; sku: string }) => {
+    (input: { projectId: string; partKey: string; sku: string }): string => {
       const fileName = `${input.sku}.rfa`;
       const id = `rfa-${Date.now()}`;
       setQueue((prev) => [
@@ -164,6 +164,7 @@ export function useRevitDownloadQueue() {
           fileName,
         },
       ]);
+      return id;
     },
     [],
   );
@@ -175,8 +176,8 @@ export function useRevitDownloadQueue() {
       variationKey: string;
       sku: string;
       fileTypes: string[];
-    }) => {
-      if (input.fileTypes.length === 0) return;
+    }): string[] => {
+      if (input.fileTypes.length === 0) return [];
       const stamp = Date.now();
       const queueItems: DownloadQueueItem[] = input.fileTypes.map((fileType, index) => ({
         id: `draw-${stamp}-${index}`,
@@ -201,6 +202,7 @@ export function useRevitDownloadQueue() {
           variationKey,
         })),
       );
+      return queueItems.map((item) => item.id);
     },
     [],
   );

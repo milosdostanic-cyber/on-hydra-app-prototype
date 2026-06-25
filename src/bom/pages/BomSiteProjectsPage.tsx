@@ -10,6 +10,8 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import type { CSSProperties, Key } from 'react';
 
 import { useActiveProject, useBomHubPath } from '../../context/ActiveProjectContext';
+import { useActionTrail } from '../../context/ActionTrailContext';
+import { actionTrailHighlightStyle } from '../../search/actionTrailStyles';
 import { BomCreateProjectModal } from '../components/BomCreateProjectModal';
 import { BomUploadDestinationModal } from '../components/BomUploadDestinationModal';
 import { BomPageHeader } from '../layout/BomPageHeader';
@@ -64,6 +66,14 @@ export function BomSiteProjectsPage() {
   const { constructionProjectId = '' } = useParams<{ constructionProjectId: string }>();
   const { setProjectId, project } = useActiveProject();
   const bomHubPath = useBomHubPath();
+  const { entries } = useActionTrail();
+  const highlightedProjectIds = useMemo(
+    () =>
+      new Set(
+        entries.filter((e) => e.module === 'bom' && e.newTagActive).map((e) => e.subProjectId),
+      ),
+    [entries],
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -527,6 +537,7 @@ export function BomSiteProjectsPage() {
                   ) : (
                     <>
                       <AppSearchInput
+                        size="middle"
                         placeholder="Search Items..."
                         value={searchText}
                         onChange={(e) => {
@@ -564,6 +575,9 @@ export function BomSiteProjectsPage() {
                   columns={columns}
                   dataSource={paginatedProjects}
                   pagination={false}
+                  onRow={(record) => ({
+                    style: actionTrailHighlightStyle(token, highlightedProjectIds.has(record.id)),
+                  })}
                   rowSelection={{
                     selectedRowKeys,
                     onChange: (keys) => setSelectedRowKeys(keys),

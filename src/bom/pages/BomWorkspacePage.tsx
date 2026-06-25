@@ -38,7 +38,10 @@ import {
   workspacePageHeaderDescription,
 } from '../bomWorkspaceHelpers';
 import { useBomHubPath } from '../../context/ActiveProjectContext';
+import { useActionTrail } from '../../context/ActionTrailContext';
 import { PageBackButton } from '../../shell/PageBackButton';
+import { ActionTrailNewTag } from '../../search/components/ActionTrailNewTag';
+import { actionTrailHighlightStyle } from '../../search/actionTrailStyles';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import {
   Alert,
@@ -125,6 +128,16 @@ export function BomWorkspacePage() {
   const projectTitle = project?.name ?? bomProjectTitleById(bomProjectId) ?? 'BOM project';
   const isSeedEmptyProject = project != null && project.items === 0;
   const { rows, setRows } = useBomWorkspaceRows(bomProjectId);
+  const { entries } = useActionTrail();
+  const trailItemIds = useMemo(
+    () =>
+      new Set(
+        entries
+          .filter((e) => e.module === 'bom' && e.subProjectId === bomProjectId && e.newTagActive)
+          .flatMap((e) => e.itemIds),
+      ),
+    [entries, bomProjectId],
+  );
   const { pendingForProject, setActiveUploadId } = useBomImportFlow();
   const pendingUploadSessions = pendingForProject(bomProjectId);
   const [query, setQuery] = useState('');
@@ -478,13 +491,22 @@ export function BomWorkspacePage() {
   }
 
   const columns = useMemo(
-    () =>
-      buildBomWorkspaceColumns({
+    () => [
+      {
+        title: '',
+        key: 'actionTrail',
+        width: 56,
+        render: (_: unknown, row: BomItem) => (
+          <ActionTrailNewTag module="bom" subProjectId={bomProjectId} itemId={row.id} />
+        ),
+      },
+      ...buildBomWorkspaceColumns({
         bomProjectId,
         onDelete: openDeleteModal,
         onQuantityChange: handleQuantityChange,
       }),
-    [bomProjectId],
+    ],
+    [bomProjectId, openDeleteModal, handleQuantityChange],
   );
 
   function renderTableEmptyState() {
@@ -778,6 +800,7 @@ export function BomWorkspacePage() {
                 ) : null}
                 <AppSearchInput
                   allowClear
+                  size="middle"
                   placeholder="Search Items..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -792,6 +815,9 @@ export function BomWorkspacePage() {
           columns={columns}
           dataSource={filteredRows}
           scroll={{ x: 'max-content' }}
+          onRow={(record) => ({
+            style: actionTrailHighlightStyle(token, trailItemIds.has(record.id)),
+          })}
           rowSelection={{
             selectedRowKeys,
             onChange: (keys) => setSelectedRowKeys(keys),

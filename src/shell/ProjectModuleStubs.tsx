@@ -1,7 +1,16 @@
 import { FilePdfOutlined, FolderOpenOutlined, UploadOutlined } from '@ant-design/icons';
+import { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { BomPageHeader } from '../bom/layout/BomPageHeader';
+import { useActionTrail, useActionTrailModuleLifecycle } from '../context/ActionTrailContext';
 import { useDownloadHistory } from '../search/revitDownloadQueue';
+import { ActionTrailNewTag } from '../search/components/ActionTrailNewTag';
+import { actionTrailHighlightStyle } from '../search/actionTrailStyles';
+import {
+  hydraTextStyleToReactCss,
+  hydraTitleHeading4,
+} from '../theme/hydraTypography';
 import { PageBackButton } from './PageBackButton';
 import { projectTitleById } from './projectSeed';
 import {
@@ -23,10 +32,10 @@ export function SalesBraceModule() {
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to={`/projects/${projectId}/content`}>Back to project workspace</PageBackButton>
-      <Typography.Paragraph style={{ margin: 0, color: token.colorTextSecondary }}>
-        Sales brace (stub): this level will show design names and brace visuals — a different layout than
-        Submittal / Download Center, by product design.
-      </Typography.Paragraph>
+      <BomPageHeader
+        title="Spec"
+        description="Sales brace (stub): this level will show design names and brace visuals — a different layout than Submittal / Download Center, by product design."
+      />
     </Space>
   );
 }
@@ -35,6 +44,17 @@ export function ContentModule() {
   const { token } = theme.useToken();
   const { projectId = '' } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  useActionTrailModuleLifecycle('content');
+  const { entries } = useActionTrail();
+  const trailItemIds = useMemo(
+    () =>
+      new Set(
+        entries
+          .filter((e) => e.module === 'content' && e.subProjectId === projectId && e.newTagActive)
+          .flatMap((e) => e.itemIds),
+      ),
+    [entries, projectId],
+  );
   const title = projectTitleById(projectId) ?? 'Project';
   const { historyForProject } = useDownloadHistory();
   const projectHistory = historyForProject(projectId);
@@ -42,14 +62,23 @@ export function ContentModule() {
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to="/dashboard">Back to home</PageBackButton>
-      <Typography.Title level={3} style={{ margin: 0 }}>
-        Download Center
-      </Typography.Title>
-      <Typography.Text type="secondary">
-        {title} · Content downloads require project context before queuing.
-      </Typography.Text>
 
-      <Card title="Download history" size="small">
+      <BomPageHeader
+        title="Download Center"
+        description={`${title} · Content downloads require project context before queuing.`}
+      />
+
+      <Card
+        title={
+          <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraTitleHeading4) }}>
+            Download history
+          </Typography.Text>
+        }
+        styles={{
+          header: { borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}` },
+          body: { padding: token.paddingMD },
+        }}
+      >
         {projectHistory.length === 0 ? (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -60,11 +89,14 @@ export function ContentModule() {
             size="small"
             dataSource={projectHistory.slice(0, 20)}
             renderItem={(item) => (
-              <List.Item>
-                <Flex vertical gap={2} style={{ minWidth: 0 }}>
-                  <Typography.Text strong ellipsis>
-                    {item.fileName}
-                  </Typography.Text>
+              <List.Item style={actionTrailHighlightStyle(token, trailItemIds.has(item.id))}>
+                <Flex vertical gap={2} style={{ minWidth: 0, width: '100%' }}>
+                  <Flex align="center" gap={token.marginXS} wrap="wrap">
+                    <Typography.Text strong ellipsis>
+                      {item.fileName}
+                    </Typography.Text>
+                    <ActionTrailNewTag module="content" subProjectId={projectId} itemId={item.id} />
+                  </Flex>
                   <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
                     {item.kind === 'revit' ? 'Revit' : 'Drawing'} · SKU {item.sku}
                     {item.variationKey ? ` · variant ${item.variationKey}` : ''}
@@ -111,13 +143,29 @@ export function ContentModule() {
         </Col>
       </Row>
 
-      <Card title="Quick actions" size="small">
+      <Card
+        title={
+          <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraTitleHeading4) }}>
+            Quick actions
+          </Typography.Text>
+        }
+        styles={{
+          header: { borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}` },
+          body: { padding: token.paddingMD },
+        }}
+      >
         <Flex gap={token.marginSM} wrap="wrap">
-          <Button icon={<UploadOutlined />} onClick={() => navigate('/bom')}>
+          <Button type="primary" size="large" icon={<UploadOutlined />} onClick={() => navigate('/bom')}>
             Upload BOM
           </Button>
-          <Button onClick={() => navigate('/search/results?q=all')}>Part Search</Button>
-          <Button icon={<FolderOpenOutlined />} onClick={() => navigate(`/projects/${projectId}/submittal`)}>
+          <Button size="large" onClick={() => navigate('/search/results?q=all')}>
+            Part Search
+          </Button>
+          <Button
+            size="large"
+            icon={<FolderOpenOutlined />}
+            onClick={() => navigate(`/projects/${projectId}/submittal`)}
+          >
             New submittal
           </Button>
         </Flex>
@@ -131,12 +179,10 @@ export function ProjectReframingProposalModule() {
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to="/dashboard">Back to home</PageBackButton>
-      <Typography.Title level={3} style={{ margin: 0 }}>
-        Project Reframing Proposal
-      </Typography.Title>
-      <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
-        Proposal workspace (stub). Use this route for Project Reframing Proposal flow and content.
-      </Typography.Paragraph>
+      <BomPageHeader
+        title="Project Reframing Proposal"
+        description="Proposal workspace (stub). Use this route for Project Reframing Proposal flow and content."
+      />
     </Space>
   );
 }

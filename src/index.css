@@ -34,3 +34,16 @@ body {
   font-weight: var(--hydra-alert-title-font-weight);
   color: var(--hydra-alert-title-color);
 }
+
+/* Action Trail — one-shot nav badge pulse (duration set inline from theme token). */
+@keyframes action-trail-badge-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}

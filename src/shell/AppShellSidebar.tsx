@@ -10,10 +10,11 @@ import {
   SearchOutlined,
   UnorderedListOutlined,
 } from '@ant-design/icons';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useHydraColorMode } from '../context/HydraThemeContext';
+import { ActionTrailNavBadge } from '../search/components/ActionTrailNavBadge';
 import { shellLayout } from '../theme/hydraAlias';
 import {
   hydraMenuItemBorderRadius,
@@ -44,6 +45,13 @@ function primarySideKey(pathname: string): string {
   return 'dash';
 }
 
+const TRAIL_MENU_KEYS = new Set(['bom', 'submittal', 'spec', 'content']);
+
+function trailIcon(key: string, icon: ReactNode) {
+  if (!TRAIL_MENU_KEYS.has(key)) return icon;
+  return <ActionTrailNavBadge menuKey={key}>{icon}</ActionTrailNavBadge>;
+}
+
 export function AppShellSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const { colorMode } = useHydraColorMode();
@@ -57,11 +65,11 @@ export function AppShellSidebar() {
       { key: 'dash', icon: <HomeOutlined />, label: 'Homepage' },
       { key: 'part-search', icon: <SearchOutlined />, label: 'Part Search' },
       { key: 'seis', icon: <CalculatorOutlined />, label: 'SeisBrace' },
-      { key: 'spec', icon: <FileTextOutlined />, label: 'Spec' },
-      { key: 'submittal', icon: <InboxOutlined />, label: 'Submittal' },
+      { key: 'spec', icon: trailIcon('spec', <FileTextOutlined />), label: 'Spec' },
+      { key: 'submittal', icon: trailIcon('submittal', <InboxOutlined />), label: 'Submittal' },
       { key: 'catalog', icon: <GlobalOutlined />, label: 'Catalog' },
-      { key: 'bom', icon: <UnorderedListOutlined />, label: 'BOM' },
-      { key: 'content', icon: <ReadOutlined />, label: 'Download Center' },
+      { key: 'bom', icon: trailIcon('bom', <UnorderedListOutlined />), label: 'BOM' },
+      { key: 'content', icon: trailIcon('content', <ReadOutlined />), label: 'Download Center' },
     ],
     [],
   );

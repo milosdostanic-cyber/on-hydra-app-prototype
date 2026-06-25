@@ -10,9 +10,12 @@ import {
   RightOutlined,
 } from '@ant-design/icons';
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { useSubmittalPackages } from '../../context/SubmittalPackagesContext';
+import { ActionTrailNewTag } from '../../search/components/ActionTrailNewTag';
+import { actionTrailHighlightStyle } from '../../search/actionTrailStyles';
+import { shellTableLinkButtonStyle, shellTableStyles } from '../../shell/shellTablePatterns';
 import {
   Button,
   Card,
@@ -30,6 +33,7 @@ import type { SubmittalPackage, SubmittalPackagePart } from '../types';
 
 type Props = {
   pkg: SubmittalPackage;
+  highlighted?: boolean;
   onDownload: (pkg: SubmittalPackage) => void;
   onEdit: (pkg: SubmittalPackage) => void;
 };
@@ -41,7 +45,7 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
 });
 
 /** Collapsible submittal package card with a parts table + footer actions (ZIP `PackageCard`). */
-export function PackageCard({ pkg, onDownload, onEdit }: Props) {
+export function PackageCard({ pkg, highlighted = false, onDownload, onEdit }: Props) {
   const { token } = theme.useToken();
   const navigate = useNavigate();
   const { deletePackage, removePartFromPackage, movePart } = useSubmittalPackages();
@@ -72,7 +76,16 @@ export function PackageCard({ pkg, onDownload, onEdit }: Props) {
       title: 'Part',
       dataIndex: 'displayName',
       render: (_, row) => (
-        <Link to={`/search/parts/${row.partKey}`}>{row.displayName}</Link>
+        <Flex align="center" gap={token.marginXS} wrap="wrap">
+          <Button
+            type="link"
+            style={shellTableLinkButtonStyle}
+            onClick={() => navigate(`/search/parts/${row.partKey}`)}
+          >
+            {row.displayName}
+          </Button>
+          <ActionTrailNewTag module="submittal" subProjectId={pkg.id} itemId={row.id} />
+        </Flex>
       ),
     },
     {
@@ -128,6 +141,7 @@ export function PackageCard({ pkg, onDownload, onEdit }: Props) {
 
   return (
     <Card
+      style={actionTrailHighlightStyle(token, highlighted)}
       styles={{ body: { padding: expanded ? token.paddingLG : 0 } }}
       title={
         <Flex align="center" gap={token.marginXS}>
@@ -172,10 +186,10 @@ export function PackageCard({ pkg, onDownload, onEdit }: Props) {
           {pkg.parts.length > 0 ? (
             <Table
               rowKey="id"
-              size="small"
               columns={columns}
               dataSource={pkg.parts}
               pagination={false}
+              styles={shellTableStyles(token)}
             />
           ) : (
             <Empty

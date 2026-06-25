@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { AddToBomModal } from '../bom/components/AddToBomModal';
+import { initialWorkspaceRowsForBomProject } from '../context/BomWorkspaceContext';
+import { useBomWorkspace } from '../context/BomWorkspaceContext';
+import { useActionTrail } from '../context/ActionTrailContext';
 import { useActiveProject } from '../context/ActiveProjectContext';
 import {
   ProjectRequiredModal,
@@ -11,6 +13,7 @@ import { App } from '../ui/antd';
 import type { PartVariationRow } from './partDetailDemoData';
 import { useRevitDownloadQueue } from './revitDownloadQueue';
 import { DrawingFileTypesModal } from './components/DrawingFileTypesModal';
+import { buildCatalogBomItem, isSkuInBomRows } from './catalogBomAdd';
 
 /** Add `'spec'` when Add to Spec ships. */
 export type VariantActionId = 'bom' | 'drawing';
@@ -39,11 +42,22 @@ function isBomResolution(
   return 'bomProjectId' in result && 'bomProjectName' in result;
 }
 
+function isSkuInAnyBomWorkspace(
+  rowsByProjectId: Record<string, import('../bom/data/types').BomItem[] | undefined>,
+  sku: string,
+): boolean {
+  return Object.values(rowsByProjectId).some((rows) => {
+    const list = rows ?? [];
+    return isSkuInBomRows(list, sku);
+  });
+}
+
 /** Variant-level BOM + drawing queue orchestration (no Submittal at variant level). */
 export function useVariantActionFlows(partKey: string, variation: PartVariationRow | null) {
   const { message } = App.useApp();
-  const navigate = useNavigate();
   const { projectId, projects, setProjectId } = useActiveProject();
+  const { rowsByProjectId, setWorkspaceRows } = useBomWorkspace();
+  const { registerEntry } = useActionTrail();
   const { addDrawingFilesToQueue } = useRevitDownloadQueue();
 
   const [pending, setPending] = useState<VariantActionId | null>(null);
@@ -65,10 +79,40 @@ export function useVariantActionFlows(partKey: string, variation: PartVariationR
     [variation],
   );
 
+  const isInBom = useMemo(
+    () => (variation ? isSkuInAnyBomWorkspace(rowsByProjectId, variation.sku) : false),
+    [rowsByProjectId, variation],
+  );
+
   const finishBomAdd = (bomProjectId: string, bomProjectName: string) => {
     if (!variation) return;
+    const existingRows =
+      rowsByProjectId[bomProjectId] ?? initialWorkspaceRowsForBomProject(bomProjectId);
+    if (isSkuInBomRows(existingRows, variation.sku)) {
+      message.info(`Already in BOM — “${bomProjectName}”.`);
+      return;
+    }
+
+    const newRow = buildCatalogBomItem(
+      {
+        partKey: variation.key,
+        sku: variation.sku,
+        displayName: `${variation.sku} — ${variation.name}`,
+      },
+      existingRows.length,
+    );
+    setWorkspaceRows(bomProjectId, (prev) => [...prev, newRow]);
+
+    registerEntry({
+      module: 'bom',
+      subProjectId: bomProjectId,
+      subProjectLabel: bomProjectName,
+      partKey: variation.key,
+      variantKey: variation.key,
+      itemIds: [newRow.id],
+    });
+
     message.success(`${variation.sku} added to “${bomProjectName}”.`);
-    navigate(`/bom/projects/${bomProjectId}/workspace`);
   };
 
   const openDrawingPicker = (pid: string) => {
@@ -78,7 +122,7 @@ export function useVariantActionFlows(partKey: string, variation: PartVariationR
 
   const queueDrawingFiles = (pid: string, fileTypes: string[]) => {
     if (!variation || fileTypes.length === 0) return;
-    addDrawingFilesToQueue({
+    const itemIds = addDrawingFilesToQueue({
       projectId: pid,
       partKey,
       variationKey: variation.key,
@@ -86,6 +130,15 @@ export function useVariantActionFlows(partKey: string, variation: PartVariationR
       fileTypes,
     });
     const projectName = projects.find((p) => p.key === pid)?.name ?? 'project';
+    registerEntry({
+      module: 'content',
+      subProjectId: pid,
+      subProjectLabel: projectName,
+      partKey,
+      variantKey: variation.key,
+      itemIds,
+      partCount: itemIds.length,
+    });
     message.success(
       `${fileTypes.length} drawing file${fileTypes.length === 1 ? '' : 's'} added to download queue · ${projectName}.`,
     );
@@ -226,5 +279,6 @@ export function useVariantActionFlows(partKey: string, variation: PartVariationR
     queueSingleFileType,
     modals,
     pillActions,
+    isInBom,
   };
 }

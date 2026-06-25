@@ -280,3 +280,13 @@ export function useSubmittalPackages(): SubmittalPackagesContextValue {
   }
   return ctx;
 }
+
+/** Read-only snapshot helpers for cross-flow checks (e.g. Action Trail duplicate detection). */
+export function isPartInAnySubmittalPackage(partKey: string): boolean {
+  return getPackagesSnapshot().some((pkg) => pkg.parts.some((p) => p.partKey === partKey));
+}
+
+export function findSubmittalPartRowId(packageId: string, partKey: string): string | undefined {
+  const pkg = getPackagesSnapshot().find((p) => p.id === packageId);
+  return pkg?.parts.find((p) => p.partKey === partKey)?.id;
+}

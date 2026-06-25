@@ -1,10 +1,12 @@
 import { PlusOutlined } from '@ant-design/icons';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { BomPageHeader } from '../bom/layout/BomPageHeader';
+import { useActionTrail, useActionTrailModuleLifecycle } from '../context/ActionTrailContext';
 import { useSubmittalPackages } from '../context/SubmittalPackagesContext';
 import { PageBackButton } from '../shell/PageBackButton';
-import { Button, Empty, Flex, Space, Typography, theme } from '../ui/antd';
+import { Button, Empty, Space, Typography, theme } from '../ui/antd';
 import { PackageCard } from './components/PackageCard';
 import { PackageCreateEditModal } from './components/PackageCreateEditModal';
 import { PdfPreviewModal } from './components/PdfPreviewModal';
@@ -18,6 +20,17 @@ import type { SubmittalPackage } from './types';
 export function SubmittalPackagesPage() {
   const { token } = theme.useToken();
   const { projectId = '' } = useParams<{ projectId: string }>();
+  useActionTrailModuleLifecycle('submittal');
+  const { entries } = useActionTrail();
+  const highlightedPackageIds = useMemo(
+    () =>
+      new Set(
+        entries
+          .filter((e) => e.module === 'submittal' && e.newTagActive)
+          .map((e) => e.subProjectId),
+      ),
+    [entries],
+  );
   const { packagesForProject, createPackage, updatePackage } = useSubmittalPackages();
   const packages = packagesForProject(projectId);
 
@@ -29,26 +42,23 @@ export function SubmittalPackagesPage() {
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to={`/projects/${projectId}/content`}>Back to project workspace</PageBackButton>
 
-      <Flex align="flex-start" justify="space-between" gap={token.margin} wrap="wrap">
-        <Flex vertical>
-          <Typography.Title level={4} style={{ margin: 0 }}>
-            Submittal packages
-          </Typography.Title>
-          <Typography.Text type="secondary">
-            Group cut sheets into packages, then preview and download the submittal PDF.
-          </Typography.Text>
-        </Flex>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
-          New package
-        </Button>
-      </Flex>
+      <BomPageHeader
+        title="Submittal packages"
+        description="Group cut sheets into packages, then preview and download the submittal PDF."
+        actions={
+          <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
+            New package
+          </Button>
+        }
+      />
 
       {packages.length > 0 ? (
-        <Space orientation="vertical" size={token.margin} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
           {packages.map((pkg) => (
             <PackageCard
               key={pkg.id}
               pkg={pkg}
+              highlighted={highlightedPackageIds.has(pkg.id)}
               onDownload={setPreviewing}
               onEdit={setEditing}
             />
@@ -57,15 +67,15 @@ export function SubmittalPackagesPage() {
       ) : (
         <Empty
           description={
-            <Space orientation="vertical" size={token.marginXXS}>
-              <Typography.Text>No submittal packages yet.</Typography.Text>
+            <Space orientation="vertical" size={token.marginXS}>
+              <Typography.Text strong>No submittal packages yet.</Typography.Text>
               <Typography.Text type="secondary">
                 Create a package, then add cut sheets from search.
               </Typography.Text>
             </Space>
           }
         >
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
+          <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
             New package
           </Button>
         </Empty>

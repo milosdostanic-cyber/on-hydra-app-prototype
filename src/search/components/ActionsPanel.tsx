@@ -1,4 +1,4 @@
-import { PlusOutlined } from '@ant-design/icons';
+import { CheckOutlined, PlusOutlined } from '@ant-design/icons';
 import type { CSSProperties, ReactNode } from 'react';
 
 import type { PartActionPayload } from '../usePartActionFlows';
@@ -50,22 +50,37 @@ export function ActionsPanel({ partKey, payload, selectedVariation }: Props) {
     justifyContent: 'flex-start',
   };
 
+  const inStateStyle: CSSProperties = {
+    color: token.colorSuccess,
+    borderColor: token.colorSuccessBorder,
+    textAlign: 'left',
+    justifyContent: 'flex-start',
+  };
+
   const actionBtn = (
     label: string,
     onClick: () => void,
-    options: { disabled?: boolean; tooltip?: string; enabled?: boolean },
+    options: {
+      disabled?: boolean;
+      tooltip?: string;
+      enabled?: boolean;
+      inState?: boolean;
+    },
   ) => (
     <ActionButtonWrap disabled={Boolean(options.disabled)} tooltip={options.tooltip}>
       <Button
         block
+        size="large"
         type="default"
-        icon={<PlusOutlined />}
+        icon={options.inState ? <CheckOutlined /> : <PlusOutlined />}
         disabled={options.disabled}
         onClick={onClick}
         style={
-          options.enabled && !options.disabled
-            ? enabledOutlineStyle
-            : { textAlign: 'left', justifyContent: 'flex-start' }
+          options.inState
+            ? inStateStyle
+            : options.enabled && !options.disabled
+              ? enabledOutlineStyle
+              : { textAlign: 'left', justifyContent: 'flex-start' }
         }
       >
         {label}
@@ -95,20 +110,26 @@ export function ActionsPanel({ partKey, payload, selectedVariation }: Props) {
 
   return (
     <>
-      <Flex vertical gap={token.marginXS} style={{ width: '100%' }}>
-        {actionBtn('Add Part to Submittal Package', () => figureFlows.requestAction('submittal'), {
-          enabled: true,
-        })}
+      <Flex vertical gap={token.marginSM} style={{ width: '100%' }}>
+        {actionBtn(
+          figureFlows.isInSubmittalPackage ? 'In Submittal ✓' : 'Add Part to Submittal Package',
+          () => figureFlows.requestAction('submittal'),
+          {
+            enabled: !figureFlows.isInSubmittalPackage,
+            inState: figureFlows.isInSubmittalPackage,
+          },
+        )}
         {actionBtn('Add Revit File to Downloads', () => figureFlows.requestAction('revit-queue'), {
           enabled: true,
         })}
         {actionBtn(
-          'Add Part Variant to BOM',
+          variantFlows.isInBom ? 'In BOM ✓' : 'Add Part Variant to BOM',
           () => variantFlows.requestAction('bom'),
           {
             disabled: !selectedVariation,
             tooltip: !selectedVariation ? VARIATION_REQUIRED_TOOLTIP : undefined,
-            enabled: Boolean(selectedVariation),
+            enabled: Boolean(selectedVariation) && !variantFlows.isInBom,
+            inState: variantFlows.isInBom,
           },
         )}
         {fileTypeAction('Add PDF File to Downloads', 'PDF')}

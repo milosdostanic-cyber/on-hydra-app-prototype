@@ -2,8 +2,11 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { AddToBomModal } from '../bom/components/AddToBomModal';
+import { initialWorkspaceRowsForBomProject } from '../context/BomWorkspaceContext';
+import { useBomWorkspace } from '../context/BomWorkspaceContext';
+import { useActionTrail } from '../context/ActionTrailContext';
 import { useActiveProject } from '../context/ActiveProjectContext';
-import { useSubmittalPackages } from '../context/SubmittalPackagesContext';
+import { useSubmittalPackages, findSubmittalPartRowId, isPartInAnySubmittalPackage } from '../context/SubmittalPackagesContext';
 import {
   ProjectRequiredModal,
   type ProjectDestinationRequirement,
@@ -11,6 +14,7 @@ import {
 } from '../shell/ProjectRequiredModal';
 import { AddToPackageModal } from '../submittal/components/AddToPackageModal';
 import { App, Button } from '../ui/antd';
+import { buildCatalogBomItem, isSkuInBomRows } from './catalogBomAdd';
 import { useRevitDownloadQueue } from './revitDownloadQueue';
 
 export type FigureActionId = 'bom' | 'revit-queue' | 'revit-quick' | 'submittal';
@@ -76,6 +80,8 @@ export function usePartActionFlows(payload: PartActionPayload) {
   const navigate = useNavigate();
   const { projectId, projects, setProjectId } = useActiveProject();
   const { addCartItem, addPartToPackage } = useSubmittalPackages();
+  const { rowsByProjectId, setWorkspaceRows } = useBomWorkspace();
+  const { registerEntry, consumeForModule } = useActionTrail();
   const { addToQueue } = useRevitDownloadQueue();
 
   const [pending, setPending] = useState<FigureActionId | null>(null);
@@ -93,9 +99,39 @@ export function usePartActionFlows(payload: PartActionPayload) {
     [payload],
   );
 
+  const isInSubmittalPackage = useMemo(
+    () => isPartInAnySubmittalPackage(payload.partKey),
+    [payload.partKey],
+  );
+
   const finishBomAdd = (bomProjectId: string, bomProjectName: string) => {
+    const existingRows =
+      rowsByProjectId[bomProjectId] ?? initialWorkspaceRowsForBomProject(bomProjectId);
+    if (isSkuInBomRows(existingRows, payload.sku)) {
+      message.info(`Already in BOM — “${bomProjectName}”.`);
+      return;
+    }
+
+    const newRow = buildCatalogBomItem(
+      {
+        partKey: payload.partKey,
+        sku: payload.sku,
+        displayName: payload.displayName,
+        figureNumber: payload.figureNumber,
+      },
+      existingRows.length,
+    );
+    setWorkspaceRows(bomProjectId, (prev) => [...prev, newRow]);
+
+    registerEntry({
+      module: 'bom',
+      subProjectId: bomProjectId,
+      subProjectLabel: bomProjectName,
+      partKey: payload.partKey,
+      itemIds: [newRow.id],
+    });
+
     message.success(`${payload.sku} added to “${bomProjectName}”.`);
-    navigate(`/bom/projects/${bomProjectId}/workspace`);
   };
 
   const finishSubmittalAdd = (
@@ -104,14 +140,35 @@ export function usePartActionFlows(payload: PartActionPayload) {
     packageName: string,
     options?: { partAlreadyAdded?: boolean },
   ) => {
-    if (!options?.partAlreadyAdded) {
-      addPartToPackage(packageId, {
-        partKey: payload.partKey,
-        displayName: payload.displayName,
-        figureNumber: payload.figureNumber,
-      });
+    const existingRowId = findSubmittalPartRowId(packageId, payload.partKey);
+    if (existingRowId && !options?.partAlreadyAdded) {
+      message.info(`Already in submittal package — “${packageName}”.`);
+      return;
     }
+
+    let partRowId = existingRowId;
+    if (!partRowId) {
+      if (!options?.partAlreadyAdded) {
+        addPartToPackage(packageId, {
+          partKey: payload.partKey,
+          displayName: payload.displayName,
+          figureNumber: payload.figureNumber,
+        });
+      }
+      partRowId = findSubmittalPartRowId(packageId, payload.partKey);
+    }
+    if (!partRowId) return;
+
     addCartItem({ partKey: payload.partKey, packageId });
+
+    registerEntry({
+      module: 'submittal',
+      subProjectId: packageId,
+      subProjectLabel: packageName,
+      partKey: payload.partKey,
+      itemIds: [partRowId],
+    });
+
     notification.success({
       message: 'Added to submittal package',
       description: `${payload.sku} cut sheet added to “${packageName}”.`,
@@ -121,6 +178,7 @@ export function usePartActionFlows(payload: PartActionPayload) {
           size="small"
           onClick={() => {
             notification.destroy();
+            consumeForModule('submittal', packageId);
             navigate(`/projects/${pid}/submittal`);
           }}
         >
@@ -136,10 +194,18 @@ export function usePartActionFlows(payload: PartActionPayload) {
       case 'bom':
         setAddBomProjectId(pid);
         break;
-      case 'revit-queue':
-        addToQueue({ projectId: pid, partKey: payload.partKey, sku: payload.sku });
+      case 'revit-queue': {
+        const queueId = addToQueue({ projectId: pid, partKey: payload.partKey, sku: payload.sku });
+        registerEntry({
+          module: 'content',
+          subProjectId: pid,
+          subProjectLabel: projectName,
+          partKey: payload.partKey,
+          itemIds: [queueId],
+        });
         message.success(`${payload.sku}.rfa added to download queue · ${projectName}.`);
         break;
+      }
       case 'revit-quick':
         console.info('[unified-search] revit-quick-download', {
           partKey: payload.partKey,
@@ -233,5 +299,10 @@ export function usePartActionFlows(payload: PartActionPayload) {
     </>
   );
 
-  return { requestAction, modals, actionLabels: ACTION_OPTIONS.map((o) => ({ id: o.key, label: o.label })) };
+  return {
+    requestAction,
+    modals,
+    actionLabels: ACTION_OPTIONS.map((o) => ({ id: o.key, label: o.label })),
+    isInSubmittalPackage,
+  };
 }

@@ -19,17 +19,11 @@ import {
   hydraTitleHeading5,
 } from '../theme/hydraTypography';
 import { shellLayout } from '../theme/hydraAlias';
-import { Avatar, Button, Dropdown, Flex, List, Modal, Typography, theme } from '../ui/antd';
+import { Avatar, Button, Dropdown, Flex, List, Modal, Switch, Typography, theme } from '../ui/antd';
 import type { MenuProps } from '../ui/antd';
 import { useActiveProject } from '../context/ActiveProjectContext';
+import { useActionTrail } from '../context/ActionTrailContext';
 import { type ProjectRow } from './projectSeed';
-
-const userMenuItems: MenuProps['items'] = [
-  { key: 'profile', label: 'Profile' },
-  { key: 'settings', label: 'Settings' },
-  { type: 'divider' },
-  { key: 'signout', label: 'Sign out' },
-];
 
 const shellControlBtnStyle = (color: string): CSSProperties => ({
   color,
@@ -179,8 +173,31 @@ export function AppTopBar() {
   const { token } = theme.useToken();
   const location = useLocation();
   const { project } = useActiveProject();
+  const { enabled: actionTrailEnabled, setEnabled: setActionTrailEnabled } = useActionTrail();
   const [switchOpen, setSwitchOpen] = useState(false);
   const onPrimary = token.colorTextLightSolid;
+
+  const userMenuItems: MenuProps['items'] = [
+    { key: 'profile', label: 'Profile' },
+    {
+      key: 'action-trail',
+      label: (
+        <Flex align="center" justify="space-between" gap={token.marginSM} style={{ minWidth: 200 }}>
+          <Typography.Text>Action guidance</Typography.Text>
+          <Switch
+            size="small"
+            checked={actionTrailEnabled}
+            onChange={setActionTrailEnabled}
+            onClick={(_, e) => e.stopPropagation()}
+            aria-label="Toggle action guidance"
+          />
+        </Flex>
+      ),
+    },
+    { key: 'settings', label: 'Settings' },
+    { type: 'divider' },
+    { key: 'signout', label: 'Sign out' },
+  ];
 
   const { title, subtitle } = topBarCopyForPath(location.pathname, project?.name);
 
