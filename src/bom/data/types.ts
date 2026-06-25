@@ -29,10 +29,67 @@ export interface BomItem {
   confidence: BomItemConfidence;
   category?: string;
   unit?: string;
+  figureNumber?: string;
+  sku?: string;
+  /** Short variant descriptor (finish, connection) when SKU differs from figure. */
+  variantLabel?: string;
+  manufacturer?: string;
+  upc?: string;
   status?: BomItemMatchStatus;
+  /** How the ASC line was matched during import review. */
+  matchSource?: BomMatchSource;
+  /** Demo submittal / datasheet URL when available for the selected SKU. */
+  submittalUrl?: string;
+  /** Parsed competitor description preserved from the import file. */
+  importedDescription?: string;
+  /** Source row number from the uploaded BOM file. */
+  importedRowNumber?: number;
 }
 
+export type BomParsingReviewColumnProfile = 'description' | 'sku-only' | 'upc';
+
+export type BomImportStep = 'map' | 'review' | 'match' | 'done';
+
+export interface BomImportProgress {
+  uploadId: string;
+  fileName: string;
+  bomProjectId: string;
+  currentStep: BomImportStep;
+  totalAscFields: number;
+  mappedAscFields: number;
+  totalRows: number;
+  parsedRows: number;
+  matchedRows: number;
+  acceptedCount: number;
+  skippedCount: number;
+  manualCount: number;
+  startedAt: string;
+  lastUpdatedAt: string;
+}
+
+export type BomMatchLineStatus = 'pending' | 'accepted' | 'skipped';
+
+export type BomMatchSource = 'auto' | 'manual';
+
+export type BomMatchScoreBand = 'high' | 'medium' | 'low' | 'processing';
+
 export type AscSubstitutionRisk = 'low' | 'medium' | 'high';
+
+/** Whether the matcher returned a sellable SKU or only a parent figure number. */
+export type BomMatchLevel = 'sku' | 'figure';
+
+export interface AscSkuVariant {
+  id: string;
+  figureNumber: string;
+  sku: string;
+  description: string;
+  size: string;
+  finish?: string;
+  domesticImport?: 'Domestic' | 'Import';
+  painted?: 'Painted' | 'Unpainted';
+  pressureRating?: string;
+  connectionType?: string;
+}
 
 export interface AscCatalogPart {
   partNumber: string;
@@ -48,6 +105,9 @@ export interface AscCatalogPart {
   ignoredAttributes: string[];
   conversionRule: string;
   substitutionRisk: AscSubstitutionRisk;
+  /** Parent figure when `matchLevel` is figure-only or after SKU resolve. */
+  figureNumber?: string;
+  matchLevel?: BomMatchLevel;
 }
 
 export interface BomMatchResult {
@@ -55,6 +115,13 @@ export interface BomMatchResult {
   originalRequest: string;
   suggestedParts: AscCatalogPart[];
   topMatch?: AscCatalogPart;
+  lineStatus: BomMatchLineStatus;
+  source: BomMatchSource;
+  /** Figure-level match requires `selectedVariantId` before confirm. */
+  matchLevel?: BomMatchLevel;
+  selectedVariantId?: string;
+  /** Parent figure reference kept after SKU selection. */
+  figureNumber?: string;
 }
 
 export interface GuidedQuestion {

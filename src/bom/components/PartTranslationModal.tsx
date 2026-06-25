@@ -11,11 +11,11 @@ import {
   Modal,
   Progress,
   Space,
-  Tag,
   Typography,
   message,
   theme,
 } from '../../ui/antd';
+import { HydraTag } from '../../ui/HydraTag';
 import type { BomItem, AscCatalogPart } from '../data/types';
 import {
   hydraBaseNormal,
@@ -87,9 +87,9 @@ export function PartTranslationModal({
 
   if (!currentItem) return null;
 
-  const confidenceColor = (conf: number) =>
+  const confidenceTone = (conf: number) =>
     conf >= 90 ? 'success' : conf >= 75 ? 'warning' : 'error';
-  const riskColor = (risk: string) =>
+  const riskTone = (risk: string) =>
     risk === 'low' ? 'success' : risk === 'medium' ? 'warning' : 'error';
 
   const panelBase = {
@@ -148,19 +148,16 @@ export function PartTranslationModal({
             <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
               Match confidence:
             </Typography.Text>
-            <Tag color={confidenceColor(currentAscPart.matchConfidence)} style={{ margin: 0 }}>
+            <HydraTag tone={confidenceTone(currentAscPart.matchConfidence)}>
               {currentAscPart.matchConfidence}%
-            </Tag>
+            </HydraTag>
             <Divider type="vertical" style={{ margin: 0 }} />
             <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
               Substitution risk:
             </Typography.Text>
-            <Tag
-              color={riskColor(currentAscPart.substitutionRisk)}
-              style={{ margin: 0, textTransform: 'capitalize' }}
-            >
+            <HydraTag tone={riskTone(currentAscPart.substitutionRisk)} style={{ textTransform: 'capitalize' }}>
               {currentAscPart.substitutionRisk}
-            </Tag>
+            </HydraTag>
             <Divider type="vertical" style={{ margin: 0 }} />
             <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
               Rule:{' '}

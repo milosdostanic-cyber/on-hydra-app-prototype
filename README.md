@@ -1,216 +1,48 @@
 # Hydra App Prototype
 
-Hydra App Prototype is a React + Vite app for BOM (Bill of Materials) workflows in ASC Connected.
-It is optimized for fast prototyping with existing Ant Design components and Hydra theme tokens.
+React + Vite prototype for BOM workflows in ASC Connected (Ant Design + Hydra theme).
 
-## Who This README Is For
+## Branch: `Bom-V1-Update`
 
-Use this guide if you are:
-- a PM/designer reviewing or iterating on prototype flows
-- a developer implementing UI changes in Cursor
-- a stakeholder who needs to run the app locally from a GitHub link
+GitHub: [ooden-tech/on-hydra-app-prototype @ `Bom-V1-Update`](https://github.com/ooden-tech/on-hydra-app-prototype/tree/Bom-V1-Update)
 
-## Figma References
+### UX / UI / user flow — what changed
 
-- Design System (Hydra Ant Design DS): [Hydra Ant Design - DS](https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=204-47936&t=V9ypdSdYk2oXONOX-1)
-- BOM product/design flows: [BOM SPEC - ASC Connected v2](https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=670-18849&t=1ggZcsa1oIJ6jHIA-1)
+#### BOM import (guided 3-step flow)
 
-## Tech Stack
+End-to-end path: **upload → field mapping → parsing review → match verification → save to workspace**.
 
-- React 19
-- TypeScript
-- Vite
-- Ant Design
-- React Router
+- **Resume interrupted imports** — If the user leaves mid-flow, the project workspace shows an incomplete-import banner (file name, current step, progress). **Continue** returns them to the right step. Progress survives a **page refresh** (client-side persistence).
+- **Step orientation** — A **3-step progress strip** (Map → Parse → Match) appears on field mapping, parsing review, and matching so users always know where they are in the pipeline.
+- **Field mapping** — Map BOM columns to ASC fields. User must map at least one of **Description**, **Figure Number**, **Part Number / SKU**, or **UPC** before continuing. **Mapping status** side panel shows how many fields are mapped and offers reset.
+- **Parsing review** — Table layout **adapts to the identifier mapped** in step 1 (Description-led, UPC-led, or SKU-only columns). Rows are editable. Summary **alert** calls out how many lines were parsed and which may need attention. **Continue to matching** only when the session is valid; **missing-session** state if the user lands without data.
+- **Match verification (table)** — Review all lines in one table: original input vs suggested ASC match. **Summary cards** (total, accepted, pending, skipped, match confidence). **Confidence filter** and **accept all high matches / skip rest** for faster review. Per row: **accept**, **refine** (manual pick), **skip**; **status** and **match score** columns (including “added manually”). **Save and import** stays **disabled until every line is accepted or skipped**.
+- **Match verification (one-by-one)** — **Review one by one** from the table opens a guided single-line flow: approve, skip, or open manual pick. Same decisions as the table, optimized for line-by-line review.
+- **Manual replacement** — **Refine** opens the **replacement picker**: context alert for the line being swapped, selectable ASC catalog table, then approve the chosen part (row shows as manually added).
+- **After import** — Accepted and manually picked lines are **added to the workspace table**, not only a summary banner. Completed matching shows a **confirmed** state on the progress strip before returning to the workspace.
+- **Cancel upload** — Clears the in-progress session so the workspace does not keep stale “continue” alerts.
 
-## Quick Start (Step by Step)
+#### BOM workspace & project
 
-### 1) Install prerequisites
+- **Workspace** — BOM lines table, warnings, post-import summary, and resume banners for active uploads.
+- **Landing** — Start upload, open projects, **edit project name** (modal).
+- **Upload** — File type and size validation with clear errors at upload time.
 
-- Install Node.js 20+ (LTS recommended)
-- Install npm (ships with Node.js)
-- Install Cursor
+#### Product catalog (prototype)
 
-#### Fresh macOS setup (simple, one step at a time)
+- **Catalog home** — Entry into browse/search; **featured parts** cards linking into part routes.
+- **Browse hierarchy** — Category “all parts”, subcategory hub, product line parts, part variants list, and variant detail — wired through shell navigation, breadcrumbs, and back patterns.
 
-If this is your first time setting up the project on a new Mac, follow these exact steps.
+---
 
-Step 0: Open Terminal.
-
-Step 1: Install Homebrew (skip this step if `brew -v` already works).
+### Run locally
 
 ```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-Step 2: Install Node.js 20 (npm is included).
-
-```bash
-brew install node@20
-echo 'export PATH="/opt/homebrew/opt/node@20/bin:$PATH"' >> ~/.zshrc
-source ~/.zshrc
-```
-
-Step 3: Install Git (optional, only if `git --version` fails).
-
-```bash
-brew install git
-```
-
-Step 4: Confirm required tools are installed.
-
-```bash
-node -v
-npm -v
-git --version
-```
-
-Step 5: Clone the repository and enter the project folder.
-
-```bash
-git clone https://github.com/ooden-tech/on-hydra-app-prototype.git
-cd on-hydra-app-prototype
-```
-
-Step 6: Install project dependencies.
-
-```bash
+git fetch origin
+git checkout Bom-V1-Update
+git pull origin Bom-V1-Update
 npm install
-```
-
-Step 7: Start the app.
-
-```bash
 npm run dev
 ```
 
-Step 8: Open the local URL shown in Terminal (usually `http://localhost:5173/`).
-
-This repository uses npm and `package-lock.json`, so `yarn` and `pnpm` are not required.
-
-### 5) Verify core routes
-
-After startup, quickly verify these routes:
-
-- `/projects` (entry/home)
-- `/catalog`
-- `/bom`
-
-## Working in Cursor (PM-Friendly)
-
-1. Open Cursor
-2. Select `Open Folder` and choose this repository
-3. Open `README.md` and keep it pinned
-4. Use built-in terminal in Cursor and run:
-
-```bash
-npm run dev
-```
-
-5. Keep browser and Cursor side-by-side:
-   - browser for validating UX
-   - Cursor chat for change requests
-
-## Prototyping Workflow (PM + Cursor)
-
-Use this flow for safe, fast iteration without breaking shared UI foundations.
-
-### Golden Rules
-
-- Reuse existing patterns before creating new layout compositions
-- Do not change shared/core components unless explicitly requested
-- Do not create or modify design tokens during PM prototyping
-- Keep changes local to the target screen/flow
-
-### Suggested PM Cycle
-
-1. Choose one target screen/flow (example: BOM Matching)
-2. Write one focused change request (scope + expected behavior)
-3. Run and review locally
-4. Iterate in small steps until approved
-5. Capture screenshots/videos for stakeholder review
-
-### Recommended Prompt Template
-
-Use the template in:
-
-- `docs/prompt-templates/pm-prototyping-prompt.md`
-
-Paste it into Cursor chat and replace the screen/flow specifics.
-
-## Project Structure (High Level)
-
-- `src/shell/*` - shell pages (projects, catalog, top-level workspace)
-- `src/bom/*` - BOM-specific flows and pages
-- `src/theme/*` - Hydra/Ant theme tokens and mappings
-- `docs/prompt-templates/*` - PM prompt templates
-
-## Available App Routes (Reference)
-
-- `/projects` - projects list and project creation entry
-- `/catalog` - catalog landing
-- `/catalog/results` - catalog search/result view
-- `/catalog/parts/:partId` - part details
-- `/bom` - BOM landing
-- `/bom/search` - BOM search/import flow
-- `/bom/projects/:bomProjectId/parsing-review`
-- `/bom/projects/:bomProjectId/matching`
-- `/bom/projects/:bomProjectId/items/:itemId/narrow`
-- `/bom/projects/:bomProjectId/items/:itemId/recommend`
-- `/bom/projects/:bomProjectId/workspace`
-- `/bom/projects/:bomProjectId/asc-products`
-- `/bom/projects/:bomProjectId/translate`
-- `/bom/projects/:bomProjectId/field-mapping`
-- `/bom/projects/:bomProjectId/export`
-- `/bom/projects/:bomProjectId/service-request`
-
-## Scripts
-
-- `npm run dev` - start Vite dev server
-- `npm run build` - run TypeScript build and Vite production build
-- `npm run preview` - preview production build locally
-- `npm run tokens:dump` - dump primary token data via local script
-
-## Git Workflow (Simple)
-
-- Create a branch for each feature/fix
-- Keep commits small and clear
-- Open PR to `main`
-- Merge only after quick route sanity check (`/projects`, `/catalog`, `/bom`)
-
-## Troubleshooting
-
-### `npm install` fails
-
-- Confirm Node 20+:
-
-```bash
-node -v
-```
-
-- Remove and reinstall:
-
-```bash
-rm -rf node_modules package-lock.json
-npm install
-```
-
-### App does not open on `5173`
-
-- Check terminal output for Vite port override
-- Open the exact URL shown in terminal
-
-### Blank page after startup
-
-- Stop server and restart:
-
-```bash
-npm run dev
-```
-
-- Check browser console errors
-
-## Notes
-
-- This repo is prototype-oriented: prioritize speed and clarity of UX validation
-- Keep design-system alignment: Ant Design + Hydra tokens first
+Open the URL Vite prints (often `http://localhost:5173/`).

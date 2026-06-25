@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, createContext, useContext, type ReactNode } from 'react';
 
 import { App as AntdApp, ConfigProvider } from '../ui/antd';
-import { applyHydraBrandCssVars } from '../theme/brandColors';
+import { applyHydraAlertTitleCssVars, applyHydraBrandCssVars } from '../theme/brandColors';
 import { createHydraAntdTheme, createHydraAntdThemeDark } from '../theme/antdTheme';
 import type { HydraColorMode } from '../theme/hydraColorMode';
 
@@ -36,6 +36,7 @@ export function HydraThemeProvider({ children }: Props) {
 
   useEffect(() => {
     applyHydraBrandCssVars(document.documentElement, colorMode);
+    applyHydraAlertTitleCssVars(document.documentElement, colorMode);
     document.documentElement.style.colorScheme = colorMode === 'dark' ? 'dark' : 'light';
     try {
       window.localStorage.setItem(STORAGE_KEY, colorMode);

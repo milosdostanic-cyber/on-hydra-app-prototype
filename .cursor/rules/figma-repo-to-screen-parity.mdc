@@ -1,0 +1,148 @@
+---
+description: Align a user-selected Figma screen 1:1 with a repo file link — Official MCP default; Console when explicitly requested
+alwaysApply: false
+---
+
+# Figma screen parity from repo link (code → Figma)
+
+**Language:** English.
+
+Use this workflow when the user provides a **repository link** (file path, route, or GitHub URL to a screen/component) and wants the **Figma screen** updated to match the **implemented UI 1:1**.
+
+This is the **inverse** of **[hydra-design-to-code.mdc](./hydra-design-to-code.mdc)** (design → code). Token authority for Hydra still follows **[figma-repo-parity.mdc](./figma-repo-parity.mdc)**.
+
+**MCP routing:** Default per **[figma-mcp-routing.mdc](./figma-mcp-routing.mdc)** — **Official Figma MCP** (`plugin-figma-figma`, skills **`figma-use`** + **`figma-generate-design`**). Use **[figma-console-mcp.mdc](./figma-console-mcp.mdc)** / **`user-figma-console`** only when the user **explicitly** requests Console MCP (Phase B below).
+
+## When this applies (trigger)
+
+- User gives a **repo link** to a screen (e.g. `src/bom/pages/BomWorkspacePage.tsx`, a route, or a PR/blob URL) **and** asks to fix / sync / match **Figma** to that implementation.
+- User has **selected** the target frame(s) in Figma (or will select before you edit).
+
+Do **not** use this rule for greenfield “design a new screen from scratch” unless the user also wants strict repo parity and selection-scoped edits.
+
+## Required inputs
+
+| Input | Required | Notes |
+|-------|----------|--------|
+| **Repo link** | Yes | Resolve to a concrete file (and export/component) in this workspace. |
+| **Figma selection** | Yes | User-selected node(s) define the **only** edit boundary. |
+| **Figma file** | Yes | Open in Figma Desktop with **Desktop Bridge** running. DS library must be **enabled** on that file. |
+
+If selection is empty, call **`figma_get_selection`** once; if still empty, **stop** and ask the user to select the screen frame (do not guess a node).
+
+Optional but helpful: Figma URL with `node-id` (must still match current selection or be confirmed by the user).
+
+## Hard constraints (non-negotiable)
+
+### 1. Selection-only edits
+
+- **Only** modify nodes inside the **user’s current selection** (the selected frame and its **descendants**).
+- **Do not** create, delete, move, restyle, or rename anything **outside** that subtree (other pages, sections, components, or library files).
+- **Do not** edit the **published DS library file** itself unless the user explicitly expands scope to library work.
+- Before any write: **`figma_get_selection`** (`verbose: true` when you need fills/styles). Record `nodeId`(s) and treat them as an **allowlist** for all subsequent tool calls and `figma_execute` scripts.
+- In `figma_execute`, scope with `figma.currentPage.selection` or the confirmed root `nodeId`; **abort** if the script would touch nodes outside the allowlist.
+
+### 2. Design system only (file-bound library)
+
+- Reuse **components** and **variables/tokens** from the **design system library linked to that Figma file** (for Hydra: [Hydra Ant Design — DS](https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS) — see `Documentation/*` for `fileKey` / URLs).
+- **Discover fresh each session:** `figma_search_components` (pass `libraryFileKey` or `libraryFileUrl` for the DS file when searching library components).
+- **Prefer:** `figma_instantiate_component` → `figma_set_instance_properties` / variant props → **variable bindings** on instances (`figma_set_fills`, spacing tools, `figma_import_library_variable` when a token is not yet local).
+- **Do not** draw one-off rectangles, text, or buttons when a DS component + props can express the UI.
+- **Do not** paste raw hex / ad-hoc styles in Figma when a **semantic variable** exists in the file or library; map from repo theme mirrors (`src/theme/*`, `Documentation/hydra-*-mapping.md`).
+
+### 3. No detaching
+
+- **Never** call `detachInstance()` or equivalent unless **all** of the following are true:
+  1. No DS component, variant, or `INSTANCE_SWAP` can achieve the repo layout/content.
+  2. You documented the gap in the response (component name searched, props tried).
+  3. User **explicitly approved** detach for that node, **or** you **stopped and asked** before detaching.
+- After any approved detach, run **`figma_lint_design`** on the subtree and flag **detached components** in the summary.
+
+### 4. MCP
+
+- **Default:** **`plugin-figma-figma`** per **[figma-mcp-routing.mdc](./figma-mcp-routing.mdc)** — load **`figma-use`** + **`figma-generate-design`**; use `search_design_system`, `generate_figma_design`, `use_figma`, `get_screenshot`.
+- **Console opt-in:** **`user-figma-console`** only when the user explicitly requests Console — see **[figma-console-mcp.mdc](./figma-console-mcp.mdc)** and Phase B below.
+- Read each tool’s schema before calling.
+
+## Workflow
+
+### Phase A — Repo (source of truth for this task)
+
+1. **Resolve** the repo link to a file path; open and read the screen component and its imports.
+2. **Decompose** the UI: regions, antd/Hydra components (`src/ui/antd.ts`), layout (`shellLayout`, `Flex`, `Card`, tables, modals, tags, etc.).
+3. **Extract a parity spec** from code (not from screenshots):
+   - Typography roles → names in `src/theme/figmaTypography.ts` / antd `Typography` levels.
+   - Colors / surfaces → semantic tokens from `theme.useToken()` usage and `src/theme/*` mirrors.
+   - Spacing / radius → `token.padding*`, `margin*`, `borderRadius*`, `shellLayout`.
+   - Component inventory → list of DS component names to search in Figma (Button, Input, Table, Tag, Menu, …).
+4. If the repo uses **mock data**, mirror **structure and states** shown in code (default / empty / loading) only when evident in the file; do not invent extra states.
+
+### Phase B — Figma (Official MCP — default)
+
+1. Load **`figma-generate-design`** and **`figma-use`**.
+2. `search_design_system` for DS components, variables, and styles needed from Phase A.
+3. `generate_figma_design` and/or `use_figma` to update the user’s selected frame to match the repo spec — work incrementally; bind variables; use DS instances.
+4. **Validate:** `get_screenshot` → compare to repo intent; iterate up to **3** times.
+
+### Phase B (Console) — Figma selection-scoped
+
+*Use only when the user explicitly opted into Figma Console MCP.*
+
+1. **`figma_navigate`** to the user’s file URL if needed; confirm Desktop Bridge connection (`figma_list_open_files`).
+2. **`figma_get_selection`** — establish allowlisted root(s). **`figma_capture_screenshot`** of selection (baseline).
+3. **`figma_get_design_system_kit`** or **`figma_get_variables`** (`format: filtered` / `verbosity: summary` as needed) for tokens **in that file**; use **`figma_get_library_variables`** + **`figma_import_library_variable`** only when bindings require a library token not yet local.
+4. **Gap analysis:** compare baseline screenshot + `figma_get_file_data` (subtree) to the repo spec. Prefer **`figma_check_design_parity`** with `codeSpec` derived from Phase A when comparing a single component frame.
+5. **Apply fixes** inside the selection only:
+   - Swap/add **instances** from DS; set props via **`figma_set_instance_properties`** (never silent direct text edits on instances).
+   - Bind **variables** instead of hardcoded fills/strokes.
+   - Adjust auto-layout / spacing with node tools or scoped **`figma_execute`**.
+   - Remove obsolete layers **only** inside the selection if repo no longer includes them.
+6. **Validate:** `figma_capture_screenshot` → compare to repo intent; iterate up to **3** times. Optional: **`figma_lint_design`** on the selection root.
+7. **Annotate (when requested):** pin English comments on **new or changed** nodes per **[figma-layout-change-comments.mdc](./figma-layout-change-comments.mdc)**.
+
+### Phase C — Report
+
+Summarize briefly:
+
+- Repo file(s) used as source.
+- Selection `nodeId`(s) edited.
+- DS components/instances added or updated (names + variants).
+- Variables bound (collection / path).
+- Any **intentional** non-1:1 gap (missing DS component, token, or ambiguous code).
+- Any **detach** (should be none unless approved).
+
+## Repo ↔ Figma mapping hints (Hydra)
+
+| Code | Figma |
+|------|--------|
+| `src/theme/figmaTypography.ts` roles | Text styles / typography variables in DS |
+| `src/theme/primaryPrimitive*.ts`, `figmaSemanticColors.ts` | `Color/Primary/*`, `Neutral/*`, Customize Theme paths in docs |
+| `src/ui/antd.ts` exports | Ant Design components in Hydra DS library |
+| `shellLayout`, `sidebarSemanticsLight` | Layout spacing + sidebar/menu components/tokens |
+
+Do **not** change repo theme files during a Figma-only parity pass unless the user also requests a **code** update per **figma-repo-parity.mdc**.
+
+## Stop and ask (do not guess)
+
+- Selection empty or ambiguous (multiple unrelated top-level nodes).
+- Repo link points to shared layout used many ways — which frame/state to mirror?
+- No DS component match after **`figma_search_components`** with library scope.
+- Parity requires **detach**, new local components, new variables, or edits **outside** selection.
+- DS library not subscribed in the target file.
+
+## Deliverable checklist
+
+- [ ] Figma changes are **only** inside user-selected subtree.
+- [ ] **DS components + variables** only; no unnecessary detach.
+- [ ] **Official Figma MCP** used by default, or **Console** only with explicit user opt-in.
+- [ ] Before/after screenshots captured for the selection.
+- [ ] Summary lists gaps and any approved exceptions.
+
+## Related
+
+- **[figma-mcp-routing.mdc](./figma-mcp-routing.mdc)** — default Official MCP routing.
+- **[figma-console-mcp.mdc](./figma-console-mcp.mdc)** — Console MCP (opt-in).
+- **[figma-layout-change-comments.mdc](./figma-layout-change-comments.mdc)** — pinned comments on new/changed layout.
+- **[figma-repo-parity.mdc](./figma-repo-parity.mdc)** — token/file authority when repo must change too.
+- **[hydra-design-to-code.mdc](./hydra-design-to-code.mdc)** — Figma/screenshot → code (opposite direction).
+- **[hydra-ui-tokens.mdc](./hydra-ui-tokens.mdc)** — allowed token mirrors in code.

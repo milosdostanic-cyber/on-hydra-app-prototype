@@ -75,6 +75,7 @@ Before treating the task as complete:
 
 - **[hydra-ui-tokens.mdc](./hydra-ui-tokens.mdc)** — registry of allowed mirror modules; no stray literals.
 - **[figma-repo-parity.mdc](./figma-repo-parity.mdc)** — Figma ↔ repo parity when tokens or visuals change.
+- **[figma-repo-to-screen-parity.mdc](./figma-repo-to-screen-parity.mdc)** — opposite direction: repo link → user-selected Figma screen 1:1 (Console MCP, DS-only).
 - **[Documentation/hydra-typography.md](../Documentation/hydra-typography.md)** — typography and antd theme bridge.
 
 ## Workflow (reference)

@@ -1,4 +1,4 @@
-import { mockAscParts } from './data/mockData';
+import { isBomItemFullyDefined, isBomTranslationUnfinished, mockAscParts } from './data/mockData';
 import type { AscCatalogPart, BomItem } from './data/types';
 
 export function suggestedAscPartForRow(row: BomItem): AscCatalogPart {
@@ -9,5 +9,9 @@ export function suggestedAscPartForRow(row: BomItem): AscCatalogPart {
 }
 
 export function isWorkspaceRowConfirmed(row: BomItem): boolean {
-  return row.status === 'confirmed';
+  return isBomItemFullyDefined(row);
+}
+
+export function isWorkspaceTranslationUnfinished(row: BomItem): boolean {
+  return isBomTranslationUnfinished(row);
 }

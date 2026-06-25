@@ -1,3 +1,4 @@
+import type { BomMappingConfidence } from './bomFieldMappingUtils';
 import type { BomProject } from './data/types';
 
 /** Carried on `location.state` through field mapping → parsing review → commit. */
@@ -7,6 +8,19 @@ export type BomUploadFlowLocationState = {
   appendTargetId?: string;
   /** Field mapping page output */
   fieldMapping?: Record<string, string | undefined>;
+  /** Derived on smart mapping summary from auto / saved field mapping */
+  mappingConfidence?: BomMappingConfidence;
+  /** Tracks in-flight import session for progress strip + matching state */
+  uploadId?: string;
+  /** Step-back target for field mapping chrome (upload entry — not hub when resuming from workspace). */
+  uploadFlowBackTo?: string;
+  uploadFlowBackLabel?: string;
+  /** Set when guided review finishes — table view can show a summary banner. */
+  guidedReviewComplete?: boolean;
+  /** Table view: filter to skipped lines on arrival. */
+  focusSkipped?: boolean;
+  /** Guided review: open a specific match row (e.g. Resolve from summary table). */
+  focusItemId?: string;
 };
 
 export function resolveUploadDestination(
@@ -22,10 +36,8 @@ export function resolveUploadDestination(
       appendTargetId: state.appendTargetId ?? (bomProjectId !== 'new' ? bomProjectId : undefined),
     };
   }
-  if (bomProjectId === 'new') {
-    return { destination: 'new', appendTargetId: undefined };
-  }
-  return { destination: 'append', appendTargetId: bomProjectId };
+  // Resume / in-project import without explicit destination → full 3-step flow (not append shortcut).
+  return { destination: 'new', appendTargetId: undefined };
 }
 
 export function sortBomProjectsByLastEditedDesc(projects: BomProject[]): BomProject[] {
@@ -38,3 +50,9 @@ export function sortBomProjectsByLastEditedDesc(projects: BomProject[]): BomProj
 export type BomWorkspaceAppendBannerState = {
   appendImportBanner?: { fileName: string; count: number };
 };
+
+const DEFAULT_UPLOAD_FILE_NAME = 'BOM-ExLine2.xlsx';
+
+export function readUploadFileName(state: BomUploadFlowLocationState | null | undefined): string {
+  return state?.uploadFileName?.trim() || DEFAULT_UPLOAD_FILE_NAME;
+}

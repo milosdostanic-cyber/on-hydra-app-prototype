@@ -11,7 +11,7 @@ alwaysApply: true
 
 1. **Colors, spacing, radii, motion, and global font metrics** used in app UI must come from **antd `theme.useToken()`**, **`shellLayout`**, **`sidebarSemanticsLight`**, or other exports that trace back to the token modules below — **not** inline `#hex`, `rgb`/`rgba`, or ad-hoc `px` in TSX/CSS for design intent.
 
-2. **Typography (family, role sizes, line heights, weights)** is owned by **Figma** the Ant Design kit. Code mirrors it in **`src/theme/figmaTypography.ts`**. When Figma text styles or variables change, **update that file** (Figma MCP `get_design_context`, variables panel, or documented export). **Do not** set `fontSize` / `lineHeight` / `fontWeight` / `fontFamily` ad hoc in screens.
+2. **Typography (family, role sizes, line heights, weights)** is owned by **Figma** the Ant Design kit. Code mirrors it in **`src/theme/figmaTypography.ts`**. When Figma text styles or variables change, **update that file** (Official Figma MCP: `search_design_system` / `get_design_context` per **[figma-mcp-routing.mdc](./figma-mcp-routing.mdc)**; or Console when explicitly opted in; or variables panel / documented export). **Do not** set `fontSize` / `lineHeight` / `fontWeight` / `fontFamily` ad hoc in screens.
 
 3. **Font delivery:** `index.html` may load the webfont (URL only). **Metrics** still live in `figmaTypography.ts` and `theme.token`.
 

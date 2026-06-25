@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-
+import { FeaturedParts } from '../catalog/FeaturedParts';
 import {
   CATALOG_DEMO_PARTS,
   CATALOG_QUICK_CATEGORIES,
@@ -9,8 +9,9 @@ import {
 import { PageBackButton } from './PageBackButton';
 import { shellLayout } from '../theme/hydraAlias';
 import { hydraBaseStrong } from '../theme/hydraTypography';
-import { AppSearchInput, Button, Flex, Pagination, Space, Table, Tag, Typography, theme } from '../ui/antd';
+import { AppSearchInput, Button, Flex, Pagination, Space, Table, Typography, theme } from '../ui/antd';
 import type { TableColumnsType } from '../ui/antd';
+import { HydraTag } from '../ui/HydraTag';
 
 const PREVIEW_ROWS = CATALOG_DEMO_PARTS.slice(0, 2);
 
@@ -72,26 +73,28 @@ export function CatalogHome() {
         <Button onClick={() => goResults('all')}>Browse all sample parts</Button>
       </Flex>
 
+      <FeaturedParts />
+
       <div>
         <Typography.Text type="secondary" style={{ display: 'block', marginBottom: token.marginXS }}>
           Quick browse by category
         </Typography.Text>
         <Flex wrap="wrap" gap={token.marginXS}>
           {CATALOG_QUICK_CATEGORIES.map((cat) => (
-            <Tag
+            <HydraTag
               key={cat}
-              style={{ cursor: 'pointer', margin: 0, paddingBlock: token.paddingXXS }}
+              style={{ cursor: 'pointer', paddingBlock: token.paddingXXS }}
               onClick={() => goResults(cat)}
             >
               {cat}
-            </Tag>
+            </HydraTag>
           ))}
         </Flex>
       </div>
 
       <div>
         <Typography.Title level={5} style={{ marginBottom: token.marginSM }}>
-          Featured sample parts
+          Catalog results preview
         </Typography.Title>
         <Typography.Paragraph type="secondary" style={{ marginTop: 0, marginBottom: token.marginSM }}>
           Same data as full results — open a row to download, add to a submittal, or add to a BOM.

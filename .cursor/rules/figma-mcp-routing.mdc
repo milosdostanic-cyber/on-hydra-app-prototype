@@ -1,0 +1,84 @@
+---
+description: Use Official Figma MCP (plugin) by default; Figma Console MCP only when the user explicitly requests it
+alwaysApply: true
+---
+
+# Figma MCP routing (default — Official)
+
+**Language:** English (unless the user explicitly asks for another language).
+
+For **any** Figma read/write task in this repo, use the **Official Figma MCP** (Cursor **Figma** plugin, server **`plugin-figma-figma`**), **not** Figma Console MCP — **unless** the user **explicitly** asks for **Figma Console MCP** (see opt-in section below).
+
+## MCP server to call (default)
+
+| Use | Do not use (unless user opts in) |
+|-----|----------------------------------|
+| `CallMcpTool` → **`server`: `plugin-figma-figma`** | `user-figma-console` (Figma Console MCP / Desktop Bridge) |
+
+Before each tool call, read the tool schema under the MCP descriptors folder for `plugin-figma-figma`.
+
+## Mandatory skills (Official MCP)
+
+Load these **before** calling the matching tools:
+
+| Tool / task | Skill (load first) |
+|-------------|-------------------|
+| `use_figma` (create/edit nodes, variables, components) | **`figma-use`** — `.cursor/skills/figma-use/SKILL.md` |
+| Full page / screen code → Figma | **`figma-generate-design`** |
+| Design system / components / variables in Figma | **`figma-generate-library`** |
+| New Figma / FigJam / Slides file | **`figma-create-new-file`** |
+| FigJam diagrams | **`figma-generate-diagram`** |
+| Design → code from Figma URL | **`figma-use`** + **`hydra-design-to-code`** (`get_design_context`) |
+
+**Never** call `use_figma`, `create_new_file`, or `generate_diagram` without loading the corresponding skill first.
+
+## Official MCP — common tools
+
+| Task | Official tool |
+|------|----------------|
+| Design context / implement from frame | `get_design_context` (pass `fileKey`, `nodeId`; convert URL `node-id=1-2` → `1:2`) |
+| Screenshot / visual check | `get_screenshot` |
+| File / node metadata | `get_metadata` |
+| Search DS components, variables, styles | `search_design_system` |
+| Create / edit nodes (Plugin API) | `use_figma` (with **`figma-use`** skill) |
+| Build / update screen from code | `generate_figma_design` + `use_figma` (with **`figma-generate-design`** skill) |
+| Code Connect | `get_code_connect_map`, `add_code_connect_map` (Official only) |
+| FigJam | `get_figjam`, `generate_diagram` |
+
+## Workflows (default — Official)
+
+### Design → code
+
+1. Parse `fileKey` and `nodeId` from the Figma URL.
+2. `get_design_context` with `nodeId` and `fileKey`.
+3. Implement using **[hydra-design-to-code.mdc](./hydra-design-to-code.mdc)** and **[hydra-ui-tokens.mdc](./hydra-ui-tokens.mdc)**.
+4. Token/parity updates in Figma: `use_figma` or variable workflows per **[figma-repo-parity.mdc](./figma-repo-parity.mdc)**.
+
+### Code / tokens → Figma
+
+1. Load **`figma-generate-design`** and **`figma-use`**.
+2. `search_design_system` for existing components, variables, and styles.
+3. `generate_figma_design` and/or `use_figma` to assemble the screen incrementally.
+4. Validate with `get_screenshot` (up to 3 iterations).
+
+For **repo link → selected Figma screen 1:1 parity**, follow **[figma-repo-to-screen-parity.mdc](./figma-repo-to-screen-parity.mdc)** (Official path).
+
+## Figma Console MCP (opt-in only)
+
+Use **`user-figma-console`** **only** when the user **explicitly** requests:
+
+- “Figma Console”, “Console MCP”, “Desktop Bridge”, “TJ Pitre”, or **`user-figma-console`**
+
+When opted in, follow **[figma-console-mcp.mdc](./figma-console-mcp.mdc)** and skill **`@figma-console-mcp`** for that task only. Do **not** mix Official and Console tools in the same Figma edit pass unless the user asks.
+
+Console-only workflows (no Official equivalent):
+
+- **`figma_post_comment`** / layout pin comments → **[figma-layout-change-comments.mdc](./figma-layout-change-comments.mdc)**
+- Deep Desktop Bridge audits (`figma_audit_design_system`, `figma_lint_design`, batch variable tools at Console scale)
+
+If Console is requested but Bridge is not connected, **stop** and ask the user to start Desktop Bridge — do **not** silently fall back to Official MCP unless they say so.
+
+## Repo alignment
+
+- Hydra Figma ↔ code parity rules stay in **[figma-repo-parity.mdc](./figma-repo-parity.mdc)**; this rule only chooses **which MCP** executes Figma-side work.
+- Prior Console-based audits remain valid history (`Documentation/old-ds-tokenization-audit-2026-04-08.md`); new work defaults to Official unless the user opts into Console.

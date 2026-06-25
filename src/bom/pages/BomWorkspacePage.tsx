@@ -1,24 +1,32 @@
 import {
+  DeleteOutlined,
+  EditOutlined,
   ExclamationCircleOutlined,
   ExportOutlined,
   FileSearchOutlined,
   PlusOutlined,
   SwapOutlined,
-  TranslationOutlined,
   UploadOutlined,
 } from '@ant-design/icons';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type Key } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import { useBomImportFlow } from '../context/BomImportFlowContext';
 import { useBomWorkspaceRows } from '../../context/BomWorkspaceContext';
-import type { BomWorkspaceAppendBannerState } from '../bomUploadFlowState';
+import { routeForImportStep, type BomImportSession } from '../bomImportProgressState';
+import type { BomUploadFlowLocationState, BomWorkspaceAppendBannerState } from '../bomUploadFlowState';
+import { BomPendingUploadsRegion } from '../components/BomPendingUploadsRegion';
 import { MAX_UPLOAD_BYTES, VALID_UPLOAD_TYPES } from '../constants/uploadLimits';
 import { bomProjectById, bomProjectTitleById } from '../data/mockData';
-import type { BomItem } from '../data/types';
+import type { BomItem, BomProject } from '../data/types';
+import { BomConfidenceTag } from '../components/BomTags';
+import { createAdHocCompetitorMatchSession } from '../bomAdHocMatchSession';
+import { BomEditProjectModal } from '../components/BomEditProjectModal';
 import { AscProductsDrawer } from '../components/AscProductsDrawer';
-import { PartTranslationModal } from '../components/PartTranslationModal';
-import { BomConfidenceTag, BomMatchStatusTag } from '../components/BomTags';
+import { buildBomWorkspaceColumns } from '../bomWorkspaceColumns';
 import { isWorkspaceRowConfirmed, suggestedAscPartForRow } from '../bomWorkspaceHelpers';
+import { BomWorkspaceImportDetailDrawer } from '../components/BomWorkspaceImportDetailDrawer';
+import { useBomHubPath } from '../../context/ActiveProjectContext';
 import { PageBackButton } from '../../shell/PageBackButton';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import {
@@ -29,23 +37,23 @@ import {
   Card,
   Descriptions,
   Divider,
+  Dropdown,
   Empty,
   Flex,
   Input,
   Modal,
   Progress,
-  Rate,
+  Select,
   Space,
   Table,
   Typography,
   message,
   theme,
 } from '../../ui/antd';
-import type { TableColumnsType } from '../../ui/antd';
 import { shellLayout } from '../../theme/hydraAlias';
+import { bluePrimaryPrimitiveLight } from '../../theme/primaryPrimitiveBlue';
 import {
   hydraBaseNormal,
-  hydraSmallNormal,
   hydraTextStyleToReactCss,
   hydraTitleHeading3,
 } from '../../theme/hydraTypography';
@@ -63,28 +71,62 @@ type AddedCatalogProduct = {
   qty?: number;
 };
 
-function confidenceSummaryPercent(rows: BomItem[]): number {
-  if (rows.length === 0) return 0;
-  const weight = (c: BomItem['confidence']) => (c === 'high' ? 1 : c === 'medium' ? 0.5 : 0);
-  const sum = rows.reduce((acc, r) => acc + weight(r.confidence), 0);
-  return Math.round((sum / rows.length) * 100);
-}
-
-function confidenceRank(confidence: BomItem['confidence']): number {
-  if (confidence === 'high') return 3;
-  if (confidence === 'medium') return 2;
-  return 1;
-}
-
-function statusRank(status: BomItem['status']): number {
-  if (status === 'confirmed') return 3;
-  if (status === 'needs-review') return 2;
-  if (status === 'matched') return 1;
-  return 0;
-}
-
 function renumberRows(rows: BomItem[]): BomItem[] {
   return rows.map((row, idx) => ({ ...row, rowNumber: idx + 1 }));
+}
+
+function BomWorkspaceStatsStrip({
+  total,
+  confirmed,
+  needsReview,
+  missing,
+}: {
+  total: number;
+  confirmed: number;
+  needsReview: number;
+  missing: number;
+}) {
+  const { token } = theme.useToken();
+
+  const cardShellStyle = (accentColor: string) => ({
+    flex: 1,
+    minWidth: 160,
+    height: 56,
+    paddingInline: token.paddingMD,
+    paddingBlock: token.paddingSM,
+    borderRadius: token.borderRadiusLG,
+    border: 'none',
+    borderLeft: `${token.sizeUnit}px solid ${accentColor}`,
+    background: token.colorBgContainer,
+    boxShadow: token.boxShadowTertiary,
+    boxSizing: 'border-box' as const,
+  });
+
+  const statInner = (label: string, value: number) => (
+    <Flex align="center" justify="space-between" style={{ width: '100%', height: 32 }}>
+      <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+        {label}
+      </Typography.Text>
+      <Typography.Text style={hydraTextStyleToReactCss(hydraTitleHeading3)}>{value}</Typography.Text>
+    </Flex>
+  );
+
+  return (
+    <Flex gap={token.margin} align="stretch" style={{ width: '100%' }} wrap="wrap">
+      <Flex align="center" style={cardShellStyle(bluePrimaryPrimitiveLight[6])}>
+        {statInner('Total lines', total)}
+      </Flex>
+      <Flex align="center" style={cardShellStyle(token.colorSuccessBorder)}>
+        {statInner('Confirmed', confirmed)}
+      </Flex>
+      <Flex align="center" style={cardShellStyle(token.colorWarningBorder)}>
+        {statInner('Needs review', needsReview)}
+      </Flex>
+      <Flex align="center" style={cardShellStyle(token.colorErrorBorder)}>
+        {statInner('Missing match', missing)}
+      </Flex>
+    </Flex>
+  );
 }
 
 export function BomWorkspacePage() {
@@ -92,31 +134,52 @@ export function BomWorkspacePage() {
   const { modal } = App.useApp();
   const { bomProjectId = '' } = useParams<{ bomProjectId: string }>();
   const navigate = useNavigate();
+  const bomHubPath = useBomHubPath();
   const location = useLocation();
   const project = bomProjectById(bomProjectId);
   const projectTitle = project?.name ?? bomProjectTitleById(bomProjectId) ?? 'BOM project';
   const isSeedEmptyProject = project != null && project.items === 0;
   const { rows, setRows } = useBomWorkspaceRows(bomProjectId);
+  const { pendingForProject, setActiveUploadId } = useBomImportFlow();
+  const pendingUploadSessions = pendingForProject(bomProjectId);
   const [query, setQuery] = useState('');
 
   const [isTranslating, setIsTranslating] = useState(false);
   const [actionError, setActionError] = useState<{ type: WorkspaceActionErrorType; message: string } | null>(null);
   const [resolveModalRow, setResolveModalRow] = useState<BomItem | null>(null);
-  const [resolvePhase, setResolvePhase] = useState<'review' | 'feedback'>('review');
-  const [feedbackText, setFeedbackText] = useState('');
-  const [feedbackRating, setFeedbackRating] = useState(0);
   const [statusFilter, setStatusFilter] = useState<WorkspaceStatusFilter>('all');
   const [ascDrawerOpen, setAscDrawerOpen] = useState(false);
-  const [translationOpen, setTranslationOpen] = useState(false);
+  const [swapRow, setSwapRow] = useState<BomItem | null>(null);
   const emptyWorkspaceFileRef = useRef<HTMLInputElement>(null);
   const [appendImportBanner, setAppendImportBanner] = useState<{ fileName: string; count: number } | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editProject, setEditProject] = useState<BomProject | null>(project ?? null);
+  const [importDetailRow, setImportDetailRow] = useState<BomItem | null>(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+  const [competitorEntryOpen, setCompetitorEntryOpen] = useState(false);
+  const [competitorEntryText, setCompetitorEntryText] = useState('');
+
+  useEffect(() => {
+    if (project) setEditProject(project);
+  }, [project]);
+
+  useEffect(() => {
+    setSelectedRowKeys([]);
+  }, [bomProjectId]);
 
   const filteredRows = useMemo(() => {
     const q = query.trim().toLowerCase();
     return rows.filter((row) => {
       const matchesQuery =
         !q ||
-        [row.originalInput, row.parsedDescription, row.category ?? '', row.unit ?? '']
+        [
+          row.originalInput,
+          row.parsedDescription,
+          row.figureNumber ?? '',
+          row.sku ?? '',
+          row.category ?? '',
+          row.unit ?? '',
+        ]
           .join(' ')
           .toLowerCase()
           .includes(q);
@@ -128,14 +191,17 @@ export function BomWorkspacePage() {
     });
   }, [rows, query, statusFilter]);
 
-  const totalItems = rows.length;
-  const confirmedCount = rows.filter(isWorkspaceRowConfirmed).length;
-  const needsReviewCount = rows.filter((row) => row.status === 'needs-review').length;
-  const missingCount = rows.filter((row) => row.status === 'pending' || row.status === undefined).length;
-  const reviewCount = totalItems - confirmedCount;
-  const confidencePercent = confidenceSummaryPercent(rows);
+  const workspaceStats = useMemo(() => {
+    const confirmed = rows.filter(isWorkspaceRowConfirmed).length;
+    const needsReview = rows.filter((r) => r.status === 'needs-review').length;
+    const missing = rows.filter((r) => r.status === 'pending' || r.status === undefined).length;
+    return { total: rows.length, confirmed, needsReview, missing };
+  }, [rows]);
+
+  const reviewCount = rows.length - rows.filter(isWorkspaceRowConfirmed).length;
   const canTranslate = reviewCount > 0;
-  const hasWorkspaceRows = totalItems > 0;
+  const hasWorkspaceRows = rows.length > 0;
+  const hasSelection = selectedRowKeys.length > 0;
 
   useEffect(() => {
     const st = (location.state ?? {}) as BomWorkspaceAppendBannerState;
@@ -232,11 +298,16 @@ export function BomWorkspacePage() {
       title: 'Re-upload BOM file?',
       content:
         'This will replace your current BOM run after you map columns again. Existing workspace rows stay until you complete a new import.',
-      okText: 'Continue to field mapping',
+      okText: 'Continue to column mapping',
       onOk: () => {
         setActionError(null);
-        navigate(`/bom/projects/${bomProjectId}/field-mapping`, {
-          state: { uploadDestination: 'append', appendTargetId: bomProjectId },
+        navigate(`/bom/projects/${bomProjectId}/mapping-summary`, {
+          state: {
+            uploadDestination: 'append',
+            appendTargetId: bomProjectId,
+            uploadFlowBackTo: `/bom/projects/${bomProjectId}/workspace`,
+            uploadFlowBackLabel: 'Back to workspace',
+          },
         });
       },
     });
@@ -257,12 +328,14 @@ export function BomWorkspacePage() {
     const closeLoading = message.loading('Processing your file…', 0);
     window.setTimeout(() => {
       closeLoading();
-      message.success('File received. Opening field mapping.');
-      navigate(`/bom/projects/${bomProjectId}/field-mapping`, {
+      message.success('File received. Reviewing column mapping.');
+      navigate(`/bom/projects/${bomProjectId}/mapping-summary`, {
         state: {
           uploadFileName: file.name,
           uploadDestination: 'append',
           appendTargetId: bomProjectId,
+          uploadFlowBackTo: `/bom/projects/${bomProjectId}/workspace`,
+          uploadFlowBackLabel: 'Back to workspace',
         },
       });
     }, 900);
@@ -294,15 +367,24 @@ export function BomWorkspacePage() {
 
   function openResolveModal(row: BomItem) {
     setResolveModalRow(row);
-    setResolvePhase('review');
-    setFeedbackText('');
-    setFeedbackRating(0);
   }
 
   function closeResolveModal() {
     setResolveModalRow(null);
-    setResolvePhase('review');
-    setFeedbackText('');
+  }
+
+  function handleRowDelete(id: string) {
+    setRows((prev) => renumberRows(prev.filter((r) => r.id !== id)));
+    setSelectedRowKeys((prev) => prev.filter((k) => k !== id));
+    message.success('Line item removed.');
+  }
+
+  function handleBulkDelete() {
+    const ids = new Set(selectedRowKeys as string[]);
+    const n = ids.size;
+    setRows((prev) => renumberRows(prev.filter((r) => !ids.has(r.id))));
+    setSelectedRowKeys([]);
+    message.success(`${n} line item${n > 1 ? 's' : ''} removed.`);
   }
 
   function openDeleteModal(row: BomItem) {
@@ -329,7 +411,7 @@ export function BomWorkspacePage() {
             <Typography.Text
               type="secondary"
               style={{
-                ...hydraTextStyleToReactCss(hydraSmallNormal),
+                ...hydraTextStyleToReactCss(hydraBaseNormal),
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em',
               }}
@@ -338,7 +420,6 @@ export function BomWorkspacePage() {
             </Typography.Text>
             <Descriptions
               bordered
-              size="small"
               column={2}
               style={{ marginTop: token.marginXS }}
             >
@@ -353,8 +434,35 @@ export function BomWorkspacePage() {
         </Space>
       ),
       onOk: () => {
-        setRows((prev) => renumberRows(prev.filter((r) => r.id !== row.id)));
-        message.success('Line item removed.');
+        handleRowDelete(row.id);
+      },
+    });
+  }
+
+  function openBulkDeleteModal() {
+    const n = selectedRowKeys.length;
+    if (n === 0) return;
+    modal.confirm({
+      title: `Remove ${n} BOM line${n > 1 ? 's' : ''}?`,
+      icon: (
+        <ExclamationCircleOutlined style={{ color: token.colorError, fontSize: hydraBaseNormal.fontSize }} />
+      ),
+      width: 480,
+      centered: true,
+      okText: 'Remove all',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      content: (
+        <Alert
+          type="error"
+          showIcon
+          style={{ marginTop: token.marginSM }}
+          message="Selected lines will be removed from the workspace"
+          description="Row numbers will be renumbered. This demo action cannot be undone."
+        />
+      ),
+      onOk: () => {
+        handleBulkDelete();
       },
     });
   }
@@ -372,118 +480,39 @@ export function BomWorkspacePage() {
         ? { ...prev, status: 'needs-review' }
         : prev
     ));
-    setResolvePhase('review');
-    message.info('Row moved to Needs Review. Continue with approve, feedback, or manual swap.');
+    message.info('Row moved to Needs Review. Confirm the match or choose a different part.');
   }
 
-  function handleSubmitFeedback(row: BomItem) {
-    setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, status: 'confirmed' as const } : r)));
-    closeResolveModal();
-    message.success(
-      feedbackRating > 0
-        ? `Feedback submitted (${feedbackRating}/5). Item confirmed.`
-        : 'Feedback submitted. Item confirmed.',
-    );
+  function handleContinuePendingUpload(session: BomImportSession) {
+    setActiveUploadId(session.uploadId);
+    const { bomProjectId: projectId, currentStep, fileName } = session.progress;
+    const uploadState: BomUploadFlowLocationState = {
+      uploadId: session.uploadId,
+      uploadFileName: fileName,
+      fieldMapping: session.fieldMapping,
+      uploadFlowBackTo: `/bom/projects/${projectId}/workspace`,
+      uploadFlowBackLabel: 'Back to workspace',
+    };
+    navigate(routeForImportStep(projectId, currentStep), { state: uploadState });
   }
 
   function handleManualSwap(row: BomItem) {
     closeResolveModal();
-    navigate(`/bom/projects/${bomProjectId}/asc-products`, {
-      state: {
-        swapRowId: row.id,
-        swapSource: {
-          partNumber: row.originalInput,
-          description: row.parsedDescription,
-          size: row.size,
-          category: row.category,
-        },
-      },
-    });
+    setSwapRow(row);
+    setAscDrawerOpen(true);
   }
 
-  const statCardShell = {
-    background: token.colorBgContainer,
-    border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-    borderRadius: token.borderRadiusLG,
-    boxShadow: token.boxShadowTertiary,
-    paddingBlock: token.padding,
-    paddingInlineStart: token.paddingMD,
-    paddingInlineEnd: token.paddingMD,
-  };
-  const statCardAccentWidth = token.lineWidth * 2;
-
-  const columns: TableColumnsType<BomItem> = [
-    { title: '#', dataIndex: 'rowNumber', key: 'rowNumber', width: 50 },
-    {
-      title: 'Part number',
-      dataIndex: 'originalInput',
-      key: 'originalInput',
-      width: 157,
-      sorter: (a, b) => a.originalInput.localeCompare(b.originalInput),
-      render: (partNumber: string, row) => (
-        <Typography.Link onClick={() => openResolveModal(row)}>{partNumber}</Typography.Link>
-      ),
-    },
-    {
-      title: 'Description',
-      dataIndex: 'parsedDescription',
-      key: 'parsedDescription',
-      ellipsis: true,
-    },
-    {
-      title: 'Category',
-      dataIndex: 'category',
-      key: 'category',
-      width: 110,
-      sorter: (a, b) => (a.category ?? '').localeCompare(b.category ?? ''),
-    },
-    {
-      title: 'Quantity',
-      dataIndex: 'quantity',
-      key: 'quantity',
-      width: 110,
-      sorter: (a, b) => a.quantity - b.quantity,
-    },
-    { title: 'Unit', dataIndex: 'unit', key: 'unit', width: 110 },
-    {
-      title: 'Confidence',
-      dataIndex: 'confidence',
-      key: 'confidence',
-      width: 110,
-      sorter: (a, b) => confidenceRank(a.confidence) - confidenceRank(b.confidence),
-      render: (c: BomItem['confidence']) => <BomConfidenceTag confidence={c} />,
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      width: 110,
-      sorter: (a, b) => statusRank(a.status) - statusRank(b.status),
-      render: (s: BomItem['status']) => (s ? <BomMatchStatusTag status={s} /> : '—'),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      width: 150,
-      render: (_, row) => (
-        <Space size={token.margin}>
-          <Typography.Link onClick={() => openResolveModal(row)}>
-            {isWorkspaceRowConfirmed(row) ? 'Review' : 'Resolve'}
-          </Typography.Link>
-          <Typography.Link
-            type="danger"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              openDeleteModal(row);
-            }}
-          >
-            Delete
-          </Typography.Link>
-        </Space>
-      ),
-    },
-  ];
+  const columns = useMemo(
+    () =>
+      buildBomWorkspaceColumns({
+        bomProjectId,
+        onViewOriginal: setImportDetailRow,
+        onReview: openResolveModal,
+        onDelete: openDeleteModal,
+        isConfirmed: isWorkspaceRowConfirmed,
+      }),
+    [bomProjectId],
+  );
 
   function renderTableEmptyState() {
     if (!hasWorkspaceRows) {
@@ -511,7 +540,9 @@ export function BomWorkspacePage() {
           </Space>
         }
       >
-        <Button onClick={clearSearchAndFilters}>Reset filters</Button>
+        <Button size="large" onClick={clearSearchAndFilters}>
+          Reset filters
+        </Button>
       </Empty>
     );
   }
@@ -523,131 +554,92 @@ export function BomWorkspacePage() {
 
     return (
       <Modal
-        title={isConfirmed ? 'Review BOM Line' : 'Resolve BOM Line'}
+        title="Review BOM line"
         open={!!resolveModalRow}
         onCancel={closeResolveModal}
         footer={null}
         width={720}
         destroyOnClose
       >
-        {resolvePhase === 'review' ? (
-          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            <div>
-              <Typography.Text type="secondary" style={{
-                ...hydraTextStyleToReactCss(hydraSmallNormal),
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-              }}>
-                Original BOM Line
-              </Typography.Text>
-              <Descriptions
-                bordered
-                size="small"
-                column={2}
-                style={{ marginTop: token.marginXS }}
-              >
-                <Descriptions.Item label="Part number">{resolveModalRow.originalInput}</Descriptions.Item>
-                <Descriptions.Item label="Description">{resolveModalRow.parsedDescription}</Descriptions.Item>
-                <Descriptions.Item label="Size">{resolveModalRow.size || '—'}</Descriptions.Item>
-                <Descriptions.Item label="Category">{resolveModalRow.category || '—'}</Descriptions.Item>
-                <Descriptions.Item label="Quantity">{resolveModalRow.quantity} {resolveModalRow.unit || ''}</Descriptions.Item>
-                <Descriptions.Item label="Confidence">
-                  <BomConfidenceTag confidence={resolveModalRow.confidence} />
-                </Descriptions.Item>
-              </Descriptions>
-            </div>
-
-            <Divider style={{ margin: 0 }} />
-
-            <div>
-              <Typography.Text type="secondary" style={{
-                ...hydraTextStyleToReactCss(hydraSmallNormal),
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-              }}>
-                Suggested ASC Part
-              </Typography.Text>
-              <Descriptions
-                bordered
-                size="small"
-                column={2}
-                style={{ marginTop: token.marginXS }}
-              >
-                <Descriptions.Item label="Part number">{suggestedPart.partNumber}</Descriptions.Item>
-                <Descriptions.Item label="Description">{suggestedPart.description}</Descriptions.Item>
-                <Descriptions.Item label="Family">{suggestedPart.productFamily}</Descriptions.Item>
-                <Descriptions.Item label="Dimensions">{suggestedPart.dimensions}</Descriptions.Item>
-                <Descriptions.Item label="Pressure">{suggestedPart.pressureRating}</Descriptions.Item>
-                <Descriptions.Item label="Connection">{suggestedPart.connectionType}</Descriptions.Item>
-                <Descriptions.Item label="Match confidence" span={2}>
-                  <Progress percent={suggestedPart.matchConfidence} size="small" style={{ maxWidth: 280 }} />
-                </Descriptions.Item>
-              </Descriptions>
-            </div>
-
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-              Review the suggested ASC part and confirm or replace it before final export.
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <div>
+            <Typography.Text type="secondary" style={{
+              ...hydraTextStyleToReactCss(hydraBaseNormal),
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+            }}>
+              Original imported line
             </Typography.Text>
+            <Descriptions
+              bordered
+              size="small"
+              column={2}
+              style={{ marginTop: token.marginXS }}
+            >
+              <Descriptions.Item label="Part number">{resolveModalRow.originalInput}</Descriptions.Item>
+              <Descriptions.Item label="Description">{resolveModalRow.parsedDescription}</Descriptions.Item>
+              <Descriptions.Item label="Size">{resolveModalRow.size || '—'}</Descriptions.Item>
+              <Descriptions.Item label="Category">{resolveModalRow.category || '—'}</Descriptions.Item>
+              <Descriptions.Item label="Quantity">{resolveModalRow.quantity} {resolveModalRow.unit || ''}</Descriptions.Item>
+              <Descriptions.Item label="Confidence">
+                <BomConfidenceTag confidence={resolveModalRow.confidence} />
+              </Descriptions.Item>
+            </Descriptions>
+          </div>
 
-            <Flex justify="flex-end" gap={token.marginXS} wrap="wrap">
+          <Divider style={{ margin: 0 }} />
+
+          <div>
+            <Typography.Text type="secondary" style={{
+              ...hydraTextStyleToReactCss(hydraBaseNormal),
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+            }}>
+              Suggested ASC part
+            </Typography.Text>
+            <Descriptions
+              bordered
+              column={2}
+              style={{ marginTop: token.marginXS }}
+            >
+              <Descriptions.Item label="Part number">{suggestedPart.partNumber}</Descriptions.Item>
+              <Descriptions.Item label="Description">{suggestedPart.description}</Descriptions.Item>
+              <Descriptions.Item label="Family">{suggestedPart.productFamily}</Descriptions.Item>
+              <Descriptions.Item label="Dimensions">{suggestedPart.dimensions}</Descriptions.Item>
+              <Descriptions.Item label="Pressure">{suggestedPart.pressureRating}</Descriptions.Item>
+              <Descriptions.Item label="Connection">{suggestedPart.connectionType}</Descriptions.Item>
+              <Descriptions.Item label="Match confidence" span={2}>
+                <Progress percent={suggestedPart.matchConfidence} size="small" style={{ maxWidth: 280 }} />
+              </Descriptions.Item>
+            </Descriptions>
+          </div>
+
+          <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+            {isConfirmed
+              ? 'This line is confirmed. You can choose a different part or reopen it for review.'
+              : 'Confirm the suggested ASC part, or choose a different part before final export.'}
+          </Typography.Text>
+
+          <Flex justify="space-between" align="center" wrap="wrap" gap={token.marginSM}>
+            <Button size="large" onClick={closeResolveModal}>
+              {isConfirmed ? 'Done' : 'Cancel'}
+            </Button>
+            <Flex gap={token.marginXS} wrap="wrap">
+              <Button size="large" icon={<SwapOutlined />} onClick={() => handleManualSwap(resolveModalRow)}>
+                Choose different part
+              </Button>
               {isConfirmed ? (
-                <>
-                  <Button onClick={closeResolveModal}>Done</Button>
-                  <Button icon={<SwapOutlined />} onClick={() => handleManualSwap(resolveModalRow)}>
-                    Manual Swap
-                  </Button>
-                  <Button danger onClick={() => handleReopen(resolveModalRow)}>
-                    Reopen for Review
-                  </Button>
-                </>
+                <Button size="large" danger onClick={() => handleReopen(resolveModalRow)}>
+                  Reopen for review
+                </Button>
               ) : (
-                <>
-                  <Button onClick={closeResolveModal}>Cancel</Button>
-                  <Button onClick={() => setResolvePhase('feedback')}>
-                    Approve with Feedback
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setTranslationOpen(true);
-                    }}
-                  >
-                    Review translation
-                  </Button>
-                  <Button icon={<SwapOutlined />} onClick={() => handleManualSwap(resolveModalRow)}>
-                    Manual Swap
-                  </Button>
-                  <Button type="primary" onClick={() => handleApprove(resolveModalRow)}>
-                    Approve
-                  </Button>
-                </>
+                <Button size="large" type="primary" onClick={() => handleApprove(resolveModalRow)}>
+                  Confirm match
+                </Button>
               )}
             </Flex>
-          </Space>
-        ) : (
-          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            <Typography.Text>
-              Confirm this match and attach feedback for review. Your feedback helps improve future matching.
-            </Typography.Text>
-            <div>
-              <Typography.Text type="secondary" style={{ display: 'block', marginBottom: token.marginXS }}>
-                Optional rating
-              </Typography.Text>
-              <Rate value={feedbackRating} onChange={setFeedbackRating} />
-            </div>
-            <Input.TextArea
-              rows={4}
-              placeholder="Describe any issues or notes about this match..."
-              value={feedbackText}
-              onChange={(e) => setFeedbackText(e.target.value)}
-            />
-            <Flex justify="flex-end" gap={token.marginXS}>
-              <Button onClick={() => setResolvePhase('review')}>Back</Button>
-              <Button type="primary" onClick={() => handleSubmitFeedback(resolveModalRow)}>
-                Submit &amp; Confirm
-              </Button>
-            </Flex>
-          </Space>
-        )}
+          </Flex>
+        </Space>
       </Modal>
     );
   }
@@ -665,8 +657,19 @@ export function BomWorkspacePage() {
         <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
           <BomPageHeader
             eyebrow="Draft"
-            title={projectTitle}
-            description="Upload a file to parse your BOM, browse ASC products, or use the quick picker."
+            title={editProject?.name ?? projectTitle}
+            titleVariant="heading3"
+            titleAddon={
+              project ? (
+                <Button
+                  type="text"
+                  icon={<EditOutlined />}
+                  aria-label="Edit project name"
+                  onClick={() => setEditModalOpen(true)}
+                />
+              ) : null
+            }
+            description="Upload a BOM file to import parts, browse the ASC catalog, or add items one by one."
             actions={
               <Space wrap>
                 <Button size="large" type="primary" icon={<ExportOutlined />} onClick={handleExport}>
@@ -685,20 +688,33 @@ export function BomWorkspacePage() {
                 <Space orientation="vertical" size={token.marginXS}>
                   <Typography.Text strong>No BOM items yet</Typography.Text>
                   <Typography.Text type="secondary">
-                    Upload a file to parse your BOM, browse ASC products, or use the quick picker.
+                    Upload a BOM file to import parts, browse the ASC catalog, or add items one by one.
                   </Typography.Text>
                 </Space>
               }
             >
               <Flex gap={token.marginSM} justify="center" wrap="wrap">
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={<PlusOutlined />}
-                  onClick={() => setAscDrawerOpen(true)}
+                <Dropdown
+                  trigger={['click']}
+                  menu={{
+                    items: [
+                      {
+                        key: 'asc',
+                        label: 'Find an ASC part',
+                        onClick: () => setAscDrawerOpen(true),
+                      },
+                      {
+                        key: 'competitor',
+                        label: 'Add competitor / unknown part',
+                        onClick: () => setCompetitorEntryOpen(true),
+                      },
+                    ],
+                  }}
                 >
-                  Add item
-                </Button>
+                  <Button type="primary" size="large" icon={<PlusOutlined />}>
+                    Add item
+                  </Button>
+                </Dropdown>
                 <Button
                   size="large"
                   icon={<UploadOutlined />}
@@ -744,29 +760,14 @@ export function BomWorkspacePage() {
             message.success('Product added from quick picker.');
           }}
         />
-        <PartTranslationModal
-          open={translationOpen}
-          onClose={() => setTranslationOpen(false)}
-          items={resolveModalRow ? [resolveModalRow] : []}
-          ascParts={resolveModalRow ? [suggestedAscPartForRow(resolveModalRow)] : []}
-          onConfirm={(itemId, ascPart) => {
-            setRows((prev) =>
-              prev.map((r) =>
-                r.id === itemId
-                  ? {
-                      ...r,
-                      status: 'confirmed' as const,
-                      confidence: 'high' as const,
-                      originalInput: ascPart.partNumber,
-                      parsedDescription: ascPart.description,
-                      size: ascPart.dimensions,
-                    }
-                  : r,
-              ),
-            );
-            setTranslationOpen(false);
-            closeResolveModal();
-            message.success('Translation reviewed and line confirmed.');
+        <BomEditProjectModal
+          open={editModalOpen}
+          project={editProject}
+          onClose={() => setEditModalOpen(false)}
+          onSave={(updated) => {
+            setEditProject(updated);
+            setEditModalOpen(false);
+            message.success('Project name updated.');
           }}
         />
       </>
@@ -776,11 +777,8 @@ export function BomWorkspacePage() {
   if (bomProjectId && bomProjectId !== 'new' && !project) {
     return (
       <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-        <Typography.Title level={3} style={{ margin: 0 }}>
-          Project not found
-        </Typography.Title>
-        <Typography.Paragraph type="secondary">This BOM project id is not in the demo data.</Typography.Paragraph>
-        <Button type="primary" onClick={() => navigate('/bom')}>
+        <BomPageHeader title="Project not found" description="This BOM project id is not in the demo data." />
+        <Button type="primary" onClick={() => navigate(bomHubPath)}>
           BOM home
         </Button>
       </Space>
@@ -788,20 +786,32 @@ export function BomWorkspacePage() {
   }
 
   return (
-    <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <PageBackButton to="/bom">Back to BOM projects</PageBackButton>
+    <>
+      <BomPendingUploadsRegion
+        sessions={pendingUploadSessions}
+        onContinue={handleContinuePendingUpload}
+        defaultExpanded={pendingUploadSessions.length > 1}
+      />
+      <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+      <PageBackButton to={bomHubPath}>Back to BOM projects</PageBackButton>
       <BomPageHeader
-        title={`${projectTitle} workspace`}
+        title={editProject?.name ?? projectTitle}
+        titleVariant="heading3"
         description="Active project BOM review workspace. Confirm lines, resolve review items, and finalize project output."
+        titleAddon={
+          project ? (
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              aria-label="Edit project name"
+              onClick={() => setEditModalOpen(true)}
+            />
+          ) : null
+        }
         actions={
-          <Space wrap>
-            <Button size="large" type="primary" icon={<ExportOutlined />} onClick={handleExport}>
-              Export
-            </Button>
-            <Button size="large" onClick={handleRequestService}>
-              Request service
-            </Button>
-          </Space>
+          <Button size="large" type="primary" icon={<ExportOutlined />} onClick={handleExport}>
+            Export
+          </Button>
         }
       />
 
@@ -845,117 +855,6 @@ export function BomWorkspacePage() {
         />
       ) : null}
 
-      <Flex gap={token.margin} wrap="wrap" align="stretch">
-        <div
-          style={{
-            ...statCardShell,
-            flex: '1 1 160px',
-            minWidth: 0,
-            cursor: 'pointer',
-            borderInlineStartWidth: statCardAccentWidth,
-            borderInlineStartStyle: 'solid',
-            borderInlineStartColor: token.colorPrimaryBorder,
-          }}
-          onClick={() => setStatusFilter('all')}
-        >
-          <Flex align="center" justify="space-between" gap={token.marginXS}>
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-              Total items
-            </Typography.Text>
-            <Typography.Title level={3} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading3) }}>
-              {totalItems}
-            </Typography.Title>
-          </Flex>
-        </div>
-        <div
-          style={{
-            ...statCardShell,
-            flex: '1 1 160px',
-            minWidth: 0,
-            cursor: 'pointer',
-            borderInlineStartWidth: statCardAccentWidth,
-            borderInlineStartStyle: 'solid',
-            borderInlineStartColor: token.colorSuccessBorder,
-          }}
-          onClick={() => setStatusFilter('confirmed')}
-        >
-          <Flex align="center" justify="space-between" gap={token.marginXS}>
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-              Confirmed
-            </Typography.Text>
-            <Typography.Title level={3} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading3) }}>
-              {confirmedCount}
-            </Typography.Title>
-          </Flex>
-        </div>
-        <div
-          style={{
-            ...statCardShell,
-            flex: '1 1 160px',
-            minWidth: 0,
-            cursor: 'pointer',
-            borderInlineStartWidth: statCardAccentWidth,
-            borderInlineStartStyle: 'solid',
-            borderInlineStartColor: token.colorWarningBorder,
-          }}
-          onClick={() => setStatusFilter('needs-review')}
-        >
-          <Flex align="center" justify="space-between" gap={token.marginXS}>
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-              Needs Review
-            </Typography.Text>
-            <Typography.Title level={3} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading3) }}>
-              {needsReviewCount}
-            </Typography.Title>
-          </Flex>
-        </div>
-        <div
-          style={{
-            ...statCardShell,
-            flex: '1 1 160px',
-            minWidth: 0,
-            cursor: 'pointer',
-            borderInlineStartWidth: statCardAccentWidth,
-            borderInlineStartStyle: 'solid',
-            borderInlineStartColor: token.colorErrorBorder,
-          }}
-          onClick={() => setStatusFilter('missing')}
-        >
-          <Flex align="center" justify="space-between" gap={token.marginXS}>
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-              Missing
-            </Typography.Text>
-            <Typography.Title level={3} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading3) }}>
-              {missingCount}
-            </Typography.Title>
-          </Flex>
-        </div>
-        <div
-          style={{
-            ...statCardShell,
-            flex: '1 1 220px',
-            maxWidth: 368,
-            minWidth: 200,
-            borderInlineStartWidth: statCardAccentWidth,
-            borderInlineStartStyle: 'solid',
-            borderInlineStartColor: token.colorInfoBorder,
-          }}
-        >
-          <Flex vertical justify="center" gap={token.marginXXS} style={{ width: '100%', minHeight: '100%' }}>
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-              Match Confidence
-            </Typography.Text>
-            <Progress
-              percent={confidencePercent}
-              size="small"
-              strokeColor={token.colorInfo}
-              trailColor={token.colorFillSecondary}
-              style={{ margin: 0 }}
-            />
-          </Flex>
-        </div>
-      </Flex>
-
       {isTranslating && (
         <Alert
           type="info"
@@ -964,6 +863,15 @@ export function BomWorkspacePage() {
           description="Running ASC matching on lines that need review. Table will update when complete."
         />
       )}
+
+      {hasWorkspaceRows ? (
+        <BomWorkspaceStatsStrip
+          total={workspaceStats.total}
+          confirmed={workspaceStats.confirmed}
+          needsReview={workspaceStats.needsReview}
+          missing={workspaceStats.missing}
+        />
+      ) : null}
 
       <Card
         style={{ borderRadius: token.borderRadiusLG, boxShadow: token.boxShadowTertiary }}
@@ -976,46 +884,92 @@ export function BomWorkspacePage() {
           wrap="wrap"
           style={{
             paddingInline: token.paddingMD,
-            paddingBlock: token.paddingSM,
+            paddingBlock: token.padding,
             borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
           }}
         >
-          <Space wrap size={token.marginXS}>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setAscDrawerOpen(true)}>
-              Add Item
-            </Button>
-            <Button onClick={() => navigate(`/bom/projects/${bomProjectId}/asc-products`)}>Browse products</Button>
-            <Button icon={<UploadOutlined />} onClick={handleUpload}>
-              Upload file
-            </Button>
-            {canTranslate ? (
-              <Button icon={<TranslationOutlined />} onClick={() => navigate(`/bom/projects/${bomProjectId}/translate`)}>
-                Translate all
-              </Button>
-            ) : null}
-          </Space>
-          <Flex align="center" gap={token.marginXS} wrap="wrap">
-            <AppSearchInput
-              allowClear
-              placeholder="Search items..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              style={{ width: 240, maxWidth: '100%' }}
-            />
-          </Flex>
+          {hasSelection ? (
+            <Flex align="center" justify="space-between" gap={token.marginSM} style={{ width: '100%' }} wrap="wrap">
+              <Typography.Text type="secondary">
+                {selectedRowKeys.length} selected
+              </Typography.Text>
+              <Space size={token.marginSM}>
+                <Button danger icon={<DeleteOutlined />} onClick={openBulkDeleteModal}>
+                  Bulk Delete
+                </Button>
+                <Button onClick={() => setSelectedRowKeys([])}>Clear Selection</Button>
+              </Space>
+            </Flex>
+          ) : (
+            <>
+              <Space wrap size={token.marginXS}>
+                <Dropdown
+                  trigger={['click']}
+                  menu={{
+                    items: [
+                      {
+                        key: 'asc',
+                        label: 'Find an ASC part',
+                        onClick: () => setAscDrawerOpen(true),
+                      },
+                      {
+                        key: 'competitor',
+                        label: 'Add competitor / unknown part',
+                        onClick: () => setCompetitorEntryOpen(true),
+                      },
+                    ],
+                  }}
+                >
+                  <Button type="primary" icon={<PlusOutlined />}>
+                    Add Item
+                  </Button>
+                </Dropdown>
+                <Button icon={<UploadOutlined />} onClick={handleUpload}>
+                  Upload file
+                </Button>
+              </Space>
+              <Flex align="center" gap={token.marginXS} wrap="wrap">
+                <Select<WorkspaceStatusFilter>
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  style={{ width: 168 }}
+                  options={[
+                    { value: 'all', label: 'All statuses' },
+                    { value: 'confirmed', label: 'Confirmed' },
+                    { value: 'needs-review', label: 'Needs review' },
+                    { value: 'missing', label: 'Missing match' },
+                  ]}
+                />
+                <AppSearchInput
+                  allowClear
+                  placeholder="Search Items..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  style={{ width: 240, maxWidth: '100%' }}
+                />
+              </Flex>
+            </>
+          )}
         </Flex>
         <Table<BomItem>
           rowKey="id"
           columns={columns}
           dataSource={filteredRows}
           scroll={{ x: 'max-content' }}
+          rowSelection={{
+            selectedRowKeys,
+            onChange: (keys) => setSelectedRowKeys(keys),
+            preserveSelectedRowKeys: false,
+          }}
+          onRow={(row) => ({
+            onDoubleClick: () => openResolveModal(row),
+          })}
           locale={{
             emptyText: renderTableEmptyState(),
           }}
           pagination={{
             pageSize: shellLayout.tablePageSizeDefault,
             showSizeChanger: false,
-            showTotal: (total) => `${total} row${total === 1 ? '' : 's'}`,
             position: ['bottomRight'],
           }}
           styles={{
@@ -1027,10 +981,41 @@ export function BomWorkspacePage() {
 
       {renderResolveModal()}
 
+      <BomWorkspaceImportDetailDrawer
+        open={importDetailRow !== null}
+        row={importDetailRow}
+        onClose={() => setImportDetailRow(null)}
+      />
+
       <AscProductsDrawer
         open={ascDrawerOpen}
-        onClose={() => setAscDrawerOpen(false)}
+        mode={swapRow ? 'swap' : 'browse'}
+        onClose={() => {
+          setAscDrawerOpen(false);
+          setSwapRow(null);
+        }}
         onAddProduct={(p) => {
+          if (swapRow) {
+            setRows((prev) =>
+              prev.map((r) =>
+                r.id === swapRow.id
+                  ? {
+                      ...r,
+                      parsedDescription: p.description,
+                      size: p.size,
+                      sku: p.ascNumber,
+                      category: p.partType,
+                      status: 'needs-review',
+                      matchSource: 'manual',
+                    }
+                  : r,
+              ),
+            );
+            setSwapRow(null);
+            setAscDrawerOpen(false);
+            message.success('Replacement part selected.');
+            return;
+          }
           setRows((prev) =>
             renumberRows([
               ...prev,
@@ -1047,6 +1032,7 @@ export function BomWorkspacePage() {
                 category: p.partType,
                 unit: 'EA',
                 status: 'needs-review',
+                matchSource: 'manual',
               },
             ]),
           );
@@ -1055,31 +1041,67 @@ export function BomWorkspacePage() {
         }}
       />
 
-      <PartTranslationModal
-        open={translationOpen}
-        onClose={() => setTranslationOpen(false)}
-        items={resolveModalRow ? [resolveModalRow] : []}
-        ascParts={resolveModalRow ? [suggestedAscPartForRow(resolveModalRow)] : []}
-        onConfirm={(itemId, ascPart) => {
-          setRows((prev) =>
-            prev.map((r) =>
-              r.id === itemId
-                ? {
-                    ...r,
-                    status: 'confirmed' as const,
-                    confidence: 'high' as const,
-                    originalInput: ascPart.partNumber,
-                    parsedDescription: ascPart.description,
-                    size: ascPart.dimensions,
-                  }
-                : r,
-            ),
-          );
-          setTranslationOpen(false);
-          closeResolveModal();
-          message.success('Translation reviewed and line confirmed.');
+      <BomEditProjectModal
+        open={editModalOpen}
+        project={editProject}
+        onClose={() => setEditModalOpen(false)}
+        onSave={(updated) => {
+          setEditProject(updated);
+          setEditModalOpen(false);
+          message.success('Project name updated.');
         }}
       />
-    </Space>
+
+      <Modal
+        open={competitorEntryOpen}
+        title="Add competitor or unknown part"
+        onCancel={() => {
+          setCompetitorEntryOpen(false);
+          setCompetitorEntryText('');
+        }}
+        footer={
+          <Flex justify="flex-end" gap={token.marginXS}>
+            <Button
+              onClick={() => {
+                setCompetitorEntryOpen(false);
+                setCompetitorEntryText('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              disabled={!competitorEntryText.trim()}
+              onClick={() => {
+                const text = competitorEntryText.trim();
+                if (!text) return;
+                const session = createAdHocCompetitorMatchSession(bomProjectId, text);
+                setCompetitorEntryOpen(false);
+                setCompetitorEntryText('');
+                navigate(`/bom/projects/${bomProjectId}/matching/review`, {
+                  state: { uploadId: session.uploadId, uploadFileName: 'Manual entry' },
+                });
+              }}
+            >
+              Find match
+            </Button>
+          </Flex>
+        }
+      >
+        <Space orientation="vertical" style={{ width: '100%' }} size={token.marginSM}>
+          <Typography.Text type="secondary">
+            Paste a part number, brand, or description. We&apos;ll run BOM matching for this line.
+          </Typography.Text>
+          <Input.TextArea
+            autoFocus
+            rows={3}
+            placeholder="e.g. Grundfos CM5-8 centrifugal pump or competitor SKU"
+            value={competitorEntryText}
+            onChange={(e) => setCompetitorEntryText(e.target.value)}
+          />
+        </Space>
+      </Modal>
+      </Space>
+    </>
   );
 }

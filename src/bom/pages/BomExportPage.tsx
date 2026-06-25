@@ -2,6 +2,7 @@ import { CheckCircleOutlined, FileExcelOutlined, FileTextOutlined, SendOutlined 
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
+import { useBomHubPath } from '../../context/ActiveProjectContext';
 import { useBomWorkspaceRows } from '../../context/BomWorkspaceContext';
 import { isWorkspaceRowConfirmed } from '../bomWorkspaceHelpers';
 import { shellLayout } from '../../theme/hydraAlias';
@@ -9,6 +10,7 @@ import { BomPageHeader } from '../layout/BomPageHeader';
 import { bomProjectById, bomProjectTitleById } from '../data/mockData';
 import type { BomItem } from '../data/types';
 import { BomCardTitle } from '../components/BomCardTitle';
+import { BomTablePaginationBar } from '../components/BomTablePaginationBar';
 import { ExportCard } from '../../ui/ExportCard';
 import {
   Alert,
@@ -20,7 +22,6 @@ import {
   Form,
   Input,
   Modal,
-  Pagination,
   Row,
   Space,
   Table,
@@ -92,6 +93,7 @@ export function BomExportPage() {
   const { token } = theme.useToken();
   const { bomProjectId = '' } = useParams<{ bomProjectId: string }>();
   const navigate = useNavigate();
+  const bomHubPath = useBomHubPath();
   const { rows } = useBomWorkspaceRows(bomProjectId);
   const projectMeta = bomProjectById(bomProjectId);
   const projectTitle = bomProjectTitleById(bomProjectId) ?? 'BOM project';
@@ -183,7 +185,7 @@ export function BomExportPage() {
           title="BOM project not found"
           description="Unknown project id."
           actions={
-            <Button type="primary" size="large" onClick={() => navigate('/bom')}>
+            <Button type="primary" size="large" onClick={() => navigate(bomHubPath)}>
               Go to BOM home
             </Button>
           }
@@ -199,7 +201,7 @@ export function BomExportPage() {
         description={`Choose one export route, preview the output, then run a single final action. Project: ${projectTitle}.`}
         actions={
           <Space wrap>
-            <Link to="/bom">
+            <Link to={bomHubPath}>
               <Button size="large">BOM home</Button>
             </Link>
             <Button
@@ -280,23 +282,11 @@ export function BomExportPage() {
             body: { cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM } },
           }}
         />
-        <Flex
-          justify="flex-end"
-          align="center"
-          style={{
-            paddingInline: token.paddingMD,
-            paddingBlock: token.paddingSM,
-            borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-          }}
-        >
-          <Pagination
-            current={previewPage}
-            pageSize={shellLayout.tablePageSizeDefault}
-            total={confirmedRows.length}
-            onChange={setPreviewPage}
-            showSizeChanger={false}
-          />
-        </Flex>
+        <BomTablePaginationBar
+          current={previewPage}
+          total={confirmedRows.length}
+          onChange={setPreviewPage}
+        />
       </Card>
 
       <Card title={<BomCardTitle>Column mapping</BomCardTitle>} style={{ borderColor: token.colorBorderSecondary }}>

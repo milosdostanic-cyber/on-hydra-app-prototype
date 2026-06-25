@@ -35,7 +35,7 @@ export function BomNarrowPage() {
       <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
         <BomPageHeader
           title="Line item not found"
-          description="This line may have been removed from the parsed BOM."
+          description="This line may have been removed from your BOM."
           actions={
             <Button type="primary" size="large" onClick={() => navigate(`/bom/projects/${bomProjectId}/matching`)}>
               Back to matching

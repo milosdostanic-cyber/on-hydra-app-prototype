@@ -6,11 +6,10 @@ import {
   UploadOutlined,
 } from '@ant-design/icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import type { Key } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import type { CSSProperties, Key } from 'react';
 
-import { useActiveProject } from '../../context/ActiveProjectContext';
-import { PageBackButton } from '../../shell/PageBackButton';
+import { useActiveProject, useBomHubPath } from '../../context/ActiveProjectContext';
 import { BomCreateProjectModal } from '../components/BomCreateProjectModal';
 import { BomUploadDestinationModal } from '../components/BomUploadDestinationModal';
 import { BomPageHeader } from '../layout/BomPageHeader';
@@ -21,9 +20,7 @@ import type { BomProject } from '../data/types';
 import { shellLayout } from '../../theme/hydraAlias';
 import {
   hydraBaseNormal,
-  hydraSmallNormal,
   hydraTextStyleToReactCss,
-  hydraTitleHeading3,
   hydraTitleHeading4,
 } from '../../theme/hydraTypography';
 import {
@@ -62,11 +59,14 @@ const SORT_OPTIONS = [
   { value: 'asc', label: 'Last edited: oldest' },
 ];
 
-export function BomLandingPage() {
+export function BomSiteProjectsPage() {
   const { token } = theme.useToken();
   const { modal } = App.useApp();
   const navigate = useNavigate();
-  const { projectId, project } = useActiveProject();
+  const location = useLocation();
+  const { constructionProjectId = '' } = useParams<{ constructionProjectId: string }>();
+  const { setProjectId, project } = useActiveProject();
+  const bomHubPath = useBomHubPath();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -79,19 +79,29 @@ export function BomLandingPage() {
   const [hoveredQuickAction, setHoveredQuickAction] = useState<'upload' | 'search' | null>(null);
   const [uploadDestModalOpen, setUploadDestModalOpen] = useState(false);
   const [pendingUpload, setPendingUpload] = useState<{ name: string; size: number } | null>(null);
+  const [projectsListKey, setProjectsListKey] = useState(0);
 
-  // Reset selection and page when switching projects
+  useEffect(() => {
+    if (location.state?.refreshBomProjects) {
+      setProjectsListKey((key) => key + 1);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.pathname, location.state, navigate]);
+
+  useEffect(() => {
+    if (constructionProjectId) setProjectId(constructionProjectId);
+  }, [constructionProjectId, setProjectId]);
+
   useEffect(() => {
     setSelectedRowKeys([]);
     setSearchText('');
     setStatusFilter('all');
     setProjectsPage(1);
-  }, [projectId]);
+  }, [constructionProjectId]);
 
-  // BOMs scoped to the active project, excluding locally deleted ones
   const projectBoms = useMemo(
-    () => mockBomProjects.filter((p) => p.projectId === projectId && !deletedIds.has(p.id)),
-    [projectId, deletedIds],
+    () => mockBomProjects.filter((p) => p.projectId === constructionProjectId && !deletedIds.has(p.id)),
+    [constructionProjectId, deletedIds, projectsListKey],
   );
 
   const filteredProjects = useMemo(() => {
@@ -153,7 +163,7 @@ export function BomLandingPage() {
             message="This project will be removed from your list"
             description="In this demo the project is only hidden locally until you refresh; there is no server delete."
           />
-          <Descriptions bordered size="small" column={1}>
+          <Descriptions bordered column={1}>
             <Descriptions.Item label="Project name">{row.name}</Descriptions.Item>
             <Descriptions.Item label="Items">{row.items}</Descriptions.Item>
             <Descriptions.Item label="Last edited">{row.lastEdited}</Descriptions.Item>
@@ -293,29 +303,40 @@ export function BomLandingPage() {
     const closeLoading = message.loading('Processing your file…', 0);
     window.setTimeout(() => {
       closeLoading();
-      message.success('File received. Opening field mapping.');
+      message.success('File received. Reviewing column mapping.');
       if (state.uploadDestination === 'new') {
-        navigate('/bom/projects/new/field-mapping', { state });
+        navigate('/bom/projects/new/mapping-summary', {
+          state: {
+            ...state,
+            uploadFlowBackTo: bomHubPath,
+            uploadFlowBackLabel: 'Back to BOM',
+          },
+        });
       } else if (state.appendTargetId) {
-        navigate(`/bom/projects/${state.appendTargetId}/field-mapping`, { state });
+        navigate(`/bom/projects/${state.appendTargetId}/mapping-summary`, {
+          state: {
+            ...state,
+            uploadFlowBackTo: `/bom/projects/${state.appendTargetId}/workspace`,
+            uploadFlowBackLabel: 'Back to workspace',
+          },
+        });
       }
       setPendingUpload(null);
     }, 900);
   };
 
-  const cardFlatStyle = {
-    background: token.colorBgContainer,
-    borderRadius: token.borderRadiusLG,
-    border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-    cursor: 'pointer' as const,
+  const getQuickActionStyle = (kind: 'upload' | 'search'): CSSProperties => {
+    const isHovered = hoveredQuickAction === kind;
+    return {
+      background: token.colorBgContainer,
+      borderRadius: token.borderRadiusLG,
+      border: `${token.lineWidth * 2}px ${token.lineType} ${isHovered ? token.colorPrimaryBorderHover : token.colorPrimaryBorder}`,
+      boxShadow: isHovered ? token.boxShadow : token.boxShadowTertiary,
+      transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
+      cursor: 'pointer',
+      transition: `border-color ${token.motionDurationMid}, box-shadow ${token.motionDurationMid}, transform ${token.motionDurationMid}`,
+    };
   };
-
-  const getQuickActionStyle = (kind: 'upload' | 'search') => ({
-    ...cardFlatStyle,
-    borderColor: hoveredQuickAction === kind ? token.colorPrimaryBorderHover : token.colorBorderSecondary,
-    boxShadow: 'none',
-    transition: `border-color ${token.motionDurationMid}`,
-  });
 
   const tableShellStyle = {
     background: token.colorBgContainer,
@@ -326,38 +347,30 @@ export function BomLandingPage() {
 
   const hasNoProjects = projectBoms.length === 0;
   const hasNoResults = !hasNoProjects && filteredProjects.length === 0;
-  const isFiltered = searchText.trim() !== '' || statusFilter !== 'all';
 
   return (
     <>
+      {/* Figma Content: gap 24; Container: gap 20; Projects Container: gap 12 */}
       <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-        <PageBackButton to="/dashboard">Back to home</PageBackButton>
-        {!project ? (
-          <Alert
-            type="info"
-            showIcon
-            message="Select a construction project"
-            description="Pick a project from the top bar to scope BOM runs to the right job site."
+        <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
+          <BomPageHeader
+            title="Get started"
+            description="Upload files, search parts, or start from scratch to create your BOM"
+            descriptionVariant="large-strong"
+            actions={
+              <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setCreateModalOpen(true)}>
+                New BOM Project
+              </Button>
+            }
           />
-        ) : null}
-        <BomPageHeader
-          title="Get started"
-          description="Upload files, search parts, or start from scratch to create your BOM."
-          actions={
-            <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setCreateModalOpen(true)}>
-              New BOM project
-            </Button>
-          }
-        />
 
-        {/* Upload + Search cards — matched type scale + equal card height */}
-        <Row gutter={[token.marginMD, token.marginMD]} align="stretch">
+          <Row gutter={[token.padding, token.padding]} align="stretch">
           <Col xs={24} md={12} style={{ display: 'flex' }}>
             <Card
               style={{ ...getQuickActionStyle('upload'), width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}
               styles={{
                 body: {
-                  padding: `${token.paddingMD}px ${token.paddingLG}px`,
+                  padding: token.paddingMD,
                   flex: 1,
                   display: 'flex',
                   flexDirection: 'column',
@@ -369,7 +382,7 @@ export function BomLandingPage() {
             >
               <Flex vertical gap={token.marginXS} style={{ flex: 1 }}>
                 <Flex align="center" gap={token.marginSM}>
-                  <UploadOutlined style={{ fontSize: hydraTitleHeading3.fontSize, color: token.colorSuccess }} />
+                  <UploadOutlined style={{ fontSize: hydraTitleHeading4.fontSize, color: token.colorSuccess }} />
                   <Typography.Title level={4} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading4) }}>
                     Upload a file
                   </Typography.Title>
@@ -378,14 +391,8 @@ export function BomLandingPage() {
                   type="secondary"
                   style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
                 >
-                  After you pick a file, choose whether it starts a{' '}
-                  <Typography.Text strong>new BOM project</Typography.Text> or{' '}
-                  <Typography.Text strong>adds lines</Typography.Text> to a BOM you already have in this
-                  construction project.
+                  Excel, CSV, or PDF. We map your columns, then guide you through review and matching.
                 </Typography.Paragraph>
-                <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-                  CSV, Excel, or PDF up to 50MB. Next: column mapping, then parsing review.
-                </Typography.Text>
               </Flex>
             </Card>
           </Col>
@@ -394,43 +401,37 @@ export function BomLandingPage() {
               style={{ ...getQuickActionStyle('search'), width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}
               styles={{
                 body: {
-                  padding: `${token.paddingMD}px ${token.paddingLG}px`,
+                  padding: token.paddingMD,
                   flex: 1,
                   display: 'flex',
                   flexDirection: 'column',
                 },
               }}
-              onClick={() => navigate('/bom/search')}
+              onClick={() => navigate('/bom/search?mode=competitor')}
               onMouseEnter={() => setHoveredQuickAction('search')}
               onMouseLeave={() => setHoveredQuickAction(null)}
             >
               <Flex vertical gap={token.marginXS} style={{ flex: 1 }}>
                 <Flex align="center" gap={token.marginSM}>
-                  <FileSearchOutlined style={{ fontSize: hydraTitleHeading3.fontSize, color: token.colorPrimary }} />
+                  <FileSearchOutlined style={{ fontSize: hydraTitleHeading4.fontSize, color: token.colorPrimary }} />
                   <Typography.Title level={4} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading4) }}>
-                    Search Catalogue Parts
+                    Search parts
                   </Typography.Title>
                 </Flex>
                 <Typography.Paragraph
                   type="secondary"
                   style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
                 >
-                  Look up <Typography.Text strong>ASC catalog</Typography.Text> parts by number or description to
-                  validate lines before you add them to a BOM in this construction project.
+                  Competitor lines or ASC catalog. Match to parts or search and add to your project.
                 </Typography.Paragraph>
-                <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-                  Same search bar pattern as the workspace; results open in the catalog flow.
-                </Typography.Text>
               </Flex>
             </Card>
           </Col>
-        </Row>
+          </Row>
+        </Space>
 
         <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
-          <BomPageHeader
-            title="Your BOM projects"
-            description="BOM runs scoped to the active construction project in the top bar."
-          />
+          <BomPageHeader title="Your BOM Projects" />
 
           <Card styles={{ body: { padding: 0 } }} style={tableShellStyle}>
             {hasNoProjects ? (
@@ -570,7 +571,7 @@ export function BomLandingPage() {
                   }}
                 />
                 <Flex
-                  justify="space-between"
+                  justify="flex-end"
                   align="center"
                   style={{
                     paddingInline: token.paddingMD,
@@ -578,10 +579,6 @@ export function BomLandingPage() {
                     borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
                   }}
                 >
-                  <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-                    {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''}
-                    {isFiltered ? ' found' : ' total'}
-                  </Typography.Text>
                   <Pagination
                     current={projectsPage}
                     pageSize={shellLayout.tablePageSizeDefault}
