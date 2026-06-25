@@ -5,6 +5,7 @@ import { PIPE_ATTACHMENTS, STRUCTURAL_ATTACHMENTS, SWIVEL_TYPES } from '../../da
 import { useSeisBrace } from '../../context/SeisBraceContext';
 import { useSeisBraceWizard } from '../../context/SeisBraceWizardContext';
 import { WizardFooter } from '../../components/WizardFooter';
+import { PageDescription } from '../../../shell/PageDescription';
 import { draftToBraceFields } from '../../utils/draft';
 import {
   App,
@@ -109,9 +110,9 @@ export function PartsSelectionStep() {
         <Typography.Title level={4} style={{ margin: 0 }}>
           Parts Selection
         </Typography.Title>
-        <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
+        <PageDescription>
           Select the swivel fitting, structural attachment, and pipe attachment for this brace.
-        </Typography.Paragraph>
+        </PageDescription>
       </div>
 
       <Card size="small" title="Sway Brace Structural Fitting (Swivel)">

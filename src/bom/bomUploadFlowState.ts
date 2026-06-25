@@ -21,6 +21,8 @@ export type BomUploadFlowLocationState = {
   focusSkipped?: boolean;
   /** Guided review: open a specific match row (e.g. Resolve from summary table). */
   focusItemId?: string;
+  /** Set when navigating to guided review from the matching table (not from the upload flow). Hides upload-flow chrome. */
+  resolveFromTable?: boolean;
 };
 
 export function resolveUploadDestination(

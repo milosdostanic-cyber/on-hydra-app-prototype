@@ -3,7 +3,9 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { catalogPartByKey } from '../catalog/catalogDemoData';
 import { readCatalogPartReturnState } from '../catalog/catalogPartNavigation';
+import { BomPageHeader } from '../bom/layout/BomPageHeader';
 import { PageBackButton } from './PageBackButton';
+import { PageDescription } from './PageDescription';
 import { hydraSmallNormal, hydraTextStyleToReactCss } from '../theme/hydraTypography';
 import { useSubmittalDraft } from '../context/SubmittalDraftContext';
 import { PROJECT_SEED_ROWS } from './projectSeed';
@@ -64,14 +66,12 @@ export function CatalogPartPage() {
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to={catalogReturnTo}>{catalogReturnLabel}</PageBackButton>
-      <Typography.Title level={3} style={{ margin: 0 }}>
-        {partTitle}
-      </Typography.Title>
-      <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
+      <BomPageHeader title={partTitle} />
+      <PageDescription>
         The cut sheet PDF for this part can be added to a <Typography.Text strong>submittal package</Typography.Text>{' '}
         under a project. Submittal PDFs are managed in{' '}
         <Typography.Text strong>Submittal manager</Typography.Text> for the project you choose.
-      </Typography.Paragraph>
+      </PageDescription>
 
       <Descriptions column={1} size="small" bordered styles={{ label: { width: token.controlHeight * 5 } }}>
         <Descriptions.Item label="SKU">{label}</Descriptions.Item>

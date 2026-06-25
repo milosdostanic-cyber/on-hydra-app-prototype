@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { LeftOutlined } from '@ant-design/icons';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import {
@@ -44,6 +45,7 @@ import {
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
 import {
+  Alert,
   Button,
   Card,
   Flex,
@@ -80,6 +82,7 @@ export function BomProgressiveMatchingPage() {
   const location = useLocation();
   const uploadState = (location.state ?? {}) as BomUploadFlowLocationState;
   const uploadFileName = readUploadFileName(uploadState);
+  const resolveFromTable = Boolean(uploadState.resolveFromTable);
   const projectTitle = bomProjectTitleById(bomProjectId) ?? 'BOM project';
   const tableRoute = `/bom/projects/${bomProjectId}/matching/table`;
   const { session, uploadId, matchResults, persist, stats } = useBomMatchingData(bomProjectId);
@@ -268,8 +271,11 @@ export function BomProgressiveMatchingPage() {
         ? `${readyCount} ready to import · ${reviewSummary.skipped} skipped for ${projectTitle}.`
         : `All ${reviewSummary.total} parts reviewed for ${projectTitle}.`;
     }
+    if (resolveFromTable && pendingCount > 1) {
+      return `Part ${reviewingPosition} of ${totalParts} · ${pendingCount - 1} more part${pendingCount - 1 === 1 ? '' : 's'} still need a decision after this one.`;
+    }
     return `Part ${reviewingPosition} of ${totalParts} · ${projectTitle}`;
-  }, [allDone, hasSkippedItems, projectTitle, readyCount, reviewSummary, reviewingPosition, totalParts]);
+  }, [allDone, hasSkippedItems, pendingCount, projectTitle, readyCount, resolveFromTable, reviewSummary, reviewingPosition, totalParts]);
 
   function handleHeaderPrimary() {
     if (!current) return;
@@ -288,28 +294,41 @@ export function BomProgressiveMatchingPage() {
       style={{ width: '100%' }}
     >
       <div style={{ flexShrink: 0 }}>
-        <BomUploadFlowStepChrome
-          backTo={parsingReviewRoute}
-          backLabel="Back to file check"
-          backState={uploadState}
-          fileName={uploadFileName}
-          currentStep={2}
-          statusLabel={matchingProgressStatus}
-          statusTone={allDone ? 'success' : 'warning'}
-          stepsComplete={allDone}
-        />
+        {resolveFromTable ? (
+          <Button
+            type="default"
+            icon={<LeftOutlined />}
+            onClick={() => navigate(tableRoute, { state: { ...uploadState, resolveFromTable: undefined } })}
+            style={{ alignSelf: 'flex-start' }}
+          >
+            Back to matching results
+          </Button>
+        ) : (
+          <BomUploadFlowStepChrome
+            backTo={parsingReviewRoute}
+            backLabel="Back to file check"
+            backState={uploadState}
+            fileName={uploadFileName}
+            currentStep={2}
+            statusLabel={matchingProgressStatus}
+            statusTone={allDone ? 'success' : 'warning'}
+            stepsComplete={allDone}
+          />
+        )}
       </div>
 
       <div style={{ flexShrink: 0 }}>
       <BomPageHeader
-        title={allDone ? 'Guided review complete' : 'Match parts from your file'}
+        title={allDone ? (resolveFromTable ? 'All parts resolved' : 'Guided review complete') : (resolveFromTable ? 'Resolve match' : 'Match parts from your file')}
         description={matchingHeaderDescription}
         actions={
           allDone ? null : current ? (
             <Flex gap={token.marginXS} align="center" wrap="wrap" justify="flex-end">
-              <Button type="link" size="large" onClick={handleSkip}>
-                Skip for now
-              </Button>
+              {!resolveFromTable ? (
+                <Button type="link" size="large" onClick={handleSkip}>
+                  Skip for now
+                </Button>
+              ) : null}
               {ctaState === 'no-match' ? (
                 <Button type="link" size="large" onClick={() => navigate('/bom/search')}>
                   Search unknown parts
@@ -355,39 +374,52 @@ export function BomProgressiveMatchingPage() {
             gap: token.marginMD,
           }}
         >
-          <Card
-            style={{ flexShrink: 0 }}
-            styles={{ body: { padding: `${token.paddingSM}px ${token.paddingMD}px` } }}
-          >
-            <Flex align="center" gap={token.marginMD} wrap="wrap">
-              <Flex vertical gap={token.marginXXS} style={{ flexShrink: 0 }}>
-                <Typography.Text strong style={hydraTextStyleToReactCss(hydraLargeStrong)}>
-                  {reviewedCount}/{totalParts} reviewed
-                </Typography.Text>
-                <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-                  {remainingCount} remaining · {stats.skipped} skipped
-                </Typography.Text>
+          {resolveFromTable ? (
+            <Alert
+              type="info"
+              showIcon
+              message="Review and confirm this match"
+              description={
+                pendingCount > 1
+                  ? `Confirm the suggested part or pick a different one. After resolving this, you'll be shown ${pendingCount - 1} other part${pendingCount - 1 === 1 ? '' : 's'} that still need a decision.`
+                  : 'Confirm the suggested part or pick a different one. This is the last part that needs a decision — you\'ll be ready to import after.'
+              }
+            />
+          ) : (
+            <Card
+              style={{ flexShrink: 0 }}
+              styles={{ body: { padding: `${token.paddingSM}px ${token.paddingMD}px` } }}
+            >
+              <Flex align="center" gap={token.marginMD} wrap="wrap">
+                <Flex vertical gap={token.marginXXS} style={{ flexShrink: 0 }}>
+                  <Typography.Text strong style={hydraTextStyleToReactCss(hydraLargeStrong)}>
+                    {reviewedCount}/{totalParts} reviewed
+                  </Typography.Text>
+                  <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+                    {remainingCount} remaining · {stats.skipped} skipped
+                  </Typography.Text>
+                </Flex>
+                <Progress
+                  percent={totalParts ? Math.round((reviewedCount / totalParts) * 100) : 0}
+                  showInfo={false}
+                  strokeColor={token.colorPrimary}
+                  style={{ flex: 1, minWidth: 120, margin: 0 }}
+                />
+                <Button
+                  type="primary"
+                  disabled={pendingCount === 0 || autoMatchableCount === 0}
+                  onClick={handleAutoMatchHigh}
+                  title={
+                    autoMatchableCount === 0
+                      ? 'No pending lines have a strong match to accept.'
+                      : 'Accept every strong match in one step and skip the rest for manual review.'
+                  }
+                >
+                  {autoMatchHighButtonLabel(autoMatchableCount)}
+                </Button>
               </Flex>
-              <Progress
-                percent={totalParts ? Math.round((reviewedCount / totalParts) * 100) : 0}
-                showInfo={false}
-                strokeColor={token.colorPrimary}
-                style={{ flex: 1, minWidth: 120, margin: 0 }}
-              />
-              <Button
-                type="primary"
-                disabled={pendingCount === 0 || autoMatchableCount === 0}
-                onClick={handleAutoMatchHigh}
-                title={
-                  autoMatchableCount === 0
-                    ? 'No pending lines have a strong match to accept.'
-                    : 'Accept every strong match in one step and skip the rest for manual review.'
-                }
-              >
-                {autoMatchHighButtonLabel(autoMatchableCount)}
-              </Button>
-            </Flex>
-          </Card>
+            </Card>
+          )}
 
           {shouldShowGuidedReviewPageAlert(current) ? (
             <BomMatchingReviewQualityAlert matchRow={current} parsedItem={parsedItem} />

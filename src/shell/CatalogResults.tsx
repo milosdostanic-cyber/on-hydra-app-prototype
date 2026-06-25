@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 
 import { CATALOG_DEMO_PARTS } from '../catalog/catalogDemoData';
 import { catalogPartReturnFrom } from '../catalog/catalogPartNavigation';
+import { BomPageHeader } from '../bom/layout/BomPageHeader';
 import { shellLayout } from '../theme/hydraAlias';
 import { PageBackButton } from './PageBackButton';
 import { hydraBaseStrong } from '../theme/hydraTypography';
@@ -66,12 +67,10 @@ export function CatalogResults() {
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to="/catalog">Back to catalog</PageBackButton>
-      <Typography.Title level={3} style={{ margin: 0 }}>
-        {title}
-      </Typography.Title>
-      <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
-        {filtered.length} part{filtered.length !== 1 ? 's' : ''} match your search.
-      </Typography.Paragraph>
+      <BomPageHeader
+        title={title}
+        description={`${filtered.length} part${filtered.length !== 1 ? 's' : ''} match your search.`}
+      />
       {filtered.length === 0 ? (
         <Empty
           description={

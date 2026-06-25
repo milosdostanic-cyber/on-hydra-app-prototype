@@ -2,19 +2,19 @@ import { useEffect } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useActiveProject } from './context/ActiveProjectContext';
+import { BomRoutes } from './bom/BomRoutes';
+import { SeisBraceRoutes } from './seisbrace/SeisBraceRoutes';
+import { UnifiedPartDetailPage } from './search/UnifiedPartDetailPage';
+import { UnifiedSearchResultsPage } from './search/UnifiedSearchResultsPage';
 import { AppShell } from './shell/AppShell';
 import { CatalogHome } from './shell/CatalogHome';
 import {
   ContentModule,
   SalesBraceModule,
 } from './shell/ProjectModuleStubs';
-import { BomRoutes } from './bom/BomRoutes';
 import { HomeHubPage } from './shell/HomeHubPage';
 import { ProjectWorkspaceLayout } from './shell/ProjectWorkspaceLayout';
-import { SeisBraceRoutes } from './seisbrace/SeisBraceRoutes';
 import { SubmittalPackagesPage } from './submittal/SubmittalPackagesPage';
-import { UnifiedPartDetailPage } from './search/UnifiedPartDetailPage';
-import { UnifiedSearchResultsPage } from './search/UnifiedSearchResultsPage';
 
 /** Legacy catalog results route → unified search, preserving the query string. */
 function CatalogResultsRedirect() {

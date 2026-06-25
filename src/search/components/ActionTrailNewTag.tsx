@@ -1,6 +1,6 @@
-import { useActionTrail } from '../context/ActionTrailContext';
-import type { ActionTrailModule } from '../context/actionTrailStore';
-import { Tag } from '../ui/antd';
+import { useActionTrail } from '../../context/ActionTrailContext';
+import type { ActionTrailModule } from '../../context/actionTrailStore';
+import { Tag } from '../../ui/antd';
 
 type Props = {
   module: ActionTrailModule;

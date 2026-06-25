@@ -2,10 +2,12 @@ import { DownloadOutlined } from '@ant-design/icons';
 import { Link, useParams } from 'react-router-dom';
 
 import { catalogSubcategory } from '../../catalog/productCatalogHierarchy.demo';
+import { BomPageHeader } from '../../bom/layout/BomPageHeader';
 import { productCatalogHomePath, productCatalogLinePath } from '../../catalog/productCatalogNavigation';
 import { shellLayout } from '../../theme/hydraAlias';
 import { PageBackButton } from '../PageBackButton';
-import { Button, Flex, Space, Table, Typography, message, theme } from '../../ui/antd';
+import { PageDescription } from '../PageDescription';
+import { Button, Flex, Space, Table, message, theme } from '../../ui/antd';
 import type { TableColumnsType } from '../../ui/antd';
 import { HydraTag } from '../../ui/HydraTag';
 
@@ -63,41 +65,35 @@ export function SubcategoryHubPage() {
   ];
 
   if (!sub) {
-    return (
-      <Typography.Paragraph type="secondary">
-        Subcategory not found in prototype data.
-      </Typography.Paragraph>
-    );
+    return <PageDescription>Subcategory not found in prototype data.</PageDescription>;
   }
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to={productCatalogHomePath(projectId)}>Back to Home</PageBackButton>
-      <Flex align="flex-start" justify="space-between" gap={token.margin} wrap="wrap">
-        <Typography.Title level={3} style={{ margin: 0 }}>
-          {sub.label}
-        </Typography.Title>
-        <Flex align="center" gap={token.marginXS} wrap="wrap">
-          <Button type="text">
-            {sub.partCount} parts
-          </Button>
-          <Button
-            type="primary"
-            size="large"
-            icon={<DownloadOutlined />}
-            onClick={() => message.info('Stub: download would start.')}
-          >
-            Download All Content
-          </Button>
-          <Button
-            size="large"
-            icon={<DownloadOutlined />}
-            onClick={() => message.info('Stub: download would start.')}
-          >
-            Download Fabrication ITM Content
-          </Button>
-        </Flex>
-      </Flex>
+      <BomPageHeader
+        title={sub.label}
+        actions={
+          <Flex align="center" gap={token.marginXS} wrap="wrap">
+            <Button type="text">{sub.partCount} parts</Button>
+            <Button
+              type="primary"
+              size="large"
+              icon={<DownloadOutlined />}
+              onClick={() => message.info('Stub: download would start.')}
+            >
+              Download All Content
+            </Button>
+            <Button
+              size="large"
+              icon={<DownloadOutlined />}
+              onClick={() => message.info('Stub: download would start.')}
+            >
+              Download Fabrication ITM Content
+            </Button>
+          </Flex>
+        }
+      />
       <Table<HubRow>
         rowKey="key"
         pagination={

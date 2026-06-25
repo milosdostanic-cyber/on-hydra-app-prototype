@@ -14,14 +14,14 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useHydraColorMode } from '../context/HydraThemeContext';
-import { ActionTrailNavBadge } from '../search/components/ActionTrailNavBadge';
+import { ActionTrailMenuGuidanceTag } from '../search/components/ActionTrailMenuGuidanceTag';
 import { shellLayout } from '../theme/hydraAlias';
 import {
   hydraMenuItemBorderRadius,
   hydraSidebarCollapseTriggerTopPx,
 } from '../theme/hydraMenuMetrics';
 import { sidebarSemanticsFor } from '../theme/sidebarSemantics';
-import { Button, Layout, Menu, theme } from '../ui/antd';
+import { Button, Flex, Layout, Menu, theme } from '../ui/antd';
 import type { MenuProps } from '../ui/antd';
 
 import { ConnectedSidebarBrand } from './ConnectedSidebarBrand';
@@ -45,11 +45,40 @@ function primarySideKey(pathname: string): string {
   return 'dash';
 }
 
-const TRAIL_MENU_KEYS = new Set(['bom', 'submittal', 'spec', 'content']);
+/** Spec omitted until Add to Spec action ships (no registerEntry yet). */
+const TRAIL_MENU_KEYS = new Set(['bom', 'submittal', 'content']);
 
-function trailIcon(key: string, icon: ReactNode) {
-  if (!TRAIL_MENU_KEYS.has(key)) return icon;
-  return <ActionTrailNavBadge menuKey={key}>{icon}</ActionTrailNavBadge>;
+function trailMenuItem(
+  key: string,
+  icon: ReactNode,
+  labelText: string,
+  collapsed: boolean,
+  token: ReturnType<typeof theme.useToken>['token'],
+): NonNullable<MenuProps['items']>[number] {
+  const isTrail = TRAIL_MENU_KEYS.has(key);
+
+  if (!isTrail) {
+    return { key, icon, label: labelText };
+  }
+
+  if (collapsed) {
+    return {
+      key,
+      icon: <ActionTrailMenuGuidanceTag menuKey={key} variant="icon">{icon}</ActionTrailMenuGuidanceTag>,
+      label: labelText,
+    };
+  }
+
+  return {
+    key,
+    icon,
+    label: (
+      <Flex align="center" gap={token.marginXS} style={{ width: '100%' }}>
+        <span style={{ flex: '1 1 auto', minWidth: 0 }}>{labelText}</span>
+        <ActionTrailMenuGuidanceTag menuKey={key} variant="inline" />
+      </Flex>
+    ),
+  };
 }
 
 export function AppShellSidebar() {
@@ -65,13 +94,13 @@ export function AppShellSidebar() {
       { key: 'dash', icon: <HomeOutlined />, label: 'Homepage' },
       { key: 'part-search', icon: <SearchOutlined />, label: 'Part Search' },
       { key: 'seis', icon: <CalculatorOutlined />, label: 'SeisBrace' },
-      { key: 'spec', icon: trailIcon('spec', <FileTextOutlined />), label: 'Spec' },
-      { key: 'submittal', icon: trailIcon('submittal', <InboxOutlined />), label: 'Submittal' },
+      { key: 'spec', icon: <FileTextOutlined />, label: 'Spec' },
+      trailMenuItem('submittal', <InboxOutlined />, 'Submittal', collapsed, token),
       { key: 'catalog', icon: <GlobalOutlined />, label: 'Catalog' },
-      { key: 'bom', icon: trailIcon('bom', <UnorderedListOutlined />), label: 'BOM' },
-      { key: 'content', icon: trailIcon('content', <ReadOutlined />), label: 'Download Center' },
+      trailMenuItem('bom', <UnorderedListOutlined />, 'BOM', collapsed, token),
+      trailMenuItem('content', <ReadOutlined />, 'Download Center', collapsed, token),
     ],
-    [],
+    [collapsed, token],
   );
 
   const selectedMenuKeys = useMemo(() => [primarySideKey(location.pathname)], [location.pathname]);
@@ -142,6 +171,7 @@ export function AppShellSidebar() {
           <Menu
             theme="dark"
             mode="inline"
+            inlineCollapsed={collapsed}
             selectedKeys={selectedMenuKeys}
             items={primaryMenuItems}
             onClick={onMenuClick}

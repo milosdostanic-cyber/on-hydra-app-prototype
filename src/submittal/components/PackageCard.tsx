@@ -9,9 +9,10 @@ import {
   PlusOutlined,
   RightOutlined,
 } from '@ant-design/icons';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { useActionTrailHighlightActive } from '../../context/ActionTrailContext';
 import { useSubmittalPackages } from '../../context/SubmittalPackagesContext';
 import { ActionTrailNewTag } from '../../search/components/ActionTrailNewTag';
 import { actionTrailHighlightStyle } from '../../search/actionTrailStyles';
@@ -33,7 +34,6 @@ import type { SubmittalPackage, SubmittalPackagePart } from '../types';
 
 type Props = {
   pkg: SubmittalPackage;
-  highlighted?: boolean;
   onDownload: (pkg: SubmittalPackage) => void;
   onEdit: (pkg: SubmittalPackage) => void;
 };
@@ -45,8 +45,9 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
 });
 
 /** Collapsible submittal package card with a parts table + footer actions (ZIP `PackageCard`). */
-export function PackageCard({ pkg, highlighted = false, onDownload, onEdit }: Props) {
+export function PackageCard({ pkg, onDownload, onEdit }: Props) {
   const { token } = theme.useToken();
+  const highlighted = useActionTrailHighlightActive('submittal', pkg.id);
   const navigate = useNavigate();
   const { deletePackage, removePartFromPackage, movePart } = useSubmittalPackages();
   const [expanded, setExpanded] = useState(true);
@@ -163,6 +164,13 @@ export function PackageCard({ pkg, highlighted = false, onDownload, onEdit }: Pr
       }
       extra={
         <Space size={token.marginXS}>
+          <Tooltip title="Add part from search">
+            <Button
+              icon={<PlusOutlined />}
+              onClick={() => navigate('/search/results?q=all')}
+              aria-label="Add part from search"
+            />
+          </Tooltip>
           <Tooltip title="Download submittal PDF">
             <Button icon={<DownloadOutlined />} onClick={() => onDownload(pkg)} aria-label="Download" />
           </Tooltip>
@@ -194,17 +202,9 @@ export function PackageCard({ pkg, highlighted = false, onDownload, onEdit }: Pr
           ) : (
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description="No parts yet. Add cut sheets from search."
+              description="No parts yet. Use + above or add cut sheets from search."
             />
           )}
-          <Button
-            type="dashed"
-            icon={<PlusOutlined />}
-            onClick={() => navigate('/search/results?q=all')}
-            style={{ alignSelf: 'flex-start' }}
-          >
-            Add part from search
-          </Button>
         </Space>
       )}
     </Card>

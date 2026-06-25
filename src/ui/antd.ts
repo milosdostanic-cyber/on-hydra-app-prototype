@@ -72,5 +72,5 @@ export type {
   TabsProps,
 } from 'antd';
 
-export { AppSearchInput } from './AppSearchInput';
+export { AppSearchInput, INLINE_SEARCH_CONTROL_SIZE } from './AppSearchInput';
 export type { AppSearchInputProps } from './AppSearchInput';

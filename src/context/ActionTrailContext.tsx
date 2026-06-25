@@ -4,9 +4,12 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useSyncExternalStore,
   type ReactNode,
 } from 'react';
+
+import { ActionTrailLiveRegion } from '../search/components/ActionTrailLiveRegion';
 
 import {
   actionTrailModuleForMenuKey,
@@ -90,7 +93,12 @@ export function ActionTrailProvider({ children }: { children: ReactNode }) {
     [state.enabled, state.entries, countForModuleCb, countForMenuKey],
   );
 
-  return <ActionTrailContext.Provider value={value}>{children}</ActionTrailContext.Provider>;
+  return (
+    <ActionTrailContext.Provider value={value}>
+      <ActionTrailLiveRegion />
+      {children}
+    </ActionTrailContext.Provider>
+  );
 }
 
 export function useActionTrail(): ActionTrailContextValue {
@@ -99,13 +107,22 @@ export function useActionTrail(): ActionTrailContextValue {
   return ctx;
 }
 
-/** Mark module guidance consumed on mount; clear item "New" tags on unmount. */
+/** Mark module guidance consumed on mount; clear item "New" tags on real unmount (Strict Mode safe). */
 export function useActionTrailModuleLifecycle(module: ActionTrailModule) {
   const { consumeForModule, clearNewTagsForModule } = useActionTrail();
+  const visitGeneration = useRef(0);
 
   useEffect(() => {
+    visitGeneration.current += 1;
+    const generation = visitGeneration.current;
     consumeForModule(module);
-    return () => clearNewTagsForModule(module);
+    return () => {
+      queueMicrotask(() => {
+        if (visitGeneration.current === generation) {
+          clearNewTagsForModule(module);
+        }
+      });
+    };
   }, [module, consumeForModule, clearNewTagsForModule]);
 }
 

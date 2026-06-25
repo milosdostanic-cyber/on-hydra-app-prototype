@@ -329,17 +329,18 @@ export function BomAscProductsPage() {
           <Flex align="center" justify="space-between" gap={token.marginSM} wrap="wrap">
             <AppSearchInput
               allowClear
+              size="middle"
               placeholder="Search by description, ASC #, figure number, brand..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{ width: 420, maxWidth: '100%' }}
             />
             <Space size={token.marginXS} wrap>
-              <Button icon={<FilterOutlined />} onClick={openFilterDrawer}>
+              <Button size="middle" icon={<FilterOutlined />} onClick={openFilterDrawer}>
                 Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
               </Button>
               {activeFilterCount > 0 ? (
-                <Button onClick={clearAppliedFilters}>Clear</Button>
+                <Button size="middle" onClick={clearAppliedFilters}>Clear</Button>
               ) : null}
               <Typography.Text
                 type="secondary"

@@ -6,7 +6,7 @@ import { BomCardTitle } from '../components/BomCardTitle';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { useBomHubPath } from '../../context/ActiveProjectContext';
 import { PageBackButton } from '../../shell/PageBackButton';
-import { AppSearchInput, Button, Card, Flex, Radio, Space, Typography, message, theme } from '../../ui/antd';
+import { AppSearchInput, INLINE_SEARCH_CONTROL_SIZE, Button, Card, Flex, Radio, Space, Typography, message, theme } from '../../ui/antd';
 
 type BomSearchMode = 'competitor' | 'asc';
 
@@ -82,7 +82,7 @@ export function BomSearchPage() {
 
           <AppSearchInput
             allowClear
-            size="large"
+            size={INLINE_SEARCH_CONTROL_SIZE}
             placeholder={
               mode === 'asc'
                 ? 'Example: FP7450 or standard response sprinkler'

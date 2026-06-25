@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { bomSitePath, useActiveProject } from '../../context/ActiveProjectContext';
+import { bomSitePath, resolveActiveConstructionProjectId, useActiveProject } from '../../context/ActiveProjectContext';
 import { mappingStepStatusLabel } from '../bomUploadFlowStatus';
 import {
   ASC_FIELD_MAPPING_TOTAL,
@@ -139,7 +139,7 @@ export function BomMappingSummaryPage() {
   const alertCopy = confidenceAlertCopy(confidence, mappedCount, duplicateColumns.size, fieldMapping);
 
   const projectMeta = bomProjectById(bomProjectId);
-  const bomBackTarget = bomSitePath(projectId);
+  const bomBackTarget = bomSitePath(resolveActiveConstructionProjectId(projectId));
   const flowBackTo = uploadState.uploadFlowBackTo ?? bomBackTarget;
   const flowBackLabel = uploadState.uploadFlowBackLabel ?? 'Back to BOM';
   const advancedMappingRoute = bomAdvancedFieldMappingRoute(bomProjectId);

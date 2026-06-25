@@ -14,6 +14,7 @@ import type { MenuProps } from '../ui/antd';
 import { hydraMenuItemBorderRadius } from '../theme/hydraMenuMetrics';
 import { shellLayout } from '../theme/hydraAlias';
 import { setLastScopedProjectId } from './lastProjectScope';
+import { pageDescriptionStyle } from './pageDescriptionStyle';
 import { projectTitleById } from './projectSeed';
 
 const { Sider, Content } = Layout;
@@ -91,7 +92,7 @@ export function ProjectWorkspaceLayout() {
             Home
           </Button>
           <Typography.Text strong>{title}</Typography.Text>
-          <Typography.Paragraph type="secondary" style={{ marginBottom: 0, marginTop: token.marginXXS }}>
+          <Typography.Paragraph style={{ ...pageDescriptionStyle(token), marginTop: token.marginXXS }}>
             Modules for this project
           </Typography.Paragraph>
         </div>

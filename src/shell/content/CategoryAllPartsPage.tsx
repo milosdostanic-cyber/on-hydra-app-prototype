@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 
 import { CatalogThumbnailPlaceholder } from '../../catalog/CatalogThumbnailPlaceholder';
 import { flattenLeafPartsInCategory, catalogCategoryById } from '../../catalog/productCatalogHierarchy.demo';
+import { BomPageHeader } from '../../bom/layout/BomPageHeader';
 import { productCatalogHomePath, productCatalogPartVariantsPath } from '../../catalog/productCatalogNavigation';
 import { shellLayout } from '../../theme/hydraAlias';
 import { PageBackButton } from '../PageBackButton';
@@ -91,33 +92,31 @@ export function CategoryAllPartsPage() {
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to={productCatalogHomePath(projectId)}>Back to Home</PageBackButton>
-      <Flex align="flex-start" justify="space-between" gap={token.margin} wrap="wrap">
-        <Typography.Title level={3} style={{ margin: 0 }}>
-          {categoryTitle}
-        </Typography.Title>
-        {cat ? (
-          <Flex align="center" gap={token.marginXS} wrap="wrap">
-            <HydraTag tone="processing">
-              {cat.totalParts} parts
-            </HydraTag>
-            <Button
-              type="primary"
-              size="large"
-              icon={<DownloadOutlined />}
-              onClick={() => message.info('Stub: download would start.')}
-            >
-              Download All Content
-            </Button>
-            <Button
-              size="large"
-              icon={<DownloadOutlined />}
-              onClick={() => message.info('Stub: download would start.')}
-            >
-              Download Fabrication ITM Content
-            </Button>
-          </Flex>
-        ) : null}
-      </Flex>
+      <BomPageHeader
+        title={categoryTitle}
+        actions={
+          cat ? (
+            <Flex align="center" gap={token.marginXS} wrap="wrap">
+              <HydraTag tone="processing">{cat.totalParts} parts</HydraTag>
+              <Button
+                type="primary"
+                size="large"
+                icon={<DownloadOutlined />}
+                onClick={() => message.info('Stub: download would start.')}
+              >
+                Download All Content
+              </Button>
+              <Button
+                size="large"
+                icon={<DownloadOutlined />}
+                onClick={() => message.info('Stub: download would start.')}
+              >
+                Download Fabrication ITM Content
+              </Button>
+            </Flex>
+          ) : undefined
+        }
+      />
       {rows.length === 0 ? (
         <Empty
           description={

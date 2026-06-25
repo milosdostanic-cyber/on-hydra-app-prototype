@@ -2,7 +2,7 @@ import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useActiveProject, useBomHubPath } from '../../context/ActiveProjectContext';
+import { useActiveProject, resolveActiveConstructionProjectId, useBomHubPath } from '../../context/ActiveProjectContext';
 import { useBomWorkspace } from '../../context/BomWorkspaceContext';
 import { buildImportedWorkspaceRows, resolveImportBomProjectId } from '../bomFinishImport';
 import { computeMatchingReviewSummary } from '../bomMatchingReviewStatus';
@@ -54,7 +54,7 @@ export function useBomFinishImport({
     const targetProjectId = resolveImportBomProjectId(
       bomProjectId,
       uploadState,
-      constructionProjectId,
+      resolveActiveConstructionProjectId(constructionProjectId),
       uploadFileName,
     );
     const parsedItems = session?.parsedItems ?? [];

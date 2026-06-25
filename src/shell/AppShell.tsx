@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Outlet, useLocation, useParams } from 'react-router-dom';
 
-import { useActiveProject } from '../context/ActiveProjectContext';
+import { useActiveProject, resolveActiveConstructionProjectId } from '../context/ActiveProjectContext';
 import { Breadcrumb, Layout, theme } from '../ui/antd';
 
 import { buildAppBreadcrumbItems } from './buildAppBreadcrumbItems';
@@ -34,7 +34,9 @@ export function AppShell() {
       buildAppBreadcrumbItems({
         pathname: location.pathname,
         projectId: params.projectId,
-        constructionProjectId: params.constructionProjectId ?? activeConstructionProjectId ?? undefined,
+        constructionProjectId:
+          params.constructionProjectId ??
+          resolveActiveConstructionProjectId(activeConstructionProjectId),
         partId: params.partId,
         itemId: params.itemId,
         swapRowId: locationState.swapRowId,

@@ -16,6 +16,8 @@ export type BomWorkspaceRowActions = {
   bomProjectId: string;
   onDelete: (row: BomItem) => void;
   onQuantityChange: (row: BomItem, quantity: number) => void;
+  /** Hide per-row Actions when bulk selection toolbar is active (default true). */
+  showRowActions?: boolean;
 };
 
 function FigureLink({ row, bomProjectId }: { row: BomItem; bomProjectId: string }) {
@@ -38,7 +40,9 @@ function FigureLink({ row, bomProjectId }: { row: BomItem; bomProjectId: string 
 }
 
 export function buildBomWorkspaceColumns(actions: BomWorkspaceRowActions): TableColumnsType<BomItem> {
-  return [
+  const showRowActions = actions.showRowActions !== false;
+
+  const columns: TableColumnsType<BomItem> = [
     {
       title: '#',
       dataIndex: 'rowNumber',
@@ -83,7 +87,10 @@ export function buildBomWorkspaceColumns(actions: BomWorkspaceRowActions): Table
         />
       ),
     },
-    {
+  ];
+
+  if (showRowActions) {
+    columns.push({
       title: 'Actions',
       key: 'actions',
       width: bomWorkspaceTableColumnWidths.actions,
@@ -99,6 +106,8 @@ export function buildBomWorkspaceColumns(actions: BomWorkspaceRowActions): Table
           Delete
         </Button>
       ),
-    },
-  ];
+    });
+  }
+
+  return columns;
 }

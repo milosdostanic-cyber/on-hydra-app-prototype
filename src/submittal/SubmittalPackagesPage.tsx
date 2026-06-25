@@ -1,12 +1,12 @@
 import { PlusOutlined } from '@ant-design/icons';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { BomPageHeader } from '../bom/layout/BomPageHeader';
 import { useActionTrail, useActionTrailModuleLifecycle } from '../context/ActionTrailContext';
 import { useSubmittalPackages } from '../context/SubmittalPackagesContext';
 import { PageBackButton } from '../shell/PageBackButton';
-import { Button, Empty, Space, Typography, theme } from '../ui/antd';
+import { Button, Empty, Space, Tooltip, Typography, theme } from '../ui/antd';
 import { PackageCard } from './components/PackageCard';
 import { PackageCreateEditModal } from './components/PackageCreateEditModal';
 import { PdfPreviewModal } from './components/PdfPreviewModal';
@@ -21,16 +21,6 @@ export function SubmittalPackagesPage() {
   const { token } = theme.useToken();
   const { projectId = '' } = useParams<{ projectId: string }>();
   useActionTrailModuleLifecycle('submittal');
-  const { entries } = useActionTrail();
-  const highlightedPackageIds = useMemo(
-    () =>
-      new Set(
-        entries
-          .filter((e) => e.module === 'submittal' && e.newTagActive)
-          .map((e) => e.subProjectId),
-      ),
-    [entries],
-  );
   const { packagesForProject, createPackage, updatePackage } = useSubmittalPackages();
   const packages = packagesForProject(projectId);
 
@@ -46,9 +36,14 @@ export function SubmittalPackagesPage() {
         title="Submittal packages"
         description="Group cut sheets into packages, then preview and download the submittal PDF."
         actions={
-          <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
-            New package
-          </Button>
+          <Tooltip title="New package">
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => setCreateOpen(true)}
+              aria-label="New package"
+            />
+          </Tooltip>
         }
       />
 
@@ -58,7 +53,6 @@ export function SubmittalPackagesPage() {
             <PackageCard
               key={pkg.id}
               pkg={pkg}
-              highlighted={highlightedPackageIds.has(pkg.id)}
               onDownload={setPreviewing}
               onEdit={setEditing}
             />
@@ -75,9 +69,14 @@ export function SubmittalPackagesPage() {
             </Space>
           }
         >
-          <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
-            New package
-          </Button>
+          <Tooltip title="New package">
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => setCreateOpen(true)}
+              aria-label="New package"
+            />
+          </Tooltip>
         </Empty>
       )}
 

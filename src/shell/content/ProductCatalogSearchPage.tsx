@@ -9,6 +9,7 @@ import {
   productCatalogSearchPath,
 } from '../../catalog/productCatalogNavigation';
 import { shellLayout } from '../../theme/hydraAlias';
+import { BomPageHeader } from '../../bom/layout/BomPageHeader';
 import { PageBackButton } from '../PageBackButton';
 import { Button, Empty, Flex, Pagination, Space, Table, Typography, theme } from '../../ui/antd';
 import type { TableColumnsType } from '../../ui/antd';
@@ -96,12 +97,10 @@ export function ProductCatalogSearchPage() {
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to={productCatalogHomePath(projectId)}>Back to Home</PageBackButton>
-      <Typography.Title level={3} style={{ margin: 0 }}>
-        {title}
-      </Typography.Title>
-      <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
-        {rows.length} part{rows.length !== 1 ? 's' : ''} match in the prototype catalog.
-      </Typography.Paragraph>
+      <BomPageHeader
+        title={title}
+        description={`${rows.length} part${rows.length !== 1 ? 's' : ''} match in the prototype catalog.`}
+      />
       {rows.length === 0 ? (
         <Empty
           description={

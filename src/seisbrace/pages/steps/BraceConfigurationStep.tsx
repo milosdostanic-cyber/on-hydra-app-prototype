@@ -9,6 +9,7 @@ import {
 import { useSeisBrace } from '../../context/SeisBraceContext';
 import { useSeisBraceWizard } from '../../context/SeisBraceWizardContext';
 import { WizardFooter } from '../../components/WizardFooter';
+import { PageDescription } from '../../../shell/PageDescription';
 import { draftToBraceFields, seismicDesignForce, totalZoiWeight } from '../../utils/draft';
 import {
   App,
@@ -153,9 +154,9 @@ export function BraceConfigurationStep() {
         <Typography.Title level={4} style={{ margin: 0 }}>
           Define Brace Type and Zone of Influence
         </Typography.Title>
-        <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
+        <PageDescription>
           Choose the brace orientation, then describe the pipe segments in the zone of influence.
-        </Typography.Paragraph>
+        </PageDescription>
       </div>
 
       <Card size="small" title="Brace Orientation">

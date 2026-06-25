@@ -11,7 +11,7 @@ import type { CSSProperties, Key } from 'react';
 
 import { useActiveProject, useBomHubPath } from '../../context/ActiveProjectContext';
 import { useActionTrail } from '../../context/ActionTrailContext';
-import { actionTrailHighlightStyle } from '../../search/actionTrailStyles';
+import { actionTrailTableRowProps } from '../../search/actionTrailStyles';
 import { BomCreateProjectModal } from '../components/BomCreateProjectModal';
 import { BomUploadDestinationModal } from '../components/BomUploadDestinationModal';
 import { BomPageHeader } from '../layout/BomPageHeader';
@@ -66,13 +66,10 @@ export function BomSiteProjectsPage() {
   const { constructionProjectId = '' } = useParams<{ constructionProjectId: string }>();
   const { setProjectId, project } = useActiveProject();
   const bomHubPath = useBomHubPath();
-  const { entries } = useActionTrail();
+  const { entries, pendingSubProjectIds } = useActionTrail();
   const highlightedProjectIds = useMemo(
-    () =>
-      new Set(
-        entries.filter((e) => e.module === 'bom' && e.newTagActive).map((e) => e.subProjectId),
-      ),
-    [entries],
+    () => new Set(pendingSubProjectIds('bom')),
+    [entries, pendingSubProjectIds],
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -219,78 +216,86 @@ export function BomSiteProjectsPage() {
 
   const tableLinkButtonStyle = { padding: 0, height: 'auto' as const };
 
-  const columns: TableColumnsType<BomProject> = [
-    {
-      title: 'Project name',
-      dataIndex: 'name',
-      key: 'name',
-      render: (name: string, row) => (
-        <Button
-          type="link"
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/bom/projects/${row.id}/workspace`);
-          }}
-          style={tableLinkButtonStyle}
-        >
-          {name}
-        </Button>
-      ),
-    },
-    {
-      title: 'Last edited',
-      dataIndex: 'lastEdited',
-      key: 'lastEdited',
-      sorter: (a, b) => new Date(a.lastEdited).getTime() - new Date(b.lastEdited).getTime(),
-    },
-    {
-      title: 'Items',
-      dataIndex: 'items',
-      key: 'items',
-      align: 'center',
-      sorter: (a, b) => a.items - b.items,
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      align: 'left',
-      render: (_status: BomProject['status'], row: BomProject) => (
-        <BomProjectStatusTag status={resolveBomProjectStatus(row.id)} />
-      ),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      width: 150,
-      render: (_: unknown, row: BomProject) => (
-        <Space size={token.marginSM}>
+  const columns: TableColumnsType<BomProject> = useMemo(() => {
+    const base: TableColumnsType<BomProject> = [
+      {
+        title: 'Project name',
+        dataIndex: 'name',
+        key: 'name',
+        render: (name: string, row) => (
           <Button
             type="link"
-            style={tableLinkButtonStyle}
             onClick={(e) => {
               e.stopPropagation();
               navigate(`/bom/projects/${row.id}/workspace`);
             }}
-          >
-            Edit
-          </Button>
-          <Button
-            type="link"
-            danger
             style={tableLinkButtonStyle}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              openDeleteProjectModal(row);
-            }}
           >
-            Delete
+            {name}
           </Button>
-        </Space>
-      ),
-    },
-  ];
+        ),
+      },
+      {
+        title: 'Last edited',
+        dataIndex: 'lastEdited',
+        key: 'lastEdited',
+        sorter: (a, b) => new Date(a.lastEdited).getTime() - new Date(b.lastEdited).getTime(),
+      },
+      {
+        title: 'Items',
+        dataIndex: 'items',
+        key: 'items',
+        align: 'center',
+        sorter: (a, b) => a.items - b.items,
+      },
+      {
+        title: 'Status',
+        dataIndex: 'status',
+        key: 'status',
+        align: 'left',
+        render: (_status: BomProject['status'], row: BomProject) => (
+          <BomProjectStatusTag status={resolveBomProjectStatus(row.id)} />
+        ),
+      },
+    ];
+
+    if (hasSelection) return base;
+
+    return [
+      ...base,
+      {
+        title: 'Actions',
+        key: 'actions',
+        width: 150,
+        render: (_: unknown, row: BomProject) => (
+          <Space size={token.marginSM}>
+            <Button
+              type="link"
+              style={tableLinkButtonStyle}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/bom/projects/${row.id}/workspace`);
+              }}
+            >
+              Edit
+            </Button>
+            <Button
+              type="link"
+              danger
+              style={tableLinkButtonStyle}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                openDeleteProjectModal(row);
+              }}
+            >
+              Delete
+            </Button>
+          </Space>
+        ),
+      },
+    ];
+  }, [hasSelection, navigate, token.marginSM]);
 
   const triggerUpload = () => fileInputRef.current?.click();
 
@@ -575,9 +580,9 @@ export function BomSiteProjectsPage() {
                   columns={columns}
                   dataSource={paginatedProjects}
                   pagination={false}
-                  onRow={(record) => ({
-                    style: actionTrailHighlightStyle(token, highlightedProjectIds.has(record.id)),
-                  })}
+                  onRow={(record) =>
+                    actionTrailTableRowProps(token, highlightedProjectIds.has(record.id))
+                  }
                   rowSelection={{
                     selectedRowKeys,
                     onChange: (keys) => setSelectedRowKeys(keys),

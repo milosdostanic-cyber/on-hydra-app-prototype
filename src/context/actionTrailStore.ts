@@ -13,6 +13,8 @@ export type GuidanceEntry = {
   partCount: number;
   createdAt: string;
   seen: boolean;
+  /** True after the user leaves the destination module — suppresses repeat highlights. */
+  highlightDismissed: boolean;
   /** True after the user opens the destination module — drives "New" tags until next visit. */
   newTagActive: boolean;
 };
@@ -45,7 +47,13 @@ function readState(): StoreState {
     const parsed = JSON.parse(raw) as StoreState;
     if (!parsed || typeof parsed !== 'object') return DEFAULT_STATE;
     return {
-      entries: Array.isArray(parsed.entries) ? parsed.entries : [],
+      entries: Array.isArray(parsed.entries)
+        ? parsed.entries.map((entry) => ({
+            ...entry,
+            highlightDismissed: entry.highlightDismissed === true,
+            newTagActive: entry.newTagActive === true,
+          }))
+        : [],
       enabled: parsed.enabled !== false,
     };
   } catch {
@@ -124,6 +132,7 @@ export function registerEntry(input: RegisterEntryInput) {
       partCount: input.partCount ?? 1,
       createdAt: new Date().toISOString(),
       seen: false,
+      highlightDismissed: false,
       newTagActive: false,
     };
     return { ...prev, entries: [...prev.entries, entry] };
@@ -169,8 +178,11 @@ export function consumeForModule(module: ActionTrailModule, subProjectId?: strin
     entries: prev.entries.map((e) => {
       if (e.module !== module) return e;
       if (subProjectId && e.subProjectId !== subProjectId) return e;
-      if (e.seen) return e;
-      return { ...e, seen: true, newTagActive: true };
+      return {
+        ...e,
+        seen: true,
+        newTagActive: !e.highlightDismissed,
+      };
     }),
   }));
 }
@@ -179,7 +191,9 @@ export function clearNewTagsForModule(module: ActionTrailModule) {
   setState((prev) => ({
     ...prev,
     entries: prev.entries.map((e) =>
-      e.module === module ? { ...e, newTagActive: false } : e,
+      e.module === module
+        ? { ...e, newTagActive: false, highlightDismissed: true }
+        : e,
     ),
   }));
 }

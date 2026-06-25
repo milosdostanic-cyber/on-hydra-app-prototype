@@ -10,6 +10,7 @@ import { useActiveProject } from '../../../context/ActiveProjectContext';
 import { useSeisBrace } from '../../context/SeisBraceContext';
 import { useSeisBraceWizard } from '../../context/SeisBraceWizardContext';
 import { WizardFooter } from '../../components/WizardFooter';
+import { PageDescription } from '../../../shell/PageDescription';
 import { App, DatePicker, Form, Input, Select, Space, Typography, theme } from '../../../ui/antd';
 
 export function SeismicDesignStep() {
@@ -67,9 +68,9 @@ export function SeismicDesignStep() {
         <Typography.Title level={4} style={{ margin: 0 }}>
           Seismic Design Setup
         </Typography.Title>
-        <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
+        <PageDescription>
           Name the design and set the governing code, units, and load basis.
-        </Typography.Paragraph>
+        </PageDescription>
       </div>
 
       <Form

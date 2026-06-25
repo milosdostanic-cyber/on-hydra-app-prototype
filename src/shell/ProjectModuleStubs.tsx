@@ -1,4 +1,4 @@
-import { FilePdfOutlined, FolderOpenOutlined, UploadOutlined } from '@ant-design/icons';
+import { FilePdfOutlined, FolderOpenOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -22,6 +22,7 @@ import {
   List,
   Row,
   Space,
+  Tooltip,
   Typography,
   theme,
 } from '../ui/antd';
@@ -45,16 +46,12 @@ export function ContentModule() {
   const { projectId = '' } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   useActionTrailModuleLifecycle('content');
-  const { entries } = useActionTrail();
+  const { entries, pendingItemIds } = useActionTrail();
   const trailItemIds = useMemo(
-    () =>
-      new Set(
-        entries
-          .filter((e) => e.module === 'content' && e.subProjectId === projectId && e.newTagActive)
-          .flatMap((e) => e.itemIds),
-      ),
-    [entries, projectId],
+    () => new Set(pendingItemIds('content', projectId)),
+    [entries, pendingItemIds, projectId],
   );
+  const showHistoryHighlight = trailItemIds.size > 0;
   const title = projectTitleById(projectId) ?? 'Project';
   const { historyForProject } = useDownloadHistory();
   const projectHistory = historyForProject(projectId);
@@ -65,10 +62,21 @@ export function ContentModule() {
 
       <BomPageHeader
         title="Download Center"
-        description={`${title} · Content downloads require project context before queuing.`}
+        description={`${title} · Queued files from part search and detail. Direct downloads do not appear here.`}
+        actions={
+          <Tooltip title="Search parts">
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate('/search/results?q=all')}
+              aria-label="Search parts"
+            />
+          </Tooltip>
+        }
       />
 
       <Card
+        style={actionTrailHighlightStyle(token, showHistoryHighlight)}
         title={
           <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraTitleHeading4) }}>
             Download history
@@ -82,7 +90,7 @@ export function ContentModule() {
         {projectHistory.length === 0 ? (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description="No downloads queued yet for this project. Add files from part detail or search."
+            description="No downloads queued yet. Use + above or add files from part detail."
           />
         ) : (
           <List
@@ -90,7 +98,7 @@ export function ContentModule() {
             dataSource={projectHistory.slice(0, 20)}
             renderItem={(item) => (
               <List.Item style={actionTrailHighlightStyle(token, trailItemIds.has(item.id))}>
-                <Flex vertical gap={2} style={{ minWidth: 0, width: '100%' }}>
+                <Flex vertical gap={token.marginXXS} style={{ minWidth: 0, width: '100%' }}>
                   <Flex align="center" gap={token.marginXS} wrap="wrap">
                     <Typography.Text strong ellipsis>
                       {item.fileName}
@@ -108,40 +116,58 @@ export function ContentModule() {
         )}
       </Card>
 
-      <Row gutter={[token.marginMD, token.marginMD]}>
-        <Col xs={24} md={8}>
-          <Card size="small" title="BOM">
-            <Typography.Paragraph type="secondary">3 runs · 85% matched</Typography.Paragraph>
-            <Button type="link" onClick={() => navigate('/bom')} style={{ padding: 0, height: 'auto' }}>
-              Open BOM
-            </Button>
-          </Card>
-        </Col>
-        <Col xs={24} md={8}>
-          <Card size="small" title="Submittal" extra={<FilePdfOutlined />}>
-            <Typography.Paragraph type="secondary">12 docs · 2 pending</Typography.Paragraph>
-            <Button
-              type="link"
-              onClick={() => navigate(`/projects/${projectId}/submittal`)}
-              style={{ padding: 0, height: 'auto' }}
-            >
-              Open submittal
-            </Button>
-          </Card>
-        </Col>
-        <Col xs={24} md={8}>
-          <Card size="small" title="SeisBrace">
-            <Typography.Paragraph type="secondary">Setup module</Typography.Paragraph>
-            <Button
-              type="link"
-              onClick={() => navigate(`/projects/${projectId}/seis-brace`)}
-              style={{ padding: 0, height: 'auto' }}
-            >
-              Open SeisBrace
-            </Button>
-          </Card>
-        </Col>
-      </Row>
+      <Card
+        title={
+          <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraTitleHeading4) }}>
+            Related modules
+          </Typography.Text>
+        }
+        styles={{
+          header: { borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}` },
+          body: { padding: token.paddingMD },
+        }}
+      >
+        <Row gutter={[token.marginMD, token.marginMD]}>
+          <Col xs={24} sm={8}>
+            <Flex vertical gap={token.marginXS}>
+              <Typography.Text strong>BOM</Typography.Text>
+              <Typography.Text type="secondary">3 runs · 85% matched</Typography.Text>
+              <Button type="link" onClick={() => navigate('/bom')} style={{ padding: 0, height: 'auto', alignSelf: 'flex-start' }}>
+                Open BOM
+              </Button>
+            </Flex>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Flex vertical gap={token.marginXS}>
+              <Flex align="center" gap={token.marginXXS}>
+                <Typography.Text strong>Submittal</Typography.Text>
+                <FilePdfOutlined style={{ color: token.colorTextSecondary }} />
+              </Flex>
+              <Typography.Text type="secondary">12 docs · 2 pending</Typography.Text>
+              <Button
+                type="link"
+                onClick={() => navigate(`/projects/${projectId}/submittal`)}
+                style={{ padding: 0, height: 'auto', alignSelf: 'flex-start' }}
+              >
+                Open submittal
+              </Button>
+            </Flex>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Flex vertical gap={token.marginXS}>
+              <Typography.Text strong>SeisBrace</Typography.Text>
+              <Typography.Text type="secondary">Setup module</Typography.Text>
+              <Button
+                type="link"
+                onClick={() => navigate(`/projects/${projectId}/seis-brace`)}
+                style={{ padding: 0, height: 'auto', alignSelf: 'flex-start' }}
+              >
+                Open SeisBrace
+              </Button>
+            </Flex>
+          </Col>
+        </Row>
+      </Card>
 
       <Card
         title={
@@ -154,21 +180,21 @@ export function ContentModule() {
           body: { padding: token.paddingMD },
         }}
       >
-        <Flex gap={token.marginSM} wrap="wrap">
-          <Button type="primary" size="large" icon={<UploadOutlined />} onClick={() => navigate('/bom')}>
-            Upload BOM
-          </Button>
-          <Button size="large" onClick={() => navigate('/search/results?q=all')}>
-            Part Search
-          </Button>
-          <Button
-            size="large"
-            icon={<FolderOpenOutlined />}
-            onClick={() => navigate(`/projects/${projectId}/submittal`)}
-          >
-            New submittal
-          </Button>
-        </Flex>
+        <Space size={token.marginSM} wrap>
+          <Tooltip title="Upload BOM">
+            <Button type="default" icon={<UploadOutlined />} onClick={() => navigate('/bom')} aria-label="Upload BOM" />
+          </Tooltip>
+          <Tooltip title="Part search">
+            <Button icon={<FolderOpenOutlined />} onClick={() => navigate('/search/results?q=all')} aria-label="Part search" />
+          </Tooltip>
+          <Tooltip title="New submittal package">
+            <Button
+              icon={<PlusOutlined />}
+              onClick={() => navigate(`/projects/${projectId}/submittal`)}
+              aria-label="New submittal package"
+            />
+          </Tooltip>
+        </Space>
       </Card>
     </Space>
   );

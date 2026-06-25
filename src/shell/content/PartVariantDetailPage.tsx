@@ -15,7 +15,9 @@ import {
   type DemoPartFamilyDetail,
 } from '../../catalog/productCatalogHierarchy.demo';
 import { productCatalogPartVariantsPath } from '../../catalog/productCatalogNavigation';
+import { BomPageHeader } from '../../bom/layout/BomPageHeader';
 import { PageBackButton } from '../PageBackButton';
+import { PageDescription } from '../PageDescription';
 import {
   Badge,
   Button,
@@ -133,7 +135,7 @@ export function PartVariantDetailPage() {
   );
 
   if (!view || !effectiveDetail) {
-    return <Typography.Paragraph type="secondary">Variant not found.</Typography.Paragraph>;
+    return <PageDescription>Variant not found.</PageDescription>;
   }
 
   const { partTitle, resolved } = view;
@@ -146,10 +148,8 @@ export function PartVariantDetailPage() {
       <PageBackButton to={backTo}>Back to Parts</PageBackButton>
       <Flex gap={token.marginLG} align="flex-start" wrap="wrap">
         <Space orientation="vertical" size={token.marginSM} style={{ flex: '1 1 280px', minWidth: 0 }}>
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            {partTitle}
-          </Typography.Title>
-          <Typography.Text type="secondary">{modelCode}</Typography.Text>
+          <BomPageHeader title={partTitle} />
+          <PageDescription>{modelCode}</PageDescription>
           <Flex gap={token.marginSM} wrap="wrap" align="center">
             <Button
               type="primary"
@@ -196,9 +196,9 @@ export function PartVariantDetailPage() {
       </Card>
 
       <Card title="Available Sizes & Variations" styles={{ header: { borderBottom: 'none' } }}>
-        <Typography.Paragraph type="secondary" style={{ marginBottom: token.marginMD }}>
+        <PageDescription style={{ marginBottom: token.marginMD }}>
           {effectiveDetail.sizeVariationIntro}
-        </Typography.Paragraph>
+        </PageDescription>
         <Table<SizeRow>
           rowKey="key"
           pagination={false}

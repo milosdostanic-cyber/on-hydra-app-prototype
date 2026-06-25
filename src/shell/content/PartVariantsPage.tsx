@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { CatalogThumbnailPlaceholder } from '../../catalog/CatalogThumbnailPlaceholder';
 import { catalogLeafPart } from '../../catalog/productCatalogHierarchy.demo';
+import { BomPageHeader } from '../../bom/layout/BomPageHeader';
+import { PageDescription } from '../PageDescription';
 import {
   productCatalogLinePath,
   productCatalogVariantDetailPath,
@@ -76,7 +78,7 @@ export function PartVariantsPage() {
   ];
 
   if (!part) {
-    return <Typography.Paragraph type="secondary">Part not found.</Typography.Paragraph>;
+    return <PageDescription>Part not found.</PageDescription>;
   }
 
   const linePath = productCatalogLinePath(projectId, categoryId, subcategoryId, productLineId);
@@ -99,29 +101,29 @@ export function PartVariantsPage() {
       >
         Back
       </Button>
-      <Flex align="flex-start" justify="space-between" gap={token.margin} wrap="wrap">
-        <Typography.Title level={3} style={{ margin: 0 }}>
-          {part.name}
-        </Typography.Title>
-        <Flex align="center" gap={token.marginXS} wrap="wrap">
-          <HydraTag>{part.variants.length} parts</HydraTag>
-          <Button
-            type="primary"
-            size="large"
-            icon={<DownloadOutlined />}
-            onClick={() => message.info('Stub: download would start.')}
-          >
-            Download Fabrication BIM Content
-          </Button>
-          <Button
-            size="large"
-            icon={<DownloadOutlined />}
-            onClick={() => message.info('Stub: download would start.')}
-          >
-            Download All Content
-          </Button>
-        </Flex>
-      </Flex>
+      <BomPageHeader
+        title={part.name}
+        actions={
+          <Flex align="center" gap={token.marginXS} wrap="wrap">
+            <HydraTag>{part.variants.length} parts</HydraTag>
+            <Button
+              type="primary"
+              size="large"
+              icon={<DownloadOutlined />}
+              onClick={() => message.info('Stub: download would start.')}
+            >
+              Download Fabrication BIM Content
+            </Button>
+            <Button
+              size="large"
+              icon={<DownloadOutlined />}
+              onClick={() => message.info('Stub: download would start.')}
+            >
+              Download All Content
+            </Button>
+          </Flex>
+        }
+      />
       <Typography.Title level={5} type="secondary" style={{ margin: 0 }}>
         Parts
       </Typography.Title>

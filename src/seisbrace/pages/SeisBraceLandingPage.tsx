@@ -4,16 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import type { Key } from 'react';
 
 import { useActiveProject } from '../../context/ActiveProjectContext';
+import { BomPageHeader } from '../../bom/layout/BomPageHeader';
 import { PageBackButton } from '../../shell/PageBackButton';
-import {
-  hydraBaseNormal,
-  hydraTextStyleToReactCss,
-  hydraTitleHeading3,
-} from '../../theme/hydraTypography';
 import {
   Alert,
   App,
   AppSearchInput,
+  INLINE_SEARCH_CONTROL_SIZE,
   Button,
   Card,
   Divider,
@@ -207,19 +204,15 @@ export function SeisBraceLandingPage() {
           />
         ) : null}
 
-        <Flex align="flex-start" justify="space-between" gap={token.marginMD} wrap="wrap" style={{ width: '100%' }}>
-          <div style={{ flex: '1 1 240px', minWidth: 0 }}>
-            <Typography.Title level={3} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading3) }}>
-              SeisBrace
-            </Typography.Title>
-            <Typography.Paragraph style={{ margin: 0, color: token.colorTextDescription, ...hydraTextStyleToReactCss(hydraBaseNormal) }}>
-              Seismic designs and brace configurations for this construction project.
-            </Typography.Paragraph>
-          </div>
-          <Button type="primary" size="large" icon={<PlusOutlined />} onClick={startNewDesign}>
-            New design
-          </Button>
-        </Flex>
+        <BomPageHeader
+          title="SeisBrace"
+          description="Seismic designs and brace configurations for this construction project."
+          actions={
+            <Button type="primary" size="large" icon={<PlusOutlined />} onClick={startNewDesign}>
+              New design
+            </Button>
+          }
+        />
 
         {hasDesigns ? (
           <Flex align="center" justify="space-between" gap={token.marginSM} wrap="wrap">
@@ -228,20 +221,23 @@ export function SeisBraceLandingPage() {
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear
+              size={INLINE_SEARCH_CONTROL_SIZE}
               style={{ flex: '1 1 240px', maxWidth: 360 }}
             />
             <Flex gap={token.marginSM} align="center" wrap="wrap">
               <Select
+                size={INLINE_SEARCH_CONTROL_SIZE}
                 value={sortKey}
                 onChange={(v) => setSortKey(v as SortKey)}
                 options={SORT_OPTIONS}
                 style={{ width: 160 }}
               />
-              <Button icon={<DownloadOutlined />} onClick={() => message.success('DWG file download started (stub).')}>
+              <Button size={INLINE_SEARCH_CONTROL_SIZE} icon={<DownloadOutlined />} onClick={() => message.success('DWG file download started (stub).')}>
                 Get DWG file
               </Button>
               <Button
                 type="primary"
+                size={INLINE_SEARCH_CONTROL_SIZE}
                 icon={<FileTextOutlined />}
                 disabled={selectedBraceKeys.length === 0}
                 onClick={() => setSubmittalOpen(true)}

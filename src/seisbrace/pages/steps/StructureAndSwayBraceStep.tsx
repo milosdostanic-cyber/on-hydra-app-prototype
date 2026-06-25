@@ -12,6 +12,7 @@ import {
 import { useSeisBrace } from '../../context/SeisBraceContext';
 import { useSeisBraceWizard } from '../../context/SeisBraceWizardContext';
 import { WizardFooter } from '../../components/WizardFooter';
+import { PageDescription } from '../../../shell/PageDescription';
 import { draftToBraceFields } from '../../utils/draft';
 import {
   App,
@@ -69,9 +70,9 @@ export function StructureAndSwayBraceStep() {
         <Typography.Title level={4} style={{ margin: 0 }}>
           Structure &amp; Sway Brace
         </Typography.Title>
-        <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
+        <PageDescription>
           Define the supporting structure, the fastener, and the brace member.
-        </Typography.Paragraph>
+        </PageDescription>
       </div>
 
       <Row gutter={token.marginLG} style={{ maxWidth: 880 }}>

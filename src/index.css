@@ -35,6 +35,28 @@ body {
   color: var(--hydra-alert-title-color);
 }
 
+/* Action Trail — table row highlight (replaces antd cell borders to avoid double lines). */
+tr.action-trail-table-row > td.ant-table-cell {
+  background: var(--action-trail-highlight-bg) !important;
+  border-top: 1px solid var(--action-trail-highlight-border) !important;
+  border-bottom: 1px solid var(--action-trail-highlight-border) !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
+}
+
+tr.action-trail-table-row > td.ant-table-cell:first-child {
+  border-inline-start: 1px solid var(--action-trail-highlight-border) !important;
+}
+
+tr.action-trail-table-row > td.ant-table-cell:last-child {
+  border-inline-end: 1px solid var(--action-trail-highlight-border) !important;
+}
+
+/* Single seam below highlighted row — next row keeps normal divider only. */
+tr.action-trail-table-row + tr > td.ant-table-cell {
+  border-top: none !important;
+}
+
 /* Action Trail — one-shot nav badge pulse (duration set inline from theme token). */
 @keyframes action-trail-badge-pulse {
   0% {
@@ -45,5 +67,16 @@ body {
   }
   100% {
     transform: scale(1);
+  }
+}
+
+/* Action Trail — one-shot row/card highlight emphasis (reduced-motion skips via inline style). */
+@keyframes action-trail-highlight-pulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.06);
   }
 }

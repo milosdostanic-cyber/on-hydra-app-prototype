@@ -41,7 +41,7 @@ import { useBomHubPath } from '../../context/ActiveProjectContext';
 import { useActionTrail } from '../../context/ActionTrailContext';
 import { PageBackButton } from '../../shell/PageBackButton';
 import { ActionTrailNewTag } from '../../search/components/ActionTrailNewTag';
-import { actionTrailHighlightStyle } from '../../search/actionTrailStyles';
+import { actionTrailHighlightStyle, actionTrailTableRowProps } from '../../search/actionTrailStyles';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import {
   Alert,
@@ -128,15 +128,10 @@ export function BomWorkspacePage() {
   const projectTitle = project?.name ?? bomProjectTitleById(bomProjectId) ?? 'BOM project';
   const isSeedEmptyProject = project != null && project.items === 0;
   const { rows, setRows } = useBomWorkspaceRows(bomProjectId);
-  const { entries } = useActionTrail();
+  const { entries, pendingItemIds } = useActionTrail();
   const trailItemIds = useMemo(
-    () =>
-      new Set(
-        entries
-          .filter((e) => e.module === 'bom' && e.subProjectId === bomProjectId && e.newTagActive)
-          .flatMap((e) => e.itemIds),
-      ),
-    [entries, bomProjectId],
+    () => new Set(pendingItemIds('bom', bomProjectId)),
+    [entries, pendingItemIds, bomProjectId],
   );
   const { pendingForProject, setActiveUploadId } = useBomImportFlow();
   const pendingUploadSessions = pendingForProject(bomProjectId);
@@ -504,9 +499,10 @@ export function BomWorkspacePage() {
         bomProjectId,
         onDelete: openDeleteModal,
         onQuantityChange: handleQuantityChange,
+        showRowActions: !hasSelection,
       }),
     ],
-    [bomProjectId, openDeleteModal, handleQuantityChange],
+    [bomProjectId, openDeleteModal, handleQuantityChange, hasSelection],
   );
 
   function renderTableEmptyState() {
@@ -815,9 +811,9 @@ export function BomWorkspacePage() {
           columns={columns}
           dataSource={filteredRows}
           scroll={{ x: 'max-content' }}
-          onRow={(record) => ({
-            style: actionTrailHighlightStyle(token, trailItemIds.has(record.id)),
-          })}
+          onRow={(record) =>
+            actionTrailTableRowProps(token, trailItemIds.has(record.id))
+          }
           rowSelection={{
             selectedRowKeys,
             onChange: (keys) => setSelectedRowKeys(keys),

@@ -1,11 +1,11 @@
 import { CheckOutlined, PlusOutlined } from '@ant-design/icons';
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import type { PartActionPayload } from '../usePartActionFlows';
 import { usePartActionFlows } from '../usePartActionFlows';
 import type { PartVariationRow } from '../partDetailDemoData';
 import { useVariantActionFlows } from '../useVariantActionFlows';
-import { Button, Flex, Tooltip, theme } from '../../ui/antd';
+import { Button, Divider, Flex, Space, Tag, Tooltip, Typography, theme } from '../../ui/antd';
 
 const VARIATION_REQUIRED_TOOLTIP = 'Select a variation to enable this action.';
 const FILE_UNAVAILABLE_TOOLTIP = "This file type isn't available for the selected variation.";
@@ -16,82 +16,95 @@ type Props = {
   selectedVariation: PartVariationRow | null;
 };
 
-function ActionButtonWrap({
+function ActionRow({
+  label,
+  hint,
+  addLabel,
+  onAdd,
   disabled,
-  tooltip,
-  children,
+  disabledTooltip,
+  inState,
+  inStateLabel,
 }: {
-  disabled: boolean;
-  tooltip?: string;
-  children: ReactNode;
+  label: string;
+  hint?: string;
+  addLabel: string;
+  onAdd: () => void;
+  disabled?: boolean;
+  disabledTooltip?: string;
+  inState?: boolean;
+  inStateLabel?: string;
 }) {
-  if (!disabled || !tooltip) return <>{children}</>;
+  const { token } = theme.useToken();
+
+  const addButton = (
+    <Button
+      type="default"
+      size="middle"
+      icon={<PlusOutlined />}
+      disabled={disabled}
+      onClick={onAdd}
+      aria-label={addLabel}
+    />
+  );
 
   return (
-    <Tooltip title={tooltip}>
-      <span style={{ display: 'block', width: '100%' }} tabIndex={0}>
-        {children}
-      </span>
-    </Tooltip>
+    <Flex align="center" justify="space-between" gap={token.marginSM} style={{ width: '100%' }}>
+      <Flex vertical gap={token.marginXXS} style={{ minWidth: 0, flex: 1 }}>
+        <Typography.Text>{label}</Typography.Text>
+        {hint ? (
+          <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+            {hint}
+          </Typography.Text>
+        ) : null}
+      </Flex>
+      {inState ? (
+        <Tag icon={<CheckOutlined />} color="success">
+          {inStateLabel}
+        </Tag>
+      ) : disabled && disabledTooltip ? (
+        <Tooltip title={disabledTooltip}>
+          <span>{addButton}</span>
+        </Tooltip>
+      ) : (
+        <Tooltip title={addLabel}>{addButton}</Tooltip>
+      )}
+    </Flex>
   );
 }
 
-/** Actions card — figure-level and variation-gated download/BOM actions. */
+function ActionSection({ title, children }: { title: string; children: ReactNode }) {
+  const { token } = theme.useToken();
+  return (
+    <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
+      <Typography.Text
+        type="secondary"
+        style={{
+          display: 'block',
+          fontSize: token.fontSizeSM,
+          textTransform: 'uppercase',
+          letterSpacing: '0.04em',
+        }}
+      >
+        {title}
+      </Typography.Text>
+      <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
+        {children}
+      </Space>
+    </Space>
+  );
+}
+
+/** Actions card — grouped rows with compact + controls (labels left, add on the right). */
 export function ActionsPanel({ partKey, payload, selectedVariation }: Props) {
   const { token } = theme.useToken();
   const figureFlows = usePartActionFlows(payload);
   const variantFlows = useVariantActionFlows(partKey, selectedVariation);
 
-  const enabledOutlineStyle: CSSProperties = {
-    color: token.colorPrimary,
-    borderColor: token.colorPrimary,
-    fontWeight: token.fontWeightStrong,
-    textAlign: 'left',
-    justifyContent: 'flex-start',
-  };
-
-  const inStateStyle: CSSProperties = {
-    color: token.colorSuccess,
-    borderColor: token.colorSuccessBorder,
-    textAlign: 'left',
-    justifyContent: 'flex-start',
-  };
-
-  const actionBtn = (
-    label: string,
-    onClick: () => void,
-    options: {
-      disabled?: boolean;
-      tooltip?: string;
-      enabled?: boolean;
-      inState?: boolean;
-    },
-  ) => (
-    <ActionButtonWrap disabled={Boolean(options.disabled)} tooltip={options.tooltip}>
-      <Button
-        block
-        size="large"
-        type="default"
-        icon={options.inState ? <CheckOutlined /> : <PlusOutlined />}
-        disabled={options.disabled}
-        onClick={onClick}
-        style={
-          options.inState
-            ? inStateStyle
-            : options.enabled && !options.disabled
-              ? enabledOutlineStyle
-              : { textAlign: 'left', justifyContent: 'flex-start' }
-        }
-      >
-        {label}
-      </Button>
-    </ActionButtonWrap>
-  );
-
   const fileTypeEnabled = (fileType: string) =>
     Boolean(selectedVariation?.drawingFileTypes.includes(fileType));
 
-  const fileTypeAction = (label: string, fileType: string) => {
+  const fileTypeRow = (fileType: string) => {
     const hasVariation = Boolean(selectedVariation);
     const available = fileTypeEnabled(fileType);
     const disabled = !hasVariation || !available;
@@ -99,43 +112,58 @@ export function ActionsPanel({ partKey, payload, selectedVariation }: Props) {
       ? VARIATION_REQUIRED_TOOLTIP
       : !available
         ? FILE_UNAVAILABLE_TOOLTIP
-        : undefined;
+        : `Add ${fileType} to Download Center`;
 
-    return actionBtn(
-      label,
-      () => variantFlows.queueSingleFileType(fileType),
-      { disabled, tooltip, enabled: !disabled },
+    return (
+      <ActionRow
+        key={fileType}
+        label={`${fileType} file`}
+        hint={hasVariation && !available ? 'Not available for this variant' : undefined}
+        addLabel={`Add ${fileType} to Download Center`}
+        onAdd={() => variantFlows.queueSingleFileType(fileType)}
+        disabled={disabled}
+        disabledTooltip={tooltip}
+      />
     );
   };
 
   return (
     <>
-      <Flex vertical gap={token.marginSM} style={{ width: '100%' }}>
-        {actionBtn(
-          figureFlows.isInSubmittalPackage ? 'In Submittal ✓' : 'Add Part to Submittal Package',
-          () => figureFlows.requestAction('submittal'),
-          {
-            enabled: !figureFlows.isInSubmittalPackage,
-            inState: figureFlows.isInSubmittalPackage,
-          },
-        )}
-        {actionBtn('Add Revit File to Downloads', () => figureFlows.requestAction('revit-queue'), {
-          enabled: true,
-        })}
-        {actionBtn(
-          variantFlows.isInBom ? 'In BOM ✓' : 'Add Part Variant to BOM',
-          () => variantFlows.requestAction('bom'),
-          {
-            disabled: !selectedVariation,
-            tooltip: !selectedVariation ? VARIATION_REQUIRED_TOOLTIP : undefined,
-            enabled: Boolean(selectedVariation) && !variantFlows.isInBom,
-            inState: variantFlows.isInBom,
-          },
-        )}
-        {fileTypeAction('Add PDF File to Downloads', 'PDF')}
-        {fileTypeAction('Add STEP File to Downloads', 'STEP')}
-        {fileTypeAction('Add DWG File to Downloads', 'DWG')}
-      </Flex>
+      <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
+        <ActionSection title="Add to project">
+          <ActionRow
+            label="Submittal package"
+            hint="Figure-level cut sheet"
+            addLabel="Add to submittal package"
+            onAdd={() => figureFlows.requestAction('submittal')}
+            inState={figureFlows.isInSubmittalPackage}
+            inStateLabel="In Submittal"
+          />
+          <ActionRow
+            label="BOM"
+            hint={selectedVariation ? `Variant ${selectedVariation.sku}` : 'Select a variant first'}
+            addLabel="Add variant to BOM"
+            onAdd={() => variantFlows.requestAction('bom')}
+            disabled={!selectedVariation}
+            disabledTooltip={VARIATION_REQUIRED_TOOLTIP}
+            inState={variantFlows.isInBom}
+            inStateLabel="In BOM"
+          />
+        </ActionSection>
+
+        <Divider style={{ margin: 0 }} />
+
+        <ActionSection title="Send to Download Center">
+          <ActionRow
+            label="Revit file"
+            addLabel="Add Revit file to Download Center"
+            onAdd={() => figureFlows.requestAction('revit-queue')}
+          />
+          {fileTypeRow('PDF')}
+          {fileTypeRow('STEP')}
+          {fileTypeRow('DWG')}
+        </ActionSection>
+      </Space>
       {figureFlows.modals}
       {variantFlows.modals}
     </>

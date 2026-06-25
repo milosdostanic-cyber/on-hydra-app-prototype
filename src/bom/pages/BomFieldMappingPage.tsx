@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { bomSitePath, useActiveProject } from '../../context/ActiveProjectContext';
+import { bomSitePath, resolveActiveConstructionProjectId, useActiveProject } from '../../context/ActiveProjectContext';
 import type { BomFieldAliasMap } from '../bomFieldMappingConfig';
 import { mappingStepStatusLabel } from '../bomUploadFlowStatus';
 import {
@@ -70,7 +70,7 @@ export function BomFieldMappingPage() {
       : duplicateBomColumns.size > 0
         ? 'Each file column can link to only one part detail. Fix duplicates first.'
         : undefined;
-  const bomBackTarget = bomSitePath(projectId);
+  const bomBackTarget = bomSitePath(resolveActiveConstructionProjectId(projectId));
   const { uploadId } = useBomImportSession(bomProjectId);
 
   function returnToMappingSummary(fieldMapping: BomFieldAliasMap) {

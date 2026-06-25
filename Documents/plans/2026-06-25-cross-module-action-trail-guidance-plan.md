@@ -3,9 +3,9 @@
 **Date:** 2026-06-25
 **Source PRDs:** `Hydra-PRD - Cross-Module Guidance` + `Hydra-Intake - X-Module Guidance` (ConnectED Phase 2 — UATL-348)
 **Also incorporates:** `Connected — Global Notifications` (user & task flow diagram — one catalog route, one part page, four destinations, deferred notification system)
-**Status:** Planning only — no code changes yet.
+**Status:** **Implemented in prototype (~85%)** — 2026-06-25 audit. Phases 1–4 largely done; Spec destination and polish items remain.
 
-> **Important context before reading.** The two PRDs were written against the **production microfrontend (MFE) codebase** (`packages/on-hydra-frontend-core`, `apps/on-hydra-frontend-bom`, `apps/on-hydra-frontend-content`, Redux slices, iframe MFE boundaries, `companyName` multi-tenancy, RBAC). **This repository is the single-app prototype** (`on-hydra-app-prototype`): one Vite + React + Ant Design app, React Context + `useSyncExternalStore` + `sessionStorage` for state, React Router for navigation, **no Redux, no MFE iframes, no permission model, no company tenancy.**
+> **Important context before reading.** The two PRDs were written against the **production microfrontend (MFE) codebase** (`packages/on-hydra-frontend-core`, `apps/on-hydra-frontend-bom`, `apps/on-hydra-frontend-content`, Redux slices, iframe MFE boundaries, `companyName` multi-tenancy, RBAC). **This repository is the single-app prototype** (`on-hydra-app-prototype`): one Vite + React + Ant Design app, React Context + `useSyncExternalStore` + **`localStorage`** (Action Trail store) for cross-tab guidance state, React Router for navigation, **no Redux, no MFE iframes, no permission model, no company tenancy.**
 >
 > This plan **translates** the PRD requirements onto the prototype's real patterns. Wherever a PRD requirement depends on something that does not exist in the prototype (RBAC, multi-tenancy, real persisted BOM rows), it is called out explicitly in **Open Questions** rather than invented.
 
@@ -157,76 +157,124 @@ It never interrupts you or drags you somewhere — you can keep searching and fo
 
 ## 5. Open questions / unclear parts
 
-1. **BOM add currently auto-navigates and does not persist a row.** In this prototype, `usePartActionFlows.finishBomAdd` / `useVariantActionFlows.finishBomAdd` show a success message and **immediately `navigate('/bom/projects/:id/workspace')`** — and the `AddToBomModal` does **not** insert a row into `BomWorkspaceContext`. The PRD says **no auto-navigation** from the unified listing (Scenario notes) but also references `highlightItemId` auto-nav (Q-2/Q-5 "TBD"). → **Need a decision:** for the prototype, do we (a) stop auto-navigating on unified-listing BOM adds so the trail is meaningful, and (b) actually insert the added part as a workspace row so there is something to highlight at item level (FR-4)? Without (b), BOM item-level highlight has no target.
-2. **Multi-tab sync vs sessionStorage (FR-12).** All current prototype stores use `sessionStorage`, which is per-tab. True cross-tab sync needs `localStorage` + `storage` events (or `BroadcastChannel`). Confirm we may move the Action Trail entry store to `localStorage` (the PRD's NFR-4 multi-tenancy isolation does not apply here since the prototype has no `companyName`).
-3. **Where does the on/off toggle live (FR-10)?** There is no settings/preferences page in the prototype. Options: a small toggle in the top bar (`src/shell/AppShell.tsx`), a header menu, or a stub settings entry. Needs product/design direction.
+1. **BOM add currently auto-navigates and does not persist a row.** → **RESOLVED in prototype.** `finishBomAdd` stays on search page, inserts row via `setWorkspaceRows`, registers Action Trail entry with `itemIds`.
+2. **Multi-tab sync vs sessionStorage (FR-12).** → **RESOLVED.** Action Trail store uses `localStorage` + `storage` event listener in `actionTrailStore.ts`.
+3. **Where does the on/off toggle live (FR-10)?** → **RESOLVED.** User menu in `AppTopBar.tsx` — "Action guidance" `Switch` (default ON).
 4. **Dismissal trigger — RESOLVED by the Global Notifications flow.** The badge clears when the user **opens the module** (rows marked `seen`); the item "New" tag clears on the next visit. Plan now uses this; no longer an open question. (Earlier viewport/dwell ambiguity is dropped.)
 5. **Download Center grouping target (PRD Q-6).** Resolution says "latest undownloaded grouping." The prototype's `ContentModule` shows a flat `useDownloadHistory` list, not grouped batches. Confirm whether to introduce a lightweight "latest batch" grouping for the highlight, or just highlight the newest rows.
 6. **RBAC / permissions (FR-7) and multi-tenancy (NFR-4).** Neither exists in the prototype. Recommend marking FR-7 and NFR-4 **N/A for the prototype** and noting they are handled in production. Confirm.
 7. **Submittal "sub-project" granularity.** PRD models Submittal as project → package → part. In the prototype, the sidebar `submittal` key is **project-scoped** (`/projects/:projectId/submittal`) and packages are the sub-projects. Confirm the badge counts parts across all packages of the active/last-scoped project and the highlight targets packages.
 8. **Visual spec (PRD Q-5 / NFR-6).** No ConnectED Figma for guidance states yet. The highlight treatment will be built from existing tokens as a placeholder and should be revisited when Design delivers specs.
-9. **Add to Spec is not implemented (new, from the flow diagram).** The diagram lists **Add to Spec** as a first-class destination, but the prototype has **no Add to Spec action** (no button in `ActionsPanel`, only a `spec` / `sales-brace` stub `SalesBraceModule`). → Should this plan (a) wire Spec guidance only once Add to Spec ships, or (b) also stub an "Add to Spec" action now so the 4th destination can be demoed? Recommend (a) to keep scope tight; confirm.
-10. **Persistence conflict — two PRDs disagree.** The Global Notifications flow says the badge is **server-side, persists across sessions, survives logout, and clears only on module open**. The earlier Cross-Module PRD says **frontend session state, 1-week TTL, and a user on/off toggle**. → Which wins for v1? For the **prototype** there is no auth/backend, so: use `localStorage` (survives reload + multi-tab), treat "server-side / survives logout" as **production-only / N/A here**, and confirm whether the **1-week TTL** and **on/off toggle** still apply given the "persists until opened" rule. This directly affects FR-10 and FR-11.
-11. **Direct-download vs queue split.** Confirm the exact prototype mapping: only **Send to Download Center** (`revit-queue` / queued drawings) creates a `content` badge; **Quick Download Revit** (`revit-quick`) and any direct file download stay toast-only. The plan assumes this split.
+9. **Add to Spec is not implemented (new, from the flow diagram).** → **Decision: (a) wire only when Add to Spec ships.** Sidebar **no longer** shows a guidance tag on Spec until `registerEntry({ module: 'spec' })` exists. Store type still includes `'spec'` for future wiring.
+10. **Persistence conflict — two PRDs disagree.** → **Prototype resolution:** `localStorage` (reload + multi-tab). **Both** persist-until-module-open **and** 7-day TTL (`pruneExpired` on mount + focus). Toggle default ON. Server-side / survives logout = production-only.
+11. **Direct-download vs queue split.** → **CONFIRMED implemented.** Only `revit-queue` / `queueDrawingFiles` register `content`; `revit-quick` stays toast-only.
 
 ---
 
 ## 6. Implementation checklist
 
 ### Phase 1 — Guidance store + registration
-- [ ] Create `src/context/ActionTrailContext.tsx` (+ optional `actionTrailStore.ts`) using the `useSyncExternalStore` + storage pattern from `SubmittalDraftContext.tsx`.
-- [ ] Define the `GuidanceEntry` type and all helpers listed in §2.1.
-- [ ] Wire `ActionTrailProvider` into `src/main.tsx`.
-- [ ] Call `registerEntry` in `usePartActionFlows.tsx` (`finishBomAdd`, `finishSubmittalAdd`, `execute('revit-queue')` only).
-- [ ] Call `registerEntry` in `useVariantActionFlows.tsx` (`finishBomAdd`, `queueDrawingFiles`).
-- [ ] **Do NOT** register for `execute('revit-quick')` / direct device downloads (toast only).
-- [ ] Add **"Already in module"** check before register → toast "Already in …" + pill "In … ✓", skip registration.
-- [ ] **Verify:** add parts from `/search/parts/:partId`; confirm entries appear in storage, direct downloads create no entry, and existing toasts still fire.
+- [x] Create `src/context/ActionTrailContext.tsx` (+ `actionTrailStore.ts`) using the `useSyncExternalStore` + storage pattern.
+- [x] Define the `GuidanceEntry` type and all helpers listed in §2.1 (+ `newTagActive`, `enabled`).
+- [x] Wire `ActionTrailProvider` into `src/main.tsx`.
+- [x] Call `registerEntry` in `usePartActionFlows.tsx` (`finishBomAdd`, `finishSubmittalAdd`, `execute('revit-queue')` only).
+- [x] Call `registerEntry` in `useVariantActionFlows.tsx` (`finishBomAdd`, `queueDrawingFiles`).
+- [x] **Do NOT** register for `execute('revit-quick')` / direct device downloads (toast only).
+- [x] Add **"Already in module"** check before register → toast "Already in …" + pill "In … ✓", skip registration.
+- [ ] **Verify:** manual smoke from `/search/parts/:partId` (see §7).
 
 ### Phase 2 — Left-nav badge
-- [ ] In `AppShellSidebar.tsx`, render `Badge` with `countForModule` (unseen count) on `bom` / `submittal` / `spec` / `content` menu items.
-- [ ] Pulse the badge **once** when its count increases (token-driven, reduced-motion aware).
-- [ ] **Verify (AC-1):** after a cross-module add, badge shows the correct unseen part count without navigating; badge visible when sidebar is collapsed; pulses once.
+- [x] In `AppShellSidebar.tsx`, render guidance tag with unseen count on `bom` / `submittal` / `content` (`ActionTrailMenuGuidanceTag`; Volcano `Tag`, not Ant `Badge`).
+- [x] Pulse the tag **once** when count increases (`action-trail-badge-pulse` + `prefers-reduced-motion`).
+- [x] Collapsed + expanded sidebar variants.
+- [ ] **Verify (AC-1):** manual smoke.
 
 ### Phase 3 — "New" tag + highlights + dismiss-on-open
-- [ ] Create the local token-only highlight treatment honouring `prefers-reduced-motion`.
-- [ ] BOM project list highlight in `BomSiteProjectsPage.tsx` (`rowClassName`).
-- [ ] Submittal package highlight in `SubmittalPackagesPage.tsx` / `PackageCard.tsx`.
-- [ ] Download Center grouping highlight in `ContentModule` (`ProjectModuleStubs.tsx`).
-- [ ] Item-level **"New" tag** + highlight: BOM workspace rows (`BomWorkspacePage.tsx`), submittal part rows (`PackageCard.tsx`), download file rows (`ContentModule`).
-- [ ] Dismiss = **on module open** mark rows `seen` → badge clears; "New" tag gone on next visit.
-- [ ] **Verify (AC-2/AC-3/AC-4/AC-5/AC-9):** single add, batch adds to one module, adds to two submittal packages, and a queued download all highlight correctly; badge clears on module open; "New" tag gone next visit.
+- [x] Local token-only highlight in `src/search/actionTrailStyles.ts` (static outline/bg; badge pulse only).
+- [x] BOM project list highlight in `BomSiteProjectsPage.tsx` (`onRow` style).
+- [x] Submittal package highlight in `SubmittalPackagesPage.tsx` / `PackageCard.tsx`.
+- [~] Download Center: **item-level** highlight in `ContentModule` — no batch/grouping highlight (PRD Q-6 still open).
+- [x] Item-level **"New" tag** + highlight: BOM workspace, submittal parts, download rows.
+- [x] Dismiss = module open → `consumeForModule`; unmount → `clearNewTagsForModule`.
+- [ ] **Verify (AC-2–AC-5, AC-9):** manual smoke.
 
 ### Phase 4 — Cross-cutting
-- [ ] Persistence: store in `localStorage` so badge survives reload (prototype stand-in for "persists across sessions"). Reconcile TTL vs persists-until-opened per Open Question 10.
-- [ ] `pruneExpired()` on mount + window focus (FR-11), **if** the 1-week TTL is kept. **Verify (AC-7b):** entry older than 7 days removed on load.
-- [ ] Preference toggle (default ON) + skip all badges/highlights when disabled. **Verify (AC-7a):** disabled → toast still shows, no badge/highlight.
-- [ ] Multi-tab sync via `storage`/`BroadcastChannel`. **Verify:** add in one tab updates badge in another (FR-12).
-- [ ] Extend submittal "Go to packages" toast CTA to consume guidance (FR-9). **Verify (AC-6):** clicking CTA decrements badge.
+- [x] `localStorage` persistence (`hydra-action-trail`).
+- [x] `pruneExpired()` on mount + window focus (7-day TTL).
+- [x] Preference toggle in `AppTopBar.tsx` user menu.
+- [x] Multi-tab sync via `storage` event (no `BroadcastChannel`).
+- [x] Submittal "Go to packages" toast CTA calls `consumeForModule('submittal', packageId)`.
+- [ ] **Verify (AC-6, AC-7a/b, FR-12):** manual smoke.
 
 ### Final verification
 - [ ] `npx tsc --noEmit` passes.
-- [ ] `ReadLints` clean on every edited file.
-- [ ] No design tokens, shared/core components, or unrelated screens were modified.
-- [ ] Existing success toasts/messages still behave exactly as before (FR-8 additive).
-- [ ] Highlight uses only tokens (no raw hex/px) and has a reduced-motion fallback.
+- [ ] Manual E2E smoke (see §7).
+- [x] No design tokens or shared/core components modified.
+- [x] Existing success toasts/messages preserved (additive).
+- [x] Highlight uses tokens only; badge pulse honours reduced motion.
 
 ---
 
 ## Affected files (reference)
 
-**New:** `src/context/ActionTrailContext.tsx` (+ optional `src/context/actionTrailStore.ts`).
+**New:**
+- `src/context/ActionTrailContext.tsx`
+- `src/context/actionTrailStore.ts`
+- `src/search/actionTrailStyles.ts`
+- `src/search/components/ActionTrailMenuGuidanceTag.tsx`
+- `src/search/components/ActionTrailNewTag.tsx`
 
 **Edited:**
-- `src/main.tsx` — register provider
-- `src/search/usePartActionFlows.tsx`, `src/search/useVariantActionFlows.tsx` — register entries (queue/commit only) + FR-9 CTA + "already in module"
-- `src/search/components/ActionsPanel.tsx` — "In … ✓" pill state for already-added parts
-- `src/shell/AppShellSidebar.tsx` — badge + pulse-once (`bom`/`submittal`/`spec`/`content`)
-- `src/bom/pages/BomSiteProjectsPage.tsx`, `src/bom/pages/BomWorkspacePage.tsx` — BOM highlights + "New" tag
-- `src/submittal/SubmittalPackagesPage.tsx`, `src/submittal/components/PackageCard.tsx` — submittal highlights + "New" tag
-- `src/shell/ProjectModuleStubs.tsx` (`ContentModule`) — download highlights + "New" tag
-- `src/shell/AppShell.tsx` *(only if the FR-10 toggle is placed in the top bar — pending Q-3)*
-- *Add to Spec destination wiring — deferred until the Add to Spec action exists (Open Question 9)*
+- `src/main.tsx` — `ActionTrailProvider`
+- `src/search/usePartActionFlows.tsx`, `src/search/useVariantActionFlows.tsx` — register + CTA consume + duplicate checks
+- `src/search/components/ActionsPanel.tsx` — "In BOM" / "In Submittal" pill state
+- `src/shell/AppShellSidebar.tsx` — guidance tag on `bom` / `submittal` / `content` only (Spec deferred)
+- `src/shell/AppTopBar.tsx` — action guidance toggle
+- `src/bom/layout/BomLayout.tsx` — `useActionTrailModuleLifecycle('bom')`
+- `src/bom/pages/BomSiteProjectsPage.tsx`, `src/bom/pages/BomWorkspacePage.tsx`
+- `src/submittal/SubmittalPackagesPage.tsx`, `src/submittal/components/PackageCard.tsx`
+- `src/shell/ProjectModuleStubs.tsx` (`ContentModule`)
+- `src/index.css` — `action-trail-badge-pulse` keyframes
+- *Spec destination — deferred until Add to Spec action exists*
+
+## 7. Implementation status (2026-06-25 audit)
+
+| FR | Status | Notes |
+|----|--------|-------|
+| FR-1 Registration | 🟡 | BOM, Submittal, Content done; Spec not |
+| FR-2 Nav badge | ✅ | Volcano `Tag`, collapsed + expanded |
+| FR-3 Sub-project highlight | 🟡 | BOM + Submittal; Content item-only |
+| FR-4 Item highlight + New | ✅ | Static outline, not pulse |
+| FR-5 Dismiss on view | ✅ | Module mount/unmount lifecycle |
+| FR-6 Multiple entries | ✅ | Array store, aggregated counts |
+| FR-7 Permissions | ❌ N/A | No RBAC in prototype |
+| FR-9 Toast CTA | ✅ | Submittal "Go to packages" only |
+| FR-10 Toggle | ✅ | `AppTopBar` user menu |
+| FR-11 TTL | ✅ | 7 days, prune on mount/focus |
+| FR-12 Multi-tab | ✅ | `localStorage` + `storage` event |
+| NFR-1 a11y | ✅ | `aria-live` via `ActionTrailLiveRegion`; reduced motion on badge + highlight |
+
+**Deviations from original plan:**
+- Nav uses `ActionTrailMenuGuidanceTag` (Volcano `Tag`) instead of Ant `Badge`.
+- Row/card highlights are **static** primary bg + outline; only the nav tag **pulses once**.
+- `GuidanceEntry` adds `newTagActive` for two-phase dismiss (badge → highlight → clear on next visit).
+- Spec removed from sidebar trail keys until Add to Spec ships.
+
+**Remaining polish (optional):**
+1. ~~`aria-live` for badge count changes.~~ Done (`ActionTrailLiveRegion`).
+2. ~~Row/sub-project one-shot pulse animation.~~ Done (`action-trail-highlight-pulse`).
+3. ~~Download Center batch/group highlight.~~ Card-level highlight when new queue items pending.
+4. Wire Spec when Add to Spec action exists.
+5. ~~Remove or use dead export `useActionTrailHighlightActive`.~~ Wired in `PackageCard`.
+6. Manual E2E smoke + `tsc --noEmit`.
+
+**Smoke test checklist:**
+1. Part detail → Add to BOM → sidebar BOM tag shows count; stay on search.
+2. Open BOM → tag clears; project row highlights; open workspace → row + "New".
+3. Leave BOM → re-enter → no "New" tags.
+4. Repeat for Submittal + Download queue; confirm `revit-quick` creates no tag.
+5. Toggle off in user menu → no tag/highlight; toasts still fire.
+6. Second browser tab → add in tab A → tag updates in tab B.
 
 ## Guardrails (per workspace rules)
 - Reuses existing pattern: `useSyncExternalStore` stores, AntD `Badge`, existing add-success flows and toasts.

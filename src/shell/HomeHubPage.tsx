@@ -1,7 +1,5 @@
 import {
   CalculatorOutlined,
-  DeleteOutlined,
-  EditOutlined,
   FileTextOutlined,
   GlobalOutlined,
   InboxOutlined,
@@ -16,10 +14,14 @@ import { useEffect, useMemo, useState, type Key, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { mockBomProjects } from '../bom/data/mockData';
+import { matchingReviewSelectableCardStyle } from '../bom/components/BomSkuVariantPicker';
+import { BomPageHeader } from '../bom/layout/BomPageHeader';
+import { PageDescription } from './PageDescription';
 import { useActiveProject } from '../context/ActiveProjectContext';
 import { useSubmittalPackages } from '../context/SubmittalPackagesContext';
 import {
   AppSearchInput,
+  INLINE_SEARCH_CONTROL_SIZE,
   Button,
   Card,
   Col,
@@ -33,13 +35,13 @@ import {
   Space,
   Table,
   Tabs,
-  Tooltip,
   Typography,
   theme,
 } from '../ui/antd';
 import type { TableColumnsType, TabsProps } from '../ui/antd';
 
-import { hydraBaseStrong } from '../theme/hydraTypography';
+import { hydraBaseNormal, hydraTextStyleToReactCss, hydraTitleHeading4, hydraTitleHeading5 } from '../theme/hydraTypography';
+import { shellTableCardStyle, shellTableLinkButtonStyle, shellTableStyles } from './shellTablePatterns';
 import { lastDeliverableForProject } from './projectLastDeliverable';
 import {
   ProjectFormFields,
@@ -49,7 +51,6 @@ import {
 import { type ProjectFormValues, type ProjectRow } from './projectSeed';
 import {
   UMBRELLA_COMPANY_LABEL,
-  UMBRELLA_COMPANY_SLUG,
   flatProjectWorkspacePath,
 } from './umbrellaCompany';
 
@@ -92,76 +93,95 @@ type ModuleRollupCardProps = {
   onNavigate: () => void;
 };
 
-/** Dense clickable module card — only used inside expanded project rows. */
+/** Dense clickable module card — rest state matches BOM matching-review SKU cards. */
 function ModuleRollupCard({ title, countLabel, icon, onNavigate }: ModuleRollupCardProps) {
   const { token } = theme.useToken();
+  const [hovered, setHovered] = useState(false);
   const label = `Open ${title} module`;
+  const thumbnailSize = token.controlHeightLG + token.paddingLG;
+
   return (
-    <Card
-      size="small"
-      bordered
-      hoverable
-      role="button"
-      tabIndex={0}
+    <button
+      type="button"
       aria-label={label}
-      styles={{
-        root: {
-          cursor: 'pointer',
-          borderColor: token.colorBorderSecondary,
-          transition: `box-shadow ${token.motionDurationMid}, border-color ${token.motionDurationMid}`,
-        },
-        body: { padding: token.paddingSM },
-      }}
       onClick={(e) => {
         e.stopPropagation();
         onNavigate();
       }}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          e.stopPropagation();
-          onNavigate();
-        }
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        ...matchingReviewSelectableCardStyle(token, false),
+        width: '100%',
+        minWidth: 0,
+        height: '100%',
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: token.paddingMD,
+        boxShadow: token.boxShadowTertiary,
+        borderColor: hovered ? token.colorPrimaryBorderHover : token.colorBorderSecondary,
+        transition: `border-color ${token.motionDurationMid}`,
       }}
     >
-      <Flex vertical gap={token.marginXS}>
-        <Flex align="flex-start" gap={token.marginSM}>
-          <span
-            aria-hidden
-            style={{
-              color: token.colorPrimary,
-              fontSize: token.fontSizeHeading4,
-              lineHeight: 1,
-              flexShrink: 0,
-            }}
-          >
-            {icon}
-          </span>
-          <Flex vertical gap={token.marginXXS} style={{ flex: 1, minWidth: 0 }}>
-            <Typography.Text strong ellipsis={{ tooltip: title }}>
-              {title}
-            </Typography.Text>
-            <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }} ellipsis={{ tooltip: countLabel }}>
-              {countLabel}
-            </Typography.Text>
-          </Flex>
-        </Flex>
-        <Flex justify="flex-end" align="center" gap={token.marginXXS}>
-          <span
-            style={{
-              color: token.colorPrimary,
-              fontSize: token.fontSizeSM,
-              userSelect: 'none',
-              textDecoration: 'underline',
-              textDecorationColor: token.colorPrimaryBorder,
-              textUnderlineOffset: 3,
-            }}
-          >
-            Open module <RightOutlined style={{ fontSize: token.fontSizeSM }} aria-hidden />
-          </span>
-        </Flex>
+      <Flex
+        align="center"
+        justify="center"
+        aria-hidden
+        style={{
+          width: thumbnailSize,
+          height: thumbnailSize,
+          flexShrink: 0,
+          background: token.colorFillAlter,
+          borderRadius: token.borderRadiusLG,
+          border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+          color: token.colorPrimary,
+          fontSize: token.fontSizeHeading5,
+          lineHeight: 1,
+        }}
+      >
+        {icon}
       </Flex>
-    </Card>
+
+      <Flex vertical gap={token.marginSM} style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+        <Typography.Text
+          ellipsis={{ tooltip: title }}
+          style={{
+            ...hydraTextStyleToReactCss(hydraTitleHeading5),
+            color: token.colorText,
+            display: 'block',
+          }}
+        >
+          {title}
+        </Typography.Text>
+
+        <Typography.Text
+          ellipsis={{ tooltip: countLabel }}
+          type="secondary"
+          style={{
+            ...hydraTextStyleToReactCss(hydraBaseNormal),
+            display: 'block',
+          }}
+        >
+          {countLabel}
+        </Typography.Text>
+
+        <Typography.Link
+          onClick={(e) => {
+            e.stopPropagation();
+            onNavigate();
+          }}
+          style={{
+            ...hydraTextStyleToReactCss(hydraBaseNormal),
+            color: token.colorPrimaryText,
+            alignSelf: 'flex-start',
+          }}
+        >
+          Open module <RightOutlined aria-hidden />
+        </Typography.Link>
+      </Flex>
+    </button>
   );
 }
 
@@ -190,11 +210,14 @@ function ProjectModuleRollupCards({ project }: { project: ProjectRow }) {
 
   return (
     <Flex vertical gap={token.marginXS} style={{ width: '100%' }}>
-      <Typography.Title level={5} style={{ margin: 0, lineHeight: 1.35 }}>
+      <Typography.Title
+        level={4}
+        style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading4) }}
+      >
         Modules
       </Typography.Title>
-      <Row gutter={[token.marginSM, token.marginSM]}>
-        <Col xs={24} sm={12} xl={6}>
+      <Row gutter={[token.padding, token.padding]} align="stretch">
+        <Col xs={24} sm={12} xl={6} style={{ display: 'flex' }}>
           <ModuleRollupCard
             title="BOM"
             icon={<UnorderedListOutlined />}
@@ -202,7 +225,7 @@ function ProjectModuleRollupCards({ project }: { project: ProjectRow }) {
             onNavigate={() => go('bom')}
           />
         </Col>
-        <Col xs={24} sm={12} xl={6}>
+        <Col xs={24} sm={12} xl={6} style={{ display: 'flex' }}>
           <ModuleRollupCard
             title="Spec"
             icon={<FileTextOutlined />}
@@ -210,7 +233,7 @@ function ProjectModuleRollupCards({ project }: { project: ProjectRow }) {
             onNavigate={() => go('sales-brace')}
           />
         </Col>
-        <Col xs={24} sm={12} xl={6}>
+        <Col xs={24} sm={12} xl={6} style={{ display: 'flex' }}>
           <ModuleRollupCard
             title="SeisBrace"
             icon={<CalculatorOutlined />}
@@ -218,7 +241,7 @@ function ProjectModuleRollupCards({ project }: { project: ProjectRow }) {
             onNavigate={() => go('seis-brace')}
           />
         </Col>
-        <Col xs={24} sm={12} xl={6}>
+        <Col xs={24} sm={12} xl={6} style={{ display: 'flex' }}>
           <ModuleRollupCard
             title="Submittal Manager"
             icon={<InboxOutlined />}
@@ -236,7 +259,6 @@ export function HomeHubPage() {
   const { token } = theme.useToken();
   const navigate = useNavigate();
   const companyLabel = UMBRELLA_COMPANY_LABEL;
-  const companySlug = UMBRELLA_COMPANY_SLUG;
   const { projects, setProjectId, addProject, updateProject, deleteProject } = useActiveProject();
   const [tab, setTab] = useState<string>('recent');
   const [starredKeys, setStarredKeys] = useState<Set<string>>(() => new Set(['1', '3']));
@@ -413,18 +435,12 @@ export function HomeHubPage() {
       title: 'Actions',
       key: 'actions',
       align: 'right',
-      width: token.controlHeightLG * 2 + token.marginSM,
+      width: 150,
       render: (_, record) => (
-        <Flex justify="flex-end" gap={token.marginXXS} onClick={(e) => e.stopPropagation()}>
-          <Tooltip title="Edit">
-            <Button
-              type="text"
-              size="small"
-              icon={<EditOutlined />}
-              aria-label="Edit project"
-              onClick={() => openEdit(record.key)}
-            />
-          </Tooltip>
+        <Space size={token.marginSM} onClick={(e) => e.stopPropagation()}>
+          <Button type="link" style={shellTableLinkButtonStyle} onClick={() => openEdit(record.key)}>
+            Edit
+          </Button>
           <Popconfirm
             title="Delete this project?"
             description="This removes the project from your list."
@@ -432,17 +448,11 @@ export function HomeHubPage() {
             okButtonProps={{ danger: true }}
             onConfirm={() => handleDeleteProject(record.key)}
           >
-            <Tooltip title="Delete">
-              <Button
-                type="text"
-                size="small"
-                danger
-                icon={<DeleteOutlined />}
-                aria-label="Delete project"
-              />
-            </Tooltip>
+            <Button type="link" danger style={shellTableLinkButtonStyle}>
+              Delete
+            </Button>
           </Popconfirm>
-        </Flex>
+        </Space>
       ),
     },
   ];
@@ -457,12 +467,7 @@ export function HomeHubPage() {
   const starredEmpty = tab === 'starred' && hasAnyProjects && filteredRows.length === 0 && searchText.trim() === '';
   const recentEmpty = tab === 'recent' && hasAnyProjects && filteredRows.length === 0 && searchText.trim() === '';
 
-  const listPanelStyle = {
-    background: token.colorBgContainer,
-    borderRadius: token.borderRadiusLG,
-    boxShadow: token.boxShadowTertiary,
-    overflow: 'hidden' as const,
-  };
+  const listPanelStyle = shellTableCardStyle(token);
 
   const homeHubExpandedRowStyles = useMemo(
     () =>
@@ -476,72 +481,82 @@ export function HomeHubPage() {
   };
 
   return (
-    <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
-      <Flex justify="space-between" align="flex-start" wrap="wrap" gap={token.margin}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <Typography.Text type="secondary" style={{ display: 'block', marginBottom: token.marginXXS }}>
-            {companyLabel} · unified hub
-          </Typography.Text>
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            Home
-          </Typography.Title>
-          <Typography.Paragraph type="secondary" style={{ margin: `${token.marginXXS}px 0 0`, maxWidth: 720 }}>
-            Projects list below defaults to <strong>Recent</strong>. Expand a row for site details, roll-up counts, and
-            module cards (BOM, Spec, SeisBrace, Submittal Manager).
-          </Typography.Paragraph>
-          <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM, display: 'block', marginTop: token.marginXS }}>
-            Home (demo): /dashboard · company {companySlug}
-          </Typography.Text>
-        </div>
-        <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
-          New project
-        </Button>
-      </Flex>
+    <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+      <BomPageHeader
+        title="Home"
+        eyebrow={`${companyLabel} · unified hub`}
+        description="Projects list below defaults to Recent. Expand a row for site details, roll-up counts, and module cards (BOM, Spec, SeisBrace, Submittal Manager)."
+        descriptionVariant="large-strong"
+        actions={
+          <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
+            New project
+          </Button>
+        }
+      />
 
       <Card
-        size="small"
-        styles={{ body: { paddingBlock: token.paddingSM, paddingInline: token.paddingMD } }}
-        title={
-          <Typography.Text strong style={{ fontSize: token.fontSize }}>
-            Global search
-          </Typography.Text>
-        }
+        styles={{ body: { padding: token.paddingMD } }}
+        style={{
+          background: token.colorBgContainer,
+          borderRadius: token.borderRadiusLG,
+          boxShadow: token.boxShadowTertiary,
+        }}
       >
-        <Typography.Paragraph type="secondary" style={{ margin: `0 0 ${token.marginSM}px`, fontSize: token.fontSizeSM }}>
-          One search across parts, content, submittals, and BOM. Open a result to download or package
-          it — we&apos;ll ask for a project at that moment.
-        </Typography.Paragraph>
-        <Flex gap={token.marginSM} wrap="wrap" align="stretch">
-          <AppSearchInput
-            allowClear
-            placeholder="Search parts, SKUs, descriptions…"
-            value={globalSearchText}
-            onChange={(e) => setGlobalSearchText(e.target.value)}
-            onPressEnter={runGlobalSearch}
-            style={{ flex: 1, minWidth: 200 }}
-          />
-          <Button type="primary" icon={<SearchOutlined />} size="large" onClick={runGlobalSearch}>
-            Search
-          </Button>
-          <Button size="large" icon={<GlobalOutlined />} onClick={() => navigate('/catalog')}>
-            Browse catalog
-          </Button>
-        </Flex>
+        <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
+          <Typography.Title
+            level={4}
+            style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading4) }}
+          >
+            Global search
+          </Typography.Title>
+          <PageDescription>
+            One search across parts, content, submittals, and BOM. Open a result to download or package
+            it — we&apos;ll ask for a project at that moment.
+          </PageDescription>
+          <Flex gap={token.marginSM} wrap="wrap" align="center">
+            <AppSearchInput
+              allowClear
+              size={INLINE_SEARCH_CONTROL_SIZE}
+              placeholder="Search parts, SKUs, descriptions…"
+              value={globalSearchText}
+              onChange={(e) => setGlobalSearchText(e.target.value)}
+              onPressEnter={runGlobalSearch}
+              style={{ flex: 1, minWidth: 200 }}
+            />
+            <Button type="primary" icon={<SearchOutlined />} size="large" onClick={runGlobalSearch}>
+              Search
+            </Button>
+            <Button size="large" icon={<GlobalOutlined />} onClick={() => navigate('/catalog')}>
+              Browse catalog
+            </Button>
+          </Flex>
+        </Space>
       </Card>
 
-      <Typography.Title level={4} style={{ marginBottom: token.marginXS }}>
-        Projects
-      </Typography.Title>
+      <BomPageHeader title="Projects" />
 
       <Card styles={{ body: { padding: 0 } }} style={listPanelStyle}>
-        <div style={{ padding: token.paddingMD, paddingBottom: token.paddingSM }}>
+        <Flex
+          align="center"
+          justify="space-between"
+          gap={token.marginSM}
+          wrap="wrap"
+          style={{
+            paddingInline: token.paddingMD,
+            paddingBlock: token.padding,
+            borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+          }}
+        >
           <AppSearchInput
             allowClear
+            size="middle"
             placeholder="Filter by name, address, city, or state…"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: '100%', marginBottom: token.marginSM }}
+            style={{ flex: '1 1 220px', maxWidth: 420, background: token.colorBgContainer }}
           />
+        </Flex>
+        <div style={{ paddingInline: token.paddingMD, paddingBottom: token.paddingSM }}>
           <Tabs activeKey={tab} items={tabItems} onChange={setTab} />
         </div>
 
@@ -664,16 +679,17 @@ export function HomeHubPage() {
                 },
                 expandRowByClick: true,
               }}
-              styles={{
-                header: {
-                  cell: {
-                    color: token.colorTextDescription,
-                    fontWeight: hydraBaseStrong.fontWeight,
-                  },
-                },
-              }}
+              styles={shellTableStyles(token)}
             />
-            <Flex justify="flex-end" style={{ padding: token.paddingMD, paddingTop: token.paddingSM }}>
+            <Flex
+              justify="flex-end"
+              align="center"
+              style={{
+                paddingInline: token.paddingMD,
+                paddingBlock: token.paddingSM,
+                borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+              }}
+            >
               <Pagination
                 current={projectsPage}
                 pageSize={HOME_HUB_PROJECTS_PAGE_SIZE}

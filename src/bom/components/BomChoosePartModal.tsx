@@ -18,6 +18,7 @@ import {
 } from '../../theme/hydraTypography';
 import {
   AppSearchInput,
+  INLINE_SEARCH_CONTROL_SIZE,
   Button,
   Card,
   Col,
@@ -353,7 +354,7 @@ export function BomChoosePartModal({
           </Typography.Text>
           <AppSearchInput
             allowClear
-            size="large"
+            size={INLINE_SEARCH_CONTROL_SIZE}
             placeholder="Search part number, figure, description, or manufacturer"
             value={search}
             onChange={(e) => setSearch(e.target.value)}

@@ -1,5 +1,5 @@
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { catalogPartReturnFrom } from './catalogPartNavigation';
@@ -15,8 +15,10 @@ import {
   readFeaturedKeysRawSnapshot,
   subscribeFeaturedPartsKeys,
 } from './featuredPartsConfig';
+import { BomCardTitle } from '../bom/components/BomCardTitle';
+import { PageDescription } from '../shell/PageDescription';
+import { hydraFeaturedPartsPanelBgLight } from '../theme/hydraSemanticColors';
 import {
-  hydraBaseNormal,
   hydraLargeNormal,
   hydraTextStyleToReactCss,
   hydraTitleHeading3,
@@ -41,12 +43,14 @@ type FeaturedPartsProps = {
   contextNote?: string;
   /** Stronger hierarchy and spacing when embedded on project Content home. */
   emphasized?: boolean;
+  /** Tinted panel, Heading 3 headline, and roomier spacing — global catalog home. */
+  panel?: boolean;
 };
 
 /**
  * Featured-parts grid — Figma horizontal card layout; up to six cards per view; auto-advances every 7s when paginated.
  */
-export function FeaturedParts({ contextNote, emphasized = false }: FeaturedPartsProps) {
+export function FeaturedParts({ contextNote, emphasized = false, panel = false }: FeaturedPartsProps) {
   const { token } = theme.useToken();
   const navigate = useNavigate();
   const location = useLocation();
@@ -128,45 +132,77 @@ export function FeaturedParts({ contextNote, emphasized = false }: FeaturedParts
   }, [parts, page]);
 
   /** Figma featured grid gap 16; flush row edges (no antd `Col` gutter inset on first/last column). */
-  const featuredGridGap = emphasized ? token.marginMD : token.margin;
+  const isProminent = emphasized || panel;
+  const featuredGridGap = isProminent ? token.marginMD : token.margin;
   const featuredGridHalfGap = featuredGridGap / 2;
-  const sectionStackGap = emphasized ? token.marginLG : token.marginMD;
-  const sectionTitleStyle = hydraTitleHeading3;
-  const sectionTitleLevel = 3;
+  const sectionStackGap = isProminent ? token.marginLG : token.marginSM;
+
+  const introCopy = (
+    <>
+      Hand-picked catalog entries.{' '}
+      {isProjectContentHome
+        ? 'Open a card to jump straight to that part’s listing (variants table) in this product catalog.'
+        : 'Open a card for downloads and submittal actions on the part page.'}
+      {contextNote ? <> {contextNote}</> : null}
+    </>
+  );
 
   const sectionHeader = (
-    <Flex vertical gap={emphasized ? token.marginXS : token.marginXXS} style={{ width: '100%' }}>
+    <Flex vertical gap={token.marginXS} style={{ width: '100%' }}>
       <Flex align="baseline" justify="space-between" wrap="wrap" gap={token.marginSM}>
-        <Typography.Title
-          level={sectionTitleLevel}
-          style={{ margin: 0, color: token.colorLink, ...hydraTextStyleToReactCss(sectionTitleStyle) }}
-        >
-          Featured parts
-        </Typography.Title>
+        {isProminent ? (
+          <Typography.Title
+            level={3}
+            style={{ margin: 0, color: token.colorLink, ...hydraTextStyleToReactCss(hydraTitleHeading3) }}
+          >
+            Featured parts
+          </Typography.Title>
+        ) : (
+          <BomCardTitle>Featured parts</BomCardTitle>
+        )}
         {parts.length >= FEATURED_PARTS_MIN ? (
-          <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraBaseNormal), color: token.colorTextDescription }}>
+          <Typography.Text type="secondary">
             {parts.length} curated highlight{parts.length !== 1 ? 's' : ''}
           </Typography.Text>
         ) : null}
       </Flex>
-      <Typography.Paragraph
-        style={{
-          margin: 0,
-          color: token.colorTextDescription,
-          ...hydraTextStyleToReactCss(hydraLargeNormal),
-        }}
-      >
-        Hand-picked catalog entries.{' '}
-        {isProjectContentHome
-          ? 'Open a card to jump straight to that part’s listing (variants table) in this product catalog.'
-          : 'Open a card for downloads and submittal actions on the part page.'}
-        {contextNote ? <> {contextNote}</> : null}
-      </Typography.Paragraph>
+      {isProminent ? (
+        <Typography.Paragraph
+          style={{
+            margin: 0,
+            color: token.colorTextDescription,
+            ...hydraTextStyleToReactCss(hydraLargeNormal),
+          }}
+        >
+          {introCopy}
+        </Typography.Paragraph>
+      ) : (
+        <PageDescription>{introCopy}</PageDescription>
+      )}
     </Flex>
   );
 
+  const wrapPanel = (node: ReactNode) =>
+    panel ? (
+      <div
+        style={{
+          width: '100%',
+          boxSizing: 'border-box',
+          padding: token.paddingLG,
+          background: hydraFeaturedPartsPanelBgLight,
+          borderRadius: token.borderRadiusLG,
+          boxShadow: token.boxShadowTertiary,
+          border: `${token.lineWidth}px ${token.lineType} ${token.colorInfoBorder}`,
+        }}
+      >
+        {node}
+      </div>
+    ) : (
+      node
+    );
+
   if (parts.length < FEATURED_PARTS_MIN) {
-    return (
+    return wrapPanel(
       <Flex vertical gap={sectionStackGap} style={{ width: '100%' }}>
         {sectionHeader}
         <Empty
@@ -181,11 +217,11 @@ export function FeaturedParts({ contextNote, emphasized = false }: FeaturedParts
             </Space>
           }
         />
-      </Flex>
+      </Flex>,
     );
   }
 
-  return (
+  return wrapPanel(
     <Flex
       vertical
       gap={sectionStackGap}
@@ -230,7 +266,7 @@ export function FeaturedParts({ contextNote, emphasized = false }: FeaturedParts
               <FeaturedPartCard
                 part={part}
                 isHighlighted={highlightedKey === part.key}
-                onLightSurface={emphasized}
+                onLightSurface={isProminent}
                 onOpen={() =>
                   navigate(partPath, contentListingPath ? undefined : { state: partReturnState })
                 }
@@ -264,6 +300,6 @@ export function FeaturedParts({ contextNote, emphasized = false }: FeaturedParts
           />
         </Flex>
       ) : null}
-    </Flex>
+    </Flex>,
   );
 }

@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from 'react';
 
+import { clearLastScopedProjectId, getLastScopedProjectId, setLastScopedProjectId } from '../shell/lastProjectScope';
 import {
   PROJECT_SEED_ROWS,
   readStoredProjects,
@@ -17,31 +18,55 @@ import {
 
 const STORAGE_KEY = 'hydra:bomActiveProjectId';
 
-function readStoredId(projects: ProjectRow[]): string {
+/** Lucas unified: no silent fallback — null enables search-first / Path B. */
+function readStoredId(): string | null {
   try {
-    const stored = sessionStorage.getItem(STORAGE_KEY);
-    if (stored && projects.some((p) => p.key === stored)) return stored;
+    return sessionStorage.getItem(STORAGE_KEY);
   } catch {
-    /* ignore */
+    return null;
   }
-  return projects[0]?.key ?? PROJECT_SEED_ROWS[0]?.key ?? '1';
 }
 
+export type NewProjectInput = Pick<
+  ProjectRow,
+  'name' | 'address' | 'address2' | 'country' | 'city' | 'state' | 'zipCode' | 'notes' | 'contacts'
+>;
+
 type ActiveProjectContextValue = {
-  projectId: string;
+  projectId: string | null;
   project: ProjectRow | undefined;
   projects: ProjectRow[];
   setProjectId: (id: string) => void;
+  clearProjectId: () => void;
+  /** Lucas gate / Home hub — creates without switching active project. */
+  addProject: (fields: NewProjectInput) => string;
+  /** Milos BOM shell — creates and activates (persisted list). */
   createProject: (input: ConstructionProjectInput) => ProjectRow;
-  updateProject: (id: string, input: ConstructionProjectInput) => void;
-  deleteProject: (id: string) => string;
+  updateProject: (key: string, fields: NewProjectInput | ConstructionProjectInput) => void;
+  deleteProject: (key: string) => string;
 };
 
 const ActiveProjectContext = createContext<ActiveProjectContextValue | null>(null);
 
+function fieldsFromConstructionInput(input: ConstructionProjectInput): NewProjectInput {
+  return {
+    name: input.name.trim(),
+    address: input.address?.trim() || '—',
+    city: input.city?.trim() || '—',
+    state: input.state?.trim() || '—',
+  };
+}
+
+export function resolveActiveConstructionProjectId(projectId: string | null | undefined): string {
+  return projectId ?? getLastScopedProjectId() ?? PROJECT_SEED_ROWS[0]?.key ?? '1';
+}
+
 export function ActiveProjectProvider({ children }: { children: ReactNode }) {
-  const [projects, setProjects] = useState<ProjectRow[]>(() => readStoredProjects());
-  const [projectId, setProjectIdState] = useState<string>(() => readStoredId(readStoredProjects()));
+  const [projectId, setProjectIdState] = useState<string | null>(readStoredId);
+  const [projects, setProjects] = useState<ProjectRow[]>(() => {
+    const stored = readStoredProjects();
+    return stored.length > 0 ? stored : [...PROJECT_SEED_ROWS];
+  });
 
   const persistProjects = useCallback((next: ProjectRow[]) => {
     setProjects(next);
@@ -49,8 +74,8 @@ export function ActiveProjectProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const project = useMemo(
-    () => projects.find((r) => r.key === projectId),
-    [projects, projectId],
+    () => (projectId ? projects.find((r) => r.key === projectId) : undefined),
+    [projectId, projects],
   );
 
   const setProjectId = useCallback((id: string) => {
@@ -60,16 +85,34 @@ export function ActiveProjectProvider({ children }: { children: ReactNode }) {
     } catch {
       /* ignore */
     }
+    setLastScopedProjectId(id);
   }, []);
+
+  const clearProjectId = useCallback(() => {
+    setProjectIdState(null);
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
+    clearLastScopedProjectId();
+  }, []);
+
+  const addProject = useCallback(
+    (fields: NewProjectInput) => {
+      const key = `p-${Date.now()}`;
+      persistProjects([{ key, ...fields, lastOpened: 'Just now', recent: true }, ...projects]);
+      return key;
+    },
+    [persistProjects, projects],
+  );
 
   const createProject = useCallback(
     (input: ConstructionProjectInput): ProjectRow => {
+      const key = `local-${Date.now()}`;
       const row: ProjectRow = {
-        key: `local-${Date.now()}`,
-        name: input.name.trim(),
-        address: input.address?.trim() || '—',
-        city: input.city?.trim() || '—',
-        state: input.state?.trim() || '—',
+        key,
+        ...fieldsFromConstructionInput(input),
         lastOpened: 'Just now',
         recent: true,
       };
@@ -81,35 +124,37 @@ export function ActiveProjectProvider({ children }: { children: ReactNode }) {
   );
 
   const updateProject = useCallback(
-    (id: string, input: ConstructionProjectInput) => {
-      persistProjects(
-        projects.map((p) =>
-          p.key === id
-            ? {
-                ...p,
-                name: input.name.trim(),
-                address: input.address?.trim() || p.address,
-                city: input.city?.trim() || p.city,
-                state: input.state?.trim() || p.state,
-              }
-            : p,
-        ),
-      );
+    (key: string, fields: NewProjectInput | ConstructionProjectInput) => {
+      const normalized =
+        'name' in fields && typeof fields.name === 'string'
+          ? 'address' in fields && !('contacts' in fields)
+            ? fieldsFromConstructionInput(fields as ConstructionProjectInput)
+            : (fields as NewProjectInput)
+          : (fields as NewProjectInput);
+      persistProjects(projects.map((r) => (r.key === key ? { ...r, ...normalized } : r)));
     },
     [persistProjects, projects],
   );
 
   const deleteProject = useCallback(
-    (id: string): string => {
-      const next = projects.filter((p) => p.key !== id);
+    (key: string): string => {
+      const next = projects.filter((r) => r.key !== key);
       const restored = next.length > 0 ? next : [...PROJECT_SEED_ROWS];
       persistProjects(restored);
-      const fallback = restored[0];
-      const nextActiveId = projectId === id ? (fallback?.key ?? projectId) : projectId;
-      if (projectId === id && fallback) setProjectId(fallback.key);
-      return nextActiveId;
+      const fallback = restored[0]?.key ?? PROJECT_SEED_ROWS[0]?.key ?? '1';
+      if (projectId === key) {
+        try {
+          sessionStorage.removeItem(STORAGE_KEY);
+        } catch {
+          /* ignore */
+        }
+        clearLastScopedProjectId();
+        setProjectIdState(null);
+        return fallback;
+      }
+      return resolveActiveConstructionProjectId(projectId);
     },
-    [persistProjects, projectId, projects, setProjectId],
+    [persistProjects, projectId, projects],
   );
 
   const value = useMemo(
@@ -118,11 +163,23 @@ export function ActiveProjectProvider({ children }: { children: ReactNode }) {
       project,
       projects,
       setProjectId,
+      clearProjectId,
+      addProject,
       createProject,
       updateProject,
       deleteProject,
     }),
-    [projectId, project, projects, setProjectId, createProject, updateProject, deleteProject],
+    [
+      projectId,
+      project,
+      projects,
+      setProjectId,
+      clearProjectId,
+      addProject,
+      createProject,
+      updateProject,
+      deleteProject,
+    ],
   );
 
   return <ActiveProjectContext.Provider value={value}>{children}</ActiveProjectContext.Provider>;
@@ -134,12 +191,12 @@ export function useActiveProject(): ActiveProjectContextValue {
   return ctx;
 }
 
-/** BOM hub for the active construction project. */
+/** BOM hub for a construction project. */
 export function bomSitePath(constructionProjectId: string): string {
   return `/bom/site/${constructionProjectId}`;
 }
 
 export function useBomHubPath(): string {
   const { projectId } = useActiveProject();
-  return bomSitePath(projectId);
+  return bomSitePath(resolveActiveConstructionProjectId(projectId));
 }

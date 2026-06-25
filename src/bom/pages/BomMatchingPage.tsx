@@ -263,8 +263,9 @@ export function BomMatchingPage() {
           r.itemId === row.itemId ? { ...r, lineStatus: 'pending' as const } : r,
         ),
       );
-      navigate(reviewRoute, { state: uploadState });
-      message.info('Returned to guided review for this part.');
+      navigate(reviewRoute, {
+        state: { ...uploadState, focusItemId: row.itemId, resolveFromTable: true },
+      });
     },
     [matchResults, navigate, persist, reviewRoute, uploadState],
   );

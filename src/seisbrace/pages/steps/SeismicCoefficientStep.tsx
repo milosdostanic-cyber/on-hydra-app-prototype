@@ -6,6 +6,7 @@ import { useSeisBrace } from '../../context/SeisBraceContext';
 import { useSeisBraceWizard } from '../../context/SeisBraceWizardContext';
 import { CpCalculationInput } from '../../components/CpCalculationInput';
 import { WizardFooter } from '../../components/WizardFooter';
+import { PageDescription } from '../../../shell/PageDescription';
 import { draftToBraceFields } from '../../utils/draft';
 import {
   App,
@@ -81,9 +82,9 @@ export function SeismicCoefficientStep() {
         <Typography.Title level={4} style={{ margin: 0 }}>
           Seismic Coefficient
         </Typography.Title>
-        <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
+        <PageDescription>
           Enter the brace information and choose how the seismic coefficient (Cp) is calculated.
-        </Typography.Paragraph>
+        </PageDescription>
       </div>
 
       <Form
