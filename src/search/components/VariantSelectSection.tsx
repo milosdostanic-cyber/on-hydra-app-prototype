@@ -2,22 +2,26 @@ import { DownOutlined, PictureOutlined } from '@ant-design/icons';
 import { useMemo } from 'react';
 
 import type { PartDetailContent, PartVariationRow } from '../partDetailDemoData';
-import { useHydraColorMode } from '../../context/HydraThemeContext';
-import { buttonPrimaryPalette, buttonPrimaryPaletteDark } from '../../theme/buttonPrimaryPalette';
+import { pageDescriptionStyle } from '../../shell/pageDescriptionStyle';
 import { Button, Dropdown, Flex, Typography, theme } from '../../ui/antd';
 import type { MenuProps } from '../../ui/antd';
-import {
-  hydraBaseNormal,
-  hydraSmallNormal,
-  hydraTextStyleToReactCss,
-  hydraTitleHeading4,
-} from '../../theme/hydraTypography';
+import { hydraBaseNormal, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type Props = {
   detail: PartDetailContent;
   selectedVariantKey: string | null;
   onChange: (variantKey: string | null) => void;
+  /** Primary full-width picker in the configure-and-add card. */
+  compact?: boolean;
 };
+
+function fieldLabelStyle() {
+  return {
+    ...hydraTextStyleToReactCss(hydraBaseNormal),
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.04em',
+  };
+}
 
 function VariationThumbnail({ variation }: { variation: PartVariationRow }) {
   const { token } = theme.useToken();
@@ -28,8 +32,8 @@ function VariationThumbnail({ variation }: { variation: PartVariationRow }) {
         src={variation.thumbnailUrl}
         alt=""
         style={{
-          width: 28,
-          height: 28,
+          width: token.controlHeight,
+          height: token.controlHeight,
           objectFit: 'cover',
           borderRadius: token.borderRadiusSM,
           flexShrink: 0,
@@ -43,8 +47,8 @@ function VariationThumbnail({ variation }: { variation: PartVariationRow }) {
       align="center"
       justify="center"
       style={{
-        width: 28,
-        height: 28,
+        width: token.controlHeight,
+        height: token.controlHeight,
         flexShrink: 0,
         borderRadius: token.borderRadiusSM,
         border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
@@ -52,18 +56,39 @@ function VariationThumbnail({ variation }: { variation: PartVariationRow }) {
         color: token.colorTextQuaternary,
       }}
     >
-      <PictureOutlined style={{ fontSize: token.fontSizeSM }} />
+      <PictureOutlined style={{ fontSize: token.fontSize }} />
     </Flex>
   );
 }
 
-/** Interactive "Select Variation" dropdown with thumbnail options. */
-export function VariantSelectSection({ detail, selectedVariantKey, onChange }: Props) {
+function FieldLabel({ children }: { children: string }) {
   const { token } = theme.useToken();
-  const { colorMode } = useHydraColorMode();
-  const accentOrange =
-    colorMode === 'dark' ? buttonPrimaryPaletteDark.text : buttonPrimaryPalette.text;
+  return (
+    <Typography.Text
+      type="secondary"
+      style={{
+        display: 'block',
+        marginBottom: token.marginXXS,
+        ...fieldLabelStyle(),
+      }}
+    >
+      {children}
+    </Typography.Text>
+  );
+}
 
+function VariationDropdownButton({
+  detail,
+  selectedVariantKey,
+  onChange,
+  primary = false,
+}: {
+  detail: PartDetailContent;
+  selectedVariantKey: string | null;
+  onChange: (variantKey: string | null) => void;
+  primary?: boolean;
+}) {
+  const { token } = theme.useToken();
   const selectedVariation = detail.variations.find((v) => v.key === selectedVariantKey);
 
   const menuItems: MenuProps['items'] = useMemo(
@@ -74,10 +99,10 @@ export function VariantSelectSection({ detail, selectedVariantKey, onChange }: P
           <Flex align="center" gap={token.marginSM} style={{ minWidth: 0, paddingBlock: token.paddingXXS }}>
             <VariationThumbnail variation={v} />
             <Flex vertical gap={0} style={{ minWidth: 0 }}>
-              <Typography.Text ellipsis style={{ ...hydraTextStyleToReactCss(hydraBaseNormal) }}>
+              <Typography.Text ellipsis style={hydraTextStyleToReactCss(hydraBaseNormal)}>
                 {v.name}
               </Typography.Text>
-              <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+              <Typography.Text type="secondary" style={pageDescriptionStyle(token)}>
                 {v.sku}
               </Typography.Text>
             </Flex>
@@ -87,37 +112,76 @@ export function VariantSelectSection({ detail, selectedVariantKey, onChange }: P
     [detail.variations, token],
   );
 
-  const cardTitleStyle = {
-    margin: 0,
-    ...hydraTextStyleToReactCss(hydraTitleHeading4),
-    color: accentOrange,
-  };
+  const buttonLabel = selectedVariation
+    ? `${selectedVariation.name} · ${selectedVariation.sku}`
+    : 'Select variation';
 
   return (
-    <Flex vertical gap={token.marginSM}>
-      <Typography.Text style={cardTitleStyle}>Available Sizes &amp; Variations</Typography.Text>
-      <Typography.Paragraph
-        type="secondary"
-        style={{ margin: 0, ...hydraTextStyleToReactCss(hydraSmallNormal) }}
+    <Dropdown
+      menu={{
+        items: menuItems,
+        selectable: true,
+        selectedKeys: selectedVariantKey ? [selectedVariantKey] : [],
+        onSelect: ({ key }) => onChange(String(key)),
+      }}
+      trigger={['click']}
+      disabled={detail.variations.length === 0}
+    >
+      <Button
+        type={primary ? 'primary' : 'default'}
+        size={primary ? 'large' : 'middle'}
+        block={primary}
+        style={{ fontWeight: primary ? token.fontWeightStrong : undefined }}
       >
-        View all available product variations. All variations have the same specifications with
-        size-specific differences.
-      </Typography.Paragraph>
+        {primary ? (
+          <Flex align="center" justify="space-between" gap={token.marginSM} style={{ width: '100%' }}>
+            <Typography.Text ellipsis style={{ color: 'inherit', flex: 1, textAlign: 'left' }}>
+              {buttonLabel}
+            </Typography.Text>
+            <DownOutlined />
+          </Flex>
+        ) : (
+          <>
+            <Typography.Text ellipsis style={{ maxWidth: token.sizeUnit * 50 }}>
+              {buttonLabel}
+            </Typography.Text>{' '}
+            <DownOutlined />
+          </>
+        )}
+      </Button>
+    </Dropdown>
+  );
+}
 
-      <Dropdown
-        menu={{
-          items: menuItems,
-          selectable: true,
-          selectedKeys: selectedVariantKey ? [selectedVariantKey] : [],
-          onSelect: ({ key }) => onChange(String(key)),
-        }}
-        trigger={['click']}
-        disabled={detail.variations.length === 0}
-      >
-        <Button type="primary" size="large" style={{ fontWeight: token.fontWeightStrong }}>
-          {selectedVariation ? selectedVariation.name : 'Select Variation'} <DownOutlined />
-        </Button>
-      </Dropdown>
+/** Variation picker — primary dropdown in configure card, or expanded block with helper copy. */
+export function VariantSelectSection({ detail, selectedVariantKey, onChange, compact = false }: Props) {
+  const { token } = theme.useToken();
+
+  if (compact) {
+    return (
+      <div style={{ width: '100%' }}>
+        <VariationDropdownButton
+          primary
+          detail={detail}
+          selectedVariantKey={selectedVariantKey}
+          onChange={onChange}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <Flex vertical gap={token.marginXS}>
+      <FieldLabel>Available sizes &amp; variations</FieldLabel>
+      <Typography.Paragraph type="secondary" style={{ margin: 0, ...pageDescriptionStyle(token) }}>
+        Pick the size or finish you need. Specifications are shared; only dimensions differ by
+        variation.
+      </Typography.Paragraph>
+      <VariationDropdownButton
+        detail={detail}
+        selectedVariantKey={selectedVariantKey}
+        onChange={onChange}
+      />
     </Flex>
   );
 }
