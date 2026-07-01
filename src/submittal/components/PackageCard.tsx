@@ -9,7 +9,7 @@ import {
   PlusOutlined,
   RightOutlined,
 } from '@ant-design/icons';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useActionTrailHighlightActive } from '../../context/ActionTrailContext';

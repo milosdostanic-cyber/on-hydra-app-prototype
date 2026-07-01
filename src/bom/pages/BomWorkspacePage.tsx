@@ -41,7 +41,7 @@ import { useBomHubPath } from '../../context/ActiveProjectContext';
 import { useActionTrail } from '../../context/ActionTrailContext';
 import { PageBackButton } from '../../shell/PageBackButton';
 import { ActionTrailNewTag } from '../../search/components/ActionTrailNewTag';
-import { actionTrailHighlightStyle, actionTrailTableRowProps } from '../../search/actionTrailStyles';
+import { actionTrailTableRowProps } from '../../search/actionTrailStyles';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import {
   Alert,

@@ -28,6 +28,7 @@ export {
   Flex,
   FloatButton,
   Form,
+  Grid,
   Input,
   InputNumber,
   Layout,

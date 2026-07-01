@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { BomPageHeader } from '../bom/layout/BomPageHeader';
-import { useActionTrail, useActionTrailModuleLifecycle } from '../context/ActionTrailContext';
+import { useActionTrailModuleLifecycle } from '../context/ActionTrailContext';
 import { useSubmittalPackages } from '../context/SubmittalPackagesContext';
 import { PageBackButton } from '../shell/PageBackButton';
 import { Button, Empty, Space, Tooltip, Typography, theme } from '../ui/antd';

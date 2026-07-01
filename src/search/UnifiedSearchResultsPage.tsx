@@ -138,7 +138,6 @@ function SearchResultLabeledRow({
 }
 
 function UsageContextList({ row }: { row: UnifiedResultRow }) {
-  const { token } = theme.useToken();
   const contexts = row.usageContexts ?? [];
   if (contexts.length === 0) return null;
 
