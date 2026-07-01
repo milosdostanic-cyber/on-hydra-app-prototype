@@ -258,7 +258,6 @@ function SkuMatchCard({
                 confidence={scoreBand === 'high' ? 'high' : scoreBand === 'medium' ? 'medium' : 'low'}
                 percent={matchConfidence}
                 bandWithPercent
-                size="base"
               />
             ) : null}
             <HydraTag tone={domesticImport === 'Domestic' ? 'processing' : 'default'}>

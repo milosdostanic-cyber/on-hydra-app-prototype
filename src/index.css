@@ -25,6 +25,15 @@ body {
 }
 
 /*
+ * Tag label — Figma `Base/Normal` (14/22), not antd default `fontSizeSM` (12).
+ * Vars set in `applyHydraTagCssVars` (`brandColors.ts`).
+ */
+.ant-tag {
+  font-size: var(--hydra-tag-font-size);
+  line-height: var(--hydra-tag-line-height);
+}
+
+/*
  * Alert headline — Figma `Large/Strong` (16/24, semibold) + `colorText`.
  * Vars set in `applyHydraAlertTitleCssVars` (`brandColors.ts`).
  */

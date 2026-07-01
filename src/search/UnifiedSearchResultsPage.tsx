@@ -38,8 +38,6 @@ import {
   type UnifiedResultRow,
 } from './unifiedSearchData';
 
-const SEARCH_RESULT_TAG_SIZE = 'base' as const;
-
 function tabFromParams(domain: string | null, scope: string | null): 'all' | SearchDomain {
   if (domain && (SEARCH_DOMAIN_ORDER as string[]).includes(domain)) return domain as SearchDomain;
   if (scope === 'parts') return 'parts';
@@ -53,7 +51,7 @@ function TabCountLabel({ label, count }: { label: string; count: number }) {
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: token.marginXS }}>
       {label}
       {hasResults ? (
-        <HydraTag size="sm" bordered={false} style={{ margin: 0 }}>
+        <HydraTag bordered={false} style={{ margin: 0 }}>
           {count}
         </HydraTag>
       ) : (
@@ -150,7 +148,6 @@ function UsageContextList({ row }: { row: UnifiedResultRow }) {
         <HydraColorfulTag
           key={`${context.module}-${context.destinationName}`}
           preset={SEARCH_DOMAIN_TAG_PRESET[context.module]}
-          size={SEARCH_RESULT_TAG_SIZE}
         >
           {context.label}: {context.destinationName}
           {context.projectName ? ` · ${context.projectName}` : ''}
@@ -179,7 +176,7 @@ function ResultRowAttributeSection({ row }: { row: UnifiedResultRow }) {
   return (
     <SearchResultLabeledRow label={attributeLabel} align="center">
       {(row.meta ?? []).slice(0, 3).map((meta) => (
-        <HydraTag key={meta} size={SEARCH_RESULT_TAG_SIZE}>
+        <HydraTag key={meta}>
           {meta}
         </HydraTag>
       ))}
@@ -242,7 +239,7 @@ function ResultRowIdentitySection({
           {row.title}
         </Link>
         {showDomainTag ? (
-          <HydraColorfulTag preset={SEARCH_DOMAIN_TAG_PRESET[row.domain]} size={SEARCH_RESULT_TAG_SIZE}>
+          <HydraColorfulTag preset={SEARCH_DOMAIN_TAG_PRESET[row.domain]}>
             {SEARCH_DOMAIN_LABELS[row.domain]}
           </HydraColorfulTag>
         ) : null}

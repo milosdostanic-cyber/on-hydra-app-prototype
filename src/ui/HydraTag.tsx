@@ -19,8 +19,6 @@ export type HydraColorfulPreset =
   | 'geekblue'
   | 'purple';
 
-export type HydraTagSize = 'sm' | 'base';
-
 function toneColors(token: ReturnType<typeof theme.useToken>['token'], tone: HydraTagTone) {
   if (tone === 'success') {
     return { background: token.colorSuccessBg, borderColor: token.colorSuccessBorder, textColor: token.colorSuccessText };
@@ -41,22 +39,19 @@ function toneColors(token: ReturnType<typeof theme.useToken>['token'], tone: Hyd
   };
 }
 
-function tagMetrics(token: ReturnType<typeof theme.useToken>['token'], size: HydraTagSize) {
-  const fontSize = size === 'base' ? token.fontSize : token.fontSizeSM;
-  const lineHeightUnitless = size === 'base' ? token.lineHeight : token.lineHeightSM;
+function tagMetrics(token: ReturnType<typeof theme.useToken>['token']) {
   return {
-    fontSize,
-    lineHeight: `${fontSize * lineHeightUnitless}px`,
+    fontSize: token.fontSize,
+    lineHeight: `${token.fontSize * token.lineHeight}px`,
   };
 }
 
 function hydraTagRootStyle(
   token: ReturnType<typeof theme.useToken>['token'],
-  size: HydraTagSize,
   colors?: { background?: string; borderColor?: string; textColor?: string; borderWidth?: number },
   style?: CSSProperties,
 ): CSSProperties {
-  const metrics = tagMetrics(token, size);
+  const metrics = tagMetrics(token);
   return {
     marginInline: 0,
     marginBlock: 0,
@@ -81,7 +76,6 @@ function hydraTagRootStyle(
 type HydraTagProps = {
   children: ReactNode;
   tone?: HydraTagTone;
-  size?: HydraTagSize;
   bordered?: boolean;
   icon?: ReactNode;
   style?: CSSProperties;
@@ -92,7 +86,6 @@ type HydraTagProps = {
 export function HydraTag({
   children,
   tone = 'default',
-  size = 'sm',
   bordered = true,
   icon,
   style,
@@ -100,7 +93,7 @@ export function HydraTag({
 }: HydraTagProps) {
   const { token } = theme.useToken();
   const colors = toneColors(token, tone);
-  const rootStyle = hydraTagRootStyle(token, size, {
+  const rootStyle = hydraTagRootStyle(token, {
     background: colors.background,
     borderColor: bordered ? colors.borderColor : undefined,
     textColor: colors.textColor,
@@ -129,7 +122,6 @@ export function HydraTag({
 type HydraColorfulTagProps = {
   children: ReactNode;
   preset: HydraColorfulPreset;
-  size?: HydraTagSize;
   style?: CSSProperties;
 };
 
@@ -137,9 +129,9 @@ type HydraColorfulTagProps = {
  * Figma DS `Tag / Colorful` (node 137:7488) — antd preset ramp `X-1` bg / `X-3` border / `X-6` text.
  * Border is kept (Figma `border=true`); only layout metrics are overridden so colors come from the preset.
  */
-export function HydraColorfulTag({ children, preset, size = 'sm', style }: HydraColorfulTagProps) {
+export function HydraColorfulTag({ children, preset, style }: HydraColorfulTagProps) {
   const { token } = theme.useToken();
-  const rootStyle = hydraTagRootStyle(token, size, undefined, style);
+  const rootStyle = hydraTagRootStyle(token, undefined, style);
 
   return (
     <Tag color={preset} styles={{ root: rootStyle }}>

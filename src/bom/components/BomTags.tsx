@@ -17,7 +17,6 @@ import { bomProjectStatusDescription } from '../bomProjectStatus';
 import { HydraTag, type HydraTagTone } from '../../ui/HydraTag';
 import { Badge, Tooltip } from '../../ui/antd';
 import { CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
-import { hydraBaseNormal, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type AntBadgeStatus = NonNullable<BadgeProps['status']>;
 
@@ -63,15 +62,12 @@ export function BomConfidenceTag({
   showIcon = false,
   percent,
   bandWithPercent = false,
-  size = 'sm',
 }: {
   confidence: BomItemConfidence;
   showIcon?: boolean;
   /** When set, renders percent only, or "High · 94%" when `bandWithPercent`. */
   percent?: number;
   bandWithPercent?: boolean;
-  /** `base` uses 14px (Figma Base/Normal); default `sm` keeps compact table tags. */
-  size?: 'sm' | 'base';
 }) {
   const tone: HydraTagTone = confidence === 'high' ? 'success' : confidence === 'medium' ? 'warning' : 'error';
   const label =
@@ -81,11 +77,7 @@ export function BomConfidenceTag({
         : `${percent}%`
       : confidenceLabel[confidence];
   return (
-    <HydraTag
-      tone={tone}
-      icon={showIcon ? confidenceIcon(confidence) : undefined}
-      style={size === 'base' ? hydraTextStyleToReactCss(hydraBaseNormal) : undefined}
-    >
+    <HydraTag tone={tone} icon={showIcon ? confidenceIcon(confidence) : undefined}>
       {label}
     </HydraTag>
   );

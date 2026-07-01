@@ -73,6 +73,7 @@ function buildHydraShellComponents(mode: HydraColorMode): NonNullable<ThemeConfi
     /**
      * Figma DS `Tag` defaults (`type=default, border=true`):
      * bg `colorFillQuaternary`, border `colorBorder`, text `colorText`.
+     * Label typography (14/22 Base/Normal) — `applyHydraTagCssVars` + `index.css` (antd defaults to `fontSizeSM`).
      */
     Tag: {
       defaultBg: alias.colorFillQuaternary,

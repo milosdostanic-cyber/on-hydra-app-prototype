@@ -161,9 +161,13 @@ export function VariantSelectSection({ detail, selectedVariantKey, onChange, act
               <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraTitleHeading5), margin: 0 }}>
                 {selectedVariation.name}
               </Typography.Text>
-              <Flex gap={token.marginSM} wrap="wrap">
-                <HydraTag bordered={false}>{optionMetadata(selectedVariation)}</HydraTag>
-                <HydraTag bordered={false}>{selectedVariation.description}</HydraTag>
+              <Flex gap={token.marginSM} wrap="wrap" align="flex-start">
+                <HydraTag bordered={false} style={{ margin: 0 }}>
+                  {optionMetadata(selectedVariation)}
+                </HydraTag>
+                <HydraTag bordered={false} style={{ margin: 0 }}>
+                  {selectedVariation.description}
+                </HydraTag>
               </Flex>
             </Flex>
           </Flex>

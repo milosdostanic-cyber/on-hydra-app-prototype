@@ -1,6 +1,11 @@
 import type { HydraColorMode } from './hydraColorMode';
 import { hydraDarkAlias, hydraLightAlias } from './hydraAlias';
-import { brandFontFamily, hydraLargeStrong, hydraTextStyleToReactCss } from './hydraTypography';
+import {
+  brandFontFamily,
+  hydraBaseNormal,
+  hydraLargeStrong,
+  hydraTextStyleToReactCss,
+} from './hydraTypography';
 import {
   bluePrimarySemantics,
   bluePrimarySemanticsDark,
@@ -34,6 +39,15 @@ export function applyHydraBrandCssVars(root: HTMLElement, mode: HydraColorMode):
   root.style.setProperty('--hydra-brand-primary-hover', b.primaryHover);
   root.style.setProperty('--hydra-brand-primary-active', b.primaryDark);
   root.style.setProperty('--hydra-font-family', brandFontFamily);
+}
+
+/**
+ * Tag label — Figma `Base/Normal` (14/22). antd `Tag` defaults to `fontSizeSM`; vars consumed in `index.css`.
+ */
+export function applyHydraTagCssVars(root: HTMLElement): void {
+  const tagStyle = hydraTextStyleToReactCss(hydraBaseNormal);
+  root.style.setProperty('--hydra-tag-font-size', `${tagStyle.fontSize}px`);
+  root.style.setProperty('--hydra-tag-line-height', tagStyle.lineHeight as string);
 }
 
 /**
