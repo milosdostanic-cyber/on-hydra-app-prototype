@@ -6,7 +6,7 @@ import {
   PlusOutlined,
   UploadOutlined,
 } from '@ant-design/icons';
-import { useEffect, useMemo, useRef, useState, type Key } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback, type Key } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useBomImportFlow } from '../context/BomImportFlowContext';
@@ -39,8 +39,10 @@ import {
 } from '../bomWorkspaceHelpers';
 import { useBomHubPath } from '../../context/ActiveProjectContext';
 import { useActionTrail } from '../../context/ActionTrailContext';
+import { shouldShowNewTag } from '../../context/actionTrailStore';
 import { PageBackButton } from '../../shell/PageBackButton';
 import { ActionTrailNewTag } from '../../search/components/ActionTrailNewTag';
+import { partKeyFromCatalogRowId } from '../../search/actionTrailPartKey';
 import { actionTrailTableRowProps } from '../../search/actionTrailStyles';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import {
@@ -128,11 +130,21 @@ export function BomWorkspacePage() {
   const projectTitle = project?.name ?? bomProjectTitleById(bomProjectId) ?? 'BOM project';
   const isSeedEmptyProject = project != null && project.items === 0;
   const { rows, setRows } = useBomWorkspaceRows(bomProjectId);
-  const { entries, pendingItemIds } = useActionTrail();
-  const trailItemIds = useMemo(
-    () => new Set(pendingItemIds('bom', bomProjectId)),
-    [entries, pendingItemIds, bomProjectId],
+  const { entries, activateItemGuidance } = useActionTrail();
+  const isTrailRow = useCallback(
+    (row: BomItem) =>
+      shouldShowNewTag(
+        'bom',
+        bomProjectId,
+        row.id,
+        partKeyFromCatalogRowId(row.id) ?? row.figureNumber,
+      ),
+    [bomProjectId, entries],
   );
+
+  useEffect(() => {
+    if (bomProjectId) activateItemGuidance('bom', bomProjectId);
+  }, [bomProjectId, activateItemGuidance]);
   const { pendingForProject, setActiveUploadId } = useBomImportFlow();
   const pendingUploadSessions = pendingForProject(bomProjectId);
   const [query, setQuery] = useState('');
@@ -492,7 +504,12 @@ export function BomWorkspacePage() {
         key: 'actionTrail',
         width: 56,
         render: (_: unknown, row: BomItem) => (
-          <ActionTrailNewTag module="bom" subProjectId={bomProjectId} itemId={row.id} />
+          <ActionTrailNewTag
+            module="bom"
+            subProjectId={bomProjectId}
+            itemId={row.id}
+            partKey={partKeyFromCatalogRowId(row.id) ?? row.figureNumber}
+          />
         ),
       },
       ...buildBomWorkspaceColumns({
@@ -811,9 +828,7 @@ export function BomWorkspacePage() {
           columns={columns}
           dataSource={filteredRows}
           scroll={{ x: 'max-content' }}
-          onRow={(record) =>
-            actionTrailTableRowProps(token, trailItemIds.has(record.id))
-          }
+          onRow={(record) => actionTrailTableRowProps(token, isTrailRow(record))}
           rowSelection={{
             selectedRowKeys,
             onChange: (keys) => setSelectedRowKeys(keys),

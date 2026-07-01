@@ -9,12 +9,14 @@ import {
   PlusOutlined,
   RightOutlined,
 } from '@ant-design/icons';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useActionTrailHighlightActive } from '../../context/ActionTrailContext';
+import { useActionTrailHighlightActive, useActionTrail } from '../../context/ActionTrailContext';
+import { markItemViewed } from '../../context/actionTrailStore';
 import { useSubmittalPackages } from '../../context/SubmittalPackagesContext';
 import { ActionTrailNewTag } from '../../search/components/ActionTrailNewTag';
+import { ActionTrailSubProjectNewTag } from '../../search/components/ActionTrailSubProjectNewTag';
 import { actionTrailHighlightStyle } from '../../search/actionTrailStyles';
 import { shellTableLinkButtonStyle, shellTableStyles } from '../../shell/shellTablePatterns';
 import {
@@ -48,9 +50,14 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
 export function PackageCard({ pkg, onDownload, onEdit }: Props) {
   const { token } = theme.useToken();
   const highlighted = useActionTrailHighlightActive('submittal', pkg.id);
+  const { activateItemGuidance } = useActionTrail();
   const navigate = useNavigate();
   const { deletePackage, removePartFromPackage, movePart } = useSubmittalPackages();
   const [expanded, setExpanded] = useState(true);
+
+  useEffect(() => {
+    if (expanded) activateItemGuidance('submittal', pkg.id);
+  }, [expanded, pkg.id, activateItemGuidance]);
 
   const columns: TableColumnsType<SubmittalPackagePart> = [
     {
@@ -81,11 +88,14 @@ export function PackageCard({ pkg, onDownload, onEdit }: Props) {
           <Button
             type="link"
             style={shellTableLinkButtonStyle}
-            onClick={() => navigate(`/search/parts/${row.partKey}`)}
+            onClick={() => {
+              markItemViewed('submittal', pkg.id, row.id, row.partKey);
+              navigate(`/search/parts/${row.partKey}`);
+            }}
           >
             {row.displayName}
           </Button>
-          <ActionTrailNewTag module="submittal" subProjectId={pkg.id} itemId={row.id} />
+          <ActionTrailNewTag module="submittal" subProjectId={pkg.id} itemId={row.id} partKey={row.partKey} />
         </Flex>
       ),
     },
@@ -154,7 +164,10 @@ export function PackageCard({ pkg, onDownload, onEdit }: Props) {
             aria-label={expanded ? 'Collapse package' : 'Expand package'}
           />
           <Flex vertical>
-            <Typography.Text strong>{pkg.name}</Typography.Text>
+            <Flex align="center" gap={token.marginXS} wrap="wrap">
+              <Typography.Text strong>{pkg.name}</Typography.Text>
+              <ActionTrailSubProjectNewTag module="submittal" subProjectId={pkg.id} />
+            </Flex>
             <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
               {pkg.parts.length} part{pkg.parts.length === 1 ? '' : 's'} · Updated{' '}
               {dateFormatter.format(new Date(pkg.updatedAt))}

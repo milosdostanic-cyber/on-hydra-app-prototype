@@ -13,6 +13,8 @@ import { ActionTrailLiveRegion } from '../search/components/ActionTrailLiveRegio
 
 import {
   actionTrailModuleForMenuKey,
+  activateModuleGuidance,
+  activateItemGuidance,
   clearNewTagsForModule,
   consumeForModule,
   countForModule,
@@ -20,13 +22,17 @@ import {
   getActionTrailServerSnapshot,
   getActionTrailSnapshot,
   isActionTrailEnabled,
+  markItemViewed,
   pendingItemIds,
   pendingSubProjectIds,
   pruneExpired,
   registerEntry,
+  resetActionTrail,
   setActionTrailEnabled,
   shouldShowNewTag,
+  shouldShowSubProjectNewTag,
   subscribeActionTrail,
+  unseenSubProjectIds,
   type ActionTrailModule,
   type GuidanceEntry,
   type RegisterEntryInput,
@@ -39,12 +45,18 @@ type ActionTrailContextValue = {
   entries: GuidanceEntry[];
   setEnabled: (enabled: boolean) => void;
   registerEntry: (input: RegisterEntryInput) => void;
+  resetActionTrail: () => void;
   countForModule: (module: ActionTrailModule) => number;
   countForMenuKey: (menuKey: string) => number;
   entriesForModule: (module: ActionTrailModule) => GuidanceEntry[];
   pendingSubProjectIds: (module: ActionTrailModule) => string[];
+  unseenSubProjectIds: (module: ActionTrailModule) => string[];
+  shouldShowSubProjectNewTag: (module: ActionTrailModule, subProjectId: string) => boolean;
   pendingItemIds: (module: ActionTrailModule, subProjectId: string) => string[];
-  shouldShowNewTag: (module: ActionTrailModule, subProjectId: string, itemId: string) => boolean;
+  shouldShowNewTag: (module: ActionTrailModule, subProjectId: string, itemId: string, partKey?: string) => boolean;
+  activateModuleGuidance: (module: ActionTrailModule) => void;
+  activateItemGuidance: (module: ActionTrailModule, subProjectId: string) => void;
+  markItemViewed: (module: ActionTrailModule, subProjectId: string, itemId: string, partKey?: string) => void;
   consumeForModule: (module: ActionTrailModule, subProjectId?: string) => void;
   clearNewTagsForModule: (module: ActionTrailModule) => void;
 };
@@ -81,12 +93,18 @@ export function ActionTrailProvider({ children }: { children: ReactNode }) {
       entries: state.entries,
       setEnabled: setActionTrailEnabled,
       registerEntry,
+      resetActionTrail,
       countForModule: countForModuleCb,
       countForMenuKey,
       entriesForModule,
       pendingSubProjectIds,
+      unseenSubProjectIds,
+      shouldShowSubProjectNewTag,
       pendingItemIds,
       shouldShowNewTag,
+      activateModuleGuidance,
+      activateItemGuidance,
+      markItemViewed,
       consumeForModule,
       clearNewTagsForModule,
     }),
@@ -107,15 +125,19 @@ export function useActionTrail(): ActionTrailContextValue {
   return ctx;
 }
 
-/** Mark module guidance consumed on mount; clear item "New" tags on real unmount (Strict Mode safe). */
+/** Activate L2/L3 guidance on mount; L1 badge clears only on L3 (`markItemViewed`). Content clears on open. */
 export function useActionTrailModuleLifecycle(module: ActionTrailModule) {
-  const { consumeForModule, clearNewTagsForModule } = useActionTrail();
+  const { activateModuleGuidance, consumeForModule, clearNewTagsForModule } = useActionTrail();
   const visitGeneration = useRef(0);
 
   useEffect(() => {
     visitGeneration.current += 1;
     const generation = visitGeneration.current;
-    consumeForModule(module);
+    if (module === 'content') {
+      consumeForModule(module);
+    } else {
+      activateModuleGuidance(module);
+    }
     return () => {
       queueMicrotask(() => {
         if (visitGeneration.current === generation) {
@@ -123,7 +145,7 @@ export function useActionTrailModuleLifecycle(module: ActionTrailModule) {
         }
       });
     };
-  }, [module, consumeForModule, clearNewTagsForModule]);
+  }, [module, activateModuleGuidance, consumeForModule, clearNewTagsForModule]);
 }
 
 export function useActionTrailHighlightActive(
@@ -136,7 +158,7 @@ export function useActionTrailHighlightActive(
     getActionTrailServerSnapshot,
   );
   return state.entries.some(
-    (e) => e.module === module && e.subProjectId === subProjectId && e.newTagActive,
+    (e) => e.module === module && e.subProjectId === subProjectId && !e.seen,
   );
 }
 

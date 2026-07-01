@@ -6,6 +6,8 @@ import {
   workspaceFigureLinkState,
   workspaceSkuDisplayLabel,
 } from './bomWorkspaceDashboard';
+import { markItemViewed } from '../context/actionTrailStore';
+import { partKeyFromCatalogRowId } from '../search/actionTrailPartKey';
 import { bomWorkspaceTableColumnWidths } from './data/bomWorkspaceSeed';
 import type { BomItem } from './data/types';
 import { hydraBaseNormal, hydraTextStyleToReactCss } from '../theme/hydraTypography';
@@ -29,6 +31,7 @@ function FigureLink({ row, bomProjectId }: { row: BomItem; bomProjectId: string 
     <Typography.Link
       onClick={(e) => {
         e.preventDefault();
+        markItemViewed('bom', bomProjectId, row.id, partKeyFromCatalogRowId(row.id));
         navigate(workspaceAscProductsPath(bomProjectId), {
           state: workspaceFigureLinkState(figure),
         });

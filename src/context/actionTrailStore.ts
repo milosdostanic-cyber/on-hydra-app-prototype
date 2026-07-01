@@ -133,7 +133,7 @@ export function registerEntry(input: RegisterEntryInput) {
       createdAt: new Date().toISOString(),
       seen: false,
       highlightDismissed: false,
-      newTagActive: false,
+      newTagActive: true,
     };
     return { ...prev, entries: [...prev.entries, entry] };
   });
@@ -150,10 +150,24 @@ export function entriesForModule(module: ActionTrailModule): GuidanceEntry[] {
   return storeCache.entries.filter((e) => e.module === module);
 }
 
+export function unseenSubProjectIds(module: ActionTrailModule): string[] {
+  const ids = new Set<string>();
+  storeCache.entries.forEach((e) => {
+    if (e.module === module && !e.seen) ids.add(e.subProjectId);
+  });
+  return [...ids];
+}
+
+export function shouldShowSubProjectNewTag(module: ActionTrailModule, subProjectId: string): boolean {
+  return storeCache.entries.some(
+    (e) => e.module === module && e.subProjectId === subProjectId && !e.seen,
+  );
+}
+
 export function pendingSubProjectIds(module: ActionTrailModule): string[] {
   const ids = new Set<string>();
   storeCache.entries.forEach((e) => {
-    if (e.module === module && e.newTagActive) ids.add(e.subProjectId);
+    if (e.module === module && e.newTagActive && !e.seen) ids.add(e.subProjectId);
   });
   return [...ids];
 }
@@ -161,15 +175,64 @@ export function pendingSubProjectIds(module: ActionTrailModule): string[] {
 export function pendingItemIds(module: ActionTrailModule, subProjectId: string): string[] {
   const ids = new Set<string>();
   storeCache.entries.forEach((e) => {
-    if (e.module === module && e.subProjectId === subProjectId && e.newTagActive) {
+    if (e.module === module && e.subProjectId === subProjectId && e.newTagActive && !e.seen) {
       e.itemIds.forEach((id) => ids.add(id));
     }
   });
   return [...ids];
 }
 
-export function shouldShowNewTag(module: ActionTrailModule, subProjectId: string, itemId: string): boolean {
-  return pendingItemIds(module, subProjectId).includes(itemId);
+export function shouldShowNewTag(
+  module: ActionTrailModule,
+  subProjectId: string,
+  itemId: string,
+  partKey?: string,
+): boolean {
+  return storeCache.entries.some((e) => {
+    if (e.module !== module || e.subProjectId !== subProjectId || e.seen || !e.newTagActive) return false;
+    if (e.itemIds.includes(itemId)) return true;
+    return partKey != null && e.partKey === partKey;
+  });
+}
+
+export function activateModuleGuidance(module: ActionTrailModule) {
+  setState((prev) => ({
+    ...prev,
+    entries: prev.entries.map((e) =>
+      e.module === module && !e.seen ? { ...e, newTagActive: true } : e,
+    ),
+  }));
+}
+
+/** Level 2 → workspace / package — ensure item tags for one sub-project without clearing L1 badge. */
+export function activateItemGuidance(module: ActionTrailModule, subProjectId: string) {
+  setState((prev) => ({
+    ...prev,
+    entries: prev.entries.map((e) =>
+      e.module === module && e.subProjectId === subProjectId && !e.seen
+        ? { ...e, newTagActive: true }
+        : e,
+    ),
+  }));
+}
+
+/** Level 3 drill-down — mark trail entry seen; L1 badge decrements and "New" tag clears. */
+export function markItemViewed(
+  module: ActionTrailModule,
+  subProjectId: string,
+  itemId: string,
+  partKey?: string,
+) {
+  setState((prev) => ({
+    ...prev,
+    entries: prev.entries.map((e) => {
+      if (e.module !== module || e.subProjectId !== subProjectId || e.seen) return e;
+      const matchesItem = e.itemIds.includes(itemId);
+      const matchesPart = partKey != null && e.partKey === partKey;
+      if (!matchesItem && !matchesPart) return e;
+      return { ...e, seen: true, newTagActive: false };
+    }),
+  }));
 }
 
 export function consumeForModule(module: ActionTrailModule, subProjectId?: string) {
@@ -190,16 +253,22 @@ export function consumeForModule(module: ActionTrailModule, subProjectId?: strin
 export function clearNewTagsForModule(module: ActionTrailModule) {
   setState((prev) => ({
     ...prev,
-    entries: prev.entries.map((e) =>
-      e.module === module
-        ? { ...e, newTagActive: false, highlightDismissed: true }
-        : e,
-    ),
+    entries: prev.entries.map((e) => {
+      if (e.module !== module) return e;
+      // Unseen entries keep newTagActive so "New" survives leaving/re-entering the module.
+      if (!e.seen) return { ...e, highlightDismissed: true };
+      return { ...e, newTagActive: false, highlightDismissed: true };
+    }),
   }));
 }
 
 export function setActionTrailEnabled(enabled: boolean) {
   setState((prev) => ({ ...prev, enabled }));
+}
+
+/** Demo reset — clear all guidance entries (badges, highlights, New tags). */
+export function resetActionTrail() {
+  setState((prev) => ({ ...prev, entries: [] }));
 }
 
 export function isActionTrailEnabled(): boolean {

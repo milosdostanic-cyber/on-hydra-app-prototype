@@ -11,6 +11,7 @@ import type { CSSProperties, Key } from 'react';
 
 import { useActiveProject, useBomHubPath } from '../../context/ActiveProjectContext';
 import { useActionTrail } from '../../context/ActionTrailContext';
+import { ActionTrailSubProjectNewTag } from '../../search/components/ActionTrailSubProjectNewTag';
 import { actionTrailTableRowProps } from '../../search/actionTrailStyles';
 import { BomCreateProjectModal } from '../components/BomCreateProjectModal';
 import { BomUploadDestinationModal } from '../components/BomUploadDestinationModal';
@@ -66,10 +67,10 @@ export function BomSiteProjectsPage() {
   const { constructionProjectId = '' } = useParams<{ constructionProjectId: string }>();
   const { setProjectId, project } = useActiveProject();
   const bomHubPath = useBomHubPath();
-  const { entries, pendingSubProjectIds } = useActionTrail();
+  const { entries, unseenSubProjectIds } = useActionTrail();
   const highlightedProjectIds = useMemo(
-    () => new Set(pendingSubProjectIds('bom')),
-    [entries, pendingSubProjectIds],
+    () => new Set(unseenSubProjectIds('bom')),
+    [entries, unseenSubProjectIds],
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -223,16 +224,19 @@ export function BomSiteProjectsPage() {
         dataIndex: 'name',
         key: 'name',
         render: (name: string, row) => (
-          <Button
-            type="link"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/bom/projects/${row.id}/workspace`);
-            }}
-            style={tableLinkButtonStyle}
-          >
-            {name}
-          </Button>
+          <Flex align="center" gap={token.marginXS} wrap="wrap">
+            <Button
+              type="link"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/bom/projects/${row.id}/workspace`);
+              }}
+              style={tableLinkButtonStyle}
+            >
+              {name}
+            </Button>
+            <ActionTrailSubProjectNewTag module="bom" subProjectId={row.id} />
+          </Flex>
         ),
       },
       {

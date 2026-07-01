@@ -174,7 +174,7 @@ export function AppTopBar() {
   const { token } = theme.useToken();
   const location = useLocation();
   const { project } = useActiveProject();
-  const { enabled: actionTrailEnabled, setEnabled: setActionTrailEnabled } = useActionTrail();
+  const { enabled: actionTrailEnabled, setEnabled: setActionTrailEnabled, resetActionTrail } = useActionTrail();
   const [switchOpen, setSwitchOpen] = useState(false);
   const onPrimary = token.colorTextLightSolid;
 
@@ -194,6 +194,11 @@ export function AppTopBar() {
           />
         </Flex>
       ),
+    },
+    {
+      key: 'action-trail-clear',
+      label: 'Clear guidance trail',
+      onClick: () => resetActionTrail(),
     },
     { key: 'settings', label: 'Settings' },
     { type: 'divider' },

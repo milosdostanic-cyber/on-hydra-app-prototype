@@ -6,7 +6,7 @@ import { initialWorkspaceRowsForBomProject } from '../context/BomWorkspaceContex
 import { useBomWorkspace } from '../context/BomWorkspaceContext';
 import { useActionTrail } from '../context/ActionTrailContext';
 import { useActiveProject } from '../context/ActiveProjectContext';
-import { useSubmittalPackages, findSubmittalPartRowId, isPartInAnySubmittalPackage } from '../context/SubmittalPackagesContext';
+import { useSubmittalPackages, findSubmittalPartRowId } from '../context/SubmittalPackagesContext';
 import {
   ProjectRequiredModal,
   type ProjectDestinationRequirement,
@@ -81,7 +81,7 @@ export function usePartActionFlows(payload: PartActionPayload) {
   const { projectId, projects, setProjectId } = useActiveProject();
   const { addCartItem, addPartToPackage } = useSubmittalPackages();
   const { rowsByProjectId, setWorkspaceRows } = useBomWorkspace();
-  const { registerEntry, consumeForModule } = useActionTrail();
+  const { registerEntry } = useActionTrail();
   const { addToQueue } = useRevitDownloadQueue();
 
   const [pending, setPending] = useState<FigureActionId | null>(null);
@@ -97,11 +97,6 @@ export function usePartActionFlows(payload: PartActionPayload) {
       figureNumber: payload.figureNumber,
     }),
     [payload],
-  );
-
-  const isInSubmittalPackage = useMemo(
-    () => isPartInAnySubmittalPackage(payload.partKey),
-    [payload.partKey],
   );
 
   const finishBomAdd = (bomProjectId: string, bomProjectName: string) => {
@@ -178,7 +173,6 @@ export function usePartActionFlows(payload: PartActionPayload) {
           size="small"
           onClick={() => {
             notification.destroy();
-            consumeForModule('submittal', packageId);
             navigate(`/projects/${pid}/submittal`);
           }}
         >
@@ -272,6 +266,8 @@ export function usePartActionFlows(payload: PartActionPayload) {
         open={gateOpen}
         actionLabel={pending ? GATE_LABELS[pending] : 'Continue'}
         actionDescription={pendingDef?.gateDescription}
+        bomSku={pending === 'bom' ? payload.sku : undefined}
+        submittalPartKey={pending === 'submittal' ? payload.partKey : undefined}
         destinationRequirement={pending ? destinationRequirementForAction(pending) : undefined}
         onResolved={handleResolved}
         onCancel={() => {
@@ -303,6 +299,5 @@ export function usePartActionFlows(payload: PartActionPayload) {
     requestAction,
     modals,
     actionLabels: ACTION_OPTIONS.map((o) => ({ id: o.key, label: o.label })),
-    isInSubmittalPackage,
   };
 }
