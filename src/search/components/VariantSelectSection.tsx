@@ -1,27 +1,36 @@
 import { DownOutlined, PictureOutlined } from '@ant-design/icons';
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { useMemo } from 'react';
 
 import type { PartDetailContent, PartVariationRow } from '../partDetailDemoData';
 import { useHydraColorMode } from '../../context/HydraThemeContext';
 import { buttonPrimaryPalette, buttonPrimaryPaletteDark } from '../../theme/buttonPrimaryPalette';
-import { Button, Dropdown, Flex, Typography, theme } from '../../ui/antd';
-import type { MenuProps } from '../../ui/antd';
 import {
   hydraBaseNormal,
-  hydraSmallNormal,
   hydraTextStyleToReactCss,
   hydraTitleHeading4,
+  hydraTitleHeading5,
 } from '../../theme/hydraTypography';
+import { HydraTag } from '../../ui/HydraTag';
+import { Button, Dropdown, Flex, Typography, theme } from '../../ui/antd';
+import type { MenuProps } from '../../ui/antd';
 
 type Props = {
   detail: PartDetailContent;
   selectedVariantKey: string | null;
   onChange: (variantKey: string | null) => void;
+  /** Part-detail action row rendered below the variation picker. */
+  actions?: ReactNode;
 };
 
 function VariationThumbnail({ variation, size = 28 }: { variation: PartVariationRow; size?: number }) {
   const { token } = theme.useToken();
+  const placeholderIconSize =
+    size >= token.controlHeight * 2
+      ? token.fontSizeHeading3
+      : size >= token.sizeUnit * 14
+        ? token.fontSizeXL
+        : token.fontSizeSM;
 
   if (variation.thumbnailUrl) {
     return (
@@ -53,7 +62,7 @@ function VariationThumbnail({ variation, size = 28 }: { variation: PartVariation
         color: token.colorTextQuaternary,
       }}
     >
-      <PictureOutlined style={{ fontSize: token.fontSizeSM }} />
+      <PictureOutlined style={{ fontSize: placeholderIconSize }} />
     </Flex>
   );
 }
@@ -73,14 +82,16 @@ function optionMetadata(variation: PartVariationRow) {
 }
 
 /** Interactive "Select Variation" dropdown with thumbnail options. */
-export function VariantSelectSection({ detail, selectedVariantKey, onChange }: Props) {
+export function VariantSelectSection({ detail, selectedVariantKey, onChange, actions }: Props) {
   const { token } = theme.useToken();
   const { colorMode } = useHydraColorMode();
   const accentOrange =
     colorMode === 'dark' ? buttonPrimaryPaletteDark.text : buttonPrimaryPalette.text;
-  const primaryPalette = colorMode === 'dark' ? buttonPrimaryPaletteDark : buttonPrimaryPalette;
 
   const selectedVariation = detail.variations.find((v) => v.key === selectedVariantKey);
+
+  const dropdownThumbnailSize = token.sizeUnit * 14;
+  const selectedThumbnailSize = token.controlHeight * 2 + token.marginXXS;
 
   const menuItems: MenuProps['items'] = useMemo(
     () =>
@@ -88,22 +99,22 @@ export function VariantSelectSection({ detail, selectedVariantKey, onChange }: P
         key: v.key,
         label: (
           <Flex align="flex-start" gap={token.marginSM} style={{ minWidth: 0, paddingBlock: token.paddingXXS }}>
-            <VariationThumbnail variation={v} />
+            <VariationThumbnail variation={v} size={dropdownThumbnailSize} />
             <Flex vertical gap={token.marginXXS} style={{ minWidth: 0 }}>
               <Typography.Text ellipsis style={{ ...hydraTextStyleToReactCss(hydraBaseNormal) }}>
                 {v.name}
               </Typography.Text>
-              <Typography.Text type="secondary" ellipsis style={hydraTextStyleToReactCss(hydraSmallNormal)}>
+              <Typography.Text type="secondary" ellipsis style={hydraTextStyleToReactCss(hydraBaseNormal)}>
                 {optionMetadata(v)}
               </Typography.Text>
-              <Typography.Text type="secondary" ellipsis style={{ fontSize: token.fontSizeSM }}>
+              <Typography.Text type="secondary" ellipsis style={hydraTextStyleToReactCss(hydraBaseNormal)}>
                 {v.description}
               </Typography.Text>
             </Flex>
           </Flex>
         ),
       })),
-    [detail.variations, token],
+    [detail.variations, dropdownThumbnailSize, token],
   );
 
   const cardTitleStyle = {
@@ -112,96 +123,98 @@ export function VariantSelectSection({ detail, selectedVariantKey, onChange }: P
     color: accentOrange,
   };
 
-  const selectedTriggerStyle: CSSProperties = {
+  const selectedPanelStyle: CSSProperties = {
     width: '100%',
     padding: token.paddingMD,
-    textAlign: 'left',
-    cursor: 'pointer',
     border: `${token.lineWidth}px ${token.lineType} ${token.colorBorder}`,
     borderRadius: token.borderRadiusLG,
-    background: token.colorBgContainer,
+    background: token.colorFillQuaternary,
     boxShadow: token.boxShadowTertiary,
   };
 
-  const changeVariationControlStyle: CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: token.marginXXS,
-    alignSelf: 'flex-start',
-    paddingBlock: token.paddingXXS,
-    paddingInline: token.paddingSM,
-    border: `${token.lineWidth}px ${token.lineType} ${primaryPalette.rest}`,
+  const selectedInnerCardStyle: CSSProperties = {
+    width: '100%',
+    padding: token.padding,
     borderRadius: token.borderRadius,
-    background: primaryPalette.rest,
-    color: token.colorTextLightSolid,
-    fontWeight: token.fontWeightStrong,
+    background: token.colorBgContainer,
+    border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
   };
 
-  const dropdown = (
-    <Dropdown
-      menu={{
-        items: menuItems,
-        selectable: true,
-        selectedKeys: selectedVariantKey ? [selectedVariantKey] : [],
-        onSelect: ({ key }) => onChange(String(key)),
-      }}
-      trigger={['click']}
-      disabled={detail.variations.length === 0}
-    >
-      {selectedVariation ? (
-        <button
-          type="button"
-          aria-haspopup="listbox"
-          aria-label={`Selected variation: ${selectedVariation.name}. Change variation.`}
-          style={selectedTriggerStyle}
-        >
-          <Flex vertical gap={token.marginXS}>
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-              Selected variation
-            </Typography.Text>
-            <Flex align="flex-start" gap={token.marginSM}>
-              <VariationThumbnail variation={selectedVariation} size={40} />
-              <Flex vertical gap={token.marginXXS} style={{ minWidth: 0 }}>
-                <Typography.Text strong ellipsis style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-                  {selectedVariation.name}
-                </Typography.Text>
-                <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-                  {optionMetadata(selectedVariation)}
-                </Typography.Text>
-                <Typography.Text type="secondary" ellipsis style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-                  {selectedVariation.description}
-                </Typography.Text>
+  const dropdownMenu = {
+    items: menuItems,
+    selectable: true as const,
+    selectedKeys: selectedVariantKey ? [selectedVariantKey] : [],
+    onSelect: ({ key }: { key: string }) => onChange(String(key)),
+  };
+
+  const dropdown = selectedVariation ? (
+    <div style={selectedPanelStyle}>
+      <Flex vertical gap={token.paddingMD} style={{ width: '100%' }}>
+        <Flex vertical gap={token.marginSM} style={{ width: '100%' }}>
+          <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+            Selected variation
+          </Typography.Text>
+
+          <Flex align="flex-start" gap={token.padding} style={selectedInnerCardStyle}>
+            <VariationThumbnail variation={selectedVariation} size={selectedThumbnailSize} />
+            <Flex vertical gap={token.marginSM} style={{ minWidth: 0, flex: 1 }}>
+              <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraTitleHeading5), margin: 0 }}>
+                {selectedVariation.name}
+              </Typography.Text>
+              <Flex gap={token.marginSM} wrap="wrap">
+                <HydraTag bordered={false}>{optionMetadata(selectedVariation)}</HydraTag>
+                <HydraTag bordered={false}>{selectedVariation.description}</HydraTag>
               </Flex>
             </Flex>
-            <span style={changeVariationControlStyle}>
-              Change variation <DownOutlined aria-hidden />
-            </span>
           </Flex>
-        </button>
-      ) : (
-        <Button
-          type="primary"
-          size="large"
-          aria-haspopup="listbox"
-          style={{ fontWeight: token.fontWeightStrong, alignSelf: 'flex-start' }}
-        >
-          Select variation <DownOutlined aria-hidden />
-        </Button>
-      )}
+        </Flex>
+
+        <Dropdown menu={dropdownMenu} trigger={['click']} disabled={detail.variations.length === 0}>
+          <Button
+            type="primary"
+            size="large"
+            icon={<DownOutlined aria-hidden />}
+            iconPlacement="end"
+            aria-haspopup="listbox"
+            aria-label={`Change selected variation: ${selectedVariation.name}`}
+            style={{ alignSelf: 'flex-start', width: 'auto', fontWeight: token.fontWeightStrong }}
+          >
+            Change variation
+          </Button>
+        </Dropdown>
+      </Flex>
+    </div>
+  ) : (
+    <Dropdown menu={dropdownMenu} trigger={['click']} disabled={detail.variations.length === 0}>
+      <Button
+        type="primary"
+        size="large"
+        aria-haspopup="listbox"
+        style={{ fontWeight: token.fontWeightStrong, alignSelf: 'flex-start' }}
+      >
+        Select variation <DownOutlined aria-hidden />
+      </Button>
     </Dropdown>
   );
 
   return (
-    <Flex vertical gap={token.marginSM}>
-      <Typography.Text style={cardTitleStyle}>Available Sizes &amp; Variations</Typography.Text>
-      <Typography.Paragraph
-        type="secondary"
-        style={{ margin: 0, ...hydraTextStyleToReactCss(hydraSmallNormal) }}
-      >
-        Select a size or variation to enable available actions.
-      </Typography.Paragraph>
+    <Flex vertical gap={token.paddingMD} style={{ width: '100%' }}>
+      <Flex vertical gap={token.marginXXS}>
+        <Typography.Text style={cardTitleStyle}>Available Sizes &amp; Variations</Typography.Text>
+        <Typography.Paragraph
+          style={{
+            margin: 0,
+            color: token.colorTextLabel,
+            ...hydraTextStyleToReactCss(hydraBaseNormal),
+          }}
+        >
+          Select a size or variation to enable available actions.
+        </Typography.Paragraph>
+      </Flex>
 
       {dropdown}
+
+      {actions}
     </Flex>
   );
 }

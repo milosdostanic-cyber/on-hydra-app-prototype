@@ -1,14 +1,14 @@
-import { ExportOutlined, LinkOutlined, PictureOutlined } from '@ant-design/icons';
+import { PictureOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import {
   hydraBaseNormal,
-  hydraSmallNormal,
+  hydraLargeNormal,
+  hydraLargeStrong,
   hydraTextStyleToReactCss,
   hydraTitleHeading2,
   hydraTitleHeading4,
-  hydraTitleHeading5,
 } from '../theme/hydraTypography';
 import { PageBackButton } from '../shell/PageBackButton';
 import {
@@ -29,19 +29,18 @@ import { partDetailContentFor, variationByKey } from './partDetailDemoData';
 import { unifiedPartByKey } from './unifiedSearchData';
 
 function SpecField({ label, value }: { label: string; value: string }) {
-  const { token } = theme.useToken();
   return (
-    <Flex vertical gap={token.marginXXS}>
+    <Flex vertical>
       <Typography.Text
         type="secondary"
         style={{
           display: 'block',
-          ...hydraTextStyleToReactCss(hydraSmallNormal),
+          ...hydraTextStyleToReactCss(hydraBaseNormal),
         }}
       >
         {label}
       </Typography.Text>
-      <Typography.Text style={hydraTextStyleToReactCss(hydraBaseNormal)}>{value}</Typography.Text>
+      <Typography.Text style={hydraTextStyleToReactCss(hydraLargeNormal)}>{value}</Typography.Text>
     </Flex>
   );
 }
@@ -78,7 +77,7 @@ export function UnifiedPartDetailPage() {
 
   const sectionTitleStyle = {
     margin: 0,
-    ...hydraTextStyleToReactCss(hydraTitleHeading5),
+    ...hydraTextStyleToReactCss(hydraLargeStrong),
     color: token.colorTextHeading,
   };
 
@@ -101,7 +100,7 @@ export function UnifiedPartDetailPage() {
         <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
           <Card styles={{ body: { padding: token.paddingLG } }} style={cardShellStyle}>
             <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-              <Flex align="center" gap={token.marginLG} wrap="wrap">
+              <Flex align="center" gap={token.padding} wrap="wrap">
                 <Card
                   styles={{ body: { padding: token.padding } }}
                   style={{ ...cardShellStyle, flex: '0 0 auto' }}
@@ -110,16 +109,16 @@ export function UnifiedPartDetailPage() {
                     align="center"
                     justify="center"
                     style={{
-                      width: token.controlHeightLG * 3,
-                      aspectRatio: '1',
-                      borderRadius: token.borderRadius,
+                      width: token.sizeUnit * 30,
+                      height: token.sizeUnit * 30,
+                      borderRadius: token.borderRadiusSM,
                       background: token.colorFillAlter,
                       color: token.colorTextQuaternary,
                     }}
                   >
                     <Space orientation="vertical" align="center" size={token.marginXS}>
                       <PictureOutlined style={{ fontSize: token.fontSizeHeading2 }} />
-                      <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
+                      <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
                         Product image
                       </Typography.Text>
                     </Space>
@@ -141,7 +140,7 @@ export function UnifiedPartDetailPage() {
                   </Typography.Title>
                   <Typography.Paragraph
                     type="secondary"
-                    style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
+                    style={{ margin: 0, ...hydraTextStyleToReactCss(hydraLargeNormal) }}
                   >
                     {detail.description}
                   </Typography.Paragraph>
@@ -152,7 +151,7 @@ export function UnifiedPartDetailPage() {
                 <Typography.Text style={sectionTitleStyle}>
                   Information &amp; Technical Specifications
                 </Typography.Text>
-                <Row gutter={[token.marginLG, token.marginMD]}>
+                <Row gutter={[0, token.marginMD]}>
                   {detail.specifications.map((field) => (
                     <Col key={field.key} xs={24} sm={12} lg={6}>
                       <SpecField label={field.label} value={field.value} />
@@ -161,11 +160,11 @@ export function UnifiedPartDetailPage() {
                 </Row>
               </Space>
 
-              <Flex gap={token.marginMD} wrap="wrap">
-                <Button type="link" icon={<LinkOutlined />} style={{ padding: 0, height: 'auto' }}>
+              <Flex gap={token.marginSM} wrap="wrap" align="center">
+                <Button type="primary" ghost style={hydraTextStyleToReactCss(hydraBaseNormal)}>
                   View Submittal
                 </Button>
-                <Button type="link" icon={<ExportOutlined />} style={{ padding: 0, height: 'auto' }}>
+                <Button type="primary" ghost style={hydraTextStyleToReactCss(hydraBaseNormal)}>
                   View Product Page
                 </Button>
               </Flex>
@@ -173,18 +172,18 @@ export function UnifiedPartDetailPage() {
           </Card>
 
           <Card styles={{ body: { padding: token.paddingLG } }} style={cardShellStyle}>
-            <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
-              <VariantSelectSection
-                detail={detail}
-                selectedVariantKey={selectedVariantKey}
-                onChange={setSelectedVariantKey}
-              />
-              <ActionsPanel
-                partKey={part.key}
-                payload={actionPayload}
-                selectedVariation={selectedVariation ?? null}
-              />
-            </Space>
+            <VariantSelectSection
+              detail={detail}
+              selectedVariantKey={selectedVariantKey}
+              onChange={setSelectedVariantKey}
+              actions={
+                <ActionsPanel
+                  partKey={part.key}
+                  payload={actionPayload}
+                  selectedVariation={selectedVariation ?? null}
+                />
+              }
+            />
           </Card>
         </Space>
       ) : null}

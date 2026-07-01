@@ -1,10 +1,9 @@
-import { PlusOutlined } from '@ant-design/icons';
-
+import { hydraBaseNormal, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 import type { PartActionPayload } from '../usePartActionFlows';
 import { usePartActionFlows } from '../usePartActionFlows';
 import type { PartVariationRow } from '../partDetailDemoData';
 import { useVariantActionFlows } from '../useVariantActionFlows';
-import { Button, Col, Row, Space, Tooltip, Typography, theme } from '../../ui/antd';
+import { Button, Flex, Tooltip, Typography, theme } from '../../ui/antd';
 
 const VARIATION_REQUIRED_TOOLTIP = 'Select a variation to enable this action.';
 const FILE_UNAVAILABLE_TOOLTIP = "This file type isn't available for the selected variation.";
@@ -15,7 +14,7 @@ type Props = {
   selectedVariation: PartVariationRow | null;
 };
 
-function ActionButton({
+function ActionButtonCell({
   label,
   hint,
   onAdd,
@@ -30,34 +29,27 @@ function ActionButton({
 }) {
   const { token } = theme.useToken();
 
-  const addButton = (
-    <Button
-      type="default"
-      size="middle"
-      icon={<PlusOutlined />}
-      disabled={disabled}
-      onClick={onAdd}
-      block
-    >
+  const button = (
+    <Button type="default" size="middle" disabled={disabled} onClick={onAdd} block>
       {label}
     </Button>
   );
 
   return (
-    <Space orientation="vertical" size={0} style={{ width: '100%' }}>
+    <Flex vertical gap={token.marginXXS} style={{ flex: '1 1 0', minWidth: 0 }}>
       {disabled && disabledTooltip ? (
         <Tooltip title={disabledTooltip}>
-          <span>{addButton}</span>
+          <span>{button}</span>
         </Tooltip>
       ) : (
-        <Tooltip title={label}>{addButton}</Tooltip>
+        <Tooltip title={label}>{button}</Tooltip>
       )}
       {hint ? (
-        <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+        <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
           {hint}
         </Typography.Text>
       ) : null}
-    </Space>
+    </Flex>
   );
 }
 
@@ -71,7 +63,7 @@ export function ActionsPanel({ partKey, payload, selectedVariation }: Props) {
   const fileTypeEnabled = (fileType: string) =>
     Boolean(selectedVariation?.drawingFileTypes.includes(fileType));
 
-  const fileTypeRow = (fileType: string) => {
+  const fileTypeCell = (fileType: string) => {
     const available = fileTypeEnabled(fileType);
     const disabled = !hasVariation || !available;
     const tooltip = !hasVariation
@@ -81,58 +73,51 @@ export function ActionsPanel({ partKey, payload, selectedVariation }: Props) {
         : `Add ${fileType} to Download Center`;
 
     return (
-      <Col key={fileType} xs={24} sm={12} lg={4}>
-        <ActionButton
-          label={`Add ${fileType} File to Downloads`}
-          hint={hasVariation && !available ? 'Not available for this variant' : undefined}
-          onAdd={() => variantFlows.queueSingleFileType(fileType)}
-          disabled={disabled}
-          disabledTooltip={tooltip}
-        />
-      </Col>
+      <ActionButtonCell
+        key={fileType}
+        label={`Add ${fileType} File to Downloads`}
+        hint={hasVariation && !available ? 'Not available for this variant' : undefined}
+        onAdd={() => variantFlows.queueSingleFileType(fileType)}
+        disabled={disabled}
+        disabledTooltip={tooltip}
+      />
     );
   };
 
   return (
     <>
-      <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
+      <Flex vertical gap={token.marginSM} style={{ width: '100%' }}>
         <Typography.Paragraph
           type="secondary"
-          style={{ margin: 0, fontSize: token.fontSizeSM }}
+          style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
         >
-          Choose a variation above to add this part to a BOM, add it to a submittal package, or download files.
+          Choose a variation to add this part to a BOM, add it to a submittal package, or download files.
         </Typography.Paragraph>
 
-        <Row gutter={[token.marginSM, token.marginSM]} style={{ width: '100%' }}>
-          <Col xs={24} sm={12} lg={4}>
-            <ActionButton
-              label="Add Part Variant to BOM"
-              onAdd={() => variantFlows.requestAction('bom')}
-              disabled={!hasVariation}
-              disabledTooltip={VARIATION_REQUIRED_TOOLTIP}
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={4}>
-            <ActionButton
-              label="Add Part to Submittal Package"
-              onAdd={() => figureFlows.requestAction('submittal')}
-              disabled={!hasVariation}
-              disabledTooltip={VARIATION_REQUIRED_TOOLTIP}
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={4}>
-            <ActionButton
-              label="Add Revit File to Downloads"
-              onAdd={() => figureFlows.requestAction('revit-queue')}
-              disabled={!hasVariation}
-              disabledTooltip={VARIATION_REQUIRED_TOOLTIP}
-            />
-          </Col>
-          {fileTypeRow('PDF')}
-          {fileTypeRow('STEP')}
-          {fileTypeRow('DWG')}
-        </Row>
-      </Space>
+        <Flex gap={token.marginSM} align="flex-start" style={{ width: '100%' }}>
+          <ActionButtonCell
+            label="Add Part Variant to BOM"
+            onAdd={() => variantFlows.requestAction('bom')}
+            disabled={!hasVariation}
+            disabledTooltip={VARIATION_REQUIRED_TOOLTIP}
+          />
+          <ActionButtonCell
+            label="Add Part to Submittal Package"
+            onAdd={() => figureFlows.requestAction('submittal')}
+            disabled={!hasVariation}
+            disabledTooltip={VARIATION_REQUIRED_TOOLTIP}
+          />
+          <ActionButtonCell
+            label="Add Revit File to Downloads"
+            onAdd={() => figureFlows.requestAction('revit-queue')}
+            disabled={!hasVariation}
+            disabledTooltip={VARIATION_REQUIRED_TOOLTIP}
+          />
+          {fileTypeCell('PDF')}
+          {fileTypeCell('STEP')}
+          {fileTypeCell('DWG')}
+        </Flex>
+      </Flex>
       {figureFlows.modals}
       {variantFlows.modals}
     </>
