@@ -5,6 +5,22 @@ import { hydraBaseNormal } from '../theme/hydraTypography';
 
 export type HydraTagTone = 'default' | 'success' | 'warning' | 'error' | 'processing';
 
+/** Ant Design colorful Tag presets — Figma DS `Tag / Colorful` (node 137:7488). */
+export type HydraColorfulPreset =
+  | 'magenta'
+  | 'red'
+  | 'volcano'
+  | 'orange'
+  | 'gold'
+  | 'lime'
+  | 'green'
+  | 'cyan'
+  | 'blue'
+  | 'geekblue'
+  | 'purple';
+
+export type HydraTagSize = 'sm' | 'base';
+
 function toneColors(token: ReturnType<typeof theme.useToken>['token'], tone: HydraTagTone) {
   if (tone === 'success') {
     return { background: token.colorSuccessBg, borderColor: token.colorSuccessBorder, textColor: token.colorSuccessText };
@@ -25,48 +41,108 @@ function toneColors(token: ReturnType<typeof theme.useToken>['token'], tone: Hyd
   };
 }
 
+function tagMetrics(token: ReturnType<typeof theme.useToken>['token'], size: HydraTagSize) {
+  const fontSize = size === 'base' ? token.fontSize : token.fontSizeSM;
+  const lineHeightUnitless = size === 'base' ? token.lineHeight : token.lineHeightSM;
+  return {
+    fontSize,
+    lineHeight: `${fontSize * lineHeightUnitless}px`,
+  };
+}
+
+function hydraTagRootStyle(
+  token: ReturnType<typeof theme.useToken>['token'],
+  size: HydraTagSize,
+  colors?: { background?: string; borderColor?: string; textColor?: string; borderWidth?: number },
+  style?: CSSProperties,
+): CSSProperties {
+  const metrics = tagMetrics(token, size);
+  return {
+    marginInline: 0,
+    marginBlock: 0,
+    borderRadius: token.borderRadiusSM,
+    paddingInline: token.paddingSM,
+    paddingBlock: token.paddingXXS,
+    fontSize: metrics.fontSize,
+    lineHeight: metrics.lineHeight,
+    fontWeight: hydraBaseNormal.fontWeight,
+    borderWidth: colors?.borderWidth ?? token.lineWidth,
+    borderStyle: token.lineType,
+    borderColor: colors?.borderColor,
+    background: colors?.background,
+    color: colors?.textColor,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: token.marginXXS,
+    ...style,
+  };
+}
+
 type HydraTagProps = {
   children: ReactNode;
   tone?: HydraTagTone;
+  size?: HydraTagSize;
+  bordered?: boolean;
   icon?: ReactNode;
   style?: CSSProperties;
   onClick?: () => void;
 };
 
-export function HydraTag({ children, tone = 'default', icon, style, onClick }: HydraTagProps) {
+/** Figma DS `Tag / Default` (node 137:7437) — semantic tones; `bordered={false}` for borderless (e.g. tab counts). */
+export function HydraTag({
+  children,
+  tone = 'default',
+  size = 'sm',
+  bordered = true,
+  icon,
+  style,
+  onClick,
+}: HydraTagProps) {
   const { token } = theme.useToken();
   const colors = toneColors(token, tone);
+  const rootStyle = hydraTagRootStyle(token, size, {
+    background: colors.background,
+    borderColor: bordered ? colors.borderColor : undefined,
+    textColor: colors.textColor,
+    borderWidth: bordered ? undefined : 0,
+  }, style);
+
   return (
     <Tag
       icon={icon}
+      bordered={bordered}
       onClick={onClick}
       styles={{
-        root: {
-          marginInline: 0,
-          marginBlock: 0,
-          borderRadius: token.borderRadiusSM,
-          paddingInline: token.paddingSM,
-          paddingBlock: token.paddingXXS,
-          fontSize: token.fontSizeSM,
-          lineHeight: `${token.fontSizeSM * token.lineHeightSM}px`,
-          fontWeight: hydraBaseNormal.fontWeight,
-          borderWidth: token.lineWidth,
-          borderStyle: token.lineType,
-          borderColor: colors.borderColor,
-          background: colors.background,
-          color: colors.textColor,
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: token.marginXXS,
-          ...style,
-        },
+        root: rootStyle,
         icon: {
           color: colors.textColor,
-          fontSize: token.fontSizeSM,
-          lineHeight: `${token.fontSizeSM * token.lineHeightSM}px`,
+          fontSize: rootStyle.fontSize,
+          lineHeight: rootStyle.lineHeight,
         },
       }}
     >
+      {children}
+    </Tag>
+  );
+}
+
+type HydraColorfulTagProps = {
+  children: ReactNode;
+  preset: HydraColorfulPreset;
+  size?: HydraTagSize;
+  style?: CSSProperties;
+};
+
+/**
+ * Figma DS `Tag / Colorful` (node 137:7488) — antd preset ramp `X-1` bg / `X-3` border / `X-6` text.
+ * Border is kept (Figma `border=true`); only layout metrics are overridden so colors come from the preset.
+ */
+export function HydraColorfulTag({ children, preset, size = 'sm', style }: HydraColorfulTagProps) {
+  const { token } = theme.useToken();
+  const rootStyle = hydraTagRootStyle(token, size, undefined, style);
+
+  return (
+    <Tag color={preset} styles={{ root: rootStyle }}>
       {children}
     </Tag>
   );

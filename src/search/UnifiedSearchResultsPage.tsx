@@ -1,32 +1,34 @@
 import { SearchOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { BomPageHeader } from '../bom/layout/BomPageHeader';
+import { useActiveProject } from '../context/ActiveProjectContext';
 import { PageBackButton } from '../shell/PageBackButton';
 import { PageDescription } from '../shell/PageDescription';
-import { shellTableCardStyle, shellTableStyles } from '../shell/shellTablePatterns';
+import { shellTableCardStyle } from '../shell/shellTablePatterns';
 import {
+  hydraBaseNormal,
   hydraTextStyleToReactCss,
-  hydraTitleHeading4,
+  hydraTitleHeading5,
 } from '../theme/hydraTypography';
+import { HydraColorfulTag, HydraTag } from '../ui/HydraTag';
 import {
   AppSearchInput,
   INLINE_SEARCH_CONTROL_SIZE,
   Button,
   Card,
-  Divider,
   Empty,
   Flex,
   List,
   Space,
-  Table,
   Tabs,
-  Tag,
   Typography,
   theme,
 } from '../ui/antd';
-import type { TableColumnsType, TabsProps } from '../ui/antd';
+import type { TabsProps } from '../ui/antd';
+
+import { SEARCH_DOMAIN_TAG_PRESET } from './searchDomainTagPresets';
 
 import {
   SEARCH_DOMAIN_LABELS,
@@ -36,6 +38,14 @@ import {
   type UnifiedResultRow,
 } from './unifiedSearchData';
 
+const SEARCH_RESULT_TAG_SIZE = 'base' as const;
+
+function tabFromParams(domain: string | null, scope: string | null): 'all' | SearchDomain {
+  if (domain && (SEARCH_DOMAIN_ORDER as string[]).includes(domain)) return domain as SearchDomain;
+  if (scope === 'parts') return 'parts';
+  return 'all';
+}
+
 function TabCountLabel({ label, count }: { label: string; count: number }) {
   const { token } = theme.useToken();
   const hasResults = count > 0;
@@ -43,7 +53,9 @@ function TabCountLabel({ label, count }: { label: string; count: number }) {
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: token.marginXS }}>
       {label}
       {hasResults ? (
-        <Tag style={{ margin: 0 }}>{count}</Tag>
+        <HydraTag size="sm" bordered={false} style={{ margin: 0 }}>
+          {count}
+        </HydraTag>
       ) : (
         <Typography.Text type="secondary">0</Typography.Text>
       )}
@@ -88,68 +100,210 @@ function DomainEmptyState({ domain, query }: { domain: SearchDomain | 'all'; que
   );
 }
 
-function PartsTable({ rows }: { rows: UnifiedResultRow[] }) {
+/**
+ * Figma `List Item (BOM)` detail row (node 6067:43068 / 6067:43058).
+ * Fixed-width label column keeps `ASC part` and `Used In` tag columns aligned; gap = Figma `paddingXS` (8px).
+ */
+function SearchResultLabeledRow({
+  label,
+  align = 'flex-start',
+  children,
+}: {
+  label: string;
+  align?: 'flex-start' | 'center';
+  children?: ReactNode;
+}) {
   const { token } = theme.useToken();
-  const navigate = useNavigate();
-
-  const openPart = (row: UnifiedResultRow) => {
-    navigate(`/search/parts/${encodeURIComponent(row.partKey ?? '')}`);
-  };
-
-  const columns: TableColumnsType<UnifiedResultRow> = [
-    {
-      title: 'SKU',
-      dataIndex: 'title',
-      key: 'sku',
-      render: (title: string) => (
-        <Typography.Text style={{ color: token.colorPrimary }}>{title}</Typography.Text>
-      ),
-    },
-    { title: 'Description', dataIndex: 'subtitle', key: 'subtitle', ellipsis: true },
-  ];
+  // Figma label column min-width 56px = controlHeightLG (40) + marginXS * 2 (16).
+  const labelColMinWidth = token.controlHeightLG + token.marginXS * 2;
 
   return (
-    <Table<UnifiedResultRow>
-      rowKey="key"
-      pagination={false}
-      columns={columns}
-      dataSource={rows}
-      onRow={(row) => ({
-        onClick: () => openPart(row),
-        style: { cursor: 'pointer' },
-      })}
-      styles={shellTableStyles(token)}
-    />
+    <Flex gap={token.paddingXS} align={align} style={{ width: '100%' }}>
+      <Typography.Text
+        style={{
+          ...hydraTextStyleToReactCss(hydraBaseNormal),
+          color: token.colorTextDescription,
+          flexShrink: 0,
+          minWidth: labelColMinWidth,
+          paddingBlock: token.paddingXXS,
+        }}
+      >
+        {label}
+      </Typography.Text>
+      <Flex gap={token.paddingXS} wrap="wrap" align="center" style={{ flex: 1, minWidth: 0 }}>
+        {children}
+      </Flex>
+    </Flex>
   );
 }
 
-/** Non-actionable preview list for stub domains (Content/Submittal/BOM/SeisBrace). */
-function StubDomainList({ domain, rows }: { domain: SearchDomain; rows: UnifiedResultRow[] }) {
+function UsageContextList({ row }: { row: UnifiedResultRow }) {
+  const { token } = theme.useToken();
+  const contexts = row.usageContexts ?? [];
+  if (contexts.length === 0) return null;
+
+  const visibleContexts = contexts.slice(0, 4);
+  const remainingCount = contexts.length - visibleContexts.length;
+
+  return (
+    <SearchResultLabeledRow label="Used In" align="flex-start">
+      {visibleContexts.map((context) => (
+        <HydraColorfulTag
+          key={`${context.module}-${context.destinationName}`}
+          preset={SEARCH_DOMAIN_TAG_PRESET[context.module]}
+          size={SEARCH_RESULT_TAG_SIZE}
+        >
+          {context.label}: {context.destinationName}
+          {context.projectName ? ` · ${context.projectName}` : ''}
+          {context.detail ? ` · ${context.detail}` : ''}
+        </HydraColorfulTag>
+      ))}
+      {remainingCount > 0 ? (
+        <Typography.Text
+          type="secondary"
+          style={{ ...hydraTextStyleToReactCss(hydraBaseNormal), flexShrink: 0 }}
+        >
+          +{remainingCount} more
+        </Typography.Text>
+      ) : null}
+    </SearchResultLabeledRow>
+  );
+}
+
+function ResultRowAttributeSection({ row }: { row: UnifiedResultRow }) {
+  const hasAttributes = Boolean(row.context || row.meta?.length);
+  if (!hasAttributes) return null;
+
+  const attributeLabel = row.context ?? (row.meta?.length ? 'Details' : '');
+  if (!attributeLabel) return null;
+
+  return (
+    <SearchResultLabeledRow label={attributeLabel} align="center">
+      {(row.meta ?? []).slice(0, 3).map((meta) => (
+        <HydraTag key={meta} size={SEARCH_RESULT_TAG_SIZE}>
+          {meta}
+        </HydraTag>
+      ))}
+    </SearchResultLabeledRow>
+  );
+}
+
+/** Figma metadata panel (node 222:511) — `colorFillQuaternary` fill, `borderRadius` (6px), `paddingSm`, no border. */
+function ResultRowMetadataSection({ row }: { row: UnifiedResultRow }) {
+  const { token } = theme.useToken();
+  const hasAttributes = Boolean(row.context || row.meta?.length);
+  const hasUsage = Boolean(row.usageContexts?.length);
+  if (!hasAttributes && !hasUsage) return null;
+
+  return (
+    <Flex
+      vertical
+      gap={token.paddingXS}
+      style={{
+        width: '100%',
+        padding: token.paddingSM,
+        borderRadius: token.borderRadius,
+        background: token.colorFillQuaternary,
+      }}
+    >
+      <ResultRowAttributeSection row={row} />
+      <UsageContextList row={row} />
+    </Flex>
+  );
+}
+
+/**
+ * Figma identity block (node 222:505).
+ * SKU = Title/Heading 5 in `colorPrimaryText`; subtitle = Base/Normal in `colorTextSecondary`;
+ * domain tag sits directly after the SKU (gap = Figma `paddingSm`, vertically centered).
+ */
+function ResultRowIdentitySection({
+  row,
+  showDomainTag,
+  onSelect,
+}: {
+  row: UnifiedResultRow;
+  showDomainTag: boolean;
+  onSelect: (row: UnifiedResultRow) => void;
+}) {
+  const { token } = theme.useToken();
+  const subtitleStyle = {
+    ...hydraTextStyleToReactCss(hydraBaseNormal),
+    color: token.colorTextSecondary,
+  };
+  const headlineStyle = {
+    ...hydraTextStyleToReactCss(hydraTitleHeading5),
+    color: token.colorPrimaryText,
+  };
+
+  return (
+    <Flex vertical gap={token.paddingXXS} style={{ width: '100%' }}>
+      <Flex align="center" gap={token.paddingSM} wrap="wrap">
+        <Link to={row.href} onClick={() => onSelect(row)} style={{ minWidth: 0, ...headlineStyle }}>
+          {row.title}
+        </Link>
+        {showDomainTag ? (
+          <HydraColorfulTag preset={SEARCH_DOMAIN_TAG_PRESET[row.domain]} size={SEARCH_RESULT_TAG_SIZE}>
+            {SEARCH_DOMAIN_LABELS[row.domain]}
+          </HydraColorfulTag>
+        ) : null}
+      </Flex>
+
+      <Typography.Paragraph
+        ellipsis={{ rows: 2, tooltip: row.subtitle }}
+        style={{ margin: 0, width: '100%', ...subtitleStyle }}
+      >
+        {row.subtitle}
+      </Typography.Paragraph>
+    </Flex>
+  );
+}
+
+/** Figma root `List Item (BOM)` (node 6067:42905) — px `paddingMd`, py `padding`, container gap `padding`. */
+function ResultRow({
+  row,
+  onSelect,
+  showDomainTag,
+}: {
+  row: UnifiedResultRow;
+  onSelect: (row: UnifiedResultRow) => void;
+  showDomainTag: boolean;
+}) {
+  const { token } = theme.useToken();
+
+  return (
+    <List.Item
+      style={{
+        paddingBlock: token.padding,
+        paddingInline: token.paddingMD,
+        borderBlockEndColor: token.colorBorderSecondary,
+      }}
+    >
+      <Flex vertical gap={token.padding} style={{ width: '100%' }}>
+        <ResultRowIdentitySection row={row} showDomainTag={showDomainTag} onSelect={onSelect} />
+        <ResultRowMetadataSection row={row} />
+      </Flex>
+    </List.Item>
+  );
+}
+
+function ResultsList({
+  rows,
+  onSelect,
+  showDomainTag,
+}: {
+  rows: UnifiedResultRow[];
+  onSelect: (row: UnifiedResultRow) => void;
+  showDomainTag: boolean;
+}) {
   const { token } = theme.useToken();
   const tableShellStyle = shellTableCardStyle(token);
   return (
     <Card styles={{ body: { padding: 0 } }} style={tableShellStyle}>
-      <div
-        style={{
-          padding: token.paddingMD,
-          borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-        }}
-      >
-        <PageDescription>
-          {SEARCH_DOMAIN_LABELS[domain]} matches (preview) — open the linked part to download or package it.
-        </PageDescription>
-      </div>
       <List<UnifiedResultRow>
         dataSource={rows}
         renderItem={(row) => (
-          <List.Item
-            style={{
-              paddingInline: token.paddingMD,
-              borderBlockEndColor: token.colorBorderSecondary,
-            }}
-          >
-            <List.Item.Meta title={row.title} description={row.subtitle} />
-          </List.Item>
+          <ResultRow row={row} onSelect={onSelect} showDomainTag={showDomainTag} />
         )}
       />
     </Card>
@@ -159,33 +313,43 @@ function StubDomainList({ domain, rows }: { domain: SearchDomain; rows: UnifiedR
 export function UnifiedSearchResultsPage() {
   const { token } = theme.useToken();
   const navigate = useNavigate();
+  const { setProjectId } = useActiveProject();
   const [params, setParams] = useSearchParams();
   const q = params.get('q') ?? '';
+  const scopeParam = params.get('scope');
+  const domainParam = params.get('domain');
   const [draft, setDraft] = useState(q);
-  const [activeTab, setActiveTab] = useState<'all' | SearchDomain>('all');
+  const [activeTab, setActiveTab] = useState<'all' | SearchDomain>(() =>
+    tabFromParams(domainParam, scopeParam),
+  );
 
   useEffect(() => {
     setDraft(q);
-    setActiveTab('all');
   }, [q]);
+
+  useEffect(() => {
+    setActiveTab(tabFromParams(domainParam, scopeParam));
+  }, [domainParam, scopeParam]);
 
   const byDomain = useMemo(() => searchByDomain(q), [q]);
   const totalCount = useMemo(
     () => SEARCH_DOMAIN_ORDER.reduce((sum, d) => sum + byDomain[d].length, 0),
     [byDomain],
   );
-  const activeDomains = useMemo(
-    () => SEARCH_DOMAIN_ORDER.filter((d) => byDomain[d].length > 0),
+  const allRows = useMemo(
+    () => SEARCH_DOMAIN_ORDER.flatMap((domain) => byDomain[domain]),
     [byDomain],
   );
 
   const runSearch = (next?: string) => {
     const value = (next ?? draft).trim() || 'all';
-    setParams({ q: value });
+    setParams({
+      q: value,
+      ...(activeTab === 'all' ? { scope: scopeParam ?? 'all' } : { domain: activeTab }),
+    });
   };
 
   const title = !q.trim() || q === 'all' ? 'Part search' : `Results for “${q}”`;
-  const tableShellStyle = shellTableCardStyle(token);
   const resultsPanelStyle = shellTableCardStyle(token);
 
   const headerDescription =
@@ -196,43 +360,42 @@ export function UnifiedSearchResultsPage() {
   const activeTabLabel =
     activeTab === 'all' ? 'All categories' : SEARCH_DOMAIN_LABELS[activeTab as SearchDomain];
 
+  const changeTab = (key: string) => {
+    const nextTab = key as 'all' | SearchDomain;
+    setActiveTab(nextTab);
+    setParams({
+      q: q || 'all',
+      ...(nextTab === 'all' ? { scope: scopeParam ?? 'all' } : { domain: nextTab }),
+    });
+  };
+
   const renderDomainContent = (domain: SearchDomain) => {
     const rows = byDomain[domain];
     if (rows.length === 0) {
       return <DomainEmptyState domain={domain} query={q} />;
     }
-    return domain === 'parts' ? (
-      <Card styles={{ body: { padding: 0 } }} style={tableShellStyle}>
-        <PartsTable rows={rows} />
-      </Card>
-    ) : (
-      <StubDomainList domain={domain} rows={rows} />
+    return (
+      <ResultsList
+        rows={rows}
+        showDomainTag={false}
+        onSelect={(row) => {
+          if (row.projectId) setProjectId(row.projectId);
+        }}
+      />
     );
   };
 
   const allContent =
-    activeDomains.length === 0 ? (
+    allRows.length === 0 ? (
       <DomainEmptyState domain="all" query={q} />
     ) : (
-      <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-        {activeDomains.map((domain, index) => (
-          <div key={domain}>
-            {index > 0 ? <Divider style={{ marginBlock: token.marginLG }} /> : null}
-            <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
-              <Flex align="center" gap={token.marginXS}>
-                <Typography.Title
-                  level={4}
-                  style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading4) }}
-                >
-                  {SEARCH_DOMAIN_LABELS[domain]}
-                </Typography.Title>
-                <Tag>{byDomain[domain].length}</Tag>
-              </Flex>
-              {renderDomainContent(domain)}
-            </Space>
-          </div>
-        ))}
-      </Space>
+      <ResultsList
+        rows={allRows}
+        showDomainTag
+        onSelect={(row) => {
+          if (row.projectId) setProjectId(row.projectId);
+        }}
+      />
     );
 
   const tabItems: TabsProps['items'] = [
@@ -299,7 +462,7 @@ export function UnifiedSearchResultsPage() {
             <Tabs
               activeKey={activeTab}
               items={tabItems}
-              onChange={(key) => setActiveTab(key as 'all' | SearchDomain)}
+              onChange={changeTab}
               tabBarStyle={{ marginBottom: 0 }}
               tabBarExtraContent={
                 <Typography.Text type="secondary" style={{ whiteSpace: 'nowrap' }}>

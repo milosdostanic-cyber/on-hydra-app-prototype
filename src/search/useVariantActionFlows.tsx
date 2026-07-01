@@ -42,16 +42,6 @@ function isBomResolution(
   return 'bomProjectId' in result && 'bomProjectName' in result;
 }
 
-function isSkuInAnyBomWorkspace(
-  rowsByProjectId: Record<string, import('../bom/data/types').BomItem[] | undefined>,
-  sku: string,
-): boolean {
-  return Object.values(rowsByProjectId).some((rows) => {
-    const list = rows ?? [];
-    return isSkuInBomRows(list, sku);
-  });
-}
-
 /** Variant-level BOM + drawing queue orchestration (no Submittal at variant level). */
 export function useVariantActionFlows(partKey: string, variation: PartVariationRow | null) {
   const { message } = App.useApp();
@@ -77,11 +67,6 @@ export function useVariantActionFlows(partKey: string, variation: PartVariationR
           }
         : null,
     [variation],
-  );
-
-  const isInBom = useMemo(
-    () => (variation ? isSkuInAnyBomWorkspace(rowsByProjectId, variation.sku) : false),
-    [rowsByProjectId, variation],
   );
 
   const finishBomAdd = (bomProjectId: string, bomProjectName: string) => {
@@ -231,6 +216,7 @@ export function useVariantActionFlows(partKey: string, variation: PartVariationR
       <ProjectRequiredModal
         open={gateOpen}
         actionLabel={gateActionLabel}
+        bomSku={pending === 'bom' ? variation?.sku : undefined}
         actionDescription={
           pendingFileType
             ? 'Drawing downloads are scoped to a project. Pick a project to queue this file.'
@@ -279,6 +265,5 @@ export function useVariantActionFlows(partKey: string, variation: PartVariationR
     queueSingleFileType,
     modals,
     pillActions,
-    isInBom,
   };
 }

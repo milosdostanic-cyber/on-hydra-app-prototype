@@ -23,6 +23,7 @@ import { Avatar, Button, Dropdown, Flex, List, Modal, Switch, Typography, theme 
 import type { MenuProps } from '../ui/antd';
 import { useActiveProject } from '../context/ActiveProjectContext';
 import { useActionTrail } from '../context/ActionTrailContext';
+import { GlobalSearch } from './GlobalSearch/GlobalSearch';
 import { type ProjectRow } from './projectSeed';
 
 const shellControlBtnStyle = (color: string): CSSProperties => ({
@@ -206,6 +207,8 @@ export function AppTopBar() {
       <Flex
         align="center"
         justify="space-between"
+        gap={token.marginLG}
+        wrap="wrap"
         style={{
           width: '100%',
           boxSizing: 'border-box',
@@ -216,12 +219,18 @@ export function AppTopBar() {
           borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorPrimaryActive}`,
         }}
       >
-        <Flex align="center" gap={token.marginMD} wrap="wrap" style={{ minWidth: 0 }}>
+        <Flex
+          align="center"
+          gap={token.marginMD}
+          wrap="wrap"
+          style={{ flex: '0 1 360px', minWidth: 0 }}
+        >
           <Typography.Text
             style={{
               ...hydraTextStyleToReactCss(hydraTitleHeading3),
               color: onPrimary,
               margin: 0,
+              minWidth: 0,
             }}
           >
             {title}
@@ -231,11 +240,17 @@ export function AppTopBar() {
               ...hydraTextStyleToReactCss(hydraBaseNormal),
               color: onPrimary,
               margin: 0,
+              maxWidth: 320,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
             }}
           >
             {subtitle}
           </Typography.Text>
         </Flex>
+
+        <GlobalSearch />
 
         <Flex align="center" gap={token.marginSM} style={{ flexShrink: 0 }}>
           <Button
