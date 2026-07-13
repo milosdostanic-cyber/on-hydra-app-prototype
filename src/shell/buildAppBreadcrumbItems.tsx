@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 
 import { bomItemById, bomProjectTitleById } from '../bom/data/mockData';
+import { buildProductCatalogBreadcrumbSegments } from '../catalog/productCatalogNavigation';
 import type { BreadcrumbProps } from '../ui/antd';
 
 import { projectTitleById } from './projectSeed';
@@ -35,25 +36,28 @@ export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] 
     return toItems([{ label: UMBRELLA_COMPANY_LABEL, to: '/dashboard' }, { label: 'Home' }]);
   }
 
-  const segs: BreadcrumbSeg[] = [{ label: UMBRELLA_COMPANY_LABEL, to: '/dashboard' }];
-
   if (pathname.startsWith('/projects/reframing-proposal')) {
-    segs.push({ label: 'Project Reframing Proposal' });
-    return toItems(segs);
+    return toItems([
+      { label: UMBRELLA_COMPANY_LABEL, to: '/dashboard' },
+      { label: 'Project Reframing Proposal' },
+    ]);
   }
 
   if (pathname.startsWith('/search')) {
     if (pathname.includes('/parts/') && partId) {
-      segs.push({ label: 'Search', to: '/search/results?q=all' });
-      segs.push({ label: `Part ${decodeURIComponent(partId)}` });
-      return toItems(segs);
+      return toItems([
+        { label: 'Part Search', to: '/search/results?q=all' },
+        { label: `Part ${decodeURIComponent(partId)}` },
+      ]);
     }
-    segs.push({ label: 'Search' });
-    return toItems(segs);
+    return toItems([{ label: 'Part Search' }]);
   }
 
   if (pathname.startsWith('/catalog')) {
-    segs.push({ label: 'Catalog', to: pathname !== '/catalog' ? '/catalog' : undefined });
+    const segs: BreadcrumbSeg[] = [
+      { label: 'Part Search', to: '/catalog' },
+      { label: 'Home', to: pathname !== '/catalog' ? '/catalog' : undefined },
+    ];
     if (pathname.includes('/results')) {
       segs.push({ label: 'Results' });
       return toItems(segs);
@@ -62,33 +66,67 @@ export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] 
       segs.push({ label: `Part ${decodeURIComponent(partId)}` });
       return toItems(segs);
     }
+    if (pathname === '/catalog' || pathname === '/catalog/') {
+      return toItems([{ label: 'Part Search' }, { label: 'Home' }]);
+    }
     return toItems(segs);
   }
 
-  if (pathname.startsWith('/projects')) {
-    if (pathname === '/projects' || pathname === '/projects/') {
-      segs.push({ label: 'Home' });
-      return toItems(segs);
+  if (pathname.startsWith('/projects') && projectId) {
+    const catalogCrumbs = buildProductCatalogBreadcrumbSegments(pathname, projectId);
+    if (catalogCrumbs) {
+      return toItems(catalogCrumbs);
     }
-    segs.push({ label: 'Home', to: '/dashboard' });
-    if (!projectId) {
-      return toItems(segs);
-    }
+
     const pTitle = projectTitleById(projectId) ?? 'Project';
-    const hub = `/projects/${projectId}/content`;
-    if (pathname === hub) {
-      segs.push({ label: pTitle });
-      segs.push({ label: 'Download Center' });
-      return toItems(segs);
+    const contentPath = `/projects/${projectId}/content`;
+    const specPath = `/projects/${projectId}/sales-brace`;
+    const submittalPath = `/projects/${projectId}/submittal`;
+
+    if (pathname === contentPath || pathname === `${contentPath}/`) {
+      return toItems([
+        { label: 'Content', to: contentPath },
+        { label: pTitle },
+        { label: 'Download center' },
+      ]);
     }
-    segs.push({ label: pTitle, to: hub });
-    if (pathname.includes('/seis-brace')) segs.push({ label: 'SeisBrace' });
-    else if (pathname.includes('/sales-brace')) segs.push({ label: 'Spec' });
-    else if (pathname.includes('/submittal')) segs.push({ label: 'Submittal' });
-    return toItems(segs);
+
+    if (pathname.includes('/sales-brace')) {
+      return toItems([
+        { label: 'Spec', to: specPath },
+        { label: pTitle },
+      ]);
+    }
+
+    if (pathname.includes('/submittal')) {
+      return toItems([
+        { label: 'Submittal Manager', to: submittalPath },
+        { label: pTitle },
+      ]);
+    }
+
+    if (pathname.includes('/seis-brace')) {
+      return toItems([
+        { label: 'SeisBrace', to: '/seisbrace' },
+        { label: pTitle },
+      ]);
+    }
+
+    if (pathname === `/projects/${projectId}` || pathname === `/projects/${projectId}/`) {
+      return toItems([
+        { label: UMBRELLA_COMPANY_LABEL, to: '/dashboard' },
+        { label: 'Home', to: '/dashboard' },
+        { label: pTitle },
+      ]);
+    }
+  }
+
+  if (pathname === '/projects' || pathname === '/projects/') {
+    return toItems([{ label: UMBRELLA_COMPANY_LABEL, to: '/dashboard' }, { label: 'Home' }]);
   }
 
   if (pathname.startsWith('/bom')) {
+    const segs: BreadcrumbSeg[] = [];
     const siteMatch = /^\/bom\/site\/([^/]+)/.exec(pathname);
     const resolvedSiteId = siteMatch?.[1] ?? a.constructionProjectId;
     const bomHub = resolvedSiteId ? `/bom/site/${resolvedSiteId}` : '/bom';
@@ -150,5 +188,21 @@ export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] 
     return toItems(segs);
   }
 
-  return toItems(segs);
+  if (pathname.startsWith('/seisbrace')) {
+    const segs: BreadcrumbSeg[] = [
+      { label: 'SeisBrace', to: pathname !== '/seisbrace' ? '/seisbrace' : undefined },
+    ];
+    if (pathname.includes('/wizard/')) segs.push({ label: 'Design wizard' });
+    return toItems(segs);
+  }
+
+  if (pathname.startsWith('/revit-plugin')) {
+    return toItems([{ label: 'Revit Plug-in' }]);
+  }
+
+  if (pathname.startsWith('/knowledge-center')) {
+    return toItems([{ label: 'Knowledge Center' }]);
+  }
+
+  return toItems([{ label: UMBRELLA_COMPANY_LABEL, to: '/dashboard' }]);
 }

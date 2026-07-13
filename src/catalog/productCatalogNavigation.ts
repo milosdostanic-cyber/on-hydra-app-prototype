@@ -8,7 +8,7 @@ import {
 export type ProductCatalogBreadcrumbSeg = { label: string; to?: string };
 
 export function productCatalogHomePath(projectId: string): string {
-  return `/projects/${projectId}/content`;
+  return `/projects/${projectId}/catalog`;
 }
 
 export function productCatalogHubPath(
@@ -59,8 +59,8 @@ export function productCatalogSearchPath(projectId: string, query: string): stri
 }
 
 /**
- * Breadcrumb trail for `/projects/:id/content/*` (Content / Home / …).
- * Returns `null` when pathname is not under project content catalog.
+ * Breadcrumb trail for `/projects/:id/catalog/*` (Part Search product hierarchy).
+ * Returns `null` when pathname is not under project product catalog.
  */
 export function buildProductCatalogBreadcrumbSegments(
   pathname: string,
@@ -70,33 +70,29 @@ export function buildProductCatalogBreadcrumbSegments(
   if (!pathname.startsWith(base)) return null;
 
   const tail = pathname.slice(base.length).replace(/^\/+/, '');
+  const moduleSeg = { label: 'Part Search', to: base } as const;
   const homeSeg = { label: 'Home', to: base } as const;
 
   if (!tail || tail === '') {
-    return [{ label: 'Content' }, { label: 'Home' }];
+    return [moduleSeg, { label: 'Home' }];
   }
 
   if (tail.startsWith('search')) {
-    return [{ label: 'Content' }, homeSeg, { label: 'Search results' }];
+    return [moduleSeg, homeSeg, { label: 'Search results' }];
   }
 
   const allPartsMatch = /^category\/([^/]+)\/all-parts$/.exec(tail);
   if (allPartsMatch) {
     const categoryId = allPartsMatch[1];
     const cat = catalogCategoryById(categoryId);
-    return [
-      { label: 'Content' },
-      homeSeg,
-      { label: cat?.title ?? 'Category' },
-      { label: 'All parts' },
-    ];
+    return [moduleSeg, homeSeg, { label: cat?.title ?? 'Category' }, { label: 'All parts' }];
   }
 
   const hubMatch = /^category\/([^/]+)\/sub\/([^/]+)$/.exec(tail);
   if (hubMatch) {
     const [, categoryId, subcategoryId] = hubMatch;
     const sub = catalogSubcategory(categoryId, subcategoryId);
-    return [{ label: 'Content' }, homeSeg, { label: sub?.label ?? 'Subcategory' }];
+    return [moduleSeg, homeSeg, { label: sub?.label ?? 'Subcategory' }];
   }
 
   const lineMatch = /^category\/([^/]+)\/sub\/([^/]+)\/line\/([^/]+)$/.exec(tail);
@@ -105,7 +101,7 @@ export function buildProductCatalogBreadcrumbSegments(
     const sub = catalogSubcategory(categoryId, subcategoryId);
     const line = catalogProductLine(categoryId, subcategoryId, lineId);
     return [
-      { label: 'Content' },
+      moduleSeg,
       homeSeg,
       { label: sub?.label ?? 'Subcategory', to: productCatalogHubPath(projectId, categoryId, subcategoryId) },
       { label: line?.name ?? 'Product line' },
@@ -120,7 +116,7 @@ export function buildProductCatalogBreadcrumbSegments(
     const part = catalogLeafPart(categoryId, subcategoryId, lineId, partId);
     const linePath = productCatalogLinePath(projectId, categoryId, subcategoryId, lineId);
     return [
-      { label: 'Content' },
+      moduleSeg,
       homeSeg,
       { label: sub?.label ?? 'Subcategory', to: productCatalogHubPath(projectId, categoryId, subcategoryId) },
       { label: line?.name ?? 'Product line', to: linePath },
@@ -137,7 +133,7 @@ export function buildProductCatalogBreadcrumbSegments(
     const part = catalogLeafPart(categoryId, subcategoryId, lineId, partId);
     const linePath = productCatalogLinePath(projectId, categoryId, subcategoryId, lineId);
     return [
-      { label: 'Content' },
+      moduleSeg,
       homeSeg,
       { label: sub?.label ?? 'Subcategory', to: productCatalogHubPath(projectId, categoryId, subcategoryId) },
       { label: line?.name ?? 'Product line', to: linePath },

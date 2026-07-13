@@ -211,7 +211,11 @@ export function useRevitDownloadQueue() {
     setQueue(() => []);
   }, []);
 
-  return { items, queueCount, addToQueue, addDrawingFilesToQueue, clearQueue };
+  const removeItem = useCallback((id: string) => {
+    setQueue((prev) => prev.filter((item) => item.id !== id));
+  }, []);
+
+  return { items, queueCount, addToQueue, addDrawingFilesToQueue, clearQueue, removeItem };
 }
 
 export function useDownloadHistory() {

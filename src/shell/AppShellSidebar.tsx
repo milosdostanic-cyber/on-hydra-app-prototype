@@ -1,7 +1,8 @@
 import {
+  BookOutlined,
+  BuildOutlined,
   CalculatorOutlined,
   FileTextOutlined,
-  GlobalOutlined,
   HomeOutlined,
   InboxOutlined,
   LeftOutlined,
@@ -31,8 +32,12 @@ const { Sider } = Layout;
 
 function primarySideKey(pathname: string): string {
   if (pathname.startsWith('/search')) return 'part-search';
-  if (pathname.startsWith('/catalog')) return 'catalog';
+  if (pathname.startsWith('/catalog')) return 'part-search';
+  if (/\/projects\/[^/]+\/catalog(\/|$)/.test(pathname)) return 'part-search';
   if (pathname.startsWith('/bom')) return 'bom';
+  if (pathname.startsWith('/seisbrace')) return 'seis';
+  if (pathname.startsWith('/revit-plugin')) return 'revit-plugin';
+  if (pathname.startsWith('/knowledge-center')) return 'knowledge-center';
   if (pathname.startsWith('/dashboard')) return 'dash';
   if (pathname.startsWith('/projects')) {
     if (pathname === '/projects' || pathname === '/projects/') return 'dash';
@@ -91,14 +96,15 @@ export function AppShellSidebar() {
 
   const primaryMenuItems: MenuProps['items'] = useMemo(
     () => [
-      { key: 'dash', icon: <HomeOutlined />, label: 'Homepage' },
+      { key: 'dash', icon: <HomeOutlined />, label: 'Home' },
       { key: 'part-search', icon: <SearchOutlined />, label: 'Part Search' },
-      { key: 'seis', icon: <CalculatorOutlined />, label: 'SeisBrace' },
-      { key: 'spec', icon: <FileTextOutlined />, label: 'Spec' },
-      trailMenuItem('submittal', <InboxOutlined />, 'Submittal', collapsed, token),
-      { key: 'catalog', icon: <GlobalOutlined />, label: 'Catalog' },
+      trailMenuItem('content', <ReadOutlined />, 'Content', collapsed, token),
       trailMenuItem('bom', <UnorderedListOutlined />, 'BOM', collapsed, token),
-      trailMenuItem('content', <ReadOutlined />, 'Download Center', collapsed, token),
+      { key: 'spec', icon: <FileTextOutlined />, label: 'Spec' },
+      { key: 'seis', icon: <CalculatorOutlined />, label: 'SeisBrace' },
+      trailMenuItem('submittal', <InboxOutlined />, 'Submittal Manager', collapsed, token),
+      { key: 'revit-plugin', icon: <BuildOutlined />, label: 'Revit Plug-in' },
+      { key: 'knowledge-center', icon: <BookOutlined />, label: 'Knowledge Center' },
     ],
     [collapsed, token],
   );
@@ -107,20 +113,22 @@ export function AppShellSidebar() {
 
   const onMenuClick: MenuProps['onClick'] = ({ key }) => {
     const pid = getLastScopedProjectId();
-    const projectScoped = key === 'seis' || key === 'spec' || key === 'submittal' || key === 'content';
+    const projectScoped =
+      key === 'spec' || key === 'submittal' || key === 'content' || key === 'bom' || key === 'seis';
     if (projectScoped && !pid) {
       navigate('/dashboard');
       return;
     }
     const routes: Record<string, string> = {
       dash: '/dashboard',
-      'part-search': '/search/results?q=all',
-      seis: `/projects/${pid}/seis-brace`,
-      spec: `/projects/${pid}/sales-brace`,
-      submittal: `/projects/${pid}/submittal`,
-      catalog: '/catalog',
-      bom: '/bom',
+      'part-search': pid ? `/projects/${pid}/catalog` : '/catalog',
       content: `/projects/${pid}/content`,
+      bom: '/bom',
+      spec: `/projects/${pid}/sales-brace`,
+      seis: '/seisbrace',
+      submittal: `/projects/${pid}/submittal`,
+      'revit-plugin': '/revit-plugin',
+      'knowledge-center': '/knowledge-center',
     };
     const path = routes[key];
     if (path) navigate(path);
