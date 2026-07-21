@@ -5,7 +5,8 @@ import { BomImportFlowProvider } from '../context/BomImportFlowContext';
 
 /** BOM routes fill shell content rail width (`AppShell` applies min/max rail). */
 export function BomLayout() {
-  useActionTrailModuleLifecycle('bom');
+  // BOM L1 count stays until the user opens the added part (figure link) — UATL-350.
+  useActionTrailModuleLifecycle('bom', { clearBadgeOnEnter: false });
 
   return (
     <BomImportFlowProvider>

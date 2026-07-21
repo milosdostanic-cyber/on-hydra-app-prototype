@@ -1,11 +1,10 @@
 import { ArrowLeftOutlined } from '@ant-design/icons';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useActiveProject } from '../context/ActiveProjectContext';
-import { initialWorkspaceRowsForBomProject, useBomWorkspace } from '../context/BomWorkspaceContext';
-import { isSkuInBomRows } from '../search/catalogBomAdd';
 import { Button, Divider, Flex, Form, Modal, Select, Space, Typography, theme } from '../ui/antd';
 
+import { BomDestinationCreateModal } from './components/BomDestinationCreateModal';
 import { BomDestinationFields } from './components/BomDestinationFields';
 import { SubmittalDestinationFields } from './components/SubmittalDestinationFields';
 import { useBomDestinationFields } from './components/useBomDestinationFields';
@@ -26,10 +25,6 @@ type ProjectRequiredModalProps = {
   actionLabel: string;
   /** Optional one-line explanation of why a project is needed. */
   actionDescription?: string;
-  /** Optional SKU used to flag BOM destinations that already contain the item. */
-  bomSku?: string;
-  /** Optional part key used to flag submittal packages that already contain the item. */
-  submittalPartKey?: string;
   /**
    * When set, step 2 in the same modal picks a BOM or submittal package under the chosen project.
    * The part/action is not resolved until both project and destination are selected.
@@ -50,58 +45,21 @@ export function ProjectRequiredModal({
   open,
   actionLabel,
   actionDescription,
-  bomSku,
-  submittalPartKey,
   destinationRequirement,
   onResolved,
   onCancel,
 }: ProjectRequiredModalProps) {
   const { token } = theme.useToken();
   const { projects, addProject } = useActiveProject();
-  const { rowsByProjectId } = useBomWorkspace();
   const [projectMode, setProjectMode] = useState<ProjectMode>(projects.length > 0 ? 'select' : 'create');
   const [flowStep, setFlowStep] = useState<FlowStep>('project');
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   const [destinationProjectId, setDestinationProjectId] = useState<string | null>(null);
+  const [createBomModalOpen, setCreateBomModalOpen] = useState(false);
   const [form] = Form.useForm();
 
   const bomFields = useBomDestinationFields(destinationProjectId ?? '');
   const submittalFields = useSubmittalDestinationFields(destinationProjectId ?? '');
-
-  const bomAvailability = useMemo(() => {
-    if (!bomSku) return {};
-    return bomFields.boms.reduce<Record<string, { disabled?: boolean; label?: string; description?: string }>>(
-      (acc, bom) => {
-        const rows = rowsByProjectId[bom.id] ?? initialWorkspaceRowsForBomProject(bom.id);
-        if (isSkuInBomRows(rows, bomSku)) {
-          acc[bom.id] = {
-            disabled: true,
-            label: 'Already contains item',
-            description: 'Choose another BOM or create a new BOM to add this item elsewhere.',
-          };
-        }
-        return acc;
-      },
-      {},
-    );
-  }, [bomFields.boms, bomSku, rowsByProjectId]);
-
-  const packageAvailability = useMemo(() => {
-    if (!submittalPartKey) return {};
-    return submittalFields.packages.reduce<Record<string, { disabled?: boolean; label?: string; description?: string }>>(
-      (acc, pkg) => {
-        if (pkg.parts.some((existing) => existing.partKey === submittalPartKey)) {
-          acc[pkg.id] = {
-            disabled: true,
-            label: 'Already contains item',
-            description: 'Choose another package or create a new package to add this item elsewhere.',
-          };
-        }
-        return acc;
-      },
-      {},
-    );
-  }, [submittalFields.packages, submittalPartKey]);
 
   useEffect(() => {
     if (!open) return;
@@ -109,6 +67,7 @@ export function ProjectRequiredModal({
     setFlowStep('project');
     setSelectedId(projects[0]?.key);
     setDestinationProjectId(null);
+    setCreateBomModalOpen(false);
     form.resetFields();
   }, [open, projects, form]);
 
@@ -162,10 +121,7 @@ export function ProjectRequiredModal({
   };
 
   const destinationCanSubmit =
-    destinationRequirement === 'bom'
-      ? bomFields.canSubmit && !(bomFields.selectedId && bomAvailability[bomFields.selectedId]?.disabled)
-      : submittalFields.canSubmit &&
-        !(submittalFields.selectedId && packageAvailability[submittalFields.selectedId]?.disabled);
+    destinationRequirement === 'bom' ? bomFields.canSubmit : submittalFields.canSubmit;
 
   const destinationLabel = destinationRequirement === 'bom' ? 'BOM' : 'Submittal package';
   const destinationConfirmLabel =
@@ -179,14 +135,15 @@ export function ProjectRequiredModal({
   const modalWidth = flowStep === 'destination' || projectMode === 'create' ? token.screenSM : 520;
 
   return (
-    <Modal
-      title={modalTitle}
-      open={open}
-      onCancel={onCancel}
-      footer={null}
-      width={modalWidth}
-      destroyOnClose
-    >
+    <>
+      <Modal
+        title={modalTitle}
+        open={open}
+        onCancel={onCancel}
+        footer={null}
+        width={modalWidth}
+        destroyOnClose
+      >
       <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
         {flowStep === 'project' ? (
           <>
@@ -301,18 +258,13 @@ export function ProjectRequiredModal({
               {destinationRequirement === 'bom' ? (
                 <BomDestinationFields
                   boms={bomFields.boms}
-                  bomAvailability={bomAvailability}
-                  mode={bomFields.mode}
-                  onModeChange={bomFields.setMode}
                   selectedId={bomFields.selectedId}
                   onSelectedIdChange={bomFields.setSelectedId}
-                  newName={bomFields.newName}
-                  onNewNameChange={bomFields.setNewName}
+                  onRequestCreateNew={() => setCreateBomModalOpen(true)}
                 />
               ) : (
                 <SubmittalDestinationFields
                   packages={submittalFields.packages}
-                  packageAvailability={packageAvailability}
                   mode={submittalFields.mode}
                   onModeChange={submittalFields.setMode}
                   selectedId={submittalFields.selectedId}
@@ -332,6 +284,16 @@ export function ProjectRequiredModal({
           </>
         )}
       </Space>
-    </Modal>
+      </Modal>
+
+      <BomDestinationCreateModal
+        open={createBomModalOpen}
+        onCancel={() => setCreateBomModalOpen(false)}
+        onCreated={(name) => {
+          bomFields.createBom(name);
+          setCreateBomModalOpen(false);
+        }}
+      />
+    </>
   );
 }

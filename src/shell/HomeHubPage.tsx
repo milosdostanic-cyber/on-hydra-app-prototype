@@ -19,6 +19,8 @@ import { BomPageHeader } from '../bom/layout/BomPageHeader';
 import { PageDescription } from './PageDescription';
 import { useActiveProject } from '../context/ActiveProjectContext';
 import { useSubmittalPackages } from '../context/SubmittalPackagesContext';
+import { productCatalogHomePath } from '../catalog/productCatalogNavigation';
+import { getLastScopedProjectId } from './lastProjectScope';
 import {
   AppSearchInput,
   INLINE_SEARCH_CONTROL_SIZE,
@@ -205,6 +207,10 @@ function ProjectModuleRollupCards({ project }: { project: ProjectRow }) {
       navigate('/bom');
       return;
     }
+    if (path === 'seis-brace') {
+      navigate('/seisbrace');
+      return;
+    }
     navigate(flatProjectWorkspacePath(pid, path));
   };
 
@@ -259,8 +265,8 @@ export function HomeHubPage() {
   const { token } = theme.useToken();
   const navigate = useNavigate();
   const companyLabel = UMBRELLA_COMPANY_LABEL;
-  const { projects, setProjectId, addProject, updateProject, deleteProject } = useActiveProject();
-  const [tab, setTab] = useState<string>('recent');
+  const { projects, projectId, setProjectId, addProject, updateProject, deleteProject } = useActiveProject();
+  const [tab, setTab] = useState<string>('all');
   const [starredKeys, setStarredKeys] = useState<Set<string>>(() => new Set(['1', '3']));
   const [projectsPage, setProjectsPage] = useState(1);
   const [searchText, setSearchText] = useState('');
@@ -526,7 +532,14 @@ export function HomeHubPage() {
             <Button type="primary" icon={<SearchOutlined />} size="large" onClick={runGlobalSearch}>
               Search
             </Button>
-            <Button size="large" icon={<GlobalOutlined />} onClick={() => navigate('/catalog')}>
+            <Button
+              size="large"
+              icon={<GlobalOutlined />}
+              onClick={() => {
+                const pid = projectId ?? getLastScopedProjectId();
+                navigate(pid ? productCatalogHomePath(pid) : '/catalog');
+              }}
+            >
               Browse catalog
             </Button>
           </Flex>

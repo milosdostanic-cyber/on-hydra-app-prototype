@@ -12,6 +12,10 @@ export type DownloadQueueItem = {
   fileName: string;
   fileType?: string;
   variationKey?: string;
+  /** Human part / variation label for Download Center rows. */
+  displayName?: string;
+  figureNumber?: string;
+  thumbnailUrl?: string;
 };
 
 export type DownloadHistoryEntry = {
@@ -23,6 +27,9 @@ export type DownloadHistoryEntry = {
   fileName: string;
   fileType?: string;
   variationKey?: string;
+  displayName?: string;
+  figureNumber?: string;
+  thumbnailUrl?: string;
   queuedAt: string;
 };
 
@@ -140,20 +147,29 @@ export function useRevitDownloadQueue() {
   const queueCount = items.length;
 
   const addToQueue = useCallback(
-    (input: { projectId: string; partKey: string; sku: string }): string => {
+    (input: {
+      projectId: string;
+      partKey: string;
+      sku: string;
+      displayName?: string;
+      figureNumber?: string;
+      thumbnailUrl?: string;
+    }): string => {
       const fileName = `${input.sku}.rfa`;
       const id = `rfa-${Date.now()}`;
-      setQueue((prev) => [
-        ...prev,
-        {
-          id,
-          kind: 'revit',
-          projectId: input.projectId,
-          partKey: input.partKey,
-          sku: input.sku,
-          fileName,
-        },
-      ]);
+      const item: DownloadQueueItem = {
+        id,
+        kind: 'revit',
+        projectId: input.projectId,
+        partKey: input.partKey,
+        sku: input.sku,
+        fileName,
+        fileType: 'RFA',
+        displayName: input.displayName,
+        figureNumber: input.figureNumber,
+        thumbnailUrl: input.thumbnailUrl,
+      };
+      setQueue((prev) => [...prev, item]);
       appendHistory([
         {
           id,
@@ -162,6 +178,10 @@ export function useRevitDownloadQueue() {
           partKey: input.partKey,
           sku: input.sku,
           fileName,
+          fileType: 'RFA',
+          displayName: input.displayName,
+          figureNumber: input.figureNumber,
+          thumbnailUrl: input.thumbnailUrl,
         },
       ]);
       return id;
@@ -176,6 +196,9 @@ export function useRevitDownloadQueue() {
       variationKey: string;
       sku: string;
       fileTypes: string[];
+      displayName?: string;
+      figureNumber?: string;
+      thumbnailUrl?: string;
     }): string[] => {
       if (input.fileTypes.length === 0) return [];
       const stamp = Date.now();
@@ -188,19 +211,39 @@ export function useRevitDownloadQueue() {
         sku: input.sku,
         fileType,
         fileName: drawingFileName(input.sku, fileType),
+        displayName: input.displayName,
+        figureNumber: input.figureNumber,
+        thumbnailUrl: input.thumbnailUrl,
       }));
       setQueue((prev) => [...prev, ...queueItems]);
       appendHistory(
-        queueItems.map(({ id, kind, projectId, partKey, sku, fileName, fileType, variationKey }) => ({
-          id,
-          kind,
-          projectId,
-          partKey,
-          sku,
-          fileName,
-          fileType,
-          variationKey,
-        })),
+        queueItems.map(
+          ({
+            id,
+            kind,
+            projectId,
+            partKey,
+            sku,
+            fileName,
+            fileType,
+            variationKey,
+            displayName,
+            figureNumber,
+            thumbnailUrl,
+          }) => ({
+            id,
+            kind,
+            projectId,
+            partKey,
+            sku,
+            fileName,
+            fileType,
+            variationKey,
+            displayName,
+            figureNumber,
+            thumbnailUrl,
+          }),
+        ),
       );
       return queueItems.map((item) => item.id);
     },

@@ -18,12 +18,10 @@ import {
   hydraTitleHeading3,
   hydraTitleHeading5,
 } from '../theme/hydraTypography';
-import { shellLayout } from '../theme/hydraAlias';
 import { Avatar, Button, Dropdown, Flex, List, Modal, Switch, Typography, theme } from '../ui/antd';
 import type { MenuProps } from '../ui/antd';
 import { useActiveProject } from '../context/ActiveProjectContext';
 import { useActionTrail } from '../context/ActionTrailContext';
-import { GlobalSearch } from './GlobalSearch/GlobalSearch';
 import { type ProjectRow } from './projectSeed';
 
 const shellControlBtnStyle = (color: string): CSSProperties => ({
@@ -58,8 +56,26 @@ function topBarCopyForPath(pathname: string, activeProjectName?: string): TopBar
   }
   if (pathname.startsWith('/catalog')) {
     return {
-      title: 'Catalog',
-      subtitle: 'Global browse — pick a project when you download or package an item',
+      title: 'Part Search',
+      subtitle: 'Catalog browse — pick a project when you download or package an item',
+    };
+  }
+  if (pathname.startsWith('/seisbrace')) {
+    return {
+      title: 'SeisBrace',
+      subtitle: 'Seismic brace designs and calculations',
+    };
+  }
+  if (pathname.startsWith('/revit-plugin')) {
+    return {
+      title: 'Revit Plug-in',
+      subtitle: 'Download, install, and support for the Revit plug-in',
+    };
+  }
+  if (pathname.startsWith('/knowledge-center')) {
+    return {
+      title: 'Knowledge Center',
+      subtitle: 'Documentation, guides, and shared resources',
     };
   }
   if (pathname.startsWith('/projects/reframing-proposal')) {
@@ -212,40 +228,36 @@ export function AppTopBar() {
       <Flex
         align="center"
         justify="space-between"
-        gap={token.marginLG}
-        wrap="wrap"
+        gap={token.paddingMD}
         style={{
           width: '100%',
           boxSizing: 'border-box',
-          minHeight: shellLayout.headerHeight,
           paddingInline: token.paddingLG,
-          paddingBlock: token.paddingSM,
+          paddingBlock: token.padding,
           background: token.colorPrimary,
           borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorPrimaryActive}`,
         }}
       >
         <Flex
-          align="center"
-          gap={token.marginMD}
-          wrap="wrap"
-          style={{ flex: '0 1 360px', minWidth: 0 }}
+          vertical
+          gap={token.paddingXXS}
+          style={{ flex: 1, minWidth: 0 }}
         >
           <Typography.Text
             style={{
               ...hydraTextStyleToReactCss(hydraTitleHeading3),
               color: onPrimary,
               margin: 0,
-              minWidth: 0,
             }}
           >
             {title}
           </Typography.Text>
           <Typography.Text
             style={{
-              ...hydraTextStyleToReactCss(hydraBaseNormal),
+              ...hydraTextStyleToReactCss(hydraTitleHeading5),
               color: onPrimary,
               margin: 0,
-              maxWidth: 320,
+              opacity: 0.65,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -255,9 +267,7 @@ export function AppTopBar() {
           </Typography.Text>
         </Flex>
 
-        <GlobalSearch />
-
-        <Flex align="center" gap={token.marginSM} style={{ flexShrink: 0 }}>
+        <Flex align="center" gap={token.paddingLG} style={{ flexShrink: 0 }}>
           <Button
             type="text"
             icon={<FolderOpenOutlined />}
@@ -267,10 +277,10 @@ export function AppTopBar() {
               display: 'flex',
               alignItems: 'center',
               gap: token.marginXXS,
-              paddingInline: token.paddingSM,
+              paddingInline: token.padding,
             }}
           >
-            <Flex align="center" gap={token.marginXS}>
+            <Flex align="center" gap={token.paddingXS}>
               <Typography.Text
                 style={{
                   ...hydraTextStyleToReactCss(hydraBaseNormal),
@@ -287,34 +297,36 @@ export function AppTopBar() {
             </Flex>
           </Button>
 
-          <Button
-            type="text"
-            icon={<QuestionCircleOutlined />}
-            aria-label="Help"
-            styles={{ icon: { color: onPrimary } }}
-            style={shellControlBtnStyle(onPrimary)}
-          />
-          <Button
-            type="text"
-            icon={<BellOutlined />}
-            aria-label="Notifications"
-            styles={{ icon: { color: onPrimary } }}
-            style={shellControlBtnStyle(onPrimary)}
-          />
-          <Flex align="center" gap={token.marginXXS}>
-            <Avatar
-              style={{ background: token.colorBgContainer, color: token.colorPrimary }}
-              icon={<UserOutlined aria-hidden />}
+          <Flex align="center" gap={token.paddingXS}>
+            <Button
+              type="text"
+              icon={<QuestionCircleOutlined />}
+              aria-label="Help"
+              styles={{ icon: { color: onPrimary } }}
+              style={shellControlBtnStyle(onPrimary)}
             />
-            <Dropdown menu={{ items: userMenuItems }} trigger={['click']}>
-              <Button
-                type="text"
-                icon={<DownOutlined />}
-                aria-label="Account menu"
-                styles={{ icon: { color: onPrimary } }}
-                style={shellControlBtnStyle(onPrimary)}
+            <Button
+              type="text"
+              icon={<BellOutlined />}
+              aria-label="Notifications"
+              styles={{ icon: { color: onPrimary } }}
+              style={shellControlBtnStyle(onPrimary)}
+            />
+            <Flex align="center" gap={token.marginXXS}>
+              <Avatar
+                style={{ background: token.colorBgContainer, color: token.colorPrimary }}
+                icon={<UserOutlined aria-hidden />}
               />
-            </Dropdown>
+              <Dropdown menu={{ items: userMenuItems }} trigger={['click']}>
+                <Button
+                  type="text"
+                  icon={<DownOutlined />}
+                  aria-label="Account menu"
+                  styles={{ icon: { color: onPrimary } }}
+                  style={shellControlBtnStyle(onPrimary)}
+                />
+              </Dropdown>
+            </Flex>
           </Flex>
         </Flex>
       </Flex>

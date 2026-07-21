@@ -23,6 +23,7 @@ import {
   getActionTrailSnapshot,
   isActionTrailEnabled,
   markItemViewed,
+  markSubProjectViewed,
   pendingItemIds,
   pendingSubProjectIds,
   pruneExpired,
@@ -57,6 +58,7 @@ type ActionTrailContextValue = {
   activateModuleGuidance: (module: ActionTrailModule) => void;
   activateItemGuidance: (module: ActionTrailModule, subProjectId: string) => void;
   markItemViewed: (module: ActionTrailModule, subProjectId: string, itemId: string, partKey?: string) => void;
+  markSubProjectViewed: (module: ActionTrailModule, subProjectId: string) => void;
   consumeForModule: (module: ActionTrailModule, subProjectId?: string) => void;
   clearNewTagsForModule: (module: ActionTrailModule) => void;
 };
@@ -105,6 +107,7 @@ export function ActionTrailProvider({ children }: { children: ReactNode }) {
       activateModuleGuidance,
       activateItemGuidance,
       markItemViewed,
+      markSubProjectViewed,
       consumeForModule,
       clearNewTagsForModule,
     }),
@@ -125,15 +128,31 @@ export function useActionTrail(): ActionTrailContextValue {
   return ctx;
 }
 
-/** Activate L2/L3 guidance on mount; L1 badge clears only on L3 (`markItemViewed`). Content clears on open. */
-export function useActionTrailModuleLifecycle(module: ActionTrailModule) {
-  const { activateModuleGuidance, consumeForModule, clearNewTagsForModule } = useActionTrail();
+export type ActionTrailModuleLifecycleOptions = {
+  /**
+   * When true (default), opening the module marks entries `seen` and clears the L1 nav badge
+   * while keeping `newTagActive` for deeper guidance this visit.
+   * When false (BOM), the L1 badge stays until L3 — `markItemViewed` on figure/part click.
+   */
+  clearBadgeOnEnter?: boolean;
+};
+
+/**
+ * Module enter/leave lifecycle for Action Trail.
+ * Leaving the module clears visit-scoped "New" highlights (`clearNewTagsForModule`).
+ */
+export function useActionTrailModuleLifecycle(
+  module: ActionTrailModule,
+  options?: ActionTrailModuleLifecycleOptions,
+) {
+  const clearBadgeOnEnter = options?.clearBadgeOnEnter !== false;
+  const { consumeForModule, activateModuleGuidance, clearNewTagsForModule } = useActionTrail();
   const visitGeneration = useRef(0);
 
   useEffect(() => {
     visitGeneration.current += 1;
     const generation = visitGeneration.current;
-    if (module === 'content') {
+    if (clearBadgeOnEnter) {
       consumeForModule(module);
     } else {
       activateModuleGuidance(module);
@@ -145,7 +164,7 @@ export function useActionTrailModuleLifecycle(module: ActionTrailModule) {
         }
       });
     };
-  }, [module, activateModuleGuidance, consumeForModule, clearNewTagsForModule]);
+  }, [module, clearBadgeOnEnter, consumeForModule, activateModuleGuidance, clearNewTagsForModule]);
 }
 
 export function useActionTrailHighlightActive(
@@ -158,7 +177,7 @@ export function useActionTrailHighlightActive(
     getActionTrailServerSnapshot,
   );
   return state.entries.some(
-    (e) => e.module === module && e.subProjectId === subProjectId && !e.seen,
+    (e) => e.module === module && e.subProjectId === subProjectId && e.newTagActive,
   );
 }
 

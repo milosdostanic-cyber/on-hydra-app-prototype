@@ -1,5 +1,3 @@
-import { useMemo } from 'react';
-
 import { useSubmittalPackages } from '../../context/SubmittalPackagesContext';
 import { SubmittalDestinationFields } from '../../shell/components/SubmittalDestinationFields';
 import { useSubmittalDestinationFields } from '../../shell/components/useSubmittalDestinationFields';
@@ -37,26 +35,6 @@ export function AddToPackageModal({
   const { addPartToPackage } = useSubmittalPackages();
   const fields = useSubmittalDestinationFields(projectId);
 
-  const packageAvailability = useMemo(() => {
-    if (!part) return {};
-    return fields.packages.reduce<Record<string, { disabled?: boolean; label?: string; description?: string }>>(
-      (acc, pkg) => {
-        if (pkg.parts.some((existing) => existing.partKey === part.partKey)) {
-          acc[pkg.id] = {
-            disabled: true,
-            label: 'Already contains item',
-            description: 'Choose another package or create a new package to add this item elsewhere.',
-          };
-        }
-        return acc;
-      },
-      {},
-    );
-  }, [fields.packages, part]);
-
-  const selectedPackageAlreadyContainsItem =
-    fields.mode === 'existing' && fields.selectedId ? Boolean(packageAvailability[fields.selectedId]?.disabled) : false;
-
   const handleOk = () => {
     if (!part) return;
     const dest = fields.resolve();
@@ -76,7 +54,7 @@ export function AddToPackageModal({
       title={title}
       width={token.screenSM}
       okText="Add to package"
-      okButtonProps={{ disabled: !fields.canSubmit || selectedPackageAlreadyContainsItem }}
+      okButtonProps={{ disabled: !fields.canSubmit }}
       onOk={handleOk}
       onCancel={onCancel}
       destroyOnClose
@@ -101,7 +79,6 @@ export function AddToPackageModal({
 
         <SubmittalDestinationFields
           packages={fields.packages}
-          packageAvailability={packageAvailability}
           mode={fields.mode}
           onModeChange={fields.setMode}
           selectedId={fields.selectedId}

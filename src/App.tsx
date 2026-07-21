@@ -10,8 +10,17 @@ import { AppShell } from './shell/AppShell';
 import { CatalogHome } from './shell/CatalogHome';
 import {
   ContentModule,
+  KnowledgeCenterModule,
+  RevitPlugInModule,
   SalesBraceModule,
 } from './shell/ProjectModuleStubs';
+import { CategoryAllPartsPage } from './shell/content/CategoryAllPartsPage';
+import { PartVariantDetailPage } from './shell/content/PartVariantDetailPage';
+import { PartVariantsPage } from './shell/content/PartVariantsPage';
+import { ProductCatalogContent } from './shell/content/ProductCatalogContent';
+import { ProductCatalogSearchPage } from './shell/content/ProductCatalogSearchPage';
+import { ProductLinePartsPage } from './shell/content/ProductLinePartsPage';
+import { SubcategoryHubPage } from './shell/content/SubcategoryHubPage';
 import { HomeHubPage } from './shell/HomeHubPage';
 import { ProjectWorkspaceLayout } from './shell/ProjectWorkspaceLayout';
 import { SubmittalPackagesPage } from './submittal/SubmittalPackagesPage';
@@ -43,6 +52,16 @@ function SeisBraceStubRedirect() {
   return null;
 }
 
+/** Old Content-module catalog deep links → Part Search catalog (index `/content` stays Content downloads). */
+function LegacyContentCatalogDeepLinkRedirect() {
+  const { projectId = '', '*': rest } = useParams<{ projectId: string; '*': string }>();
+  const { search } = useLocation();
+  if (!rest) {
+    return <Navigate to={`/projects/${projectId}/content`} replace />;
+  }
+  return <Navigate to={`/projects/${projectId}/catalog/${rest}${search}`} replace />;
+}
+
 export function App() {
   return (
     <Routes>
@@ -58,6 +77,32 @@ export function App() {
         <Route path="/catalog/parts/:partId" element={<CatalogPartRedirect />} />
         <Route path="/bom/*" element={<BomRoutes />} />
         <Route path="/seisbrace/*" element={<SeisBraceRoutes />} />
+        <Route path="/revit-plugin" element={<RevitPlugInModule />} />
+        <Route path="/knowledge-center" element={<KnowledgeCenterModule />} />
+
+        {/* Part Search — project product catalog hierarchy (existing screens, reassigned from Content) */}
+        <Route path="/projects/:projectId/catalog" element={<ProductCatalogContent />} />
+        <Route path="/projects/:projectId/catalog/search" element={<ProductCatalogSearchPage />} />
+        <Route
+          path="/projects/:projectId/catalog/category/:categoryId/all-parts"
+          element={<CategoryAllPartsPage />}
+        />
+        <Route
+          path="/projects/:projectId/catalog/category/:categoryId/sub/:subcategoryId"
+          element={<SubcategoryHubPage />}
+        />
+        <Route
+          path="/projects/:projectId/catalog/category/:categoryId/sub/:subcategoryId/line/:productLineId"
+          element={<ProductLinePartsPage />}
+        />
+        <Route
+          path="/projects/:projectId/catalog/category/:categoryId/sub/:subcategoryId/line/:productLineId/part/:partId/parts"
+          element={<PartVariantsPage />}
+        />
+        <Route
+          path="/projects/:projectId/catalog/category/:categoryId/sub/:subcategoryId/line/:productLineId/part/:partId/variant/:variantId"
+          element={<PartVariantDetailPage />}
+        />
 
         <Route path="/projects/:projectId" element={<ProjectWorkspaceLayout />}>
           <Route index element={<Navigate to="content" replace />} />
@@ -65,6 +110,8 @@ export function App() {
           <Route path="sales-brace" element={<SalesBraceModule />} />
           <Route path="submittal" element={<SubmittalPackagesPage />} />
           <Route path="content" element={<ContentModule />} />
+          {/* Deep links only — exact `content` above wins for Content downloads */}
+          <Route path="content/*" element={<LegacyContentCatalogDeepLinkRedirect />} />
         </Route>
       </Route>
     </Routes>

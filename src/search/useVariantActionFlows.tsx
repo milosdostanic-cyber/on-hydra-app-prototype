@@ -10,6 +10,7 @@ import {
   type ProjectResolution,
 } from '../shell/ProjectRequiredModal';
 import { App } from '../ui/antd';
+import type { AddToBomVariationOption } from '../bom/components/AddToBomModal';
 import type { PartVariationRow } from './partDetailDemoData';
 import { useRevitDownloadQueue } from './revitDownloadQueue';
 import { DrawingFileTypesModal } from './components/DrawingFileTypesModal';
@@ -42,8 +43,21 @@ function isBomResolution(
   return 'bomProjectId' in result && 'bomProjectName' in result;
 }
 
+function toVariationOptions(variations: PartVariationRow[]): AddToBomVariationOption[] {
+  return variations.map((variation) => ({
+    key: variation.key,
+    sku: variation.sku,
+    name: variation.name,
+    description: variation.description,
+  }));
+}
+
 /** Variant-level BOM + drawing queue orchestration (no Submittal at variant level). */
-export function useVariantActionFlows(partKey: string, variation: PartVariationRow | null) {
+export function useVariantActionFlows(
+  partKey: string,
+  variation: PartVariationRow | null,
+  allVariations: PartVariationRow[] = [],
+) {
   const { message } = App.useApp();
   const { projectId, projects, setProjectId } = useActiveProject();
   const { rowsByProjectId, setWorkspaceRows } = useBomWorkspace();
@@ -57,6 +71,8 @@ export function useVariantActionFlows(partKey: string, variation: PartVariationR
   const [drawingModalOpen, setDrawingModalOpen] = useState(false);
   const [drawingProjectId, setDrawingProjectId] = useState<string | null>(null);
 
+  const variationOptions = useMemo(() => toVariationOptions(allVariations), [allVariations]);
+
   const partPayload = useMemo(
     () =>
       variation
@@ -69,20 +85,23 @@ export function useVariantActionFlows(partKey: string, variation: PartVariationR
     [variation],
   );
 
-  const finishBomAdd = (bomProjectId: string, bomProjectName: string) => {
-    if (!variation) return;
+  const finishBomAdd = (
+    bomProjectId: string,
+    bomProjectName: string,
+    addedPart: { partKey: string; sku: string; displayName: string },
+  ) => {
     const existingRows =
       rowsByProjectId[bomProjectId] ?? initialWorkspaceRowsForBomProject(bomProjectId);
-    if (isSkuInBomRows(existingRows, variation.sku)) {
+    if (isSkuInBomRows(existingRows, addedPart.sku)) {
       message.info(`Already in BOM — “${bomProjectName}”.`);
       return;
     }
 
     const newRow = buildCatalogBomItem(
       {
-        partKey: variation.key,
-        sku: variation.sku,
-        displayName: `${variation.sku} — ${variation.name}`,
+        partKey: addedPart.partKey,
+        sku: addedPart.sku,
+        displayName: addedPart.displayName,
       },
       existingRows.length,
     );
@@ -92,12 +111,12 @@ export function useVariantActionFlows(partKey: string, variation: PartVariationR
       module: 'bom',
       subProjectId: bomProjectId,
       subProjectLabel: bomProjectName,
-      partKey: variation.key,
-      variantKey: variation.key,
+      partKey: addedPart.partKey,
+      variantKey: addedPart.partKey,
       itemIds: [newRow.id],
     });
 
-    message.success(`${variation.sku} added to “${bomProjectName}”.`);
+    message.success(`${addedPart.sku} added to “${bomProjectName}”.`);
   };
 
   const openDrawingPicker = (pid: string) => {
@@ -113,6 +132,9 @@ export function useVariantActionFlows(partKey: string, variation: PartVariationR
       variationKey: variation.key,
       sku: variation.sku,
       fileTypes,
+      displayName: `${variation.sku} — ${variation.name}`,
+      figureNumber: partKey,
+      thumbnailUrl: variation.thumbnailUrl,
     });
     const projectName = projects.find((p) => p.key === pid)?.name ?? 'project';
     registerEntry({
@@ -154,9 +176,17 @@ export function useVariantActionFlows(partKey: string, variation: PartVariationR
     }
   };
 
-  const handleAddedToBom = ({ bomProjectId, bomProjectName }: { bomProjectId: string; bomProjectName: string }) => {
+  const handleAddedToBom = ({
+    bomProjectId,
+    bomProjectName,
+    part: addedPart,
+  }: {
+    bomProjectId: string;
+    bomProjectName: string;
+    part: { partKey: string; sku: string; displayName: string };
+  }) => {
     setAddBomProjectId(null);
-    finishBomAdd(bomProjectId, bomProjectName);
+    finishBomAdd(bomProjectId, bomProjectName, addedPart);
   };
 
   const requestAction = (id: VariantActionId) => {
@@ -184,8 +214,8 @@ export function useVariantActionFlows(partKey: string, variation: PartVariationR
     setPending(null);
     if (!resume) return;
 
-    if (resume === 'bom' && isBomResolution(result)) {
-      finishBomAdd(result.bomProjectId, result.bomProjectName);
+    if (resume === 'bom' && isBomResolution(result) && partPayload) {
+      finishBomAdd(result.bomProjectId, result.bomProjectName, partPayload);
       return;
     }
 
@@ -216,7 +246,6 @@ export function useVariantActionFlows(partKey: string, variation: PartVariationR
       <ProjectRequiredModal
         open={gateOpen}
         actionLabel={gateActionLabel}
-        bomSku={pending === 'bom' ? variation?.sku : undefined}
         actionDescription={
           pendingFileType
             ? 'Drawing downloads are scoped to a project. Pick a project to queue this file.'
@@ -235,6 +264,8 @@ export function useVariantActionFlows(partKey: string, variation: PartVariationR
         open={addBomProjectId !== null}
         projectId={addBomProjectId ?? ''}
         part={addBomProjectId && partPayload ? partPayload : null}
+        variations={variationOptions}
+        initialVariantKey={variation?.key ?? null}
         onAdded={handleAddedToBom}
         onCancel={() => setAddBomProjectId(null)}
       />

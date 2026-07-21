@@ -65,7 +65,7 @@ export function ProjectWorkspaceLayout() {
       {
         key: 'content',
         icon: <FolderOpenOutlined />,
-        label: 'Download Center',
+        label: 'Content',
       },
     ],
     [submittalCount, token.colorPrimary, token.marginXS],

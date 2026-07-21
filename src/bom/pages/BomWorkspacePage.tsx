@@ -142,8 +142,10 @@ export function BomWorkspacePage() {
     [bomProjectId, entries],
   );
 
+  // Keep L1 sidebar count until figure link click (`markItemViewed` in bomWorkspaceColumns).
   useEffect(() => {
-    if (bomProjectId) activateItemGuidance('bom', bomProjectId);
+    if (!bomProjectId) return;
+    activateItemGuidance('bom', bomProjectId);
   }, [bomProjectId, activateItemGuidance]);
   const { pendingForProject, setActiveUploadId } = useBomImportFlow();
   const pendingUploadSessions = pendingForProject(bomProjectId);

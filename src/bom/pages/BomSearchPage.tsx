@@ -38,7 +38,7 @@ export function BomSearchPage() {
     }
     const encoded = encodeURIComponent(q.trim());
     if (mode === 'asc') {
-      navigate(`/catalog/results?q=${encoded}`);
+      navigate(`/search/results?q=${encoded}`);
       return;
     }
     navigate(`/bom/search/results?q=${encoded}`);

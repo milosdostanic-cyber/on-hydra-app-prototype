@@ -153,14 +153,14 @@ export function entriesForModule(module: ActionTrailModule): GuidanceEntry[] {
 export function unseenSubProjectIds(module: ActionTrailModule): string[] {
   const ids = new Set<string>();
   storeCache.entries.forEach((e) => {
-    if (e.module === module && !e.seen) ids.add(e.subProjectId);
+    if (e.module === module && e.newTagActive) ids.add(e.subProjectId);
   });
   return [...ids];
 }
 
 export function shouldShowSubProjectNewTag(module: ActionTrailModule, subProjectId: string): boolean {
   return storeCache.entries.some(
-    (e) => e.module === module && e.subProjectId === subProjectId && !e.seen,
+    (e) => e.module === module && e.subProjectId === subProjectId && e.newTagActive,
   );
 }
 
@@ -175,7 +175,7 @@ export function pendingSubProjectIds(module: ActionTrailModule): string[] {
 export function pendingItemIds(module: ActionTrailModule, subProjectId: string): string[] {
   const ids = new Set<string>();
   storeCache.entries.forEach((e) => {
-    if (e.module === module && e.subProjectId === subProjectId && e.newTagActive && !e.seen) {
+    if (e.module === module && e.subProjectId === subProjectId && e.newTagActive) {
       e.itemIds.forEach((id) => ids.add(id));
     }
   });
@@ -189,7 +189,7 @@ export function shouldShowNewTag(
   partKey?: string,
 ): boolean {
   return storeCache.entries.some((e) => {
-    if (e.module !== module || e.subProjectId !== subProjectId || e.seen || !e.newTagActive) return false;
+    if (e.module !== module || e.subProjectId !== subProjectId || !e.newTagActive) return false;
     if (e.itemIds.includes(itemId)) return true;
     return partKey != null && e.partKey === partKey;
   });
@@ -231,6 +231,21 @@ export function markItemViewed(
       const matchesPart = partKey != null && e.partKey === partKey;
       if (!matchesItem && !matchesPart) return e;
       return { ...e, seen: true, newTagActive: false };
+    }),
+  }));
+}
+
+/**
+ * Clears L1 badge for one sub-project while keeping item "New" tags for this visit.
+ * Used by Submittal (expand package). BOM must not call this on workspace open — badge
+ * clears only via `markItemViewed` on figure link click (UATL-350).
+ */
+export function markSubProjectViewed(module: ActionTrailModule, subProjectId: string) {
+  setState((prev) => ({
+    ...prev,
+    entries: prev.entries.map((e) => {
+      if (e.module !== module || e.subProjectId !== subProjectId || e.seen) return e;
+      return { ...e, seen: true };
     }),
   }));
 }

@@ -1,10 +1,9 @@
-import { useMemo } from 'react';
+import { PlusOutlined } from '@ant-design/icons';
+import { useEffect, useMemo, useState } from 'react';
 
-import { BomDestinationFields } from '../../shell/components/BomDestinationFields';
+import { BomDestinationCreateModal } from '../../shell/components/BomDestinationCreateModal';
 import { useBomDestinationFields } from '../../shell/components/useBomDestinationFields';
-import { initialWorkspaceRowsForBomProject, useBomWorkspace } from '../../context/BomWorkspaceContext';
-import { isSkuInBomRows } from '../../search/catalogBomAdd';
-import { Flex, Modal, Space, Typography, theme } from '../../ui/antd';
+import { Flex, Modal, Select, Space, Typography, theme } from '../../ui/antd';
 
 export type AddToBomPart = {
   partKey: string;
@@ -12,91 +11,166 @@ export type AddToBomPart = {
   displayName: string;
 };
 
+export type AddToBomVariationOption = {
+  key: string;
+  sku: string;
+  name: string;
+  description?: string;
+};
+
 type Props = {
   open: boolean;
   projectId: string;
   part: AddToBomPart | null;
-  onAdded: (info: { bomProjectId: string; bomProjectName: string }) => void;
+  variations?: AddToBomVariationOption[];
+  initialVariantKey?: string | null;
+  onAdded: (info: { bomProjectId: string; bomProjectName: string; part: AddToBomPart }) => void;
   onCancel: () => void;
 };
 
+function variationSelectLabel(variation: AddToBomVariationOption): string {
+  return variation.name || variation.description || variation.sku;
+}
+
+function partFromVariation(variation: AddToBomVariationOption): AddToBomPart {
+  const label = variationSelectLabel(variation);
+  return {
+    partKey: variation.key,
+    sku: variation.sku,
+    displayName: label === variation.sku ? variation.sku : `${variation.sku} — ${label}`,
+  };
+}
+
 /**
- * Pick an existing BOM project or create one, then confirm adding the part.
- * Used when the active project is already known (skips project selection).
+ * Pick a variation (when applicable) and target BOM, then confirm add.
  */
-export function AddToBomModal({ open, projectId, part, onAdded, onCancel }: Props) {
+export function AddToBomModal({
+  open,
+  projectId,
+  part,
+  variations,
+  initialVariantKey,
+  onAdded,
+  onCancel,
+}: Props) {
   const { token } = theme.useToken();
   const fields = useBomDestinationFields(projectId);
-  const { rowsByProjectId } = useBomWorkspace();
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [selectedVariantKey, setSelectedVariantKey] = useState<string | null>(null);
 
-  const bomAvailability = useMemo(() => {
-    if (!part) return {};
-    return fields.boms.reduce<Record<string, { disabled?: boolean; label?: string; description?: string }>>(
-      (acc, bom) => {
-        const rows = rowsByProjectId[bom.id] ?? initialWorkspaceRowsForBomProject(bom.id);
-        if (isSkuInBomRows(rows, part.sku)) {
-          acc[bom.id] = {
-            disabled: true,
-            label: 'Already contains item',
-            description: 'Choose another BOM or create a new BOM to add this item elsewhere.',
-          };
-        }
-        return acc;
-      },
-      {},
-    );
-  }, [fields.boms, part, rowsByProjectId]);
+  const showVariationSelect = Boolean(variations && variations.length > 0);
 
-  const selectedBomAlreadyContainsItem =
-    fields.mode === 'existing' && fields.selectedId ? Boolean(bomAvailability[fields.selectedId]?.disabled) : false;
+  useEffect(() => {
+    if (!open) return;
+    const fallbackKey = initialVariantKey ?? variations?.[0]?.key ?? null;
+    setSelectedVariantKey(fallbackKey);
+  }, [open, initialVariantKey, variations]);
+
+  const selectedVariation = useMemo(
+    () => variations?.find((variation) => variation.key === selectedVariantKey) ?? null,
+    [variations, selectedVariantKey],
+  );
+
+  const resolvedPart = useMemo(() => {
+    if (selectedVariation) return partFromVariation(selectedVariation);
+    return part;
+  }, [part, selectedVariation]);
+
+  const canSubmit =
+    Boolean(fields.selectedId) &&
+    Boolean(resolvedPart) &&
+    (!showVariationSelect || Boolean(selectedVariantKey));
 
   const handleOk = () => {
-    if (!part) return;
+    if (!resolvedPart) return;
     const dest = fields.resolve();
     if (!dest) return;
-    onAdded(dest);
+    onAdded({ ...dest, part: resolvedPart });
   };
 
-  return (
-    <Modal
-      open={open}
-      title="Add to BOM"
-      width={token.screenSM}
-      okText="Add to BOM"
-      okButtonProps={{ disabled: !fields.canSubmit || selectedBomAlreadyContainsItem }}
-      onOk={handleOk}
-      onCancel={onCancel}
-      destroyOnClose
-    >
-      <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-        {part && (
-          <Flex
-            vertical
-            gap={token.marginXXS}
-            style={{
-              padding: token.padding,
-              border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-              borderRadius: token.borderRadiusLG,
-              background: token.colorFillQuaternary,
-            }}
-          >
-            <Typography.Text type="secondary">Adding</Typography.Text>
-            <Typography.Text strong>{part.displayName}</Typography.Text>
-            <Typography.Text type="secondary">SKU {part.sku}</Typography.Text>
-          </Flex>
-        )}
+  const handleCreatedBom = (name: string) => {
+    fields.createBom(name);
+    setCreateModalOpen(false);
+  };
 
-        <BomDestinationFields
-          boms={fields.boms}
-          bomAvailability={bomAvailability}
-          mode={fields.mode}
-          onModeChange={fields.setMode}
-          selectedId={fields.selectedId}
-          onSelectedIdChange={fields.setSelectedId}
-          newName={fields.newName}
-          onNewNameChange={fields.setNewName}
-        />
-      </Space>
-    </Modal>
+  const bomOptions = fields.boms.map((bom) => ({
+    value: bom.id,
+    label: bom.name,
+  }));
+
+  return (
+    <>
+      <Modal
+        open={open}
+        title="Add to BOM"
+        width={token.screenSM}
+        okText="Add to BOM"
+        okButtonProps={{ disabled: !canSubmit }}
+        onOk={handleOk}
+        onCancel={onCancel}
+        destroyOnClose
+      >
+        <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+          {showVariationSelect ? (
+            <Flex vertical gap={token.marginXS}>
+              <Typography.Text>Select a size or variation to add to this BOM.</Typography.Text>
+              <Select
+                showSearch
+                placeholder="Choose a variation"
+                value={selectedVariantKey ?? undefined}
+                optionFilterProp="label"
+                options={variations!.map((variation) => ({
+                  value: variation.key,
+                  label: variationSelectLabel(variation),
+                }))}
+                onChange={setSelectedVariantKey}
+                style={{ width: '100%' }}
+              />
+            </Flex>
+          ) : null}
+
+          <Flex vertical gap={token.marginXS}>
+            <Typography.Text>Select a BOM to add this part to.</Typography.Text>
+            {fields.boms.length > 0 ? (
+              <Select
+                showSearch
+                placeholder="Choose a BOM"
+                value={fields.selectedId ?? undefined}
+                optionFilterProp="label"
+                options={bomOptions}
+                onChange={fields.setSelectedId}
+                style={{ width: '100%' }}
+              />
+            ) : (
+              <Typography.Text type="secondary">
+                No BOMs in this project yet. Create one to add this part.
+              </Typography.Text>
+            )}
+          </Flex>
+
+          {fields.boms.length > 0 ? (
+            <Typography.Link onClick={() => setCreateModalOpen(true)}>
+              <Space size={token.marginXS}>
+                <PlusOutlined />
+                <span>Create a new BOM instead</span>
+              </Space>
+            </Typography.Link>
+          ) : (
+            <Typography.Link onClick={() => setCreateModalOpen(true)}>
+              <Space size={token.marginXS}>
+                <PlusOutlined />
+                <span>Create a new BOM</span>
+              </Space>
+            </Typography.Link>
+          )}
+        </Space>
+      </Modal>
+
+      <BomDestinationCreateModal
+        open={createModalOpen}
+        onCancel={() => setCreateModalOpen(false)}
+        onCreated={handleCreatedBom}
+      />
+    </>
   );
 }

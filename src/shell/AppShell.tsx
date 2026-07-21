@@ -16,7 +16,7 @@ export const BOM_SHELL_FLUSH_BELOW_BREADCRUMB_ID = 'bom-shell-flush-below-breadc
 
 /** Product Catalog hero is full-bleed in the main column, flush under breadcrumbs (no shell rail / horizontal inset). */
 export function isProjectProductCatalogPath(pathname: string): boolean {
-  return /^\/projects\/[^/]+\/content$/.test(pathname);
+  return /^\/projects\/[^/]+\/catalog$/.test(pathname);
 }
 
 export function AppShell() {

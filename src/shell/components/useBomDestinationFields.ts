@@ -1,63 +1,59 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { addBomProject, mockBomProjects } from '../../bom/data/mockData';
-import type { BomDestinationMode, BomDestinationValue } from './BomDestinationFields';
+import type { BomDestinationValue } from './BomDestinationFields';
 
-/** Resolve the user's BOM destination choice (creates a BOM when in "new" mode). */
+/** Resolve the user's BOM destination choice from a selected list row. */
 export function resolveBomDestination(
   projectId: string,
-  mode: BomDestinationMode,
   selectedId: string | null,
-  newName: string,
 ): BomDestinationValue | null {
-  if (mode === 'existing') {
-    if (!selectedId) return null;
-    const bom = mockBomProjects.find((p) => p.id === selectedId && p.projectId === projectId);
-    if (!bom) return null;
-    return { bomProjectId: bom.id, bomProjectName: bom.name };
-  }
-
-  const trimmed = newName.trim();
-  if (!trimmed) return null;
-  const created = addBomProject(projectId, trimmed);
-  return { bomProjectId: created.id, bomProjectName: created.name };
+  if (!selectedId) return null;
+  const bom = mockBomProjects.find((p) => p.id === selectedId && p.projectId === projectId);
+  if (!bom) return null;
+  return { bomProjectId: bom.id, bomProjectName: bom.name };
 }
 
 /** Stateful hook for BOM destination pickers in modals. */
 export function useBomDestinationFields(projectId: string) {
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const boms = useMemo(
     () => mockBomProjects.filter((p) => p.projectId === projectId),
+    [projectId, refreshKey],
+  );
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSelectedId(boms[0]?.id ?? null);
+  }, [projectId, boms]);
+
+  const canSubmit = Boolean(selectedId);
+
+  const resolve = useCallback(
+    () => resolveBomDestination(projectId, selectedId),
+    [projectId, selectedId],
+  );
+
+  const createBom = useCallback(
+    (name: string): BomDestinationValue | null => {
+      const trimmed = name.trim();
+      if (!trimmed) return null;
+      const created = addBomProject(trimmed, undefined, projectId);
+      setRefreshKey((key) => key + 1);
+      setSelectedId(created.id);
+      return { bomProjectId: created.id, bomProjectName: created.name };
+    },
     [projectId],
   );
 
-  const [mode, setMode] = useState<BomDestinationMode>('existing');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [newName, setNewName] = useState('');
-
-  useEffect(() => {
-    if (boms.length > 0) {
-      setMode('existing');
-      setSelectedId(boms[0].id);
-    } else {
-      setMode('new');
-      setSelectedId(null);
-    }
-    setNewName('');
-  }, [projectId, boms]);
-
-  const canSubmit = mode === 'existing' ? Boolean(selectedId) : newName.trim().length > 0;
-
-  const resolve = () => resolveBomDestination(projectId, mode, selectedId, newName);
-
   return {
     boms,
-    mode,
-    setMode,
     selectedId,
     setSelectedId,
-    newName,
-    setNewName,
     canSubmit,
     resolve,
+    createBom,
   };
 }

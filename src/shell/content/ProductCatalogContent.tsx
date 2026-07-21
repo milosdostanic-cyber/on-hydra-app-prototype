@@ -1,5 +1,5 @@
 import { DownloadOutlined, RightOutlined, SearchOutlined } from '@ant-design/icons';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { PRODUCT_CATALOG_CATEGORIES } from '../../catalog/productCatalogHierarchy.demo';
@@ -10,6 +10,7 @@ import {
 } from '../../catalog/productCatalogNavigation';
 import { FeaturedParts } from '../../catalog/FeaturedParts';
 import { hydraFeaturedPartsPanelBgLight } from '../../theme/hydraSemanticColors';
+import { setLastScopedProjectId } from '../lastProjectScope';
 import { shellContentRailStyle } from '../shellContentRail';
 import {
   Button,
@@ -69,7 +70,12 @@ function CategoryCard({ token, projectId, categoryId, title, totalParts, subcate
           {title}
         </Typography.Title>
         <Flex align="center" gap={token.marginXS}>
-          <Button type="text">{`${totalParts} parts`}</Button>
+          <Button
+            type="text"
+            onClick={() => navigate(productCatalogCategoryAllPartsPath(projectId, categoryId))}
+          >
+            {`${totalParts} parts`}
+          </Button>
           <Button icon={<DownloadOutlined />} size="large" onClick={() => message.info('Stub: download would start.')}>
             Download All Content
           </Button>
@@ -128,13 +134,13 @@ function CategoryCard({ token, projectId, categoryId, title, totalParts, subcate
 }
 
 /**
- * Project **Content → Product Catalog** body (below app shell breadcrumbs).
+ * Project **Part Search → Product Catalog** body (below app shell breadcrumbs).
  * Mirrors Figma `02 - CONTENT Flow / Product Catalog` main column — hero, ribbons, categories.
  */
-function isProjectContentSearchRoot(pathname: string): boolean {
+function isProjectCatalogSearchRoot(pathname: string): boolean {
   const normalized = pathname.replace(/\/+$/, '') || '/';
   const parts = normalized.split('/').filter(Boolean);
-  return parts.length === 3 && parts[0] === 'projects' && parts[2] === 'content';
+  return parts.length === 3 && parts[0] === 'projects' && parts[2] === 'catalog';
 }
 
 export function ProductCatalogContent() {
@@ -143,7 +149,11 @@ export function ProductCatalogContent() {
   const { projectId = '' } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const [searchDraft, setSearchDraft] = useState('');
-  const showFeaturedParts = isProjectContentSearchRoot(pathname);
+  const showFeaturedParts = isProjectCatalogSearchRoot(pathname);
+
+  useEffect(() => {
+    if (projectId) setLastScopedProjectId(projectId);
+  }, [projectId]);
 
   const runSearch = (query?: string) => {
     const next = (query ?? searchDraft).trim() || 'all';

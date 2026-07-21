@@ -59,9 +59,9 @@ export function FeaturedParts({ contextNote, emphasized = false, panel = false }
     [location.pathname, location.search],
   );
   const { projectId } = useParams<{ projectId?: string }>();
-  const isProjectContentHome = useMemo(() => {
+  const isProjectCatalogHome = useMemo(() => {
     const n = location.pathname.replace(/\/+$/, '') || '/';
-    return /^\/projects\/[^/]+\/content$/.test(n);
+    return /^\/projects\/[^/]+\/catalog$/.test(n);
   }, [location.pathname]);
   const storeRaw = useSyncExternalStore(
     subscribeFeaturedPartsKeys,
@@ -140,7 +140,7 @@ export function FeaturedParts({ contextNote, emphasized = false, panel = false }
   const introCopy = (
     <>
       Hand-picked catalog entries.{' '}
-      {isProjectContentHome
+      {isProjectCatalogHome
         ? 'Open a card to jump straight to that part’s listing (variants table) in this product catalog.'
         : 'Open a card for downloads and submittal actions on the part page.'}
       {contextNote ? <> {contextNote}</> : null}
@@ -256,7 +256,7 @@ export function FeaturedParts({ contextNote, emphasized = false, panel = false }
           {pagedParts.map((part) => {
           const catalogPartPath = `/catalog/parts/${encodeURIComponent(part.key)}`;
           const contentListingPath =
-            isProjectContentHome && projectId
+            isProjectCatalogHome && projectId
               ? featuredPartContentListingPath(projectId, part.key)
               : undefined;
           const partPath = contentListingPath ?? catalogPartPath;

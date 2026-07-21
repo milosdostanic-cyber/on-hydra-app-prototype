@@ -99,19 +99,28 @@ export function usePartActionFlows(payload: PartActionPayload) {
     [payload],
   );
 
-  const finishBomAdd = (bomProjectId: string, bomProjectName: string) => {
+  const handleAddedToBom = ({
+    bomProjectId,
+    bomProjectName,
+    part: addedPart,
+  }: {
+    bomProjectId: string;
+    bomProjectName: string;
+    part: { partKey: string; sku: string; displayName: string };
+  }) => {
+    setAddBomProjectId(null);
     const existingRows =
       rowsByProjectId[bomProjectId] ?? initialWorkspaceRowsForBomProject(bomProjectId);
-    if (isSkuInBomRows(existingRows, payload.sku)) {
+    if (isSkuInBomRows(existingRows, addedPart.sku)) {
       message.info(`Already in BOM — “${bomProjectName}”.`);
       return;
     }
 
     const newRow = buildCatalogBomItem(
       {
-        partKey: payload.partKey,
-        sku: payload.sku,
-        displayName: payload.displayName,
+        partKey: addedPart.partKey,
+        sku: addedPart.sku,
+        displayName: addedPart.displayName,
         figureNumber: payload.figureNumber,
       },
       existingRows.length,
@@ -122,11 +131,11 @@ export function usePartActionFlows(payload: PartActionPayload) {
       module: 'bom',
       subProjectId: bomProjectId,
       subProjectLabel: bomProjectName,
-      partKey: payload.partKey,
+      partKey: addedPart.partKey,
       itemIds: [newRow.id],
     });
 
-    message.success(`${payload.sku} added to “${bomProjectName}”.`);
+    message.success(`${addedPart.sku} added to “${bomProjectName}”.`);
   };
 
   const finishSubmittalAdd = (
@@ -189,7 +198,13 @@ export function usePartActionFlows(payload: PartActionPayload) {
         setAddBomProjectId(pid);
         break;
       case 'revit-queue': {
-        const queueId = addToQueue({ projectId: pid, partKey: payload.partKey, sku: payload.sku });
+        const queueId = addToQueue({
+          projectId: pid,
+          partKey: payload.partKey,
+          sku: payload.sku,
+          displayName: payload.displayName,
+          figureNumber: payload.figureNumber,
+        });
         registerEntry({
           module: 'content',
           subProjectId: pid,
@@ -212,11 +227,6 @@ export function usePartActionFlows(payload: PartActionPayload) {
         setAddPackageProjectId(pid);
         break;
     }
-  };
-
-  const handleAddedToBom = ({ bomProjectId, bomProjectName }: { bomProjectId: string; bomProjectName: string }) => {
-    setAddBomProjectId(null);
-    finishBomAdd(bomProjectId, bomProjectName);
   };
 
   const handleAddedToPackage = ({ packageId, packageName }: { packageId: string; packageName: string }) => {
@@ -246,7 +256,30 @@ export function usePartActionFlows(payload: PartActionPayload) {
     if (!resume) return;
 
     if (resume === 'bom' && isBomResolution(result)) {
-      finishBomAdd(result.bomProjectId, result.bomProjectName);
+      const existingRows =
+        rowsByProjectId[result.bomProjectId] ?? initialWorkspaceRowsForBomProject(result.bomProjectId);
+      if (isSkuInBomRows(existingRows, payload.sku)) {
+        message.info(`Already in BOM — “${result.bomProjectName}”.`);
+        return;
+      }
+      const newRow = buildCatalogBomItem(
+        {
+          partKey: payload.partKey,
+          sku: payload.sku,
+          displayName: payload.displayName,
+          figureNumber: payload.figureNumber,
+        },
+        existingRows.length,
+      );
+      setWorkspaceRows(result.bomProjectId, (prev) => [...prev, newRow]);
+      registerEntry({
+        module: 'bom',
+        subProjectId: result.bomProjectId,
+        subProjectLabel: result.bomProjectName,
+        partKey: payload.partKey,
+        itemIds: [newRow.id],
+      });
+      message.success(`${payload.sku} added to “${result.bomProjectName}”.`);
       return;
     }
 
@@ -266,8 +299,6 @@ export function usePartActionFlows(payload: PartActionPayload) {
         open={gateOpen}
         actionLabel={pending ? GATE_LABELS[pending] : 'Continue'}
         actionDescription={pendingDef?.gateDescription}
-        bomSku={pending === 'bom' ? payload.sku : undefined}
-        submittalPartKey={pending === 'submittal' ? payload.partKey : undefined}
         destinationRequirement={pending ? destinationRequirementForAction(pending) : undefined}
         onResolved={handleResolved}
         onCancel={() => {
