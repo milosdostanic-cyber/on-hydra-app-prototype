@@ -1,15 +1,18 @@
 import { Link } from 'react-router-dom';
 
 import { bomItemById, bomProjectTitleById } from '../bom/data/mockData';
+import { buildProductCatalogBreadcrumbSegments } from '../catalog/productCatalogNavigation';
 import type { BreadcrumbProps } from '../ui/antd';
 
 import { projectTitleById } from './projectSeed';
+import { UMBRELLA_COMPANY_LABEL } from './umbrellaCompany';
 
 type BreadcrumbSeg = { label: string; to?: string };
 
 type BuildArgs = {
   pathname: string;
   projectId?: string;
+  constructionProjectId?: string;
   partId?: string;
   itemId?: string;
   swapRowId?: string;
@@ -27,10 +30,34 @@ function toItems(segments: BreadcrumbSeg[]): BreadcrumbProps['items'] {
 
 export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] {
   const { pathname, projectId, partId, itemId, swapRowId, swapPartNumber } = a;
-  const segs: BreadcrumbSeg[] = [{ label: 'App', to: '/projects' }];
+
+  const dashFlat = pathname === '/dashboard' || pathname === '/dashboard/';
+  if (dashFlat) {
+    return toItems([{ label: UMBRELLA_COMPANY_LABEL, to: '/dashboard' }, { label: 'Home' }]);
+  }
+
+  if (pathname.startsWith('/projects/reframing-proposal')) {
+    return toItems([
+      { label: UMBRELLA_COMPANY_LABEL, to: '/dashboard' },
+      { label: 'Project Reframing Proposal' },
+    ]);
+  }
+
+  if (pathname.startsWith('/search')) {
+    if (pathname.includes('/parts/') && partId) {
+      return toItems([
+        { label: 'Part Search', to: '/search/results?q=all' },
+        { label: `Part ${decodeURIComponent(partId)}` },
+      ]);
+    }
+    return toItems([{ label: 'Part Search' }]);
+  }
 
   if (pathname.startsWith('/catalog')) {
-    segs.push({ label: 'Catalog', to: pathname !== '/catalog' ? '/catalog' : undefined });
+    const segs: BreadcrumbSeg[] = [
+      { label: 'Part Search', to: '/catalog' },
+      { label: 'Home', to: pathname !== '/catalog' ? '/catalog' : undefined },
+    ];
     if (pathname.includes('/results')) {
       segs.push({ label: 'Results' });
       return toItems(segs);
@@ -39,42 +66,83 @@ export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] 
       segs.push({ label: `Part ${decodeURIComponent(partId)}` });
       return toItems(segs);
     }
+    if (pathname === '/catalog' || pathname === '/catalog/') {
+      return toItems([{ label: 'Part Search' }, { label: 'Home' }]);
+    }
     return toItems(segs);
   }
 
-  if (pathname.startsWith('/projects')) {
-    if (pathname === '/projects') {
-      segs.push({ label: 'Projects' });
-      return toItems(segs);
+  if (pathname.startsWith('/projects') && projectId) {
+    const catalogCrumbs = buildProductCatalogBreadcrumbSegments(pathname, projectId);
+    if (catalogCrumbs) {
+      return toItems(catalogCrumbs);
     }
-    segs.push({ label: 'Projects', to: '/projects' });
-    if (!projectId) {
-      return toItems(segs);
-    }
+
     const pTitle = projectTitleById(projectId) ?? 'Project';
-    const hub = `/projects/${projectId}/content`;
-    if (pathname === hub) {
-      segs.push({ label: pTitle });
-      segs.push({ label: 'Content' });
-      return toItems(segs);
+    const contentPath = `/projects/${projectId}/content`;
+    const specPath = `/projects/${projectId}/sales-brace`;
+    const submittalPath = `/projects/${projectId}/submittal`;
+
+    if (pathname === contentPath || pathname === `${contentPath}/`) {
+      return toItems([
+        { label: 'Content', to: contentPath },
+        { label: pTitle },
+        { label: 'Download center' },
+      ]);
     }
-    segs.push({ label: pTitle, to: hub });
-    if (pathname.includes('/seis-brace')) segs.push({ label: 'SeisBrace' });
-    else if (pathname.includes('/sales-brace')) segs.push({ label: 'Spec' });
-    else if (pathname.includes('/submittal')) segs.push({ label: 'Submittal' });
-    return toItems(segs);
+
+    if (pathname.includes('/sales-brace')) {
+      return toItems([
+        { label: 'Spec', to: specPath },
+        { label: pTitle },
+      ]);
+    }
+
+    if (pathname.includes('/submittal')) {
+      return toItems([
+        { label: 'Submittal Manager', to: submittalPath },
+        { label: pTitle },
+      ]);
+    }
+
+    if (pathname.includes('/seis-brace')) {
+      return toItems([
+        { label: 'SeisBrace', to: '/seisbrace' },
+        { label: pTitle },
+      ]);
+    }
+
+    if (pathname === `/projects/${projectId}` || pathname === `/projects/${projectId}/`) {
+      return toItems([
+        { label: UMBRELLA_COMPANY_LABEL, to: '/dashboard' },
+        { label: 'Home', to: '/dashboard' },
+        { label: pTitle },
+      ]);
+    }
   }
 
-  if (pathname.startsWith('/dashboard')) {
-    segs.push({ label: 'Homepage' });
-    return toItems(segs);
+  if (pathname === '/projects' || pathname === '/projects/') {
+    return toItems([{ label: UMBRELLA_COMPANY_LABEL, to: '/dashboard' }, { label: 'Home' }]);
   }
 
   if (pathname.startsWith('/bom')) {
-    segs.push({ label: 'BOM', to: pathname !== '/bom' ? '/bom' : undefined });
-    if (pathname === '/bom') return toItems(segs);
+    const segs: BreadcrumbSeg[] = [];
+    const siteMatch = /^\/bom\/site\/([^/]+)/.exec(pathname);
+    const resolvedSiteId = siteMatch?.[1] ?? a.constructionProjectId;
+    const bomHub = resolvedSiteId ? `/bom/site/${resolvedSiteId}` : '/bom';
+    const onBomHub = pathname === bomHub || pathname === '/bom';
+
+    segs.push({ label: 'BOM', to: onBomHub ? undefined : bomHub });
+
     if (pathname === '/bom/search') {
       segs.push({ label: 'Search' });
+      return toItems(segs);
+    }
+
+    if (siteMatch || (pathname === '/bom' && resolvedSiteId)) {
+      const siteTitle = projectTitleById(resolvedSiteId ?? '') ?? 'Construction project';
+      segs.push({ label: siteTitle, to: siteMatch && !onBomHub ? bomHub : undefined });
+      if (onBomHub || siteMatch) segs.push({ label: 'BOM Projects' });
       return toItems(segs);
     }
 
@@ -82,9 +150,14 @@ export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] 
     if (bomProjectMatch) {
       const pid = bomProjectMatch[1];
       const ws = `/bom/projects/${pid}/workspace`;
-      const pTitle = bomProjectTitleById(pid) ?? 'BOM project';
+      const onFieldMapping = pathname.includes('/field-mapping');
       const onWorkspace = pathname.includes('/workspace');
-      segs.push({ label: pTitle, to: onWorkspace ? undefined : ws });
+      if (onFieldMapping) {
+        segs.push({ label: 'New BOM Project' });
+      } else {
+        const pTitle = bomProjectTitleById(pid) ?? 'BOM project';
+        segs.push({ label: pTitle, to: onWorkspace ? undefined : ws });
+      }
 
       const resolvedItemId = itemId ?? /\/items\/([^/]+)/.exec(pathname)?.[1];
       if (resolvedItemId) {
@@ -109,12 +182,27 @@ export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] 
         if (swapRowId) {
           segs.push({ label: swapPartNumber ? `Manual swap · ${swapPartNumber}` : 'Manual swap' });
         }
-      }
-      else if (pathname.includes('/export')) segs.push({ label: 'Export' });
+      } else if (pathname.includes('/export')) segs.push({ label: 'Export' });
       else if (pathname.includes('/service-request')) segs.push({ label: 'Service request' });
     }
     return toItems(segs);
   }
 
-  return toItems(segs);
+  if (pathname.startsWith('/seisbrace')) {
+    const segs: BreadcrumbSeg[] = [
+      { label: 'SeisBrace', to: pathname !== '/seisbrace' ? '/seisbrace' : undefined },
+    ];
+    if (pathname.includes('/wizard/')) segs.push({ label: 'Design wizard' });
+    return toItems(segs);
+  }
+
+  if (pathname.startsWith('/revit-plugin')) {
+    return toItems([{ label: 'Revit Plug-in' }]);
+  }
+
+  if (pathname.startsWith('/knowledge-center')) {
+    return toItems([{ label: 'Knowledge Center' }]);
+  }
+
+  return toItems([{ label: UMBRELLA_COMPANY_LABEL, to: '/dashboard' }]);
 }

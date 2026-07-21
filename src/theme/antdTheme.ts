@@ -7,6 +7,7 @@ import {
   buttonPrimaryShadow,
   buttonPrimaryShadowDark,
 } from './buttonPrimaryPalette';
+import { buttonDangerShadow, buttonDangerShadowDark } from './buttonDangerPalette';
 import {
   hydraMenuItemBorderRadius,
   hydraMenuItemMarginBlock,
@@ -69,6 +70,15 @@ function buildHydraShellComponents(mode: HydraColorMode): NonNullable<ThemeConfi
       borderColor: alias.colorBorderSecondary,
       rowHoverBg: alias.controlItemBgHover,
     },
+    /**
+     * Figma DS `Tag` defaults (`type=default, border=true`):
+     * bg `colorFillQuaternary`, border `colorBorder`, text `colorText`.
+     * Label typography (14/22 Base/Normal) — `applyHydraTagCssVars` + `index.css` (antd defaults to `fontSizeSM`).
+     */
+    Tag: {
+      defaultBg: alias.colorFillQuaternary,
+      defaultColor: alias.colorText,
+    },
   };
 }
 
@@ -89,7 +99,9 @@ export function createHydraAntdTheme(typographyMode: HydraTypographyMode = 'defa
       colorPrimary: bluePrimarySemantics.colorPrimary,
       colorPrimaryBg: bluePrimarySemantics.colorPrimaryBg,
       colorPrimaryBgHover: bluePrimarySemantics.colorPrimaryBgHover,
+      colorPrimaryBgSubtle: bluePrimarySemantics.colorPrimaryBgSubtle,
       colorPrimaryBorder: bluePrimarySemantics.colorPrimaryBorder,
+      colorPrimaryBorderSubtle: bluePrimarySemantics.colorPrimaryBorderSubtle,
       colorPrimaryBorderHover: bluePrimarySemantics.colorPrimaryBorderHover,
       colorPrimaryHover: bluePrimarySemantics.colorPrimaryHover,
       colorPrimaryActive: bluePrimarySemantics.colorPrimaryActive,
@@ -115,6 +127,7 @@ export function createHydraAntdTheme(typographyMode: HydraTypographyMode = 'defa
         colorPrimaryTextHover: buttonPrimaryPalette.textHover,
         colorPrimaryTextActive: buttonPrimaryPalette.textActive,
         primaryShadow: buttonPrimaryShadow,
+        dangerShadow: buttonDangerShadow,
         controlOutline: buttonPrimaryControlOutline,
       },
     },
@@ -147,6 +160,7 @@ export function createHydraAntdThemeDark(typographyMode: HydraTypographyMode = '
         colorPrimaryTextHover: buttonPrimaryPaletteDark.textHover,
         colorPrimaryTextActive: buttonPrimaryPaletteDark.textActive,
         primaryShadow: buttonPrimaryShadowDark,
+        dangerShadow: buttonDangerShadowDark,
       },
     },
   };

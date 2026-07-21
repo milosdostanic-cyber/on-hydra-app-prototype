@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import { resolveBomProjectStatus } from '../bomProjectStatus';
 import { BomProjectStatusTag } from './BomTags';
 import type { BomProject } from '../data/types';
 import { sortBomProjectsByLastEditedDesc } from '../bomUploadFlowState';
 import {
   hydraBaseNormal,
   hydraLargeStrong,
-  hydraSmallNormal,
   hydraTextStyleToReactCss,
   hydraTitleHeading5,
 } from '../../theme/hydraTypography';
@@ -80,11 +80,11 @@ export function BomUploadDestinationModal({
               {p.name}
             </Typography.Text>
             <Flex gap={token.marginSM} align="center" wrap="wrap">
-              <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
+              <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
                 {p.lastEdited}
               </Typography.Text>
-              <BomProjectStatusTag status={p.status} />
-              <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
+              <BomProjectStatusTag status={resolveBomProjectStatus(p.id)} />
+              <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
                 {p.items} items
               </Typography.Text>
             </Flex>
@@ -176,7 +176,7 @@ export function BomUploadDestinationModal({
 
           {mode === 'append' && canAppend ? (
             <Flex vertical gap={token.marginXS} style={{ width: '100%', marginTop: token.paddingSM }}>
-              <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
+              <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
                 BOM project
               </Typography.Text>
               <Select

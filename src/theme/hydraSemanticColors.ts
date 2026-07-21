@@ -39,6 +39,9 @@ export const hydraNeutralGray3Light = '#F0F2F8';
 /** Figma **Colors** `Neutral/gray-3` (Dark mode `5:4`). */
 export const hydraNeutralGray3Dark = '#1F1F1F';
 
+/** Product Catalog **Featured parts** panel surface (project Content home). */
+export const hydraFeaturedPartsPanelBgLight = '#E5F0FF';
+
 /**
  * Dark `Menu` on Hydra sidebar — neutral roles on `colorSidebar`.
  */

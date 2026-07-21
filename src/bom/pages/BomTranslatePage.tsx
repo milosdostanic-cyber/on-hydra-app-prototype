@@ -13,23 +13,25 @@ import {
   InputNumber,
   Progress,
   Space,
-  Tag,
   Typography,
   message,
   theme,
 } from '../../ui/antd';
+import { BomStatusBadge } from '../components/BomTags';
+import { HydraTag } from '../../ui/HydraTag';
 import type { AscCatalogPart, BomItem } from '../data/types';
 import {
   hydraLargeNormal,
   hydraLargeStrong,
   hydraTextStyleToReactCss,
   hydraTitleHeading1,
+  hydraTitleHeading3,
 } from '../../theme/hydraTypography';
 
-function confidenceColor(conf: number) {
+function confidenceTone(conf: number) {
   return conf >= 90 ? 'success' : conf >= 75 ? 'warning' : 'error';
 }
-function riskColor(risk: string) {
+function riskTone(risk: string) {
   return risk === 'low' ? 'success' : risk === 'medium' ? 'warning' : 'error';
 }
 
@@ -148,7 +150,7 @@ export function BomTranslatePage() {
       >
         <CheckCircleOutlined style={{ fontSize: hydraTitleHeading1.fontSize, color: token.colorSuccess }} />
         <Flex vertical align="center" gap={token.marginXS}>
-          <Typography.Title level={3} style={{ margin: 0 }}>
+          <Typography.Title level={3} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading3) }}>
             Translation complete
           </Typography.Title>
           <Typography.Text type="secondary">
@@ -205,13 +207,9 @@ export function BomTranslatePage() {
             strokeColor={token.colorPrimary}
             style={{ flex: 1, margin: 0 }}
           />
-          <Flex gap={token.marginXXS} style={{ flexShrink: 0 }}>
-            <Tag color="success" style={{ margin: 0 }}>
-              {confirmed.size} confirmed
-            </Tag>
-            <Tag color="default" style={{ margin: 0 }}>
-              {skipped.size} skipped
-            </Tag>
+          <Flex gap={token.marginSM} style={{ flexShrink: 0 }}>
+            <BomStatusBadge status="success" text={`${confirmed.size} confirmed`} />
+            <BomStatusBadge status="warning" text={`${skipped.size} skipped`} />
           </Flex>
         </Flex>
       </Card>
@@ -232,16 +230,8 @@ export function BomTranslatePage() {
               {currentItem.parsedDescription}
             </Typography.Text>
           </Flex>
-          {isItemConfirmed ? (
-            <Tag color="success" style={{ margin: 0 }}>
-              Confirmed
-            </Tag>
-          ) : null}
-          {isSkipped ? (
-            <Tag color="default" style={{ margin: 0 }}>
-              Skipped
-            </Tag>
-          ) : null}
+          {isItemConfirmed ? <BomStatusBadge status="success" text="Confirmed" /> : null}
+          {isSkipped ? <BomStatusBadge status="warning" text="Skipped" /> : null}
         </Flex>
 
         {currentAscPart ? (
@@ -259,16 +249,16 @@ export function BomTranslatePage() {
             <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
               Match confidence:
             </Typography.Text>
-            <Tag color={confidenceColor(currentAscPart.matchConfidence)} style={{ margin: 0 }}>
+            <HydraTag tone={confidenceTone(currentAscPart.matchConfidence)}>
               {currentAscPart.matchConfidence}%
-            </Tag>
+            </HydraTag>
             <Divider type="vertical" style={{ margin: 0 }} />
             <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
               Substitution risk:
             </Typography.Text>
-            <Tag color={riskColor(currentAscPart.substitutionRisk)} style={{ margin: 0, textTransform: 'capitalize' }}>
+            <HydraTag tone={riskTone(currentAscPart.substitutionRisk)} style={{ textTransform: 'capitalize' }}>
               {currentAscPart.substitutionRisk}
-            </Tag>
+            </HydraTag>
             <Divider type="vertical" style={{ margin: 0 }} />
             <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
               Rule: {currentAscPart.conversionRule}

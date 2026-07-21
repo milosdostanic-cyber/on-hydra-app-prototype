@@ -2,6 +2,8 @@
 
 This folder is a **stable place to @-mention or copy** Hydra constraints for agents. **Authoritative enforcement** for Cursor in this repo still comes from `.cursor/rules/*.mdc` (many are `alwaysApply: true`).
 
+**Complete inventory (all rules + skills + workflows):** [`../agent-rules-and-skills.md`](../agent-rules-and-skills.md)
+
 ## Layout
 
 | Path | Purpose |

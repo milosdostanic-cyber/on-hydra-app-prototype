@@ -1,349 +1,211 @@
-import { ArrowRightOutlined, CheckCircleOutlined } from '@ant-design/icons';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import { bomSitePath, resolveActiveConstructionProjectId, useActiveProject } from '../../context/ActiveProjectContext';
+import type { BomFieldAliasMap } from '../bomFieldMappingConfig';
+import { mappingStepStatusLabel } from '../bomUploadFlowStatus';
+import {
+  bomMappingSummaryRoute,
+  countMappedAscFields,
+  evaluateMappingConfidence,
+  findDuplicateBomColumns,
+  getMissingRequiredFieldLabels,
+  hasRequiredFieldMapping,
+  deriveFieldMappingForUpload,
+  PARSING_IDENTIFIER_MAPPING_TOOLTIP,
+} from '../bomFieldMappingUtils';
 import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
+import { readUploadFileName } from '../bomUploadFlowState';
+import { BomFieldMappingTable } from '../components/BomFieldMappingTable';
+import { BomUploadFlowStepChrome } from '../components/BomUploadFlowStepChrome';
 import { BomPageHeader } from '../layout/BomPageHeader';
-import { bomProjectById, bomProjectTitleById } from '../data/mockData';
-import { PageBackButton } from '../../shell/PageBackButton';
+import { bomProjectById } from '../data/mockData';
+import { useBomImportSession } from '../hooks/useBomImportSession';
 import {
-  Alert,
-  Button,
-  Card,
-  Flex,
-  Select,
-  Space,
-  Typography,
-  message,
-  theme,
-} from '../../ui/antd';
-import {
-  hydraSmallNormal,
-  hydraSmallStrong,
+  hydraBaseStrong,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
-
-const BOM_SOURCE_FIELDS = [
-  '— Skip —',
-  'BRAND',
-  'DESCRIPTION',
-  'FIGURE NUM',
-  'FINISH',
-  'MFR NUM',
-  'INSTALL TYPE',
-  'MANUFACTURER',
-  'MATERIAL',
-  'ORDER FLAG',
-  'PART NUMBER',
-  'QTY',
-  'UNIT',
-  'NOTES',
-];
-
-const ASC_DEST_FIELDS = [
-  { key: 'PART NUMBER', label: 'Part Number' },
-  { key: 'DESCRIPTION', label: 'Description' },
-  { key: 'QTY', label: 'Quantity' },
-  { key: 'BRAND', label: 'Brand' },
-  { key: 'FIGURE NUM', label: 'Figure Number' },
-  { key: 'FINISH', label: 'Finish' },
-  { key: 'MFR NUM', label: 'Mfr Number' },
-  { key: 'INSTALL TYPE', label: 'Install Type' },
-  { key: 'MANUFACTURER', label: 'Manufacturer' },
-  { key: 'MATERIAL', label: 'Material' },
-  { key: 'ORDER FLAG', label: 'Order Flag' },
-] as const;
-
-type AliasMap = Record<string, string | undefined>;
-
-const DEFAULT_ALIAS: AliasMap = {
-  'PART NUMBER': 'PART NUMBER',
-  DESCRIPTION: 'DESCRIPTION',
-  QTY: 'QTY',
-  BRAND: 'BRAND',
-  'FIGURE NUM': 'FIGURE NUM',
-  FINISH: 'FINISH',
-  'MFR NUM': 'MFR NUM',
-  'INSTALL TYPE': 'INSTALL TYPE',
-  MANUFACTURER: 'MANUFACTURER',
-  MATERIAL: 'MATERIAL',
-  'ORDER FLAG': 'ORDER FLAG',
-};
-
-function normalizeSkip(val: string | undefined) {
-  if (!val || val === '— Skip —') return undefined;
-  return val;
-}
+import { App, Alert, Button, Flex, Space, Tag, Tooltip, Typography, message, theme } from '../../ui/antd';
 
 export function BomFieldMappingPage() {
   const { token } = theme.useToken();
+  const { modal } = App.useApp();
   const { bomProjectId = '' } = useParams<{ bomProjectId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const [aliasMap, setAliasMap] = useState<AliasMap>({ ...DEFAULT_ALIAS });
+  const { projectId } = useActiveProject();
+  const uploadState =
+    typeof location.state === 'object' && location.state && !Array.isArray(location.state)
+      ? (location.state as BomUploadFlowLocationState)
+      : {};
+  const uploadFileName = readUploadFileName(uploadState);
+  const initialMapping = useMemo(
+    () => deriveFieldMappingForUpload(uploadFileName, uploadState.fieldMapping),
+    [uploadFileName, uploadState.fieldMapping],
+  );
+  const [aliasMap, setAliasMap] = useState<BomFieldAliasMap>(initialMapping);
+
+  useEffect(() => {
+    setAliasMap(initialMapping);
+  }, [initialMapping]);
+
+  const isDirty = useMemo(
+    () => JSON.stringify(aliasMap) !== JSON.stringify(initialMapping),
+    [aliasMap, initialMapping],
+  );
 
   const projectMeta = bomProjectById(bomProjectId);
-  const projectLabel = bomProjectTitleById(bomProjectId) ?? 'BOM project';
+  const mappingSummaryRoute = bomMappingSummaryRoute(bomProjectId);
 
-  const mappedValues = useMemo(
-    () => Object.entries(aliasMap).map(([k, v]) => [k, normalizeSkip(v)] as const),
-    [aliasMap],
-  );
-  const mappedCount = mappedValues.filter(([, v]) => Boolean(v)).length;
-  const totalFields = ASC_DEST_FIELDS.length;
+  const mappedCount = countMappedAscFields(aliasMap);
+  const duplicateBomColumns = useMemo(() => findDuplicateBomColumns(aliasMap), [aliasMap]);
+  const hasRequired = hasRequiredFieldMapping(aliasMap);
+  const missingRequired = useMemo(() => getMissingRequiredFieldLabels(aliasMap), [aliasMap]);
+  const requiredHeaderLabels = useMemo(() => 'DESCRIPTION, SKU OR UPC', []);
+  const saveDisabled = !isDirty || !hasRequired || duplicateBomColumns.size > 0;
+  const saveDisabledReason = !isDirty
+    ? 'Change a column link before saving.'
+    : !hasRequired
+      ? PARSING_IDENTIFIER_MAPPING_TOOLTIP
+      : duplicateBomColumns.size > 0
+        ? 'Each file column can link to only one part detail. Fix duplicates first.'
+        : undefined;
+  const bomBackTarget = bomSitePath(resolveActiveConstructionProjectId(projectId));
+  const { uploadId } = useBomImportSession(bomProjectId);
 
-  const duplicateBomColumns = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const [, v] of mappedValues) {
-      if (!v) continue;
-      counts.set(v, (counts.get(v) ?? 0) + 1);
+  function returnToMappingSummary(fieldMapping: BomFieldAliasMap) {
+    const confidence = evaluateMappingConfidence(fieldMapping);
+    navigate(mappingSummaryRoute, {
+      state: {
+        ...uploadState,
+        fieldMapping,
+        mappingConfidence: confidence,
+        uploadId: uploadId ?? uploadState.uploadId,
+      },
+    });
+  }
+
+  function handleStopEditing() {
+    const goBack = () => returnToMappingSummary(initialMapping);
+
+    if (!isDirty) {
+      goBack();
+      return;
     }
-    return new Set([...counts.entries()].filter(([, n]) => n > 1).map(([col]) => col));
-  }, [mappedValues]);
 
-  const hasRequired =
-    Boolean(normalizeSkip(aliasMap['PART NUMBER'])) &&
-    Boolean(normalizeSkip(aliasMap.DESCRIPTION)) &&
-    Boolean(normalizeSkip(aliasMap.QTY));
-
-  const categoryMapped = Boolean(normalizeSkip(aliasMap['FIGURE NUM']) || normalizeSkip(aliasMap.MATERIAL));
+    modal.confirm({
+      title: 'Stop editing?',
+      content: 'Unsaved mapping changes will be discarded.',
+      okText: 'Stop editing',
+      cancelText: 'Keep editing',
+      centered: true,
+      onOk: goBack,
+    });
+  }
 
   function handleSave() {
     if (!hasRequired) {
-      message.warning('Map Part Number, Description, and Quantity before continuing.');
+      message.warning(PARSING_IDENTIFIER_MAPPING_TOOLTIP);
       return;
     }
     if (duplicateBomColumns.size > 0) {
       message.error('Each BOM column can map to only one ASC field. Adjust duplicate mappings.');
       return;
     }
-    message.success('Field mapping saved.');
-    const uploadBase: BomUploadFlowLocationState =
-      typeof location.state === 'object' && location.state && !Array.isArray(location.state)
-        ? { ...(location.state as BomUploadFlowLocationState) }
-        : {};
-    navigate(`/bom/projects/${bomProjectId}/parsing-review`, {
-      state: { ...uploadBase, fieldMapping: aliasMap },
-    });
+    message.success('Mapping saved.');
+    returnToMappingSummary(aliasMap);
   }
 
-  function handleReset() {
-    setAliasMap({ ...DEFAULT_ALIAS });
-  }
-
-  function handleCancel() {
-    if (bomProjectId && bomProjectId !== 'new' && projectMeta) {
-      navigate(`/bom/projects/${bomProjectId}/workspace`);
-      return;
-    }
-    navigate('/bom');
+  function handleResetDefaults() {
+    setAliasMap(deriveFieldMappingForUpload(uploadFileName));
   }
 
   if (bomProjectId && bomProjectId !== 'new' && !projectMeta) {
     return (
       <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-        <BomPageHeader
-          title="BOM project not found"
-          description="This project id is not in the demo list."
-          actions={
-            <Button type="primary" size="large" onClick={() => navigate('/bom')}>
-              Go to BOM home
-            </Button>
-          }
-        />
+        <BomPageHeader title="BOM project not found" />
+        <Button type="primary" size="large" onClick={() => navigate(bomBackTarget)}>
+          Go to BOM home
+        </Button>
       </Space>
     );
   }
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <PageBackButton to="/bom">Back to BOM</PageBackButton>
+      <BomUploadFlowStepChrome
+        backTo={mappingSummaryRoute}
+        backLabel="Back to mapping summary"
+        backState={{ ...uploadState, fieldMapping: aliasMap }}
+        fileName={uploadFileName}
+        currentStep={0}
+        statusLabel={mappingStepStatusLabel(mappedCount)}
+      />
+
       <BomPageHeader
-        title="Field mapping"
-        description={`Map columns from your uploaded BOM to ASC fields before parsing. ${projectLabel}.`}
+        title="Review column links"
+        description="Link at least one of Description, SKU, or UPC to a column from your file. Optional rows can stay as Skip."
         actions={
-          <Space wrap>
-            <Button size="large" onClick={handleCancel}>
-              Cancel
+          <Flex gap={token.marginXS} align="center" wrap="wrap">
+            <Button size="large" onClick={handleStopEditing}>
+              Stop editing
             </Button>
-            <Button
-              type="primary"
-              size="large"
-              onClick={handleSave}
-              disabled={!hasRequired || duplicateBomColumns.size > 0}
-            >
-              Save mapping &amp; continue
-            </Button>
-          </Space>
+            <Tooltip title={saveDisabled ? saveDisabledReason : undefined}>
+              <span>
+                <Button
+                  type="primary"
+                  size="large"
+                  onClick={handleSave}
+                  disabled={saveDisabled}
+                >
+                  Save
+                </Button>
+              </span>
+            </Tooltip>
+          </Flex>
         }
       />
 
       {!hasRequired ? (
         <Alert
-          type="warning"
-          showIcon
-          message="Required mappings"
-          description="Map at least Part Number, Description, and Quantity to continue."
-        />
-      ) : null}
-
-      {duplicateBomColumns.size > 0 ? (
-        <Alert
           type="error"
           showIcon
-          message="Duplicate BOM column"
-          description="Two or more ASC fields point at the same BOM column. Change one mapping."
+          message="Link at least Description, SKU, or UPC before you can save"
+          description="At least one of the rows marked Required below must point to a column in your file. Everything else is optional."
         />
-      ) : null}
-
-      {!categoryMapped ? (
+      ) : !isDirty ? (
         <Alert
           type="info"
           showIcon
-          message="Category not mapped"
-          description="Matching accuracy may be lower until figure or material columns are mapped."
+          message="No changes yet"
+          description="Adjust a column link above when something looks wrong, then save."
         />
       ) : null}
 
-      <Flex gap={token.marginMD} align="flex-start" wrap="wrap">
-        <Card
-          styles={{ body: { padding: 0 } }}
-          style={{ flex: '1 1 400px', minWidth: 0 }}
-        >
-          <Flex
-            gap={token.marginSM}
-            align="center"
-            style={{
-              paddingInline: token.paddingMD,
-              paddingBlock: token.paddingSM,
-              borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-              background: token.colorFillAlter,
-            }}
-          >
-            <div style={{ flex: 1 }}>
-              <Typography.Text
-                strong
-                style={{ ...hydraTextStyleToReactCss(hydraSmallStrong), color: token.colorTextSecondary }}
-              >
-                ASC FIELD
-              </Typography.Text>
-            </div>
-            <div style={{ width: 36, flexShrink: 0 }} />
-            <div style={{ flex: 1 }}>
-              <Typography.Text
-                strong
-                style={{ ...hydraTextStyleToReactCss(hydraSmallStrong), color: token.colorPrimary }}
-              >
-                YOUR BOM COLUMN
-              </Typography.Text>
-            </div>
+      <BomFieldMappingTable
+        mode="edit"
+        aliasMap={aliasMap}
+        duplicateBomColumns={duplicateBomColumns}
+        onAliasChange={(ascKey, bomColumn) =>
+          setAliasMap((prev) => ({ ...prev, [ascKey]: bomColumn }))
+        }
+        onResetDefaults={handleResetDefaults}
+        topStrip={
+          <Flex align="center" gap={token.marginSM} wrap="wrap">
+            <Typography.Text
+              strong
+              style={{ ...hydraTextStyleToReactCss(hydraBaseStrong), color: token.colorTextSecondary }}
+            >
+              REQUIRED: {requiredHeaderLabels}
+            </Typography.Text>
+            {missingRequired.length > 0 ? (
+              <Tag color="error">{missingRequired.length} still to link</Tag>
+            ) : (
+              <Tag color="success">Required links complete</Tag>
+            )}
           </Flex>
-
-          <Space orientation="vertical" size={0} style={{ width: '100%' }}>
-            {ASC_DEST_FIELDS.map(({ key, label }, idx) => {
-              const raw = aliasMap[key];
-              const normalized = normalizeSkip(raw);
-              const isMapped = Boolean(normalized);
-              const dup = normalized && duplicateBomColumns.has(normalized);
-              return (
-                <Flex
-                  key={key}
-                  gap={token.marginSM}
-                  align="center"
-                  style={{
-                    paddingInline: token.paddingMD,
-                    paddingBlock: token.paddingSM,
-                    borderBottom:
-                      idx < ASC_DEST_FIELDS.length - 1
-                        ? `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`
-                        : undefined,
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <Flex
-                      align="center"
-                      justify="space-between"
-                      style={{
-                        paddingInline: token.paddingMD,
-                        paddingBlock: token.paddingXS,
-                        background: isMapped ? token.colorPrimaryBg : token.colorFillQuaternary,
-                        border: `${token.lineWidth}px ${token.lineType} ${isMapped ? token.colorPrimaryBorder : token.colorBorderSecondary}`,
-                        borderRadius: token.borderRadius,
-                        minHeight: token.controlHeight,
-                      }}
-                    >
-                      <Typography.Text
-                        strong={isMapped}
-                        style={{
-                          ...(isMapped
-                            ? hydraTextStyleToReactCss(hydraSmallStrong)
-                            : hydraTextStyleToReactCss(hydraSmallNormal)),
-                          color: isMapped ? token.colorPrimary : token.colorTextTertiary,
-                        }}
-                      >
-                        {label}
-                      </Typography.Text>
-                      {isMapped ? (
-                        <CheckCircleOutlined
-                          style={{ color: token.colorSuccess, fontSize: hydraSmallNormal.fontSize }}
-                        />
-                      ) : null}
-                    </Flex>
-                  </div>
-
-                  <Flex
-                    align="center"
-                    justify="center"
-                    style={{
-                      width: 36,
-                      flexShrink: 0,
-                      color: isMapped ? token.colorPrimary : token.colorBorderSecondary,
-                    }}
-                  >
-                    <ArrowRightOutlined />
-                  </Flex>
-
-                  <div style={{ flex: 1 }}>
-                    <Select
-                      value={raw ?? undefined}
-                      onChange={(val) => setAliasMap((prev) => ({ ...prev, [key]: val }))}
-                      placeholder="Select BOM column…"
-                      style={{ width: '100%' }}
-                      status={dup ? 'warning' : undefined}
-                      options={BOM_SOURCE_FIELDS.map((f) => ({ value: f, label: f }))}
-                    />
-                    {dup ? (
-                      <Typography.Text type="warning" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-                        This BOM column is already mapped elsewhere.
-                      </Typography.Text>
-                    ) : null}
-                  </div>
-                </Flex>
-              );
-            })}
-          </Space>
-        </Card>
-
-        <Flex vertical gap={token.marginSM} style={{ width: 220, flexShrink: 0 }}>
-          <Card styles={{ body: { padding: token.paddingMD } }}>
-            <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
-              <Typography.Text strong>Mapping status</Typography.Text>
-              <Flex justify="space-between" align="center">
-                <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-                  Fields mapped
-                </Typography.Text>
-                <Typography.Text strong>
-                  {mappedCount} / {totalFields}
-                </Typography.Text>
-              </Flex>
-            </Space>
-          </Card>
-
-          <Button block onClick={handleReset}>
-            Reset to defaults
-          </Button>
-        </Flex>
-      </Flex>
+        }
+      />
     </Space>
   );
 }

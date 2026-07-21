@@ -1,76 +1,73 @@
 import type { ReactNode } from 'react';
 
-import {
-  hydraBaseNormal,
-  hydraTextStyleToReactCss,
-  hydraSmallNormal,
-  hydraTitleHeading2,
-  hydraTitleHeading3,
-} from '../../theme/hydraTypography';
+import { hydraTextStyleToReactCss, hydraTitleHeading3, hydraTitleHeading4 } from '../../theme/hydraTypography';
+import { pageDescriptionStyle } from '../../shell/pageDescriptionStyle';
 import { Flex, Space, Typography, theme } from '../../ui/antd';
 
 type Props = {
   title: string;
-  description?: string;
+  description?: ReactNode;
   /** Short context above the title (e.g. what “BOM” stands for). */
   eyebrow?: string;
-  /** Use 3 for a lighter landing-style headline. */
-  titleLevel?: 2 | 3;
+  /** Figma `Large/Strong` (16/24/600) for Get started–style subtitles; default `Base/Normal`. */
+  descriptionVariant?: 'base' | 'large-strong';
+  /** Figma `Title/Heading 3` (24) for page titles; `heading4` reserved for card-level titles elsewhere. */
+  titleVariant?: 'heading3' | 'heading4';
   /**
    * Primary flow actions (typically `size="large"` buttons) shown to the right of the title.
    * Table-scoped actions (filters, search, add row) stay above the table on each page.
    */
   actions?: ReactNode;
+  /** Inline control beside the title (e.g. workspace edit icon — Figma `5080:16558`). */
+  titleAddon?: ReactNode;
 };
 
-export function BomPageHeader({ title, description, eyebrow, titleLevel = 2, actions }: Props) {
+/** Page-level BOM headlines — Figma `Title/Heading 3` (24/32) on every screen of equal importance. */
+export function BomPageHeader({
+  title,
+  description,
+  eyebrow,
+  descriptionVariant = 'base',
+  titleVariant = 'heading3',
+  actions,
+  titleAddon,
+}: Props) {
   const { token } = theme.useToken();
-  const heading = titleLevel === 3 ? hydraTitleHeading3 : hydraTitleHeading2;
-  const antLevel = titleLevel === 3 ? 3 : 2;
+  const titleTypography = titleVariant === 'heading3' ? hydraTitleHeading3 : hydraTitleHeading4;
+  const titleLevel = titleVariant === 'heading3' ? 3 : 4;
 
   const titleStack = (
     <Space orientation="vertical" size={token.marginXS} style={{ minWidth: 0, width: actions ? undefined : '100%' }}>
       {eyebrow ? (
-        <Typography.Text
-          type="secondary"
-          style={{
-            display: 'block',
-            ...hydraTextStyleToReactCss(hydraSmallNormal),
-          }}
-        >
-          {eyebrow}
-        </Typography.Text>
+        <Typography.Text style={{ display: 'block', ...pageDescriptionStyle(token) }}>{eyebrow}</Typography.Text>
       ) : null}
-      <Typography.Title
-        level={antLevel}
-        style={{
-          margin: 0,
-          ...hydraTextStyleToReactCss(heading),
-        }}
-      >
-        {title}
-      </Typography.Title>
-      {description ? (
-        <Typography.Paragraph
+      <Flex align="center" gap={token.marginXXS} wrap="wrap">
+        <Typography.Title
+          level={titleLevel}
           style={{
             margin: 0,
-            color: token.colorTextDescription,
-            ...hydraTextStyleToReactCss(hydraBaseNormal),
+            ...hydraTextStyleToReactCss(titleTypography),
           }}
         >
+          {title}
+        </Typography.Title>
+        {titleAddon}
+      </Flex>
+      {description ? (
+        <Typography.Text style={{ display: 'block', ...pageDescriptionStyle(token, descriptionVariant) }}>
           {description}
-        </Typography.Paragraph>
+        </Typography.Text>
       ) : null}
     </Space>
   );
 
   if (actions) {
     return (
-      <Flex align="flex-start" justify="space-between" gap={token.marginMD} wrap="wrap" style={{ width: '100%' }}>
-        <div style={{ flex: '1 1 240px', minWidth: 0 }}>{titleStack}</div>
-        <Space size={token.marginSM} wrap align="center" style={{ flexShrink: 0 }}>
+      <Flex align="center" justify="space-between" gap={token.marginSM} wrap="nowrap" style={{ width: '100%' }}>
+        <div style={{ flex: '1 1 auto', minWidth: 0 }}>{titleStack}</div>
+        <Flex gap={token.marginXS} align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
           {actions}
-        </Space>
+        </Flex>
       </Flex>
     );
   }

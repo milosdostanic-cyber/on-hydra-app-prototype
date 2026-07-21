@@ -1,0 +1,17 @@
+---
+description: Scope control rules for safe implementation
+alwaysApply: true
+---
+
+# Scope Guardrails
+
+Before changing code:
+
+- Identify the exact files related to the requested feature.
+- Do not modify unrelated routes, components, styles, utilities, or data models.
+- Do not perform broad refactors.
+- Do not rename files or components unless required.
+- Do not change shared components unless the change is required for this feature and does not break other usage.
+- If a shared component needs a change, prefer adding a safe prop instead of changing existing behavior.
+- Keep each implementation slice small and reviewable.
+- Create an implementation plan before writing code.

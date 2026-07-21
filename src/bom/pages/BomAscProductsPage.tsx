@@ -1,11 +1,12 @@
 import { FilterOutlined } from '@ant-design/icons';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import {
-  ASC_BROWSER_PRODUCTS,
-  type AscBrowserProductRow,
-} from '../data/ascBrowserProducts';
+  readCatalogPickState,
+} from '../bomCatalogPickNavigation';
+import { matchingCatalogPartDetailRoute } from '../bomAscCatalogPartDetail';
+import { ASC_BROWSER_PRODUCTS, type AscBrowserProductRow } from '../data/ascBrowserProducts';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import {
   Alert,
@@ -41,6 +42,8 @@ type LocationState = {
     size?: string;
     category?: string;
   };
+  /** Pre-fill catalog search when opened from workspace figure link. */
+  catalogSearch?: string;
 } | null;
 
 export function BomAscProductsPage() {
@@ -50,9 +53,11 @@ export function BomAscProductsPage() {
   const location = useLocation();
 
   const state = (location.state ?? {}) as NonNullable<LocationState>;
+  const matchingPick = readCatalogPickState(location.state);
+  const isMatchingPickMode = Boolean(matchingPick);
   const swapRowId = state.swapRowId ?? null;
-  const swapSource = state.swapSource;
-  const isSwapMode = !!swapRowId;
+  const swapSource = state.swapSource ?? matchingPick?.pickSource;
+  const isSwapMode = !!swapRowId && !isMatchingPickMode;
 
   const [tab, setTab] = useState<BrowserTab>('pre-engineered');
   const [search, setSearch] = useState('');
@@ -64,6 +69,16 @@ export function BomAscProductsPage() {
   const [draftMfr, setDraftMfr] = useState<string[]>([]);
   const [draftInstall, setDraftInstall] = useState<string[]>([]);
   const [draftSize, setDraftSize] = useState<string[]>([]);
+
+  useEffect(() => {
+    const q = matchingPick?.catalogSearch?.trim() || state?.catalogSearch?.trim();
+    if (q) setSearch(q);
+  }, [matchingPick?.catalogSearch, state?.catalogSearch]);
+
+  function returnFromMatchingPick() {
+    if (!matchingPick) return;
+    navigate(matchingPick.returnTo, { state: matchingPick.uploadFlowState });
+  }
 
   const activeFilterCount = selectedMfr.length + selectedInstall.length + selectedSize.length;
 
@@ -94,8 +109,19 @@ export function BomAscProductsPage() {
     );
   }, [catalogForTab, search, selectedMfr, selectedInstall, selectedSize]);
 
+  function openMatchingPartDetail(product: AscProduct) {
+    if (!matchingPick) return;
+    navigate(matchingCatalogPartDetailRoute(bomProjectId, product.key), {
+      state: location.state,
+    });
+  }
+
   function handleSelectProduct(product: AscProduct) {
     const qty = quantities[product.key] ?? 1;
+    if (isMatchingPickMode) {
+      openMatchingPartDetail(product);
+      return;
+    }
     if (!isSwapMode && qty < 1) {
       message.warning('Enter a quantity greater than 0.');
       return;
@@ -200,7 +226,7 @@ export function BomAscProductsPage() {
       title: 'Qty',
       key: 'qty',
       width: 90,
-      hidden: isSwapMode,
+      hidden: isSwapMode || isMatchingPickMode,
       render: (_, row) => (
         <InputNumber
           size="small"
@@ -220,7 +246,11 @@ export function BomAscProductsPage() {
           type="primary"
           onClick={() => handleSelectProduct(row)}
         >
-          {isSwapMode ? 'Swap' : 'Add to BOM'}
+          {isMatchingPickMode
+            ? 'View part'
+            : isSwapMode
+              ? 'Swap'
+              : 'Add to BOM'}
         </Button>
       ),
     },
@@ -229,24 +259,53 @@ export function BomAscProductsPage() {
   return (
     <Space direction="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <BomPageHeader
-        title={isSwapMode ? 'Select ASC replacement part' : 'ASC products'}
+        title={
+          isMatchingPickMode
+            ? 'Choose ASC part from catalog'
+            : isSwapMode
+              ? 'Select ASC replacement part'
+              : 'ASC products'
+        }
         description={
-          isSwapMode
-            ? 'Choose an ASC product to replace the current suggested match for this BOM line.'
-            : 'Browse ASC products to validate matches or manually add parts to your BOM workspace.'
+          isMatchingPickMode
+            ? 'Browse the ASC catalog, pick the right part, then choose the exact SKU variant when needed.'
+            : isSwapMode
+              ? 'Choose an ASC product to replace the current suggested match for this BOM line.'
+              : 'Browse ASC products to validate matches or manually add parts to your BOM workspace.'
         }
         actions={
-          <Button size="large" onClick={() => navigate(`/bom/projects/${bomProjectId}/workspace`)}>
-            {isSwapMode ? 'Return to workspace' : 'Back to workspace'}
+          <Button
+            size="large"
+            onClick={() =>
+              isMatchingPickMode
+                ? returnFromMatchingPick()
+                : navigate(`/bom/projects/${bomProjectId}/workspace`)
+            }
+          >
+            {isMatchingPickMode
+              ? matchingPick?.returnLabel ?? 'Back to matching review'
+              : isSwapMode
+                ? 'Return to workspace'
+                : 'Back to workspace'}
           </Button>
         }
       />
 
-      {!isSwapMode ? (
+      {!isSwapMode && !isMatchingPickMode ? (
         <Tabs
           activeKey={tab}
           items={tabItems}
           onChange={(k) => setTab(k as BrowserTab)}
+        />
+      ) : isMatchingPickMode ? (
+        <Alert
+          type="info"
+          showIcon
+          message={`Choosing a different part for: ${matchingPick?.pickSource?.description ?? matchingPick?.pickSource?.partNumber ?? 'this BOM line'}${
+            matchingPick?.pickSource?.category || matchingPick?.pickSource?.size
+              ? ` · ${[matchingPick?.pickSource?.category, matchingPick?.pickSource?.size].filter(Boolean).join(' · ')}`
+              : ''
+          }`}
         />
       ) : (
         <Alert
@@ -270,17 +329,18 @@ export function BomAscProductsPage() {
           <Flex align="center" justify="space-between" gap={token.marginSM} wrap="wrap">
             <AppSearchInput
               allowClear
+              size="middle"
               placeholder="Search by description, ASC #, figure number, brand..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{ width: 420, maxWidth: '100%' }}
             />
             <Space size={token.marginXS} wrap>
-              <Button icon={<FilterOutlined />} onClick={openFilterDrawer}>
+              <Button size="middle" icon={<FilterOutlined />} onClick={openFilterDrawer}>
                 Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
               </Button>
               {activeFilterCount > 0 ? (
-                <Button onClick={clearAppliedFilters}>Clear</Button>
+                <Button size="middle" onClick={clearAppliedFilters}>Clear</Button>
               ) : null}
               <Typography.Text
                 type="secondary"

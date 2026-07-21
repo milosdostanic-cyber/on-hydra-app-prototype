@@ -3,14 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { BomCardTitle } from '../components/BomCardTitle';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { bomItemById, bomProjectTitleById, matchResultForItem } from '../data/mockData';
-import { BomRiskTag } from '../components/BomTags';
+import { BomConfidenceTag, BomManualTag, BomRiskTag } from '../components/BomTags';
 import {
   Alert,
   Button,
   Card,
   Descriptions,
   List,
-  Progress,
   Space,
   Typography,
   theme,
@@ -102,14 +101,18 @@ export function BomRecommendPage() {
       ) : (
         <>
           <Card styles={{ body: { padding: token.paddingLG } }}>
-            <Descriptions title={top.partNumber} bordered column={1} size="small">
+            <Descriptions title={top.partNumber} bordered column={1}>
               <Descriptions.Item label="Description">{top.description}</Descriptions.Item>
               <Descriptions.Item label="Family">{top.productFamily}</Descriptions.Item>
               <Descriptions.Item label="Dimensions">{top.dimensions}</Descriptions.Item>
               <Descriptions.Item label="Pressure">{top.pressureRating}</Descriptions.Item>
               <Descriptions.Item label="Connection">{top.connectionType}</Descriptions.Item>
-              <Descriptions.Item label="Match confidence">
-                <Progress percent={top.matchConfidence} />
+              <Descriptions.Item label="Match score">
+                {match.source === 'manual' ? (
+                  <BomManualTag />
+                ) : (
+                  <BomConfidenceTag confidence={top.matchConfidence >= 90 ? 'high' : top.matchConfidence >= 70 ? 'medium' : 'low'} />
+                )}
               </Descriptions.Item>
               <Descriptions.Item label="Substitution risk">
                 <BomRiskTag risk={top.substitutionRisk} />

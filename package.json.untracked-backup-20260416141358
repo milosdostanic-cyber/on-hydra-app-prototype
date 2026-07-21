@@ -1,0 +1,11 @@
+{
+  "name": "untitled-folder",
+  "private": true,
+  "description": "Wrapper so npm commands work from the parent folder; the app lives in on-hydra-app-prototype/",
+  "scripts": {
+    "dev": "npm run dev --prefix on-hydra-app-prototype",
+    "build": "npm run build --prefix on-hydra-app-prototype",
+    "preview": "npm run preview --prefix on-hydra-app-prototype",
+    "tokens:dump": "npm run tokens:dump --prefix on-hydra-app-prototype"
+  }
+}

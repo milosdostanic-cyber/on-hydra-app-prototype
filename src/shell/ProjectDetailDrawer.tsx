@@ -18,7 +18,8 @@ import {
   hydraTextStyleToReactCss,
   hydraTitleHeading5,
 } from '../theme/hydraTypography';
-import { Button, Card, Divider, Drawer, Flex, Space, Tag, Typography, theme } from '../ui/antd';
+import { Button, Card, Divider, Drawer, Flex, Space, Typography, theme } from '../ui/antd';
+import { HydraTag } from '../ui/HydraTag';
 import type { ProjectRow } from './projectSeed';
 
 type Props = {
@@ -40,8 +41,8 @@ type ModuleLink = {
 const PROJECT_MODULES: ModuleLink[] = [
   {
     key: 'content',
-    label: 'Content',
-    description: 'Browse content, manage downloads',
+    label: 'Download Center',
+    description: 'Browse downloads and manage your download history',
     icon: <FolderOpenOutlined />,
     getPath: (id) => `/projects/${id}/content`,
   },
@@ -124,7 +125,7 @@ export function ProjectDetailDrawer({ project, open, onClose }: Props) {
         >
           <Flex justify="space-between" align="flex-start" gap={token.marginMD}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <Typography.Title level={4} style={{ margin: 0 }}>
+              <Typography.Title level={3} style={{ margin: 0 }}>
                 {project.name}
               </Typography.Title>
               <Flex align="center" gap={token.marginXS} style={{ marginTop: token.marginXS }}>
@@ -134,7 +135,7 @@ export function ProjectDetailDrawer({ project, open, onClose }: Props) {
                 </Typography.Text>
               </Flex>
               <Flex gap={token.marginXS} style={{ marginTop: token.marginSM }}>
-                <Tag color="blue">Active</Tag>
+                <HydraTag tone="processing">Active</HydraTag>
                 <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
                   Last opened {project.lastOpened}
                 </Typography.Text>

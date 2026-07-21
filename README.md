@@ -1,216 +1,197 @@
 # Hydra App Prototype
 
-Hydra App Prototype is a React + Vite app for BOM (Bill of Materials) workflows in ASC Connected.
-It is optimized for fast prototyping with existing Ant Design components and Hydra theme tokens.
+React + Vite prototype for ASC Connected (Ant Design + Hydra theme): BOM workflows, unified part search/detail, catalog browse, submittal, and cross-module **Action Trail** guidance.
 
-## Who This README Is For
+## Branch: `merge/bom-unified`
 
-Use this guide if you are:
-- a PM/designer reviewing or iterating on prototype flows
-- a developer implementing UI changes in Cursor
-- a stakeholder who needs to run the app locally from a GitHub link
+GitHub: [ooden-tech/on-hydra-app-prototype @ `merge/bom-unified`](https://github.com/ooden-tech/on-hydra-app-prototype/tree/merge/bom-unified)
 
-## Figma References
-
-- Design System (Hydra Ant Design DS): [Hydra Ant Design - DS](https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=204-47936&t=V9ypdSdYk2oXONOX-1)
-- BOM product/design flows: [BOM SPEC - ASC Connected v2](https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=670-18849&t=1ggZcsa1oIJ6jHIA-1)
-
-## Tech Stack
-
-- React 19
-- TypeScript
-- Vite
-- Ant Design
-- React Router
-
-## Quick Start (Step by Step)
-
-### 1) Install prerequisites
-
-- Install Node.js 20+ (LTS recommended)
-- Install npm (ships with Node.js)
-- Install Cursor
-
-#### Fresh macOS setup (simple, one step at a time)
-
-If this is your first time setting up the project on a new Mac, follow these exact steps.
-
-Step 0: Open Terminal.
-
-Step 1: Install Homebrew (skip this step if `brew -v` already works).
+### Run locally
 
 ```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-Step 2: Install Node.js 20 (npm is included).
-
-```bash
-brew install node@20
-echo 'export PATH="/opt/homebrew/opt/node@20/bin:$PATH"' >> ~/.zshrc
-source ~/.zshrc
-```
-
-Step 3: Install Git (optional, only if `git --version` fails).
-
-```bash
-brew install git
-```
-
-Step 4: Confirm required tools are installed.
-
-```bash
-node -v
-npm -v
-git --version
-```
-
-Step 5: Clone the repository and enter the project folder.
-
-```bash
-git clone https://github.com/ooden-tech/on-hydra-app-prototype.git
-cd on-hydra-app-prototype
-```
-
-Step 6: Install project dependencies.
-
-```bash
+git fetch origin
+git checkout merge/bom-unified
+git pull origin merge/bom-unified
 npm install
-```
-
-Step 7: Start the app.
-
-```bash
 npm run dev
 ```
 
-Step 8: Open the local URL shown in Terminal (usually `http://localhost:5173/`).
+Open the URL Vite prints (often `http://localhost:5173/`).
 
-This repository uses npm and `package-lock.json`, so `yarn` and `pnpm` are not required.
+---
 
-### 5) Verify core routes
+## Cross-Module Action Trail — how to see Level 1, 2, and 3
 
-After startup, quickly verify these routes:
+**Action Trail** helps users remember where parts went after they add them from search or the part detail page. It uses three calm, non-blocking signals. You never get forced away from the part page.
 
-- `/projects` (entry/home)
-- `/catalog`
-- `/bom`
+**Before you start**
 
-## Working in Cursor (PM-Friendly)
+1. Run the app locally (see above).
+2. Open a **part detail** page, for example:
+   - `http://localhost:5173/search/results?q=all` → click any SKU row, **or**
+   - `http://localhost:5173/catalog` → open a featured card or a preview SKU.
+3. In the **top-right user menu**, make sure **Action guidance** is **ON** (default).
 
-1. Open Cursor
-2. Select `Open Folder` and choose this repository
-3. Open `README.md` and keep it pinned
-4. Use built-in terminal in Cursor and run:
+---
 
-```bash
-npm run dev
-```
+### Level 1 — Toast (immediate confirmation)
 
-5. Keep browser and Cursor side-by-side:
-   - browser for validating UX
-   - Cursor chat for change requests
+**What it is:** Instant feedback right after you commit a part to a module.
 
-## Prototyping Workflow (PM + Cursor)
+**What to click**
 
-Use this flow for safe, fast iteration without breaking shared UI foundations.
+1. On the part detail page, pick a **variant** in the dropdown if the action requires it.
+2. In the **Actions** panel on the right, click the **+** button next to **Add to BOM** (or **Add to Submittal** / **Send to Download Center**).
+3. Complete the modal if one appears (pick a BOM project or submittal package).
 
-### Golden Rules
+**What you should see**
 
-- Reuse existing patterns before creating new layout compositions
-- Do not change shared/core components unless explicitly requested
-- Do not create or modify design tokens during PM prototyping
-- Keep changes local to the target screen/flow
+- A **success toast** at the top of the screen (e.g. “Added to …”).
+- You **stay on the part page** — no redirect. You can keep searching and adding more parts.
 
-### Suggested PM Cycle
+**What it is for**
 
-1. Choose one target screen/flow (example: BOM Matching)
-2. Write one focused change request (scope + expected behavior)
-3. Run and review locally
-4. Iterate in small steps until approved
-5. Capture screenshots/videos for stakeholder review
+- Confirms the action worked in the moment.
+- Does not interrupt your workflow.
 
-### Recommended Prompt Template
+**Also try (no Level 2 tag)**
 
-Use the template in:
+- **Download Revit / STEP / PDF** (direct download) → toast only. **No** orange count tag appears in the sidebar.
+- Add the same part to the same module again → toast says **Already in …** and the action row shows **In BOM ✓** (or similar). **No** new sidebar tag.
 
-- `docs/prompt-templates/pm-prototyping-prompt.md`
+---
 
-Paste it into Cursor chat and replace the screen/flow specifics.
+### Level 2 — Sidebar guidance tag + pulse
 
-## Project Structure (High Level)
+**What it is:** A persistent reminder in the left navigation that something new is waiting in a destination module.
 
-- `src/shell/*` - shell pages (projects, catalog, top-level workspace)
-- `src/bom/*` - BOM-specific flows and pages
-- `src/theme/*` - Hydra/Ant theme tokens and mappings
-- `docs/prompt-templates/*` - PM prompt templates
+**What to click**
 
-## Available App Routes (Reference)
+1. After Level 1, **do not** open BOM yet. Look at the **left sidebar**.
 
-- `/projects` - projects list and project creation entry
-- `/catalog` - catalog landing
-- `/catalog/results` - catalog search/result view
-- `/catalog/parts/:partId` - part details
-- `/bom` - BOM landing
-- `/bom/search` - BOM search/import flow
-- `/bom/projects/:bomProjectId/parsing-review`
-- `/bom/projects/:bomProjectId/matching`
-- `/bom/projects/:bomProjectId/items/:itemId/narrow`
-- `/bom/projects/:bomProjectId/items/:itemId/recommend`
-- `/bom/projects/:bomProjectId/workspace`
-- `/bom/projects/:bomProjectId/asc-products`
-- `/bom/projects/:bomProjectId/translate`
-- `/bom/projects/:bomProjectId/field-mapping`
-- `/bom/projects/:bomProjectId/export`
-- `/bom/projects/:bomProjectId/service-request`
+**What you should see**
 
-## Scripts
+- An **orange filled tag** with a **number** next to the destination module:
+  - **BOM** — after Add to BOM
+  - **Submittal** — after Add to Submittal
+  - **Download Center** — after **Send to Download Center** (queue only)
+- When the count **increases**, the tag **pulses once**, then stays static.
+- The tag shows in **expanded** sidebar (next to the label) and **collapsed** sidebar (on the icon).
+- You can still browse search, catalog, or other modules — the tag stays until you open that destination.
 
-- `npm run dev` - start Vite dev server
-- `npm run build` - run TypeScript build and Vite production build
-- `npm run preview` - preview production build locally
-- `npm run tokens:dump` - dump primary token data via local script
+**What it is for**
 
-## Git Workflow (Simple)
+- Answers: “I added a few parts — where did they go?”
+- Points you to the right module without forcing navigation.
 
-- Create a branch for each feature/fix
-- Keep commits small and clear
-- Open PR to `main`
-- Merge only after quick route sanity check (`/projects`, `/catalog`, `/bom`)
+**Turn it off**
 
-## Troubleshooting
+- Top-right user menu → **Action guidance** → OFF.
+- Add a part again → toast still works; **no** orange sidebar tag and **no** highlights in modules.
 
-### `npm install` fails
+---
 
-- Confirm Node 20+:
+### Level 3 — Stay on the part page + in-module highlights
 
-```bash
-node -v
-```
+Level 3 has two parts: **(A) no forced redirect** and **(B) guidance when you eventually open the destination**.
 
-- Remove and reinstall:
+#### (A) Stay on the part page
 
-```bash
-rm -rf node_modules package-lock.json
-npm install
-```
+**What to do**
 
-### App does not open on `5173`
+- Add one or more parts from the same part detail page or from search results.
 
-- Check terminal output for Vite port override
-- Open the exact URL shown in terminal
+**What you should see**
 
-### Blank page after startup
+- You remain on search / part detail. Only Level 1 (toast) and Level 2 (sidebar tag) update.
 
-- Stop server and restart:
+**What it is for**
 
-```bash
-npm run dev
-```
+- Supports batch adding during a search session without losing your place.
 
-- Check browser console errors
+#### (B) Sub-project highlight + “New” tags (after you open the module)
 
-## Notes
+**What to click — BOM example**
 
-- This repo is prototype-oriented: prioritize speed and clarity of UX validation
-- Keep design-system alignment: Ant Design + Hydra tokens first
+1. Note the orange tag on **BOM** in the sidebar.
+2. Click **BOM** in the sidebar.
+
+**What you should see — step by step**
+
+| Step | Where | What it looks like | What it is for |
+|------|--------|-------------------|----------------|
+| 1 | Left sidebar | Orange tag on **BOM** **disappears** | Opening the module clears the unseen count for that module |
+| 2 | BOM **projects list** | Target project row has a **soft blue highlight** and primary border | Shows which sub-project received the part(s) |
+| 3 | Open that project **workspace** | New line(s) have a **“New”** tag and row highlight | Shows exactly which rows were just added |
+| 4 | Leave BOM and open it again later | **No** “New” tags on the second visit | First visit only — avoids permanent noise |
+
+**Submittal**
+
+1. Add to a package from the part page → orange tag on **Submittal**.
+2. Open **Submittal** → tag clears; the **package card** is highlighted.
+3. Open the package → new part rows show **“New”**.
+
+**Download Center**
+
+1. Use **Send to Download Center** (not quick download) → orange tag on **Download Center**.
+2. Open a project → **Download Center** → tag clears; download history area is highlighted for new queue items.
+
+**What it is for**
+
+- Level 2 gets you to the right **module**.
+- Level 3 (B) gets you to the right **project/package** and **row** inside that module.
+
+---
+
+### Quick smoke checklist
+
+1. Part detail → **Add to BOM** → toast (L1) + sidebar tag (L2); stay on page (L3A).
+2. Open **BOM** → tag gone; project row highlighted; workspace → **“New”** on row (L3B).
+3. Re-enter BOM → no **“New”** tags.
+4. Repeat for **Submittal** and **Download Center** queue; confirm quick download creates **no** tag.
+5. Disable **Action guidance** in user menu → toasts still work; no tag or highlights.
+6. Second browser tab → add in tab A → tag updates in tab B.
+
+More detail: [`Documents/plans/2026-06-25-cross-module-action-trail-guidance-plan.md`](Documents/plans/2026-06-25-cross-module-action-trail-guidance-plan.md).
+
+---
+
+## Other UX on this branch
+
+### Unified search (`/search/results`)
+
+- Single results panel: search bar, filter tabs with neutral count tags, grouped content.
+- Parts table: **click the whole row** to open the part (no separate Open column).
+
+### Catalog home (`/catalog`)
+
+- **Featured parts** in a tinted blue panel (hero section).
+- Lower sections use the same headline / subtitle pattern as BOM (`BomCardTitle` + `PageDescription`).
+
+### BOM import (guided 3-step flow)
+
+End-to-end path: **upload → field mapping → parsing review → match verification → save to workspace**.
+
+- **Resume interrupted imports** — workspace banner with **Continue**; progress survives refresh.
+- **3-step progress strip** (Map → Parse → Match) on mapping, parsing review, and matching.
+- **Field mapping** — at least one of Description, Figure Number, Part Number / SKU, or UPC required.
+- **Parsing review** — table adapts to mapped identifier; editable rows; summary alert.
+- **Match verification** — table or one-by-one review; **Save and import** disabled until every line is accepted or skipped.
+- **Manual replacement** — Refine → ASC picker → row marked manually added.
+- **After import** — lines land in the workspace table; progress strip shows confirmed state.
+
+### BOM workspace & project
+
+- Workspace table, warnings, post-import summary, resume banners.
+- Landing: upload, projects list, edit project name.
+- Upload: file type and size validation.
+
+### Product catalog (prototype)
+
+- Catalog home, featured parts, browse hierarchy (category → subcategory → product line → variants → detail).
+
+---
+
+## Older branch note
+
+Previous BOM-focused README targeted branch `Bom-V1-Update`. This branch (`merge/bom-unified`) includes that BOM work plus unified search, Action Trail, and shell typography alignment.

@@ -3,10 +3,11 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
 import { App } from './App';
+import { ActionTrailProvider } from './context/ActionTrailContext';
 import { ActiveProjectProvider } from './context/ActiveProjectContext';
 import { BomWorkspaceProvider } from './context/BomWorkspaceContext';
 import { HydraThemeProvider } from './context/HydraThemeContext';
-import { SubmittalDraftProvider } from './context/SubmittalDraftContext';
+import { SubmittalPackagesProvider } from './context/SubmittalPackagesContext';
 
 import './index.css';
 import 'antd/dist/reset.css';
@@ -16,11 +17,13 @@ createRoot(document.getElementById('root')!).render(
     <HydraThemeProvider>
       <BrowserRouter>
         <ActiveProjectProvider>
-          <BomWorkspaceProvider>
-            <SubmittalDraftProvider>
-              <App />
-            </SubmittalDraftProvider>
-          </BomWorkspaceProvider>
+          <ActionTrailProvider>
+            <BomWorkspaceProvider>
+              <SubmittalPackagesProvider>
+                <App />
+              </SubmittalPackagesProvider>
+            </BomWorkspaceProvider>
+          </ActionTrailProvider>
         </ActiveProjectProvider>
       </BrowserRouter>
     </HydraThemeProvider>

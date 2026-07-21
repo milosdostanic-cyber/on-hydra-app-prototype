@@ -1,9 +1,34 @@
+export type ProjectContact = {
+  name?: string;
+  role?: string;
+  email?: string;
+  phone?: string;
+  fax?: string;
+};
+
+export type ProjectFormValues = {
+  name: string;
+  address?: string;
+  address2?: string;
+  country?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  notes?: string;
+  contacts?: ProjectContact[];
+};
+
 export type ProjectRow = {
   key: string;
   name: string;
   address: string;
+  address2?: string;
+  country?: string;
   city: string;
   state: string;
+  zipCode?: string;
+  notes?: string;
+  contacts?: ProjectContact[];
   lastOpened: string;
   recent: boolean;
 };
@@ -13,8 +38,10 @@ export const PROJECT_SEED_ROWS: ProjectRow[] = [
     key: '1',
     name: 'Downtown Convention Center',
     address: '123 Main Street',
+    country: 'US',
     city: 'Phoenix',
     state: 'AZ',
+    zipCode: '85004',
     lastOpened: '2 hours ago',
     recent: true,
   },
@@ -56,6 +83,36 @@ export const PROJECT_SEED_ROWS: ProjectRow[] = [
   },
 ];
 
-export function projectTitleById(projectId: string): string | undefined {
-  return PROJECT_SEED_ROWS.find((r) => r.key === projectId)?.name;
+const PROJECTS_STORAGE_KEY = 'hydra:constructionProjects';
+
+export function readStoredProjects(): ProjectRow[] {
+  try {
+    const raw = sessionStorage.getItem(PROJECTS_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as ProjectRow[];
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {
+    /* ignore */
+  }
+  return [...PROJECT_SEED_ROWS];
 }
+
+export function writeStoredProjects(rows: ProjectRow[]): void {
+  try {
+    sessionStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(rows));
+  } catch {
+    /* ignore */
+  }
+}
+
+export function projectTitleById(projectId: string): string | undefined {
+  return readStoredProjects().find((r) => r.key === projectId)?.name;
+}
+
+export type ConstructionProjectInput = {
+  name: string;
+  address?: string;
+  city?: string;
+  state?: string;
+};

@@ -21,6 +21,7 @@ import {
 import type { TableColumnsType, TabsProps } from '../ui/antd';
 
 import { shellLayout } from '../theme/hydraAlias';
+import { BomPageHeader } from '../bom/layout/BomPageHeader';
 import { hydraBaseStrong } from '../theme/hydraTypography';
 import { PROJECT_SEED_ROWS, type ProjectRow } from './projectSeed';
 import { ProjectDetailDrawer } from './ProjectDetailDrawer';
@@ -146,30 +147,26 @@ export function ShellHomeContent() {
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <Flex justify="space-between" align="flex-start" wrap="wrap" gap={token.margin}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            Projects
-          </Typography.Title>
-          <Typography.Paragraph type="secondary" style={{ margin: `${token.marginXXS}px 0 0`, maxWidth: 720 }}>
-            Pick a job site, then open Spec, Submittal, Content, or BOM from the slide-in. You can browse the catalog
-            anytime without a project.
-          </Typography.Paragraph>
-        </div>
-        <Flex gap={token.marginSM} wrap="wrap" style={{ flexShrink: 0 }}>
-          <Button type="default" size="large" icon={<GlobalOutlined />} onClick={() => navigate('/catalog')}>
-            Browse catalog
-          </Button>
-          <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
-            Create project
-          </Button>
-        </Flex>
-      </Flex>
+      <BomPageHeader
+        title="Projects"
+        description="Pick a job site, then open Spec, Submittal, Content, or BOM from the slide-in. You can browse the catalog anytime without a project."
+        actions={
+          <Flex gap={token.marginSM} wrap="wrap" style={{ flexShrink: 0 }}>
+            <Button type="default" size="large" icon={<GlobalOutlined />} onClick={() => navigate('/catalog')}>
+              Browse catalog
+            </Button>
+            <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
+              Create project
+            </Button>
+          </Flex>
+        }
+      />
 
       <Card styles={{ body: { padding: 0 } }} style={listPanelStyle}>
         <div style={{ padding: token.paddingLG, paddingBottom: token.paddingMD }}>
           <AppSearchInput
             allowClear
+            size="middle"
             placeholder="Search by name, address, city, or state…"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
