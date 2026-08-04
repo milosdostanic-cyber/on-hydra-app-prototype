@@ -71,8 +71,23 @@ const FEATURED_KEY_TO_CONTENT_LISTING: Record<string, FeaturedContentListingTarg
   },
 };
 
+const CONTENT_PART_ID_TO_FEATURED_KEY: Record<string, string> = Object.fromEntries(
+  Object.entries(FEATURED_KEY_TO_CONTENT_LISTING).map(([featuredKey, target]) => [
+    target.partId,
+    featuredKey,
+  ]),
+);
+
 export function featuredPartContentListingTarget(partKey: string): FeaturedContentListingTarget | undefined {
   return FEATURED_KEY_TO_CONTENT_LISTING[partKey];
+}
+
+/**
+ * Map a product-catalog hierarchy leaf id → demo catalog key used by `/search/parts/:partId`
+ * (Add to BOM / Submittal / Download Center). Unmapped leaves fall back to the first featured key.
+ */
+export function catalogDemoKeyForHierarchyPartId(partId: string): string {
+  return CONTENT_PART_ID_TO_FEATURED_KEY[partId] ?? 'p-100';
 }
 
 /** Absolute path to the **part variants** listing in project Content, or `undefined` if the key is not mapped. */

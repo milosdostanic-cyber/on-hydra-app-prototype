@@ -56,7 +56,7 @@ import {
 } from '../../ui/antd';
 
 function firstPendingLineIndex(results: BomMatchResult[]): number {
-  const idx = results.findIndex((row) => row.lineStatus === 'pending');
+  const idx = results.findIndex((row) => row.lineStatus === 'pending' && !row.parseUnusable);
   return idx >= 0 ? idx : results.length;
 }
 
@@ -103,7 +103,9 @@ export function BomProgressiveMatchingPage() {
   const matchingProgressStatus = guidedMatchingStepStatusLabel(reviewingPosition, totalParts, allDone);
   const reviewedCount = stats.accepted + stats.skipped;
   const remainingCount = Math.max(totalParts - reviewedCount, 0);
-  const pendingCount = matchResults.filter((row) => row.lineStatus === 'pending').length;
+  const pendingCount = matchResults.filter(
+    (row) => row.lineStatus === 'pending' && !row.parseUnusable,
+  ).length;
   const autoMatchableCount = useMemo(
     () => countHighConfidenceAutoMatchableRows(matchResults),
     [matchResults],
@@ -171,7 +173,13 @@ export function BomProgressiveMatchingPage() {
 
   function advanceAfterAction() {
     if (current) setLastReviewed(current);
-    setIndex((i) => i + 1);
+    setIndex((i) => {
+      let next = i + 1;
+      while (next < matchResults.length && matchResults[next]?.parseUnusable) {
+        next += 1;
+      }
+      return next;
+    });
   }
 
   function handleConfirm() {
@@ -233,7 +241,9 @@ export function BomProgressiveMatchingPage() {
       message.info('All parts are already reviewed.');
       return;
     }
-    const beforePending = matchResults.filter((row) => row.lineStatus === 'pending');
+    const beforePending = matchResults.filter(
+      (row) => row.lineStatus === 'pending' && !row.parseUnusable,
+    );
     const next = applyAutoMatchHighConfidence(matchResults);
     const newlyAccepted = beforePending.filter(
       (row) => next.find((entry) => entry.itemId === row.itemId)?.lineStatus === 'accepted',
@@ -269,7 +279,9 @@ export function BomProgressiveMatchingPage() {
     if (allDone) {
       return hasSkippedItems
         ? `${readyCount} ready to import · ${reviewSummary.skipped} skipped for ${projectTitle}.`
-        : `All ${reviewSummary.total} parts reviewed for ${projectTitle}.`;
+        : reviewSummary.cantMatch > 0
+          ? `${readyCount} ready to import · ${reviewSummary.cantMatch} can't be matched for ${projectTitle}.`
+          : `All ${reviewSummary.total} parts reviewed for ${projectTitle}.`;
     }
     if (resolveFromTable && pendingCount > 1) {
       return `Part ${reviewingPosition} of ${totalParts} · ${pendingCount - 1} more part${pendingCount - 1 === 1 ? '' : 's'} still need a decision after this one.`;

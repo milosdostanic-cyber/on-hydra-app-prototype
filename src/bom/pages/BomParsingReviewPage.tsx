@@ -1,4 +1,4 @@
-import { EyeOutlined } from '@ant-design/icons';
+import { ExclamationCircleOutlined, EyeOutlined } from '@ant-design/icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -13,9 +13,14 @@ import {
 } from '../bomFieldMappingUtils';
 import { buildParsingReviewReadOnlyColumns } from '../bomParsingReviewColumns';
 import {
-  countParsingReviewWarnings,
-  filterParsingReviewLowConfidenceRows,
+  clearFixedUpcParseIssue,
+  filterParsingReviewByAttention,
+  isParsingReviewUnusableRow,
+  parsingReviewMatchOutlook,
   parsingReviewProgressStatusLabel,
+  parsingReviewProgressStatusTone,
+  parsingReviewRowSeverity,
+  type ParsingReviewAttentionFilter,
 } from '../bomParsingReviewAlert';
 import { BomParsingReviewQualityAlert } from '../components/BomParsingReviewQualityAlert';
 import { BomParsingReviewRowDrawer } from '../components/BomParsingReviewRowDrawer';
@@ -31,8 +36,10 @@ import { useBomCancelUpload } from '../hooks/useBomCancelUpload';
 import { useBomImportSession } from '../hooks/useBomImportSession';
 import type { BomItem } from '../data/types';
 import {
+  App,
   Button,
   Card,
+  Empty,
   Flex,
   Pagination,
   Space,
@@ -44,6 +51,7 @@ import {
 
 export function BomParsingReviewPage() {
   const { token } = theme.useToken();
+  const { modal } = App.useApp();
   const { bomProjectId = '' } = useParams<{ bomProjectId: string }>();
   const navigate = useNavigate();
   const bomHubPath = useBomHubPath();
@@ -77,7 +85,7 @@ export function BomParsingReviewPage() {
     ) {
       updateProgress(resolvedUploadId, {
         parsedItems: normalized,
-        matchResults: createInitialMatchResults(normalized),
+        matchResults: createInitialMatchResults(normalized, parsingReviewColumnProfile(uploadState.fieldMapping)),
         totalRows: normalized.length,
       });
       bumpRefresh();
@@ -89,28 +97,55 @@ export function BomParsingReviewPage() {
     uploadId,
     updateProgress,
     bumpRefresh,
+    uploadState.fieldMapping,
   ]);
-  const [lowConfidenceOnly, setLowConfidenceOnly] = useState(false);
+
+  const [attentionFilter, setAttentionFilter] = useState<ParsingReviewAttentionFilter>('all');
   const [editRowId, setEditRowId] = useState<string | null>(null);
   const tableRef = useRef<HTMLDivElement>(null);
+  const countsLiveRef = useRef<HTMLDivElement>(null);
 
   const columnProfile = parsingReviewColumnProfile(uploadState.fieldMapping);
-  const lowConfidenceCount = useMemo(
-    () => countParsingReviewWarnings(rows, columnProfile),
+  const outlook = useMemo(
+    () => parsingReviewMatchOutlook(rows, columnProfile),
     [rows, columnProfile],
   );
+  const unusableCount = outlook.unusable;
+  const degradedCount = outlook.limited;
   const progressStatus = parsingReviewProgressStatusLabel(rows, columnProfile);
-  const parsingStatusTone = progressStatus.endsWith(' ready') ? 'success' : 'warning';
+  const parsingStatusTone = parsingReviewProgressStatusTone(rows, columnProfile);
 
-  const visibleRows = useMemo(() => {
-    if (!lowConfidenceOnly) return rows;
-    return filterParsingReviewLowConfidenceRows(rows, columnProfile);
-  }, [rows, columnProfile, lowConfidenceOnly]);
+  const visibleRows = useMemo(
+    () => filterParsingReviewByAttention(rows, columnProfile, attentionFilter),
+    [rows, columnProfile, attentionFilter],
+  );
+
+  const pageSize = shellLayout.tablePageSizeDefault;
+  const maxPage = Math.max(1, Math.ceil(visibleRows.length / pageSize) || 1);
+
+  useEffect(() => {
+    if (page > maxPage) setPage(maxPage);
+  }, [page, maxPage]);
+
+  useEffect(() => {
+    if (countsLiveRef.current) {
+      countsLiveRef.current.textContent = `${outlook.ready} ready · ${outlook.limited} may match poorly · ${outlook.unusable} can't be matched`;
+    }
+  }, [outlook]);
 
   const editRow = editRowId ? rows.find((r) => r.id === editRowId) ?? null : null;
 
   const updateRow = useCallback((rowId: string, patch: Partial<BomItem>) => {
-    setRows((prev) => prev.map((r) => (r.id === rowId ? { ...r, ...patch } : r)));
+    setRows((prev) =>
+      prev.map((r) => {
+        if (r.id !== rowId) return r;
+        const merged = { ...r, ...patch };
+        return {
+          ...merged,
+          upcParseIssue: clearFixedUpcParseIssue(r, patch),
+        };
+      }),
+    );
   }, []);
 
   const openEditRow = useCallback((row: BomItem) => {
@@ -123,20 +158,16 @@ export function BomParsingReviewPage() {
   );
 
   const pagedParsedItems = useMemo(() => {
-    const start = (page - 1) * shellLayout.tablePageSizeDefault;
-    return visibleRows.slice(start, start + shellLayout.tablePageSizeDefault);
-  }, [page, visibleRows]);
+    const start = (page - 1) * pageSize;
+    return visibleRows.slice(start, start + pageSize);
+  }, [page, visibleRows, pageSize]);
 
   const mappingSummaryRoute = bomMappingSummaryRoute(bomProjectId);
   const advancedFieldMappingRoute = bomAdvancedFieldMappingRoute(bomProjectId);
   const { confirmCancelUpload } = useBomCancelUpload(bomProjectId);
 
-  function handleCommitParsingReview() {
-    if (rows.length === 0) {
-      message.warning('No items found to continue.');
-      return;
-    }
-    const nextMatchResults = createInitialMatchResults(rows);
+  function commitAndNavigate() {
+    const nextMatchResults = createInitialMatchResults(rows, columnProfile);
     const resolvedUploadId = uploadId ?? session?.uploadId;
     if (resolvedUploadId) {
       updateProgress(resolvedUploadId, {
@@ -157,19 +188,65 @@ export function BomParsingReviewPage() {
     });
   }
 
-  function handleReviewLowConfidence() {
-    if (lowConfidenceCount === 0) {
-      message.info('All lines look ready for matching.');
+  function handleCommitParsingReview() {
+    if (rows.length === 0) {
+      message.warning('No items found to continue.');
       return;
     }
-    setLowConfidenceOnly(true);
+
+    if (unusableCount > 0) {
+      modal.confirm({
+        title: `${unusableCount} line${unusableCount === 1 ? '' : 's'} can't be matched`,
+        icon: <ExclamationCircleOutlined style={{ color: token.colorWarning }} />,
+        content:
+          unusableCount === rows.length
+            ? "They'll be imported as unmatched lines — nothing is lost, but you'll need to pick parts for them yourself later. You may also want to re-check column mapping first."
+            : "They'll be imported as unmatched lines — nothing is lost, but you'll need to pick parts for them yourself later.",
+        okText: 'Continue anyway',
+        cancelText: 'Go back and fix',
+        centered: true,
+        onOk: commitAndNavigate,
+      });
+      return;
+    }
+
+    commitAndNavigate();
+  }
+
+  function handleFilter(filter: ParsingReviewAttentionFilter) {
+    if (filter === 'error' && unusableCount === 0) {
+      message.info('No lines that can’t be matched.');
+      return;
+    }
+    if (filter === 'warning' && degradedCount === 0) {
+      message.info('No lines that may match poorly.');
+      return;
+    }
+    setAttentionFilter(filter);
     setPage(1);
     window.setTimeout(() => tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
   }
 
   function handleShowAllRows() {
-    setLowConfidenceOnly(false);
+    setAttentionFilter('all');
     setPage(1);
+  }
+
+  function handleRowSaved(rowId: string, patch: Partial<BomItem>) {
+    const before = rows.find((r) => r.id === rowId);
+    updateRow(rowId, patch);
+    const after = before
+      ? { ...before, ...patch, upcParseIssue: clearFixedUpcParseIssue(before, patch) }
+      : null;
+    if (before && after) {
+      const wasUnusable = isParsingReviewUnusableRow(before, columnProfile);
+      const nowSeverity = parsingReviewRowSeverity(after, columnProfile);
+      if (wasUnusable && nowSeverity !== 'error') {
+        message.success(`Row ${before.rowNumber} updated — it can be matched now.`);
+        return;
+      }
+    }
+    message.success(before ? `Row ${before.rowNumber} updated.` : 'Row updated.');
   }
 
   const headerActions = (
@@ -240,6 +317,15 @@ export function BomParsingReviewPage() {
     );
   }
 
+  const toolbarLabel =
+    attentionFilter === 'error'
+      ? `Showing ${visibleRows.length} part${visibleRows.length === 1 ? '' : 's'} that can't be matched`
+      : attentionFilter === 'warning'
+        ? `Showing ${visibleRows.length} part${visibleRows.length === 1 ? '' : 's'} that may match poorly`
+        : `${rows.length} part${rows.length === 1 ? '' : 's'} we found in your file${
+            unusableCount > 0 ? ` · ${unusableCount} can't be matched` : ''
+          }`;
+
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <BomUploadFlowStepChrome
@@ -257,7 +343,26 @@ export function BomParsingReviewPage() {
         actions={headerActions}
       />
 
-      <BomParsingReviewQualityAlert rows={rows} profile={columnProfile} />
+      <div
+        ref={countsLiveRef}
+        aria-live="polite"
+        style={{
+          position: 'absolute',
+          width: 1,
+          height: 1,
+          padding: 0,
+          margin: -1,
+          overflow: 'hidden',
+          clip: 'rect(0, 0, 0, 0)',
+          whiteSpace: 'nowrap',
+          border: 0,
+        }}
+      />
+
+      <BomParsingReviewQualityAlert
+        rows={rows}
+        profile={columnProfile}
+      />
 
       <div ref={tableRef}>
         <Card styles={{ body: { padding: 0 } }}>
@@ -273,42 +378,72 @@ export function BomParsingReviewPage() {
               background: token.colorFillAlter,
             }}
           >
-            <Typography.Text type="secondary">
-              {lowConfidenceOnly
-                ? `Showing ${visibleRows.length} part${visibleRows.length === 1 ? '' : 's'} that may not match well`
-                : `${rows.length} part${rows.length === 1 ? '' : 's'} we found in your file`}
-            </Typography.Text>
-            {lowConfidenceOnly ? (
-              <Button icon={<EyeOutlined />} onClick={handleShowAllRows}>
-                Show all rows
-              </Button>
-            ) : (
-              <Button
-                disabled={lowConfidenceCount === 0}
-                icon={<EyeOutlined />}
-                onClick={handleReviewLowConfidence}
-              >
-                Show parts that may not match well
-              </Button>
-            )}
+            <Typography.Text type="secondary">{toolbarLabel}</Typography.Text>
+            <Flex gap={token.marginXS} wrap="wrap">
+              {attentionFilter !== 'all' ? (
+                <Button icon={<EyeOutlined />} onClick={handleShowAllRows}>
+                  Show all rows
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    disabled={unusableCount === 0}
+                    icon={<EyeOutlined />}
+                    onClick={() => handleFilter('error')}
+                  >
+                    Can&apos;t be matched ({unusableCount})
+                  </Button>
+                  <Button
+                    disabled={degradedCount === 0}
+                    icon={<EyeOutlined />}
+                    onClick={() => handleFilter('warning')}
+                  >
+                    May match poorly ({degradedCount})
+                  </Button>
+                </>
+              )}
+            </Flex>
           </Flex>
-          <Table<BomItem>
-            rowKey="id"
-            columns={columns}
-            dataSource={pagedParsedItems}
-            pagination={false}
-            scroll={{ x: 'max-content' }}
-            styles={{
-              header: {
-                cell: {
-                  background: token.colorFillAlter,
-                  borderBottomColor: token.colorBorderSecondary,
-                  fontWeight: token.fontWeightStrong,
+          {visibleRows.length === 0 ? (
+            <Flex
+              vertical
+              align="center"
+              justify="center"
+              style={{ paddingBlock: token.paddingLG, paddingInline: token.paddingMD }}
+            >
+              <Empty
+                description={
+                  attentionFilter === 'error'
+                    ? 'No lines that can’t be matched — nice work.'
+                    : 'No lines that may match poorly.'
+                }
+              >
+                <Button type="primary" onClick={handleShowAllRows}>
+                  Show all rows
+                </Button>
+              </Empty>
+            </Flex>
+          ) : (
+            <Table<BomItem>
+              rowKey="id"
+              columns={columns}
+              dataSource={pagedParsedItems}
+              pagination={false}
+              scroll={{ x: 'max-content' }}
+              styles={{
+                header: {
+                  cell: {
+                    background: token.colorFillAlter,
+                    borderBottomColor: token.colorBorderSecondary,
+                    fontWeight: token.fontWeightStrong,
+                  },
                 },
-              },
-              body: { cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM } },
-            }}
-          />
+                body: {
+                  cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM },
+                },
+              }}
+            />
+          )}
           <Flex
             justify="flex-end"
             align="center"
@@ -320,7 +455,7 @@ export function BomParsingReviewPage() {
           >
             <Pagination
               current={page}
-              pageSize={shellLayout.tablePageSizeDefault}
+              pageSize={pageSize}
               total={visibleRows.length}
               onChange={setPage}
               showSizeChanger={false}
@@ -335,7 +470,7 @@ export function BomParsingReviewPage() {
         profile={columnProfile}
         fieldMapping={uploadState.fieldMapping}
         onClose={() => setEditRowId(null)}
-        onSave={updateRow}
+        onSave={handleRowSaved}
       />
     </Space>
   );

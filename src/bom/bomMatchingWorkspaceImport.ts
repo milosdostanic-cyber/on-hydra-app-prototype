@@ -11,6 +11,10 @@ export function buildWorkspaceRowFromMatch(
   parsedItem: BomItem | undefined,
   rowIndex: number,
 ): BomItem {
+  if (result.parseUnusable) {
+    return buildWorkspaceRowFromUnusableParse(result, parsedItem, rowIndex);
+  }
+
   const match = result.topMatch;
   const conf: BomItemConfidence =
     result.source === 'manual' || (match?.matchConfidence ?? 0) >= 90
@@ -51,5 +55,36 @@ export function buildWorkspaceRowFromMatch(
     upc: parsedItem?.upc,
     matchSource: result.source,
     status,
+    upcParseIssue: parsedItem?.upcParseIssue,
+  });
+}
+
+/** Parse-unusable lines import as unmatched workspace rows — never dropped. */
+export function buildWorkspaceRowFromUnusableParse(
+  result: BomMatchResult,
+  parsedItem: BomItem | undefined,
+  rowIndex: number,
+): BomItem {
+  return ensureWorkspaceRowDisplayFields({
+    id: `ws-import-${result.itemId}`,
+    rowNumber: rowIndex,
+    originalInput: result.originalRequest,
+    importedDescription: parsedItem?.parsedDescription,
+    importedRowNumber: parsedItem?.rowNumber,
+    parsedDescription: parsedItem?.parsedDescription || result.originalRequest,
+    figureNumber: parsedItem?.figureNumber,
+    sku: parsedItem?.sku,
+    size: parsedItem?.size ?? '',
+    pressureClass: parsedItem?.pressureClass ?? '',
+    connectionType: parsedItem?.connectionType ?? '',
+    quantity: parsedItem?.quantity ?? 1,
+    confidence: 'low',
+    category: parsedItem?.category,
+    unit: parsedItem?.unit ?? 'EA',
+    manufacturer: parsedItem?.manufacturer,
+    upc: parsedItem?.upc,
+    matchSource: 'auto',
+    status: 'pending',
+    upcParseIssue: parsedItem?.upcParseIssue,
   });
 }

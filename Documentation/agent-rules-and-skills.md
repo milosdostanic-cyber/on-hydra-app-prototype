@@ -222,6 +222,22 @@ Skills are folders with `SKILL.md`. Cursor loads them when attached or registere
 
 ---
 
+## hydra-module-builder
+
+- **Location:** `.cursor/skills/hydra-module-builder/SKILL.md`
+- **Purpose:** Build a new Hydra module from a PRD so it follows the existing application's UX language, architecture, and implementation patterns.
+- **What it does:**
+  - Reads the validated capabilities map and performs targeted repository discovery before planning code.
+  - Studies complete screens and workflows, including layout composition, navigation, state, responsive behavior, and shared component usage.
+  - Ranks candidate references by semantic fit and current active usage; rejects legacy, orphaned, or inconsistent patterns.
+  - Maps every PRD requirement to existing modules, components, interaction patterns, or clearly scoped new local work.
+  - Asks only questions that materially affect architecture, permissions, data, workflow, or shared/global behavior.
+  - Produces a concise module analysis and file-scoped plan before implementation.
+  - Implements only when explicitly authorized, then runs `@hydra-ux-audit`, typecheck, tests, lint, build as applicable, and a final scope check.
+- **How to invoke:** `@hydra-module-builder` + PRD/spec path or text + `analyze`, `plan`, or `implement`.
+
+---
+
 ## hydra-ui-tokens-and-components
 
 - **Location:** `Documentation/hydra-ai-pack/skills/hydra-ui-tokens-and-components/SKILL.md`
@@ -234,6 +250,21 @@ Skills are folders with `SKILL.md`. Cursor loads them when attached or registere
   - Local screen composition only when no pattern exists.
   - Same intent as `hydra-ui-tokens` + `ux-guardrails` rules (rules win if they differ).
 - **How to invoke:** `@hydra-ui-tokens-and-components`
+
+---
+
+## hydra-ant-design-screen-recreator
+
+- **Location:** `.agents/skills/hydra-ant-design-screen-recreator/SKILL.md`
+- **Purpose:** Recreate reference screens in Figma using only the published Hydra Ant Design - DS library.
+- **What it does:**
+  - Treats screenshots, mocks, app routes, and Figma frames as visual/content context only.
+  - Restricts all library searches to the exact Hydra DS library key.
+  - Requires linked Hydra component/icon instances, Auto Layout, published text styles, and exact variable/effect bindings.
+  - Forbids foreign design systems, local fallbacks, raw SVGs, detached instances, new tokens/styles/components, and raw design values.
+  - Stops before writing when exact Hydra coverage is missing; never approximates.
+  - Runs provenance, binding, Auto Layout, visual parity, and `hydra-ux-audit` gates before completion.
+- **How to invoke:** `@hydra-ant-design-screen-recreator` + reference screen + target Figma file/node.
 
 ---
 
@@ -345,7 +376,7 @@ Audit and fix P0/P1. Allowed files: [from scope]
 | Folder | Contents |
 |--------|----------|
 | `.cursor/rules/` | All rules (`.mdc`) |
-| `.cursor/skills/` | Project skills (`figma-console-mcp`, `prd-ux-implementation-planner`, `hydra-ux-audit`) |
+| `.cursor/skills/` | Project skills (`figma-console-mcp`, `prd-ux-implementation-planner`, `hydra-ux-audit`, `hydra-module-builder`) |
 | `.agents/skills/` | External skills (`caveman`, `caveman-compress`) |
 | `Documentation/hydra-ai-pack/` | Portable checklist and skill copy |
 | `Documents/plans/` | Plans from `@plan-orchestrator` |

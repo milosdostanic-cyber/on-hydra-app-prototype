@@ -1,13 +1,12 @@
 import { DownloadOutlined } from '@ant-design/icons';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 
 import { CatalogThumbnailPlaceholder } from '../../catalog/CatalogThumbnailPlaceholder';
+import { catalogDemoKeyForHierarchyPartId } from '../../catalog/featuredPartContentListing';
+import { catalogPartReturnFrom, unifiedSearchPartPath } from '../../catalog/catalogPartNavigation';
 import { catalogProductLine, catalogSubcategory } from '../../catalog/productCatalogHierarchy.demo';
 import { BomPageHeader } from '../../bom/layout/BomPageHeader';
-import {
-  productCatalogHubPath,
-  productCatalogPartVariantsPath,
-} from '../../catalog/productCatalogNavigation';
+import { productCatalogHubPath } from '../../catalog/productCatalogNavigation';
 import { PageBackButton } from '../PageBackButton';
 import { PageDescription } from '../PageDescription';
 import { Button, Flex, Space, Table, message, theme } from '../../ui/antd';
@@ -25,12 +24,14 @@ type LeafRow = {
 
 export function ProductLinePartsPage() {
   const { token } = theme.useToken();
+  const location = useLocation();
   const { projectId = '', categoryId = '', subcategoryId = '', productLineId = '' } = useParams<{
     projectId: string;
     categoryId: string;
     subcategoryId: string;
     productLineId: string;
   }>();
+  const partReturnState = catalogPartReturnFrom(`${location.pathname}${location.search}`);
   const line = catalogProductLine(categoryId, subcategoryId, productLineId);
   const sub = catalogSubcategory(categoryId, subcategoryId);
 
@@ -50,13 +51,8 @@ export function ProductLinePartsPage() {
         <Flex align="center" gap={token.marginSM}>
           <CatalogThumbnailPlaceholder />
           <Link
-            to={productCatalogPartVariantsPath(
-              projectId,
-              categoryId,
-              subcategoryId,
-              productLineId,
-              row.key,
-            )}
+            to={unifiedSearchPartPath(catalogDemoKeyForHierarchyPartId(row.key))}
+            state={partReturnState}
           >
             {row.name}
           </Link>

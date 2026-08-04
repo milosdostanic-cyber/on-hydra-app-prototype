@@ -269,6 +269,26 @@ Review only, no edits: add `Audit only`
 
 ---
 
+## hydra-module-builder
+
+**Location:** `.cursor/skills/hydra-module-builder/SKILL.md`
+
+Builds a new application module from a PRD by first studying the existing product's real screens and workflows. It finds the closest active routes, layouts, page compositions, shared components, design tokens, state patterns, and responsive behavior, while avoiding legacy or inconsistent examples.
+
+It maps every requirement to reusable product patterns or clearly scoped new local work, asks only questions that materially affect the solution, and writes a short file-scoped plan before code. When implementation is explicitly requested, it works incrementally and finishes with the Hydra UX quality gate and technical validation.
+
+**How to run:**
+```
+@hydra-module-builder
+
+PRD: [path, link, or pasted requirements]
+Implement this as a new Hydra module.
+```
+
+Use `Analyze and plan only` when you do not want code changes yet.
+
+---
+
 ## hydra-ui-tokens-and-components
 
 **Location:** `Documentation/hydra-ai-pack/skills/hydra-ui-tokens-and-components/SKILL.md`
@@ -378,7 +398,7 @@ Audit and fix P0/P1.
 | Folder | Contents |
 |--------|----------|
 | `.cursor/rules/` | All rules (`.mdc`) |
-| `.cursor/skills/` | Project skills (`figma-console-mcp`, `hydra-ux-audit`, `prd-ux-implementation-planner`) |
+| `.cursor/skills/` | Project skills (`figma-console-mcp`, `hydra-ux-audit`, `prd-ux-implementation-planner`, `hydra-module-builder`) |
 | `.agents/skills/` | External skills (`caveman`, `caveman-compress`) |
 | `Documentation/hydra-ai-pack/` | Portable checklist and skill copy |
 | `Documents/plans/` | Plans from `@plan-orchestrator` |

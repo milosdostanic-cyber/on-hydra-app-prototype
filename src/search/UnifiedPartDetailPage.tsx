@@ -1,7 +1,7 @@
 import { ExportOutlined, LinkOutlined } from '@ant-design/icons';
 import type { CSSProperties, ReactNode } from 'react';
 import { useEffect, useMemo, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useLocation, useParams, useSearchParams } from 'react-router-dom';
 
 import {
   hydraBaseNormal,
@@ -11,6 +11,7 @@ import {
   hydraTitleHeading3,
   hydraTitleHeading4,
 } from '../theme/hydraTypography';
+import { readCatalogPartReturnState } from '../catalog/catalogPartNavigation';
 import { PageBackButton } from '../shell/PageBackButton';
 import {
   Button,
@@ -77,8 +78,10 @@ function SpecField({ label, value }: { label: string; value: string }) {
 export function UnifiedPartDetailPage() {
   const { token } = theme.useToken();
   const { partId } = useParams<{ partId: string }>();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const deepLinkVariant = searchParams.get('variant');
+  const partReturn = readCatalogPartReturnState(location.state);
 
   const part = partId ? unifiedPartByKey(partId) : undefined;
   const detail = useMemo(() => (part ? partDetailContentFor(part) : null), [part]);
@@ -151,7 +154,7 @@ export function UnifiedPartDetailPage() {
 
   return (
     <Space orientation="vertical" size={token.paddingLG} style={{ width: '100%' }}>
-      <PageBackButton to="/bom">Back to BOM</PageBackButton>
+      <PageBackButton to={partReturn.catalogReturnTo}>{partReturn.catalogReturnLabel}</PageBackButton>
 
       {!part ? (
         <Empty description="This part is not in the demo catalog. Try another result from search." />

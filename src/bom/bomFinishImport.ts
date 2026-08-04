@@ -28,7 +28,9 @@ export function buildImportedWorkspaceRows(
   startIndex: number,
 ): BomItem[] {
   const accepted = matchResults.filter((r) => r.lineStatus === 'accepted');
-  return accepted.map((result, i) => {
+  const unusable = matchResults.filter((r) => r.parseUnusable && r.lineStatus !== 'accepted');
+  const toImport = [...accepted, ...unusable];
+  return toImport.map((result, i) => {
     const item = parsedItems.find((p) => p.id === result.itemId);
     return buildWorkspaceRowFromMatch(result, item, startIndex + i + 1);
   });

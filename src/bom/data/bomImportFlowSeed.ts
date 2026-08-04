@@ -1,5 +1,6 @@
-import type { BomItem, BomMatchResult, BomMatchScoreBand } from './types';
+import type { BomItem, BomMatchResult, BomMatchScoreBand, BomParsingReviewColumnProfile } from './types';
 import { mockAscParts } from './mockData';
+import { parsingReviewRowSeverity } from '../bomParsingReviewAlert';
 
 export const PARSING_REVIEW_MIN_ROWS = 6;
 export const PARSING_REVIEW_MAX_ROWS = 10;
@@ -17,7 +18,7 @@ const PARSING_REVIEW_TEMPLATES: ParsingReviewTemplate[] = [
     connectionType: 'Grooved',
     manufacturer: 'Victaulic',
     figureNumber: 'FP7450',
-    upc: '123456',
+    upc: '812345678901',
     quantity: 24,
     confidence: 'high',
   },
@@ -43,7 +44,7 @@ const PARSING_REVIEW_TEMPLATES: ParsingReviewTemplate[] = [
     connectionType: 'Flanged',
     manufacturer: 'Generic',
     figureNumber: 'GV-600-FL',
-    upc: '345678',
+    upc: '345678901234',
     quantity: 12,
     confidence: 'high',
   },
@@ -61,7 +62,7 @@ const PARSING_REVIEW_TEMPLATES: ParsingReviewTemplate[] = [
     confidence: 'low',
   },
   {
-    originalInput: 'Check valve 4" grooved type',
+    originalInput: 'Check valve 4" grooved type · UPC 7.65E+11',
     parsedDescription: 'Check valve, grooved',
     sku: 'Grooved',
     size: '4 inch',
@@ -69,9 +70,14 @@ const PARSING_REVIEW_TEMPLATES: ParsingReviewTemplate[] = [
     connectionType: 'Grooved',
     manufacturer: 'Victaulic',
     figureNumber: 'CV-400-GR',
-    upc: '567890',
+    upc: '765000000000',
     quantity: 6,
-    confidence: 'high',
+    confidence: 'medium',
+    upcParseIssue: {
+      state: 'recovered',
+      rawSource: '7.65E+11',
+      reason: 'scientific-notation',
+    },
   },
   {
     originalInput: 'Flexible drop 1in victaulic style',
@@ -82,7 +88,7 @@ const PARSING_REVIEW_TEMPLATES: ParsingReviewTemplate[] = [
     connectionType: 'Grooved',
     manufacturer: '',
     figureNumber: '',
-    upc: '678901',
+    upc: '678901234567',
     quantity: 32,
     confidence: 'medium',
   },
@@ -95,12 +101,12 @@ const PARSING_REVIEW_TEMPLATES: ParsingReviewTemplate[] = [
     connectionType: 'Threaded',
     manufacturer: 'ASC',
     figureNumber: 'AHV-250-TH',
-    upc: '789012',
+    upc: '789012345678',
     quantity: 8,
     confidence: 'high',
   },
   {
-    originalInput: 'misc coupling part',
+    originalInput: 'UPC only line · 7.65E+11',
     parsedDescription: '',
     sku: '',
     size: '',
@@ -108,9 +114,14 @@ const PARSING_REVIEW_TEMPLATES: ParsingReviewTemplate[] = [
     connectionType: '',
     manufacturer: '',
     figureNumber: '',
-    upc: '',
+    upc: '765000000000',
     quantity: 15,
     confidence: 'low',
+    upcParseIssue: {
+      state: 'recovered',
+      rawSource: '7.65E+11',
+      reason: 'scientific-notation',
+    },
   },
   {
     originalInput: 'Grooved tee 4 inch',
@@ -134,7 +145,7 @@ const PARSING_REVIEW_TEMPLATES: ParsingReviewTemplate[] = [
     connectionType: 'Grooved',
     manufacturer: 'Victaulic',
     figureNumber: 'RC-600-GR',
-    upc: '890123',
+    upc: '890123456789',
     quantity: 14,
     confidence: 'high',
   },
@@ -152,7 +163,7 @@ const PARSING_REVIEW_TEMPLATES: ParsingReviewTemplate[] = [
     confidence: 'low',
   },
   {
-    originalInput: 'Alarm check valve 4 flanged',
+    originalInput: 'Alarm check valve 4 flanged · UPC 1234567',
     parsedDescription: 'Alarm check valve',
     sku: '',
     size: '4 inch',
@@ -160,9 +171,14 @@ const PARSING_REVIEW_TEMPLATES: ParsingReviewTemplate[] = [
     connectionType: 'Flanged',
     manufacturer: '',
     figureNumber: '',
-    upc: '',
+    upc: '1234567',
     quantity: 3,
     confidence: 'medium',
+    upcParseIssue: {
+      state: 'invalid',
+      rawSource: '1234567',
+      reason: 'wrong-length',
+    },
   },
 ];
 
@@ -249,7 +265,7 @@ function parsingReviewTemplateKey(item: BomItem): string {
 }
 
 /** Demo match rows — keyed by template archetype so expanded uploads stay consistent. */
-function matchForItem(item: BomItem): BomMatchResult {
+function matchForItem(item: BomItem, parseUnusable = false): BomMatchResult {
   const pool = mockAscParts;
   const base = (
     top: (typeof pool)[number] | undefined,
@@ -264,8 +280,13 @@ function matchForItem(item: BomItem): BomMatchResult {
     topMatch: top,
     lineStatus,
     source,
+    ...(parseUnusable ? { parseUnusable: true } : {}),
     ...extra,
   });
+
+  if (parseUnusable) {
+    return base(undefined, [], 'pending', 'auto', { parseUnusable: true });
+  }
 
   switch (parsingReviewTemplateKey(item)) {
     case 'item-1': {
@@ -412,6 +433,11 @@ function matchForItem(item: BomItem): BomMatchResult {
   }
 }
 
-export function createInitialMatchResults(parsedItems: BomItem[]): BomMatchResult[] {
-  return parsedItems.map(matchForItem);
+export function createInitialMatchResults(
+  parsedItems: BomItem[],
+  profile: BomParsingReviewColumnProfile = 'description',
+): BomMatchResult[] {
+  return parsedItems.map((item) =>
+    matchForItem(item, parsingReviewRowSeverity(item, profile) === 'error'),
+  );
 }

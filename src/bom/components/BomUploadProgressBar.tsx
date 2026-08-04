@@ -10,14 +10,14 @@ export const BOM_UPLOAD_FLOW_STEPS = [
 
 export type BomUploadFlowStepIndex = 0 | 1 | 2;
 
-export type BomUploadProgressStatusTone = 'warning' | 'success';
+export type BomUploadProgressStatusTone = 'warning' | 'success' | 'error';
 
 type BomUploadProgressBarProps = {
   fileName: string;
   currentStep: BomUploadFlowStepIndex;
   /** Step-specific status tag — mapping: fields mapped; parsing: items ready; matching: parts reviewed. Omit to hide. */
   statusLabel?: string;
-  /** Tag chrome — warning for in-progress mapping; success when all lines reviewed (`5204:211018`). */
+  /** Tag chrome — warning for in-progress; success when ready; error when lines can't be matched. */
   statusTone?: BomUploadProgressStatusTone;
   /** All three steps show finished checkmarks (matching complete — Figma `5204:211018`). */
   stepsComplete?: boolean;
@@ -43,11 +43,17 @@ export function BomUploadProgressBar({
           borderColor: token.colorSuccessBorder,
           background: token.colorSuccessBg,
         }
-      : {
-          color: token.colorWarningText,
-          borderColor: token.colorWarningBorderHover,
-          background: token.colorBgContainer,
-        };
+      : statusTone === 'error'
+        ? {
+            color: token.colorErrorText,
+            borderColor: token.colorErrorBorder,
+            background: token.colorErrorBg,
+          }
+        : {
+            color: token.colorWarningText,
+            borderColor: token.colorWarningBorderHover,
+            background: token.colorBgContainer,
+          };
 
   return (
     <Flex

@@ -15,6 +15,10 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useHydraColorMode } from '../context/HydraThemeContext';
+import {
+  resolveActiveConstructionProjectId,
+  useActiveProject,
+} from '../context/ActiveProjectContext';
 import { ActionTrailMenuGuidanceTag } from '../search/components/ActionTrailMenuGuidanceTag';
 import { shellLayout } from '../theme/hydraAlias';
 import {
@@ -27,6 +31,7 @@ import type { MenuProps } from '../ui/antd';
 
 import { ConnectedSidebarBrand } from './ConnectedSidebarBrand';
 import { getLastScopedProjectId } from './lastProjectScope';
+import { productCatalogHomePath } from '../catalog/productCatalogNavigation';
 
 const { Sider } = Layout;
 
@@ -93,6 +98,7 @@ export function AppShellSidebar() {
   const { token } = theme.useToken();
   const location = useLocation();
   const navigate = useNavigate();
+  const { projectId: activeProjectId } = useActiveProject();
 
   const primaryMenuItems: MenuProps['items'] = useMemo(
     () => [
@@ -119,9 +125,12 @@ export function AppShellSidebar() {
       navigate('/dashboard');
       return;
     }
+    // Part Search landing = product catalog (cover + Featured Parts + Categories). Always
+    // resolve a construction project — bare `/catalog` is the older search-first home.
+    const catalogProjectId = resolveActiveConstructionProjectId(activeProjectId ?? pid);
     const routes: Record<string, string> = {
       dash: '/dashboard',
-      'part-search': pid ? `/projects/${pid}/catalog` : '/catalog',
+      'part-search': productCatalogHomePath(catalogProjectId),
       content: `/projects/${pid}/content`,
       bom: '/bom',
       spec: `/projects/${pid}/sales-brace`,

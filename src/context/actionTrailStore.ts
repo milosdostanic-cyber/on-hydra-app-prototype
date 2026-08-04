@@ -237,10 +237,12 @@ export function markItemViewed(
 
 /**
  * Clears L1 badge for one sub-project while keeping item "New" tags for this visit.
- * Used by Submittal (expand package). BOM must not call this on workspace open — badge
- * clears only via `markItemViewed` on figure link click (UATL-350).
+ * Used by Submittal (expand package). BOM must not call this — badge clears only via
+ * `markItemViewed` on figure link click (UATL-350).
  */
 export function markSubProjectViewed(module: ActionTrailModule, subProjectId: string) {
+  // BOM count persists until the user opens the added part (figure link).
+  if (module === 'bom') return;
   setState((prev) => ({
     ...prev,
     entries: prev.entries.map((e) => {
@@ -250,7 +252,23 @@ export function markSubProjectViewed(module: ActionTrailModule, subProjectId: st
   }));
 }
 
+/**
+ * Module-open dismiss for L1 badge (Content / Submittal).
+ * BOM is excluded — L1 count stays until `markItemViewed` (figure click).
+ */
 export function consumeForModule(module: ActionTrailModule, subProjectId?: string) {
+  if (module === 'bom') {
+    setState((prev) => ({
+      ...prev,
+      entries: prev.entries.map((e) => {
+        if (e.module !== module) return e;
+        if (subProjectId && e.subProjectId !== subProjectId) return e;
+        if (e.seen) return e;
+        return { ...e, newTagActive: !e.highlightDismissed };
+      }),
+    }));
+    return;
+  }
   setState((prev) => ({
     ...prev,
     entries: prev.entries.map((e) => {

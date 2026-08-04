@@ -1,9 +1,8 @@
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-import { catalogPartReturnFrom } from './catalogPartNavigation';
-import { featuredPartContentListingPath } from './featuredPartContentListing';
+import { catalogPartReturnFrom, unifiedSearchPartPath } from './catalogPartNavigation';
 
 import {
   FEATURED_PARTS_MAX,
@@ -58,7 +57,6 @@ export function FeaturedParts({ contextNote, emphasized = false, panel = false }
     () => catalogPartReturnFrom(`${location.pathname}${location.search}`),
     [location.pathname, location.search],
   );
-  const { projectId } = useParams<{ projectId?: string }>();
   const isProjectCatalogHome = useMemo(() => {
     const n = location.pathname.replace(/\/+$/, '') || '/';
     return /^\/projects\/[^/]+\/catalog$/.test(n);
@@ -141,7 +139,7 @@ export function FeaturedParts({ contextNote, emphasized = false, panel = false }
     <>
       Hand-picked catalog entries.{' '}
       {isProjectCatalogHome
-        ? 'Open a card to jump straight to that part’s listing (variants table) in this product catalog.'
+        ? 'Open a card to add the part to BOM, Submittal, or Download Center.'
         : 'Open a card for downloads and submittal actions on the part page.'}
       {contextNote ? <> {contextNote}</> : null}
     </>
@@ -254,12 +252,7 @@ export function FeaturedParts({ contextNote, emphasized = false, panel = false }
           }}
         >
           {pagedParts.map((part) => {
-          const catalogPartPath = `/catalog/parts/${encodeURIComponent(part.key)}`;
-          const contentListingPath =
-            isProjectCatalogHome && projectId
-              ? featuredPartContentListingPath(projectId, part.key)
-              : undefined;
-          const partPath = contentListingPath ?? catalogPartPath;
+          const partPath = unifiedSearchPartPath(part.key);
 
           return (
             <Col key={part.key} xs={24} sm={12} lg={8} style={{ display: 'flex' }}>
@@ -267,9 +260,7 @@ export function FeaturedParts({ contextNote, emphasized = false, panel = false }
                 part={part}
                 isHighlighted={highlightedKey === part.key}
                 onLightSurface={isProminent}
-                onOpen={() =>
-                  navigate(partPath, contentListingPath ? undefined : { state: partReturnState })
-                }
+                onOpen={() => navigate(partPath, { state: partReturnState })}
                 onHighlight={() => setHighlightedKey(part.key)}
                 onUnhighlight={() => setHighlightedKey(null)}
               />

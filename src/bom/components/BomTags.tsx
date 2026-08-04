@@ -149,7 +149,7 @@ export function BomMatchLineStatusTag({ status }: { status: BomMatchLineStatus }
 function reviewDisplayBadgeStatus(status: BomReviewDisplayStatus): AntBadgeStatus {
   if (status === 'confirmed' || status === 'chosen') return 'success';
   if (status === 'skipped') return 'warning';
-  if (status === 'unresolved' || status === 'needs-sku') return 'error';
+  if (status === 'unresolved' || status === 'needs-sku' || status === 'cant-match') return 'error';
   return 'processing';
 }
 

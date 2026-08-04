@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import {
+  clearFixedUpcParseIssue,
   isParsingReviewLowConfidenceRow,
+  isParsingReviewUnusableRow,
   parsingReviewMissingFieldsTag,
+  parsingReviewRowSeverity,
 } from '../bomParsingReviewAlert';
 import { buildParsingReviewEditableFields, parsingReviewEditableRowPatch } from '../bomParsingReviewColumns';
 import type { BomFieldAliasMap } from '../bomFieldMappingConfig';
@@ -12,7 +15,7 @@ import {
   hydraBaseNormal,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
-import { Alert, Button, Col, Flex, Form, Modal, Row, Space, Typography, message, theme } from '../../ui/antd';
+import { Alert, Button, Col, Flex, Form, Modal, Row, Space, Typography, theme } from '../../ui/antd';
 
 /** Figma modal body width (`5506:187558` → `🎰 modal` frame). */
 const PARSING_REVIEW_EDIT_MODAL_WIDTH = 681;
@@ -53,8 +56,18 @@ export function BomParsingReviewRowDrawer({
     }
   }, [open, row]);
 
+  const rowSeverity = useMemo(
+    () => (draft ? parsingReviewRowSeverity(draft, profile) : 'ok'),
+    [draft, profile],
+  );
+
   const showIncompleteAlert = useMemo(
     () => (draft ? isParsingReviewLowConfidenceRow(draft, profile) : false),
+    [draft, profile],
+  );
+
+  const isUnusable = useMemo(
+    () => (draft ? isParsingReviewUnusableRow(draft, profile) : false),
     [draft, profile],
   );
 
@@ -66,13 +79,19 @@ export function BomParsingReviewRowDrawer({
   if (!draft) return null;
 
   function handleFieldUpdate(rowId: string, patch: Partial<BomItem>) {
-    setDraft((prev) => (prev && prev.id === rowId ? { ...prev, ...patch } : prev));
+    setDraft((prev) => {
+      if (!prev || prev.id !== rowId) return prev;
+      const merged = { ...prev, ...patch };
+      return {
+        ...merged,
+        upcParseIssue: clearFixedUpcParseIssue(prev, patch),
+      };
+    });
   }
 
   function handleSave() {
     if (!draft) return;
     onSave(draft.id, parsingReviewEditableRowPatch(draft, profile));
-    message.success('Row updated.');
     onClose();
   }
 
@@ -99,11 +118,24 @@ export function BomParsingReviewRowDrawer({
       <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
         {missingFieldsTag ? (
           <Flex align="center" gap={token.marginSM} wrap="wrap">
-            <HydraTag tone="warning">{missingFieldsTag}</HydraTag>
+            <HydraTag tone={isUnusable ? 'error' : 'warning'}>{missingFieldsTag}</HydraTag>
           </Flex>
         ) : null}
 
-        {showIncompleteAlert ? (
+        {isUnusable ? (
+          <Alert
+            type="error"
+            showIcon
+            message="We can't match this line"
+            description={
+              <Typography.Paragraph style={{ ...hydraTextStyleToReactCss(hydraBaseNormal), marginBottom: 0 }}>
+                Everything we&apos;d normally use to identify a part is missing or unreadable on this line.
+                Add a description, SKU, or UPC and we&apos;ll try to match it. If you continue without changes,
+                this line is imported as unmatched and you can resolve it in the workspace.
+              </Typography.Paragraph>
+            }
+          />
+        ) : showIncompleteAlert ? (
           <Alert
             type="warning"
             showIcon
@@ -111,8 +143,8 @@ export function BomParsingReviewRowDrawer({
             description={
               <Typography.Paragraph style={{ ...hydraTextStyleToReactCss(hydraBaseNormal), marginBottom: 0 }}>
                 We could not parse everything we usually need. If you have manufacturer, size, SKU, or figure
-                number details, add them here — otherwise expect a weaker match or no suggested part. You can still
-                continue without changes.
+                number details, add them here — otherwise expect a weaker match or no suggested part. You can
+                still continue without changes.
               </Typography.Paragraph>
             }
           />
@@ -120,6 +152,7 @@ export function BomParsingReviewRowDrawer({
 
         <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
           Edit any value shown in the table for this row.
+          {rowSeverity === 'ok' ? null : ' Changes update match readiness as you type.'}
         </Typography.Text>
 
         <Form layout="vertical" requiredMark={false}>

@@ -1,5 +1,5 @@
-import { isReadyToConfirmMatch, matchRequiresSkuSelection } from './bomMatchSkuUtils';
 import type { BomMatchResult } from './data/types';
+import { isReadyToConfirmMatch, matchRequiresSkuSelection } from './bomMatchSkuUtils';
 
 /** User-facing review status derived from match row state (no new persisted fields). */
 export type BomReviewDisplayStatus =
@@ -8,7 +8,8 @@ export type BomReviewDisplayStatus =
   | 'skipped'
   | 'unresolved'
   | 'needs-sku'
-  | 'ready-to-confirm';
+  | 'ready-to-confirm'
+  | 'cant-match';
 
 export type MatchingReviewSummary = {
   total: number;
@@ -18,11 +19,14 @@ export type MatchingReviewSummary = {
   unresolved: number;
   needsSku: number;
   readyToConfirm: number;
+  /** Parse-unusable lines — not counted in pending / needs attention. */
+  cantMatch: number;
   pending: number;
   incomplete: number;
 };
 
 export function deriveReviewDisplayStatus(row: BomMatchResult): BomReviewDisplayStatus {
+  if (row.parseUnusable) return 'cant-match';
   if (row.lineStatus === 'skipped') return 'skipped';
   if (row.lineStatus === 'accepted') {
     return row.source === 'manual' ? 'chosen' : 'confirmed';
@@ -42,6 +46,7 @@ export function computeMatchingReviewSummary(results: BomMatchResult[]): Matchin
     unresolved: 0,
     needsSku: 0,
     readyToConfirm: 0,
+    cantMatch: 0,
     pending: 0,
     incomplete: 0,
   };
@@ -57,6 +62,9 @@ export function computeMatchingReviewSummary(results: BomMatchResult[]): Matchin
         break;
       case 'skipped':
         summary.skipped += 1;
+        break;
+      case 'cant-match':
+        summary.cantMatch += 1;
         break;
       case 'unresolved':
         summary.unresolved += 1;
@@ -88,4 +96,5 @@ export const reviewDisplayStatusLabel: Record<BomReviewDisplayStatus, string> = 
   unresolved: 'Unresolved',
   'needs-sku': 'Needs exact product',
   'ready-to-confirm': 'Ready to confirm',
+  'cant-match': "Can't be matched",
 };

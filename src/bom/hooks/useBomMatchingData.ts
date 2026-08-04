@@ -54,7 +54,9 @@ export function useBomMatchingData(bomProjectId: string) {
     const total = matchResults.length;
     const accepted = matchResults.filter((r) => r.lineStatus === 'accepted').length;
     const skipped = matchResults.filter((r) => r.lineStatus === 'skipped').length;
-    const pending = matchResults.filter((r) => r.lineStatus === 'pending').length;
+    const pending = matchResults.filter(
+      (r) => r.lineStatus === 'pending' && !r.parseUnusable,
+    ).length;
     const manual = matchResults.filter((r) => r.source === 'manual').length;
     return { total, accepted, skipped, pending, manual };
   }, [matchResults]);

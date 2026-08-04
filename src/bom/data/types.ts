@@ -17,6 +17,23 @@ export type BomItemConfidence = 'high' | 'medium' | 'low';
 
 export type BomItemMatchStatus = 'matched' | 'pending' | 'needs-review' | 'confirmed';
 
+/** Parser-reported UPC problem from scientific notation or another invalid UPC value. */
+export type BomUpcParseIssue = {
+  state: 'recovered' | 'invalid';
+  /** Raw UPC text from the uploaded source cell. */
+  rawSource?: string;
+  reason?:
+    | 'scientific-notation'
+    | 'wrong-length'
+    | 'check-digit'
+    | 'truncated'
+    | 'ambiguous'
+    | 'leading-zeros-stripped';
+};
+
+/** Row-level match outlook derived from the UPC issue and current identifiers. */
+export type BomParsingRowSeverity = 'ok' | 'warning' | 'error';
+
 export interface BomItem {
   id: string;
   rowNumber: number;
@@ -48,6 +65,8 @@ export interface BomItem {
   pendingUploadId?: string;
   pendingUploadFileName?: string;
   importMatchLineStatus?: BomMatchLineStatus;
+  /** UPC-specific parser issue; row severity is derived rather than persisted. */
+  upcParseIssue?: BomUpcParseIssue;
 }
 
 export type BomParsingReviewColumnProfile = 'description' | 'sku-only' | 'upc';
@@ -126,6 +145,11 @@ export interface BomMatchResult {
   selectedVariantId?: string;
   /** Parent figure reference kept after SKU selection. */
   figureNumber?: string;
+  /**
+   * Parsing left no trustworthy identifier — line cannot be auto-matched.
+   * Excluded from matching "needs attention" pending count; imports as unmatched.
+   */
+  parseUnusable?: boolean;
 }
 
 export interface GuidedQuestion {

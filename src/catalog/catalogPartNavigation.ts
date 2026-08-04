@@ -9,12 +9,26 @@ const DEFAULT_RETURN: CatalogPartLocationState = {
   catalogReturnLabel: 'Back to results',
 };
 
+/** Unified part detail (Add to BOM / Submittal / Download Center). */
+export function unifiedSearchPartPath(partKey: string): string {
+  return `/search/parts/${encodeURIComponent(partKey)}`;
+}
+
 /** Build return target from the screen the user navigated from (path + optional search). */
 export function catalogPartReturnFrom(originPath: string): CatalogPartLocationState {
   const [pathname, search = ''] = originPath.split('?');
   const path = pathname.replace(/\/+$/, '') || '/';
   const withSearch = search ? `${path}?${search}` : path;
 
+  if (/^\/projects\/[^/]+\/catalog(\/|$)/.test(path)) {
+    const homeMatch = path.match(/^(\/projects\/[^/]+\/catalog)/);
+    const home = homeMatch?.[1] ?? path;
+    const onHome = path === home || path === `${home}/`;
+    return {
+      catalogReturnTo: onHome ? home : withSearch,
+      catalogReturnLabel: onHome ? 'Back to Part Search' : 'Back to catalog',
+    };
+  }
   if (/^\/projects\/[^/]+\/content/.test(path)) {
     const homeMatch = path.match(/^(\/projects\/[^/]+\/content)/);
     const home = homeMatch?.[1] ?? path;
@@ -25,6 +39,9 @@ export function catalogPartReturnFrom(originPath: string): CatalogPartLocationSt
   }
   if (path.startsWith('/catalog/results')) {
     return { catalogReturnTo: withSearch, catalogReturnLabel: 'Back to results' };
+  }
+  if (path.startsWith('/search/results')) {
+    return { catalogReturnTo: withSearch || '/search/results?q=all', catalogReturnLabel: 'Back to results' };
   }
   return DEFAULT_RETURN;
 }

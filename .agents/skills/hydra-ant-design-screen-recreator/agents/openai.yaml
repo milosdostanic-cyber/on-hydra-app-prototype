@@ -1,0 +1,4 @@
+interface:
+  display_name: "Hydra Ant Design Screen Recreator"
+  short_description: "Recreate screens using only Hydra Ant DS"
+  default_prompt: "Use $hydra-ant-design-screen-recreator to rebuild this reference screen in Figma using only Hydra Ant Design DS assets and tokens."

@@ -15,13 +15,16 @@ type EditableTextProps = {
   onChange: (next: string) => void;
   /** Figma attention state — yellow input border when the parser left this field empty. */
   needsAttention?: boolean;
+  /** Override status — use error for recovered/invalid values. */
+  status?: 'warning' | 'error';
 };
 
-export function editableTableText({ value, onChange, needsAttention }: EditableTextProps) {
+export function editableTableText({ value, onChange, needsAttention, status }: EditableTextProps) {
+  const resolvedStatus = status ?? (needsAttention ? 'warning' : undefined);
   return (
     <Input
       value={value ?? ''}
-      status={needsAttention ? 'warning' : undefined}
+      status={resolvedStatus}
       onChange={(e) => onChange(e.target.value)}
     />
   );
@@ -31,16 +34,24 @@ type EditableNumberProps = {
   value: number | undefined;
   onChange: (next: number | null) => void;
   needsAttention?: boolean;
+  status?: 'warning' | 'error';
   min?: number;
 };
 
-export function editableTableNumber({ value, onChange, needsAttention, min = 0 }: EditableNumberProps) {
+export function editableTableNumber({
+  value,
+  onChange,
+  needsAttention,
+  status,
+  min = 0,
+}: EditableNumberProps) {
+  const resolvedStatus = status ?? (needsAttention ? 'warning' : undefined);
   return (
     <InputNumber
       min={min}
       style={{ width: '100%' }}
       value={value}
-      status={needsAttention ? 'warning' : undefined}
+      status={resolvedStatus}
       onChange={(n) => onChange(typeof n === 'number' ? n : null)}
     />
   );

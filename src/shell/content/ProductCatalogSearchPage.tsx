@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { CatalogThumbnailPlaceholder } from '../../catalog/CatalogThumbnailPlaceholder';
+import { catalogDemoKeyForHierarchyPartId } from '../../catalog/featuredPartContentListing';
+import { catalogPartReturnFrom, unifiedSearchPartPath } from '../../catalog/catalogPartNavigation';
 import { searchCatalogParts } from '../../catalog/productCatalogHierarchy.demo';
 import {
   productCatalogHomePath,
-  productCatalogPartVariantsPath,
   productCatalogSearchPath,
 } from '../../catalog/productCatalogNavigation';
 import { shellLayout } from '../../theme/hydraAlias';
@@ -31,9 +32,11 @@ export function ProductCatalogSearchPage() {
   const { token } = theme.useToken();
   const { projectId = '' } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [params] = useSearchParams();
   const q = params.get('q') ?? '';
   const [page, setPage] = useState(1);
+  const partReturnState = catalogPartReturnFrom(`${location.pathname}${location.search}`);
 
   const hits = useMemo(() => searchCatalogParts(q), [q]);
 
@@ -72,13 +75,8 @@ export function ProductCatalogSearchPage() {
         <Flex align="center" gap={token.marginSM}>
           <CatalogThumbnailPlaceholder />
           <Link
-            to={productCatalogPartVariantsPath(
-              projectId,
-              row.categoryId,
-              row.subcategoryId,
-              row.productLineId,
-              row.partId,
-            )}
+            to={unifiedSearchPartPath(catalogDemoKeyForHierarchyPartId(row.partId))}
+            state={partReturnState}
           >
             {row.name}
           </Link>

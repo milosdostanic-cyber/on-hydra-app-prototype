@@ -120,8 +120,22 @@ export function useBomFinishImport({
     }
 
     const confirmedCount = reviewSummary.confirmed + reviewSummary.chosen;
-    if (confirmedCount === 0) {
+    if (confirmedCount === 0 && reviewSummary.cantMatch === 0) {
       message.warning('Confirm at least one match before importing.');
+      return;
+    }
+
+    if (confirmedCount === 0 && reviewSummary.cantMatch > 0) {
+      modal.confirm({
+        title: `${reviewSummary.cantMatch} line${reviewSummary.cantMatch === 1 ? '' : 's'} can't be matched`,
+        icon: <ExclamationCircleOutlined style={{ color: token.colorWarning }} />,
+        content:
+          'No parts were confirmed. Lines that could not be matched will still be imported as unmatched so nothing is lost — you can pick parts for them in the workspace.',
+        okText: 'Import unmatched lines',
+        cancelText: 'Go back',
+        centered: true,
+        onOk: runImport,
+      });
       return;
     }
 

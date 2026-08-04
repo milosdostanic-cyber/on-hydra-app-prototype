@@ -110,6 +110,11 @@ function BomMatchingStatsStrip({
       <Flex align="center" style={cardShellStyle(token.colorWarning)}>
         {statInner('Needs attention', needsAttention)}
       </Flex>
+      {summary.cantMatch > 0 ? (
+        <Flex align="center" style={cardShellStyle(token.colorError)}>
+          {statInner("Can't be matched", summary.cantMatch)}
+        </Flex>
+      ) : null}
       <Flex align="center" style={cardShellStyle(token.colorWarningBorder)}>
         {statInner('Skipped', summary.skipped)}
       </Flex>
@@ -479,6 +484,7 @@ export function BomMatchingPage() {
                 { value: 'unresolved', label: 'Unresolved' },
                 { value: 'needs-sku', label: 'Needs SKU' },
                 { value: 'ready-to-confirm', label: 'Ready to confirm' },
+                { value: 'cant-match', label: "Can't be matched" },
               ]}
             />
             {skippedCount > 0 ? (

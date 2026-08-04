@@ -1,11 +1,13 @@
 import { DownloadOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 
 import { CatalogThumbnailPlaceholder } from '../../catalog/CatalogThumbnailPlaceholder';
+import { catalogDemoKeyForHierarchyPartId } from '../../catalog/featuredPartContentListing';
+import { catalogPartReturnFrom, unifiedSearchPartPath } from '../../catalog/catalogPartNavigation';
 import { flattenLeafPartsInCategory, catalogCategoryById } from '../../catalog/productCatalogHierarchy.demo';
 import { BomPageHeader } from '../../bom/layout/BomPageHeader';
-import { productCatalogHomePath, productCatalogPartVariantsPath } from '../../catalog/productCatalogNavigation';
+import { productCatalogHomePath } from '../../catalog/productCatalogNavigation';
 import { shellLayout } from '../../theme/hydraAlias';
 import { PageBackButton } from '../PageBackButton';
 import { Button, Empty, Flex, Pagination, Space, Table, Typography, message, theme } from '../../ui/antd';
@@ -28,7 +30,9 @@ type Row = {
 export function CategoryAllPartsPage() {
   const { token } = theme.useToken();
   const { projectId = '', categoryId = '' } = useParams<{ projectId: string; categoryId: string }>();
+  const location = useLocation();
   const [page, setPage] = useState(1);
+  const partReturnState = catalogPartReturnFrom(`${location.pathname}${location.search}`);
 
   const hits = useMemo(() => flattenLeafPartsInCategory(categoryId), [categoryId]);
 
@@ -64,13 +68,8 @@ export function CategoryAllPartsPage() {
         <Flex align="center" gap={token.marginSM}>
           <CatalogThumbnailPlaceholder />
           <Link
-            to={productCatalogPartVariantsPath(
-              projectId,
-              row.categoryId,
-              row.subcategoryId,
-              row.productLineId,
-              row.partId,
-            )}
+            to={unifiedSearchPartPath(catalogDemoKeyForHierarchyPartId(row.partId))}
+            state={partReturnState}
           >
             {row.name}
           </Link>

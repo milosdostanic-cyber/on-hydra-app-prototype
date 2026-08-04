@@ -273,6 +273,7 @@ function resolveAutoAcceptedRow(row: BomMatchResult, best: SkuMatchCardItem): Bo
 }
 
 export function rowHasHighConfidenceAutoMatch(row: BomMatchResult): boolean {
+  if (row.parseUnusable) return false;
   if (row.lineStatus !== 'pending') return false;
   return bestHighConfidenceSkuCard(row) != null;
 }
@@ -284,6 +285,7 @@ export function countHighConfidenceAutoMatchableRows(results: BomMatchResult[]):
 /** Accept highest-score high-confidence SKU per pending row; skip medium/low or unmatched lines. */
 export function applyAutoMatchHighConfidence(results: BomMatchResult[]): BomMatchResult[] {
   return results.map((row) => {
+    if (row.parseUnusable) return row;
     if (row.lineStatus !== 'pending') return row;
     const best = bestHighConfidenceSkuCard(row);
     if (!best) return { ...row, lineStatus: 'skipped' as const };
