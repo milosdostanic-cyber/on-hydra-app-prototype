@@ -4,6 +4,8 @@ For each entry: **name**, **location**, **purpose**, **what it does**, **how to 
 
 In chat: `@` + name or file path.
 
+**Plain-language guide (non-technical):** [`skills-and-rules-catalog.md`](./skills-and-rules-catalog.md)
+
 ---
 
 # RULES
@@ -162,7 +164,7 @@ Rules live in `.cursor/rules/*.mdc`. Cursor loads them automatically when `alway
   - Produces scope audit, gap table, phases, guardrails, acceptance checklist.
   - Writes plan: `Documents/plans/YYYY-MM-DD-<slug>-plan.md` (BOM: `Documents/Bom/…`).
   - **Embeds implementation invocation** — per-phase `@` skills and rules and copy-paste prompts for a later chat.
-  - Figma types use only `figma-console-mcp` — not official MCP.
+  - Figma types use Official MCP by default (`@figma-use`); Console only when user explicitly requests `@figma-console-mcp`.
   - **Only allowed file writes:** plans under `Documents/`. Does not touch `src/`, theme, or config.
 - **How to invoke:** `@plan-orchestrator` + task description + `Plan only. No implementation.`
 
@@ -177,15 +179,16 @@ Skills are folders with `SKILL.md`. Cursor loads them when attached or registere
 ## figma-console-mcp
 
 - **Location:** `.cursor/skills/figma-console-mcp/SKILL.md`
-- **Purpose:** **Only** allowed Figma MCP for this project — TJ Pitre Figma Console (`user-figma-console`), not official Figma MCP.
+- **Purpose:** **Opt-in** Figma Console MCP (`user-figma-console`) — only when the user explicitly requests Console instead of Official MCP.
 - **What it does:**
-  - All Figma read/write via `user-figma-console` (Desktop Bridge plugin).
-  - Forbids `get_design_context`, `use_figma`, `generate_figma_design`, and other official tools.
+  - Figma read/write via `user-figma-console` (Desktop Bridge plugin) when active.
+  - Forbids official tools for the same Console-scoped task.
   - Maps tasks to Console tools: `figma_get_component_for_development`, `figma_navigate`, `figma_get_design_changes`, `figma_take_screenshot`, etc.
-  - Before first call: `figma_get_status` (probe) — if disconnected, stops; does not fall back to official MCP.
+  - Before first call: `figma_get_status` (probe) — if disconnected, stops.
   - `node-id` format: `695:313` (colon), not hyphen.
-  - Limits scope to user-listed nodes or `figma_get_design_changes` output.
-- **How to invoke:** `@figma-console-mcp` — required for any Figma work in this repo
+- **How to invoke:** Only when you want Console: `@figma-console-mcp`
+
+**Default Figma routing:** see rule `figma-mcp-routing.mdc` and skill `figma-use` (`.cursor/skills/figma-use/`).
 
 ---
 
@@ -203,6 +206,38 @@ Skills are folders with `SKILL.md`. Cursor loads them when attached or registere
 
 ---
 
+## hydra-ux-audit
+
+- **Location:** `.cursor/skills/hydra-ux-audit/SKILL.md`
+- **Purpose:** **Universal quality gate** for any UI task — build, review, fix, or improve. Orchestrates all Hydra UX/rules/skills.
+- **What it does:**
+  - Applies to **every** screen/flow change (not only explicit "audit" requests).
+  - **North star triad:** effortless wayfinding (user never guesses) + PRD must-haves on default path + working functionality.
+  - **Non-negotiables:** adopted patterns, `src/ui/antd.ts`, tokens, `figmaTypography`, 5-second test, functional logic.
+  - **9 layers:** user-friendliness, functionality/logic, pattern parity, tokens/typography, components, **sizes/control consistency (buttons)**, states, Figma (if provided), meta gate.
+  - Self-audits after implement; fixes P0/P1 before closing task.
+  - Scored report (P0/P1/P2) with `path:line` evidence when reviewing or when issues found.
+  - Routes DS-wide work to `@ds-parity-auditor`; does **not** use `ui-ux-pro-max` or official Figma MCP.
+- **How to invoke:** `@hydra-ux-audit` + describe task (file, flow, Figma, or "my changes"); optional `Audit only`
+
+---
+
+## hydra-module-builder
+
+- **Location:** `.cursor/skills/hydra-module-builder/SKILL.md`
+- **Purpose:** Build a new Hydra module from a PRD so it follows the existing application's UX language, architecture, and implementation patterns.
+- **What it does:**
+  - Reads the validated capabilities map and performs targeted repository discovery before planning code.
+  - Studies complete screens and workflows, including layout composition, navigation, state, responsive behavior, and shared component usage.
+  - Ranks candidate references by semantic fit and current active usage; rejects legacy, orphaned, or inconsistent patterns.
+  - Maps every PRD requirement to existing modules, components, interaction patterns, or clearly scoped new local work.
+  - Asks only questions that materially affect architecture, permissions, data, workflow, or shared/global behavior.
+  - Produces a concise module analysis and file-scoped plan before implementation.
+  - Implements only when explicitly authorized, then runs `@hydra-ux-audit`, typecheck, tests, lint, build as applicable, and a final scope check.
+- **How to invoke:** `@hydra-module-builder` + PRD/spec path or text + `analyze`, `plan`, or `implement`.
+
+---
+
 ## hydra-ui-tokens-and-components
 
 - **Location:** `Documentation/hydra-ai-pack/skills/hydra-ui-tokens-and-components/SKILL.md`
@@ -215,6 +250,21 @@ Skills are folders with `SKILL.md`. Cursor loads them when attached or registere
   - Local screen composition only when no pattern exists.
   - Same intent as `hydra-ui-tokens` + `ux-guardrails` rules (rules win if they differ).
 - **How to invoke:** `@hydra-ui-tokens-and-components`
+
+---
+
+## hydra-ant-design-screen-recreator
+
+- **Location:** `.agents/skills/hydra-ant-design-screen-recreator/SKILL.md`
+- **Purpose:** Recreate reference screens in Figma using only the published Hydra Ant Design - DS library.
+- **What it does:**
+  - Treats screenshots, mocks, app routes, and Figma frames as visual/content context only.
+  - Restricts all library searches to the exact Hydra DS library key.
+  - Requires linked Hydra component/icon instances, Auto Layout, published text styles, and exact variable/effect bindings.
+  - Forbids foreign design systems, local fallbacks, raw SVGs, detached instances, new tokens/styles/components, and raw design values.
+  - Stops before writing when exact Hydra coverage is missing; never approximates.
+  - Runs provenance, binding, Auto Layout, visual parity, and `hydra-ux-audit` gates before completion.
+- **How to invoke:** `@hydra-ant-design-screen-recreator` + reference screen + target Figma file/node.
 
 ---
 
@@ -273,8 +323,9 @@ Skills are folders with `SKILL.md`. Cursor loads them when attached or registere
 
 | Avoid | Use instead |
 |-------|-------------|
-| Official Figma MCP (`plugin-figma-figma`) | `figma-console-mcp` skill |
-| Skills: `figma-implement-design`, `figma-use`, `figma-generate-design` | `figma-console-mcp` + `hydra-design-to-code` |
+| Official Figma MCP (`plugin-figma-figma`) — default | `figma-use` skill + `figma-mcp-routing` rule |
+| Skills: `figma-use`, `figma-generate-design` | `figma-use` + `hydra-design-to-code` |
+| Figma Console MCP (opt-in) | `figma-console-mcp` skill |
 
 **Console prerequisite:** Figma Desktop open + Desktop Bridge plugin in the file.
 
@@ -303,6 +354,16 @@ Implement Phase 1 only from: Documents/plans/2026-06-08-example-plan.md
 Allowed files: [from plan]
 ```
 
+**UX audit + fix (screen / flow / PR diff):**
+```
+@hydra-ux-audit
+@hydra-ui-tokens-and-components
+
+Mode: screen
+Target: src/bom/pages/BomMatchingPage.tsx
+Audit and fix P0/P1. Allowed files: [from scope]
+```
+
 **DS / token audit:**
 ```
 @ds-parity-auditor @figma-console-mcp @figma-repo-parity
@@ -315,7 +376,7 @@ Allowed files: [from plan]
 | Folder | Contents |
 |--------|----------|
 | `.cursor/rules/` | All rules (`.mdc`) |
-| `.cursor/skills/` | Project skills (`figma-console-mcp`, `prd-ux-implementation-planner`) |
+| `.cursor/skills/` | Project skills (`figma-console-mcp`, `prd-ux-implementation-planner`, `hydra-ux-audit`, `hydra-module-builder`) |
 | `.agents/skills/` | External skills (`caveman`, `caveman-compress`) |
 | `Documentation/hydra-ai-pack/` | Portable checklist and skill copy |
 | `Documents/plans/` | Plans from `@plan-orchestrator` |
@@ -326,4 +387,4 @@ Allowed files: [from plan]
 
 ---
 
-*Update this file when adding a new rule or skill.*
+*Update this file when adding a new rule or skill. See also [`skills-and-rules-catalog.md`](./skills-and-rules-catalog.md) for the same catalog in plain English (2 paragraphs per entry).*

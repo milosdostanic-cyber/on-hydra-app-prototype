@@ -49,16 +49,30 @@ export function bluePrimaryStep(
   return ramp[n - 1];
 }
 
+/**
+ * Softer primary fill for chips / mapped-column highlights — lighter than `primary-1` (`colorPrimaryBg`).
+ * Light: ~6% `primary-6` on white; border uses `primary-1`.
+ */
+export const bluePrimaryBgSubtleLight = '#E6F4F8' as const;
+export const bluePrimaryBorderSubtleLight = bluePrimaryPrimitiveLight[0];
+
+export const bluePrimaryBgSubtleDark = bluePrimaryPrimitiveDark[1];
+export const bluePrimaryBorderSubtleDark = bluePrimaryPrimitiveDark[2];
+
 function semanticsFromRamp(
   ramp: readonly string[],
+  bgSubtle: string,
+  borderSubtle: string,
 ): {
   colorPrimary: string;
   colorPrimaryHover: string;
   colorPrimaryActive: string;
   colorPrimaryBg: string;
   colorPrimaryBgHover: string;
+  colorPrimaryBgSubtle: string;
   colorPrimaryBorder: string;
   colorPrimaryBorderHover: string;
+  colorPrimaryBorderSubtle: string;
   colorPrimaryText: string;
   colorPrimaryTextHover: string;
   colorPrimaryTextActive: string;
@@ -70,7 +84,9 @@ function semanticsFromRamp(
   return {
     colorPrimaryBg: s(1),
     colorPrimaryBgHover: s(2),
+    colorPrimaryBgSubtle: bgSubtle,
     colorPrimaryBorder: s(3),
+    colorPrimaryBorderSubtle: borderSubtle,
     colorPrimaryBorderHover: s(4),
     colorPrimaryHover: s(5),
     colorPrimary: s(6),
@@ -85,7 +101,15 @@ function semanticsFromRamp(
 }
 
 /** Semantic map for **light** — same as Figma `Color/Primary/*` → `Primary/primary-*` aliases. */
-export const bluePrimarySemantics = semanticsFromRamp(bluePrimaryPrimitiveLight);
+export const bluePrimarySemantics = semanticsFromRamp(
+  bluePrimaryPrimitiveLight,
+  bluePrimaryBgSubtleLight,
+  bluePrimaryBorderSubtleLight,
+);
 
 /** Semantic map for **dark** — same step indices, dark ramp. */
-export const bluePrimarySemanticsDark = semanticsFromRamp(bluePrimaryPrimitiveDark);
+export const bluePrimarySemanticsDark = semanticsFromRamp(
+  bluePrimaryPrimitiveDark,
+  bluePrimaryBgSubtleDark,
+  bluePrimaryBorderSubtleDark,
+);

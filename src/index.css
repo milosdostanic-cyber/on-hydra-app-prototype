@@ -9,6 +9,8 @@ body,
 body {
   font-family: var(--hydra-font-family);
   margin: 0;
+  /* Prevent layout jump when page starts/stops vertical scrolling (e.g. accordion expand/collapse). */
+  scrollbar-gutter: stable;
 }
 
 /*
@@ -20,4 +22,70 @@ body {
   --ant-btn-color-base: var(--hydra-brand-primary);
   --ant-btn-color-hover: var(--hydra-brand-primary-hover);
   --ant-btn-color-active: var(--hydra-brand-primary-active);
+}
+
+/*
+ * Tag label — Figma `Base/Normal` (14/22), not antd default `fontSizeSM` (12).
+ * Vars set in `applyHydraTagCssVars` (`brandColors.ts`).
+ */
+.ant-tag {
+  font-size: var(--hydra-tag-font-size);
+  line-height: var(--hydra-tag-line-height);
+}
+
+/*
+ * Alert headline — Figma `Large/Strong` (16/24, semibold) + `colorText`.
+ * Vars set in `applyHydraAlertTitleCssVars` (`brandColors.ts`).
+ */
+.ant-alert .ant-alert-title {
+  font-size: var(--hydra-alert-title-font-size);
+  line-height: var(--hydra-alert-title-line-height);
+  font-weight: var(--hydra-alert-title-font-weight);
+  color: var(--hydra-alert-title-color);
+}
+
+/* Action Trail — table row highlight (replaces antd cell borders to avoid double lines). */
+tr.action-trail-table-row > td.ant-table-cell {
+  background: var(--action-trail-highlight-bg) !important;
+  border-top: 1px solid var(--action-trail-highlight-border) !important;
+  border-bottom: 1px solid var(--action-trail-highlight-border) !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
+}
+
+tr.action-trail-table-row > td.ant-table-cell:first-child {
+  border-inline-start: 1px solid var(--action-trail-highlight-border) !important;
+}
+
+tr.action-trail-table-row > td.ant-table-cell:last-child {
+  border-inline-end: 1px solid var(--action-trail-highlight-border) !important;
+}
+
+/* Single seam below highlighted row — next row keeps normal divider only. */
+tr.action-trail-table-row + tr > td.ant-table-cell {
+  border-top: none !important;
+}
+
+/* Action Trail — one-shot nav badge pulse (duration set inline from theme token). */
+@keyframes action-trail-badge-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Action Trail — one-shot row/card highlight emphasis (reduced-motion skips via inline style). */
+@keyframes action-trail-highlight-pulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.06);
+  }
 }

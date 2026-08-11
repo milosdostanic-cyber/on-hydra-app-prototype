@@ -16,6 +16,7 @@ This repository uses AI-assisted implementation.
 - Optimize UX for non-technical users.
 - Reduce cognitive load.
 - Preserve existing behavior outside the requested feature.
+- For any UI work (build, review, fix), attach **`@hydra-ux-audit`** — enforces patterns, tokens, typography, user-friendly UX, and functional correctness before closing the task.
 
 ## BOM-Specific Rules
 

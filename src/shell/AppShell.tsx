@@ -1,15 +1,23 @@
 import { useMemo } from 'react';
 import { Outlet, useLocation, useParams } from 'react-router-dom';
 
-import { useActiveProject } from '../context/ActiveProjectContext';
-import { shellLayout } from '../theme/hydraAlias';
+import { useActiveProject, resolveActiveConstructionProjectId } from '../context/ActiveProjectContext';
 import { Breadcrumb, Layout, theme } from '../ui/antd';
 
 import { buildAppBreadcrumbItems } from './buildAppBreadcrumbItems';
 import { AppShellSidebar } from './AppShellSidebar';
 import { AppTopBar } from './AppTopBar';
+import { shellBreadcrumbBarStyle, shellContentRailStyle } from './shellContentRail';
 
 const { Header, Content } = Layout;
+
+/** Portal target for BOM workspace pending-upload collapse — flush under breadcrumbs (Figma `5080:16558`, gap 0). */
+export const BOM_SHELL_FLUSH_BELOW_BREADCRUMB_ID = 'bom-shell-flush-below-breadcrumb';
+
+/** Product Catalog hero is full-bleed in the main column, flush under breadcrumbs (no shell rail / horizontal inset). */
+export function isProjectProductCatalogPath(pathname: string): boolean {
+  return /^\/projects\/[^/]+\/catalog$/.test(pathname);
+}
 
 export function AppShell() {
   const { token } = theme.useToken();
@@ -26,7 +34,9 @@ export function AppShell() {
       buildAppBreadcrumbItems({
         pathname: location.pathname,
         projectId: params.projectId,
-        constructionProjectId: params.constructionProjectId ?? activeConstructionProjectId,
+        constructionProjectId:
+          params.constructionProjectId ??
+          resolveActiveConstructionProjectId(activeConstructionProjectId),
         partId: params.partId,
         itemId: params.itemId,
         swapRowId: locationState.swapRowId,
@@ -45,6 +55,7 @@ export function AppShell() {
   );
 
   const showBreadcrumbHeader = true;
+  const productCatalogFullBleed = isProjectProductCatalogPath(location.pathname);
 
   return (
     <Layout
@@ -73,47 +84,41 @@ export function AppShell() {
               boxShadow: token.boxShadowTertiary,
               paddingInline: token.paddingLG,
               paddingBlock: token.paddingSM,
+              minHeight: shellBreadcrumbBarStyle.minHeightPx,
               height: 'auto',
               lineHeight: 'inherit',
+              display: 'flex',
+              alignItems: 'center',
             }}
           >
-            <div
-              style={{
-                width: '100%',
-                maxWidth: shellLayout.contentRailMaxWidthPx,
-                minWidth: `min(100%, ${shellLayout.contentRailMinWidthPx}px)`,
-                marginInline: 'auto',
-                boxSizing: 'border-box',
-              }}
-            >
+            <div style={shellContentRailStyle}>
               <Breadcrumb items={crumbs} />
             </div>
           </Header>
         ) : null}
+        <div id={BOM_SHELL_FLUSH_BELOW_BREADCRUMB_ID} style={{ width: '100%', flexShrink: 0 }} />
         <Content
           style={{
             flex: 1,
             minHeight: 0,
             overflow: 'auto',
             margin: 0,
-            padding: token.paddingLG,
+            paddingTop: productCatalogFullBleed ? 0 : token.paddingLG,
+            paddingBottom: token.paddingLG,
+            paddingInline: productCatalogFullBleed ? 0 : token.paddingLG,
             background: 'transparent',
             borderRadius: 0,
             border: 'none',
             boxShadow: 'none',
           }}
         >
-          <div
-            style={{
-              width: '100%',
-              maxWidth: shellLayout.contentRailMaxWidthPx,
-              minWidth: `min(100%, ${shellLayout.contentRailMinWidthPx}px)`,
-              marginInline: 'auto',
-              boxSizing: 'border-box',
-            }}
-          >
+          {productCatalogFullBleed ? (
             <Outlet />
-          </div>
+          ) : (
+            <div style={shellContentRailStyle}>
+              <Outlet />
+            </div>
+          )}
         </Content>
       </Layout>
     </Layout>

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 
 import { PageBackButton } from './PageBackButton';
+import { BomPageHeader } from '../bom/layout/BomPageHeader';
 import { PROJECT_SEED_ROWS } from './projectSeed';
 import { Button, Card, Col, Flex, Progress, Row, Space, Typography, theme } from '../ui/antd';
 
@@ -12,12 +13,7 @@ export function DashboardPlaceholder() {
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to="/projects">Back to projects</PageBackButton>
-      <Typography.Title level={3} style={{ margin: 0 }}>
-        Dashboard
-      </Typography.Title>
-      <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
-        Cross-project overview (demo metrics).
-      </Typography.Paragraph>
+      <BomPageHeader title="Dashboard" description="Cross-project overview (demo metrics)." />
 
       <Row gutter={[token.marginMD, token.marginMD]}>
         <Col xs={24} sm={12} lg={6}>

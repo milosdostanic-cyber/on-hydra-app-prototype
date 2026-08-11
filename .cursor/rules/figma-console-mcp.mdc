@@ -1,0 +1,69 @@
+---
+description: Figma Console MCP (TJ Pitre / Desktop Bridge) — use ONLY when the user explicitly requests Console MCP
+alwaysApply: false
+---
+
+# Figma Console MCP (opt-in)
+
+**Language:** English (unless the user explicitly asks for another language).
+
+**Do not use this rule by default.** For all other Figma tasks, use **[figma-mcp-routing.mdc](./figma-mcp-routing.mdc)** (Official Figma MCP, `plugin-figma-figma`).
+
+Apply **this** rule **only** when the user **explicitly** asks for **Figma Console MCP**, **Desktop Bridge**, **TJ Pitre**, or **`user-figma-console`**.
+
+## MCP server to call
+
+| Use | Do not use |
+|-----|------------|
+| `CallMcpTool` → **`server`: `user-figma-console`** | `plugin-figma-figma` (`get_design_context`, `use_figma`, `get_metadata`, `get_screenshot`, `search_design_system`, etc.) |
+
+Before each tool call, read the tool schema under the MCP descriptors folder for `user-figma-console`.
+
+Also load skill **`@figma-console-mcp`** (`.cursor/skills/figma-console-mcp/SKILL.md`).
+
+## Prerequisites (user environment)
+
+1. **Figma Desktop** with the target file open.
+2. **Figma Console MCP — Desktop Bridge** plugin running in that file.
+3. If tools fail with “not connected”, ask the user to open the file in Desktop and start Desktop Bridge; use `figma_list_open_files` / `figma_navigate` to confirm the active file.
+
+## Official MCP → Console mapping
+
+| Task | Figma Console tool |
+|------|-------------------|
+| Design context / implement from frame | `figma_get_component_for_development` (pass `codebasePath` when implementing into this repo) |
+| Screenshot / visual check | `figma_capture_screenshot` (preferred after edits; reflects live plugin state) |
+| Variables / tokens read | `figma_get_variables` or **`figma_get_design_system_kit`** (preferred for combined tokens + components + styles) |
+| Bulk variable writes | `figma_batch_update_variables` / `figma_batch_create_variables` (not repeated single updates) |
+| File / page structure | `figma_get_file_data` |
+| Search DS components | `figma_search_components` → `figma_instantiate_component` |
+| Create / edit nodes | `figma_execute` and granular `figma_*` node tools |
+| Switch open file | `figma_navigate` |
+| FigJam boards | `figjam_*` tools on `user-figma-console` |
+| DS audit / lint | `figma_audit_design_system`, `figma_lint_design`, `figma_check_design_parity` |
+| Pin comments on new/changed layout | `figma_post_comment`, `figma_get_comments` — see **[figma-layout-change-comments.mdc](./figma-layout-change-comments.mdc)** |
+
+**Variable values:** use hex for colors in batch updates (e.g. `#FF0000`) per tool schema — not the official MCP `setValueForMode` RGB object shape.
+
+## Workflows
+
+### Design → code (Console)
+
+1. `figma_navigate` to the Hydra / Ant Design file URL from `Documentation/*` if needed.
+2. `figma_get_component_for_development` with `nodeId` from the Figma URL (`node-id=1-2` → `1:2`) and `codebasePath` pointing at this repo’s component roots.
+3. Implement using **[hydra-design-to-code.mdc](./hydra-design-to-code.mdc)** and **[hydra-ui-tokens.mdc](./hydra-ui-tokens.mdc)**.
+4. Token/parity updates in Figma follow **[figma-repo-parity.mdc](./figma-repo-parity.mdc)** using Console tools above.
+
+### Code / tokens → Figma (Console)
+
+For **repo link → selected Figma screen 1:1 parity** (selection-only, DS-only, no detach), follow **[figma-repo-to-screen-parity.mdc](./figma-repo-to-screen-parity.mdc)** end-to-end with Console tools.
+
+1. `figma_search_components` at session start (node IDs are not stable across sessions).
+2. Place new work inside a **Section** or **Frame**, not on blank canvas.
+3. Prefer batch variable tools for many token changes.
+4. **Validate:** after visual changes → `figma_capture_screenshot` → fix alignment/spacing → re-screenshot (up to 3 iterations).
+
+## Repo alignment
+
+- Hydra Figma ↔ code parity rules stay in **[figma-repo-parity.mdc](./figma-repo-parity.mdc)**; this rule only applies when the user opts into Console MCP.
+- Prior audits in this repo used Console (`Documentation/old-ds-tokenization-audit-2026-04-08.md`).

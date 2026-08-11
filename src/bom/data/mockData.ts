@@ -1,3 +1,5 @@
+import { buildWorkspaceMainRows, ensureWorkspaceRowDisplayFields } from './bomWorkspaceSeed';
+import { workspaceStatusAfterManualPick } from '../bomMatchingWorkspaceImport';
 import type {
   AscCatalogPart,
   BomItem,
@@ -7,17 +9,19 @@ import type {
   GuidedQuestion,
 } from './types';
 
-const bomProjectStatusCycle: BomProject['status'][] = [
-  'in-progress',
-  'completed',
-  'needs-review',
-  'draft',
-  'failed',
-  'partial',
-];
+/** Static seed default — use {@link resolveBomProjectStatus} for display (pending uploads only). */
+const bomProjectSeedStatus: BomProject['status'] = 'ready';
 
 /** Construction project IDs cycle for bulk seed rows. */
 const projectIdCycle: BomProject['projectId'][] = ['1', '2', '3', '4'];
+
+const WORKSPACE_READY_ROW_COUNT = buildWorkspaceMainRows().length;
+const WORKSPACE_ACTIVE_ROW_COUNT = 7; // mockWorkspaceItems template length
+
+function itemsCountForProjectSeed(readyWorkspace: boolean, empty: boolean): number {
+  if (empty) return 0;
+  return readyWorkspace ? WORKSPACE_READY_ROW_COUNT : WORKSPACE_ACTIVE_ROW_COUNT;
+}
 
 export const mockBomProjects: BomProject[] = [
   {
@@ -25,58 +29,60 @@ export const mockBomProjects: BomProject[] = [
     projectId: '1',
     name: 'Hospital Wing Renovation - Phase 2',
     lastEdited: '2026-03-15',
-    items: 142,
-    status: 'in-progress',
+    items: WORKSPACE_ACTIVE_ROW_COUNT,
+    status: 'ready',
   },
   {
     id: '2',
     projectId: '2',
     name: 'Industrial Plant Fire Protection',
     lastEdited: '2026-03-14',
-    items: 89,
-    status: 'completed',
+    items: WORKSPACE_READY_ROW_COUNT,
+    status: 'ready',
   },
   {
     id: '3',
     projectId: '1',
     name: 'Office Complex HVAC Upgrade',
     lastEdited: '2026-03-12',
-    items: 67,
-    status: 'needs-review',
+    items: WORKSPACE_ACTIVE_ROW_COUNT,
+    status: 'ready',
   },
   {
     id: '4',
     projectId: '3',
     name: 'Warehouse Sprinkler System',
     lastEdited: '2026-03-10',
-    items: 234,
-    status: 'draft',
+    items: 0,
+    status: 'ready',
   },
   {
     id: '5',
     projectId: '2',
     name: 'School Campus Fire Alarm Upgrade',
     lastEdited: '2026-03-05',
-    items: 178,
-    status: 'in-progress',
+    items: WORKSPACE_ACTIVE_ROW_COUNT,
+    status: 'ready',
   },
   {
     id: '6',
     projectId: '1',
     name: 'Parking Garage Electrical Upgrade',
     lastEdited: '2026-03-02',
-    items: 93,
-    status: 'in-progress',
+    items: WORKSPACE_READY_ROW_COUNT,
+    status: 'ready',
   },
   ...Array.from({ length: 24 }, (_, i): BomProject => {
     const idx = i + 7;
+    const projectId = projectIdCycle[i % 4];
+    const readyWorkspace = i % 2 === 0;
     return {
       id: String(idx),
-      projectId: projectIdCycle[i % 4],
+      projectId,
       name: `Fire protection BOM — package ${idx}`,
       lastEdited: `2026-02-${String(15 + (i % 12)).padStart(2, '0')}`,
-      items: 50 + (idx * 11) % 180,
-      status: bomProjectStatusCycle[i % 4],
+      items: itemsCountForProjectSeed(readyWorkspace, false),
+      status: bomProjectSeedStatus,
     };
   }),
 ];
@@ -191,6 +197,8 @@ export const mockWorkspaceItems: BomItem[] = [
     rowNumber: 1,
     originalInput: 'ASC-FL-400-G',
     parsedDescription: 'FireLock Grooved Coupling, Style 005',
+    figureNumber: 'FP7450',
+    sku: '4371000570',
     size: '4 inch',
     pressureClass: '300 PSI',
     connectionType: 'Grooved',
@@ -205,6 +213,8 @@ export const mockWorkspaceItems: BomItem[] = [
     rowNumber: 2,
     originalInput: 'ASC-GV-600-FL',
     parsedDescription: 'Gate Valve, Flanged',
+    figureNumber: 'GV-600-FL',
+    sku: '8821042193',
     size: '6 inch',
     pressureClass: '150 PSI',
     connectionType: 'Flanged',
@@ -219,6 +229,8 @@ export const mockWorkspaceItems: BomItem[] = [
     rowNumber: 3,
     originalInput: 'ASC-CV-400-G',
     parsedDescription: 'Check Valve, Grooved',
+    figureNumber: 'CV-400-GR',
+    sku: '5590182734',
     size: '4 inch',
     pressureClass: '300 PSI',
     connectionType: 'Grooved',
@@ -233,6 +245,8 @@ export const mockWorkspaceItems: BomItem[] = [
     rowNumber: 4,
     originalInput: 'ASC-PIPE-4-SCH10',
     parsedDescription: 'Galvanized Steel Pipe Schedule 10',
+    figureNumber: 'PIPE-4-SCH10',
+    sku: '6612038841',
     size: '4 inch',
     pressureClass: '',
     connectionType: 'Grooved',
@@ -247,6 +261,8 @@ export const mockWorkspaceItems: BomItem[] = [
     rowNumber: 5,
     originalInput: 'ASC-CV-400-G',
     parsedDescription: 'Check Valve, Grooved',
+    figureNumber: 'CV-400-GR',
+    sku: '9037741208',
     size: '4 inch',
     pressureClass: '300 PSI',
     connectionType: 'Grooved',
@@ -261,6 +277,8 @@ export const mockWorkspaceItems: BomItem[] = [
     rowNumber: 6,
     originalInput: 'ASC-BFV-300-LG',
     parsedDescription: 'Butterfly Valve, Lug Type',
+    figureNumber: 'BFV-300-LG',
+    sku: '7741209835',
     size: '3 inch',
     pressureClass: '300 PSI',
     connectionType: 'Lug',
@@ -275,6 +293,8 @@ export const mockWorkspaceItems: BomItem[] = [
     rowNumber: 7,
     originalInput: 'ASC-PIPE-4-SCH10',
     parsedDescription: 'Galvanized Steel Pipe Schedule 10',
+    figureNumber: 'PIPE-4-SCH10',
+    sku: '2289014456',
     size: '4 inch',
     pressureClass: '',
     connectionType: 'Grooved',
@@ -320,6 +340,8 @@ function matchForItem(item: BomItem): BomMatchResult {
     originalRequest: item.originalInput,
     suggestedParts: suggested,
     topMatch: top,
+    lineStatus: 'pending',
+    source: 'auto',
   };
 }
 
@@ -336,18 +358,95 @@ export function bomProjectTitleById(bomProjectId: string | undefined): string | 
   return bomProjectById(bomProjectId)?.name;
 }
 
-export function addBomProject(name: string, description?: string): BomProject {
+export function addBomProject(
+  name: string,
+  description?: string,
+  constructionProjectId = '1',
+): BomProject {
   const id = `proj-${Date.now()}`;
   const project: BomProject = {
     id,
-    projectId: '1',
+    projectId: constructionProjectId,
     name,
     description,
     lastEdited: new Date().toISOString().slice(0, 10),
     items: 0,
-    status: 'draft',
+    status: 'ready',
   };
   mockBomProjects.unshift(project);
+  return project;
+}
+
+export function updateBomProjectName(id: string, name: string): BomProject | undefined {
+  const project = mockBomProjects.find((p) => p.id === id);
+  if (!project) return undefined;
+  project.name = name;
+  project.lastEdited = new Date().toISOString().slice(0, 10);
+  return project;
+}
+
+/** Row is fully defined: part variant chosen and translation/review finished. */
+export function isBomItemFullyDefined(row: BomItem): boolean {
+  return row.status === 'confirmed';
+}
+
+/** Translation / workspace review still open (matched or needs-review, not yet confirmed). */
+export function isBomTranslationUnfinished(row: BomItem): boolean {
+  return !isBomItemFullyDefined(row);
+}
+
+export function hasUnfinishedBomTranslation(rows: BomItem[]): boolean {
+  return rows.some(isBomTranslationUnfinished);
+}
+
+function cloneWorkspaceTemplate(): BomItem[] {
+  return mockWorkspaceItems.map((r) => ensureWorkspaceRowDisplayFields({ ...r }));
+}
+
+/** Ready projects: every line confirmed with a resolved ASC part variant. */
+function workspaceRowsForReadyProject(): BomItem[] {
+  return buildWorkspaceMainRows().map((row) => ({
+    ...row,
+    status: 'confirmed' as const,
+    confidence: 'high' as const,
+  }));
+}
+
+/** Partial workspace sign-off — some lines confirmed, the rest awaiting manual review (`matched` / `needs-review`). */
+function workspaceRowsForInProgressProject(): BomItem[] {
+  return cloneWorkspaceTemplate().map((row, index) => {
+    if (index % 2 === 0) {
+      return { ...row, status: 'confirmed' as const };
+    }
+    const confidence = row.confidence ?? 'medium';
+    return {
+      ...row,
+      status: workspaceStatusAfterManualPick(confidence),
+    };
+  });
+}
+
+/**
+ * Initial workspace rows seeded from project list (item count only — not project status).
+ * Line statuses (`confirmed` / `matched` / `needs-review`) are workspace-only and do not
+ * affect project Ready vs Needs Review on the list.
+ */
+export function initialWorkspaceRowsForBomProject(bomProjectId: string): BomItem[] {
+  if (bomProjectId === 'new') return [];
+  const project = bomProjectById(bomProjectId);
+  if (!project || project.items === 0) return [];
+  if (project.items >= WORKSPACE_READY_ROW_COUNT) return workspaceRowsForReadyProject();
+  return workspaceRowsForInProgressProject();
+}
+
+export function syncBomProjectFromWorkspaceRows(
+  bomProjectId: string,
+  rows: BomItem[],
+): BomProject | undefined {
+  const project = mockBomProjects.find((p) => p.id === bomProjectId);
+  if (!project) return undefined;
+  project.items = rows.length;
+  project.lastEdited = new Date().toISOString().slice(0, 10);
   return project;
 }
 

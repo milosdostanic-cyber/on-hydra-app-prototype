@@ -1,18 +1,19 @@
 import { CheckCircleOutlined, FileExcelOutlined, FileTextOutlined, SendOutlined } from '@ant-design/icons';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { useBomHubPath } from '../../context/ActiveProjectContext';
 import { useBomWorkspaceRows } from '../../context/BomWorkspaceContext';
-import { isWorkspaceRowConfirmed } from '../bomWorkspaceHelpers';
+import { useBomImportFlow } from '../context/BomImportFlowContext';
+import { canExportBomProject, resolveExportDisabledReason } from '../bomWorkspaceHelpers';
 import { shellLayout } from '../../theme/hydraAlias';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { bomProjectById, bomProjectTitleById } from '../data/mockData';
 import type { BomItem } from '../data/types';
 import { BomCardTitle } from '../components/BomCardTitle';
+import { BomTablePaginationBar } from '../components/BomTablePaginationBar';
 import { ExportCard } from '../../ui/ExportCard';
 import {
-  Alert,
   Button,
   Card,
   Checkbox,
@@ -21,7 +22,6 @@ import {
   Form,
   Input,
   Modal,
-  Pagination,
   Row,
   Space,
   Table,
@@ -95,6 +95,8 @@ export function BomExportPage() {
   const navigate = useNavigate();
   const bomHubPath = useBomHubPath();
   const { rows } = useBomWorkspaceRows(bomProjectId);
+  const { pendingForProject } = useBomImportFlow();
+  const pendingUploadCount = pendingForProject(bomProjectId).length;
   const projectMeta = bomProjectById(bomProjectId);
   const projectTitle = bomProjectTitleById(bomProjectId) ?? 'BOM project';
   const [mode, setMode] = useState<ExportMode>('excel-csv');
@@ -103,12 +105,28 @@ export function BomExportPage() {
   const [exporting, setExporting] = useState(false);
   const [fileName, setFileName] = useState(() => `BOM_${projectTitle.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}`);
 
-  const confirmedRows = useMemo(() => rows.filter(isWorkspaceRowConfirmed), [rows]);
+  const exportReady = useMemo(
+    () => canExportBomProject(rows, pendingUploadCount),
+    [rows, pendingUploadCount],
+  );
+
+  useEffect(() => {
+    if (!exportReady) {
+      const reason = resolveExportDisabledReason(rows, pendingUploadCount);
+      message.warning(
+        reason ??
+          (rows.length === 0
+            ? 'No items to export. Return to workspace to add items.'
+            : 'Confirm all items before exporting.'),
+      );
+      navigate(`/bom/projects/${bomProjectId}/workspace`, { replace: true });
+    }
+  }, [bomProjectId, exportReady, navigate, pendingUploadCount, rows]);
 
   const pagedExportPreview = useMemo(() => {
     const start = (previewPage - 1) * shellLayout.tablePageSizeDefault;
-    return confirmedRows.slice(start, start + shellLayout.tablePageSizeDefault);
-  }, [confirmedRows, previewPage]);
+    return rows.slice(start, start + shellLayout.tablePageSizeDefault);
+  }, [rows, previewPage]);
 
   const [columnOptions, setColumnOptions] = useState<ColumnOption[]>([
     { key: 'originalInput', label: 'Part number', checked: true },
@@ -158,9 +176,7 @@ export function BomExportPage() {
   };
 
   const submit = () => {
-    if (confirmedRows.length === 0) {
-      message.warning('No confirmed items to export. Return to the workspace first.');
-      navigate(`/bom/projects/${bomProjectId}/workspace`);
+    if (!exportReady) {
       return;
     }
     if (mode === 'service') {
@@ -177,6 +193,10 @@ export function BomExportPage() {
       message.success(`${EXPORT_MODE_META[mode].title} queued as ${fileName}.csv (demo).`);
     }, 900);
   };
+
+  if (!exportReady) {
+    return null;
+  }
 
   if (bomProjectId && bomProjectId !== 'new' && !projectMeta) {
     return (
@@ -209,27 +229,12 @@ export function BomExportPage() {
               size="large"
               onClick={submit}
               loading={exporting}
-              disabled={confirmedRows.length === 0}
             >
               {EXPORT_MODE_META[mode].cta}
             </Button>
           </Space>
         }
       />
-
-      {confirmedRows.length === 0 ? (
-        <Alert
-          type="warning"
-          showIcon
-          message="No items to export"
-          description="Confirm all workspace lines before exporting."
-          action={
-            <Button size="small" type="primary" onClick={() => navigate(`/bom/projects/${bomProjectId}/workspace`)}>
-              Go to workspace
-            </Button>
-          }
-        />
-      ) : null}
 
       <Row gutter={[token.marginSM, token.marginSM]}>
         {EXPORT_MODE_ORDER.map((m) => {
@@ -256,7 +261,7 @@ export function BomExportPage() {
         <div style={{ paddingInline: token.paddingMD, paddingTop: token.paddingSM }}>
           <Typography.Paragraph type="secondary">
             Preview how your BOM appears for <strong>{EXPORT_MODE_META[mode].title}</strong>.{' '}
-            {confirmedRows.length} confirmed row{confirmedRows.length !== 1 ? 's' : ''}.
+            {rows.length} confirmed row{rows.length !== 1 ? 's' : ''}.
           </Typography.Paragraph>
           <Flex gap={token.marginSM} wrap="wrap" style={{ marginBottom: token.marginSM }}>
             <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
@@ -282,23 +287,11 @@ export function BomExportPage() {
             body: { cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM } },
           }}
         />
-        <Flex
-          justify="flex-end"
-          align="center"
-          style={{
-            paddingInline: token.paddingMD,
-            paddingBlock: token.paddingSM,
-            borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-          }}
-        >
-          <Pagination
-            current={previewPage}
-            pageSize={shellLayout.tablePageSizeDefault}
-            total={confirmedRows.length}
-            onChange={setPreviewPage}
-            showSizeChanger={false}
-          />
-        </Flex>
+        <BomTablePaginationBar
+          current={previewPage}
+          total={rows.length}
+          onChange={setPreviewPage}
+        />
       </Card>
 
       <Card title={<BomCardTitle>Column mapping</BomCardTitle>} style={{ borderColor: token.colorBorderSecondary }}>

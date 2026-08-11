@@ -42,14 +42,14 @@ Read and follow each selected `SKILL.md` or `.mdc` for **planning only** — ign
 
 | Type | Orchestrate for planning |
 |------|--------------------------|
-| `figma-delta` | `@figma-console-mcp` · `@prd-ux-implementation-planner` · `@hydra-design-to-code` |
+| `figma-delta` | `@figma-use` · `@figma-generate-design` · `@prd-ux-implementation-planner` · `@hydra-design-to-code` |
 | `prd-feature` | `@prd-ux-implementation-planner` · `@product-ux-rules` |
 | `bom-feature` | `@prd-ux-implementation-planner` · `AGENTS.md` · `docs/prd/bom-prd.md` |
 | `ui-screenshot` | `@hydra-design-to-code` · `@hydra-ui-tokens-and-components` |
 | `ui-change` | `@prd-ux-implementation-planner` · `@hydra-ui-tokens-and-components` |
-| `ds-parity` | `@ds-parity-auditor` · `@figma-console-mcp` · `@figma-repo-parity` |
+| `ds-parity` | `@ds-parity-auditor` · `@figma-use` · `@figma-repo-parity` |
 
-Figma types: **Figma Console MCP only** (`user-figma-console`). Never official Figma MCP.
+Figma types: **Official Figma MCP** (`plugin-figma-figma`) by default per `@figma-mcp-routing`. Use `@figma-console-mcp` only when the user explicitly requests Console MCP.
 
 ### Implicit rules (always active — list in plan)
 
@@ -86,12 +86,12 @@ Implicit rules above are always on; still list them in the plan so implementers 
 
 | Type | Attach in implementation chat |
 |------|--------------------------------|
-| `figma-delta` | `@figma-console-mcp` `@hydra-design-to-code` `@hydra-ui-tokens-and-components` `@scope-guardrails` `@token-discipline` |
+| `figma-delta` | `@figma-use` `@figma-generate-design` `@hydra-design-to-code` `@hydra-ui-tokens-and-components` `@scope-guardrails` `@token-discipline` |
 | `prd-feature` | `@hydra-ui-tokens-and-components` `@product-ux-rules` `@scope-guardrails` `@token-discipline` |
 | `bom-feature` | `@hydra-ui-tokens-and-components` `@product-ux-rules` `@scope-guardrails` `@token-discipline` + `@docs/prd/bom-prd.md` `AGENTS.md` |
 | `ui-screenshot` | `@hydra-design-to-code` `@hydra-ui-tokens-and-components` `@scope-guardrails` `@token-discipline` |
 | `ui-change` | `@hydra-ui-tokens-and-components` `@scope-guardrails` `@token-discipline` `@product-ux-rules` |
-| `ds-parity` | `@ds-parity-auditor` `@figma-console-mcp` `@figma-repo-parity` `@scope-guardrails` — **ask sync direction before edits** |
+| `ds-parity` | `@ds-parity-auditor` `@figma-use` `@figma-repo-parity` `@scope-guardrails` — **ask sync direction before edits** |
 
 Add `@figma-repo-parity` to any implementation phase that changes theme, primitives, or `src/theme/*`.
 

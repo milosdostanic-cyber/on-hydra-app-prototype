@@ -7,13 +7,14 @@ import {
 import { useEffect, useMemo } from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { useSubmittalDraft } from '../context/SubmittalDraftContext';
+import { useSubmittalPackages } from '../context/SubmittalPackagesContext';
 import { Badge, Button, Flex, Layout, Menu, Typography, theme } from '../ui/antd';
 import type { MenuProps } from '../ui/antd';
 
 import { hydraMenuItemBorderRadius } from '../theme/hydraMenuMetrics';
 import { shellLayout } from '../theme/hydraAlias';
 import { setLastScopedProjectId } from './lastProjectScope';
+import { pageDescriptionStyle } from './pageDescriptionStyle';
 import { projectTitleById } from './projectSeed';
 
 const { Sider, Content } = Layout;
@@ -32,11 +33,11 @@ export function ProjectWorkspaceLayout() {
   const { projectId = '' } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { countForProject } = useSubmittalDraft();
+  const { packageCountForProject } = useSubmittalPackages();
   const base = `/projects/${projectId}`;
   const title = projectTitleById(projectId) ?? 'Project';
   const selected = moduleFromPath(location.pathname);
-  const submittalCount = countForProject(projectId);
+  const submittalCount = packageCountForProject(projectId);
 
   useEffect(() => {
     if (projectId) setLastScopedProjectId(projectId);
@@ -85,13 +86,13 @@ export function ProjectWorkspaceLayout() {
             type="text"
             size="small"
             icon={<LeftOutlined />}
-            onClick={() => navigate('/projects')}
+            onClick={() => navigate('/dashboard')}
             style={{ marginBottom: token.marginXS, padding: 0, height: 'auto' }}
           >
-            All projects
+            Home
           </Button>
           <Typography.Text strong>{title}</Typography.Text>
-          <Typography.Paragraph type="secondary" style={{ marginBottom: 0, marginTop: token.marginXXS }}>
+          <Typography.Paragraph style={{ ...pageDescriptionStyle(token), marginTop: token.marginXXS }}>
             Modules for this project
           </Typography.Paragraph>
         </div>

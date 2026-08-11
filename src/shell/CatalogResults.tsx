@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { CATALOG_DEMO_PARTS } from '../catalog/catalogDemoData';
+import { catalogPartReturnFrom } from '../catalog/catalogPartNavigation';
+import { BomPageHeader } from '../bom/layout/BomPageHeader';
 import { shellLayout } from '../theme/hydraAlias';
 import { PageBackButton } from './PageBackButton';
 import { hydraBaseStrong } from '../theme/hydraTypography';
@@ -22,6 +24,8 @@ function matchesCatalogQuery(part: CatalogPartRow, rawQuery: string): boolean {
 export function CatalogResults() {
   const { token } = theme.useToken();
   const navigate = useNavigate();
+  const location = useLocation();
+  const partReturnState = catalogPartReturnFrom(`${location.pathname}${location.search}`);
   const [params] = useSearchParams();
   const q = params.get('q') ?? '';
   const [page, setPage] = useState(1);
@@ -48,7 +52,9 @@ export function CatalogResults() {
       dataIndex: 'sku',
       key: 'sku',
       render: (_: string, row) => (
-        <Link to={`/catalog/parts/${encodeURIComponent(row.key)}`}>{row.sku}</Link>
+        <Link to={`/catalog/parts/${encodeURIComponent(row.key)}`} state={partReturnState}>
+          {row.sku}
+        </Link>
       ),
     },
     {
@@ -61,12 +67,10 @@ export function CatalogResults() {
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to="/catalog">Back to catalog</PageBackButton>
-      <Typography.Title level={4} style={{ margin: 0 }}>
-        {title}
-      </Typography.Title>
-      <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
-        {filtered.length} part{filtered.length !== 1 ? 's' : ''} match your search.
-      </Typography.Paragraph>
+      <BomPageHeader
+        title={title}
+        description={`${filtered.length} part${filtered.length !== 1 ? 's' : ''} match your search.`}
+      />
       {filtered.length === 0 ? (
         <Empty
           description={

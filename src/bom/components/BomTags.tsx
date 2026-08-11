@@ -1,43 +1,47 @@
-import type { BomItemConfidence, BomItemMatchStatus, BomProjectStatus, AscSubstitutionRisk } from '../data/types';
-import { Tag, theme } from '../../ui/antd';
+import type { BadgeProps } from 'antd';
+
+import {
+  deriveReviewDisplayStatus,
+  reviewDisplayStatusLabel,
+  type BomReviewDisplayStatus,
+} from '../bomMatchingReviewStatus';
+import type {
+  BomItemConfidence,
+  BomItemMatchStatus,
+  BomMatchLineStatus,
+  BomMatchResult,
+  BomProjectStatus,
+  AscSubstitutionRisk,
+} from '../data/types';
+import { bomProjectStatusDescription } from '../bomProjectStatus';
+import { HydraTag, type HydraTagTone } from '../../ui/HydraTag';
+import { Badge, Tooltip } from '../../ui/antd';
+import { CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+
+type AntBadgeStatus = NonNullable<BadgeProps['status']>;
+
+/** Figma DS `Badge__Status` — antd status dot + label. */
+export function BomStatusBadge({ status, text }: { status: AntBadgeStatus; text: string }) {
+  return <Badge status={status} text={text} />;
+}
 
 const bomProjectStatusLabel: Record<BomProjectStatus, string> = {
-  'in-progress': 'In Progress',
-  completed: 'Completed',
+  ready: 'Ready',
   'needs-review': 'Needs Review',
-  draft: 'Draft',
-  failed: 'Failed',
-  partial: 'Partial',
 };
 
+function bomProjectBadgeStatus(status: BomProjectStatus): AntBadgeStatus {
+  if (status === 'ready') return 'success';
+  return 'warning';
+}
+
 export function BomProjectStatusTag({ status }: { status: BomProjectStatus }) {
-  const { token } = theme.useToken();
-  const color =
-    status === 'completed'
-      ? 'success'
-      : status === 'needs-review'
-        ? 'warning'
-        : status === 'draft'
-          ? 'default'
-          : status === 'failed'
-            ? 'error'
-            : status === 'partial'
-              ? 'orange'
-              : 'processing';
   return (
-    <Tag
-      color={color}
-      variant="outlined"
-      styles={{
-        root: {
-          marginInline: 0,
-          marginBlock: 0,
-          borderRadius: token.borderRadiusSM,
-        },
-      }}
-    >
-      {bomProjectStatusLabel[status]}
-    </Tag>
+    <Tooltip title={bomProjectStatusDescription(status)}>
+      <span>
+        <BomStatusBadge status={bomProjectBadgeStatus(status)} text={bomProjectStatusLabel[status]} />
+      </span>
+    </Tooltip>
   );
 }
 
@@ -47,22 +51,53 @@ const confidenceLabel: Record<BomItemConfidence, string> = {
   low: 'Low',
 };
 
-export function BomConfidenceTag({ confidence }: { confidence: BomItemConfidence }) {
-  const { token } = theme.useToken();
-  const color = confidence === 'high' ? 'success' : confidence === 'medium' ? 'warning' : 'error';
+function confidenceIcon(confidence: BomItemConfidence) {
+  if (confidence === 'high') return <CheckCircleOutlined />;
+  if (confidence === 'medium') return <ExclamationCircleOutlined />;
+  return <CloseCircleOutlined />;
+}
+
+export function BomConfidenceTag({
+  confidence,
+  showIcon = false,
+  percent,
+  bandWithPercent = false,
+}: {
+  confidence: BomItemConfidence;
+  showIcon?: boolean;
+  /** When set, renders percent only, or "High · 94%" when `bandWithPercent`. */
+  percent?: number;
+  bandWithPercent?: boolean;
+}) {
+  const tone: HydraTagTone = confidence === 'high' ? 'success' : confidence === 'medium' ? 'warning' : 'error';
+  const label =
+    percent != null && percent > 0
+      ? bandWithPercent
+        ? `${confidenceLabel[confidence]} · ${percent}%`
+        : `${percent}%`
+      : confidenceLabel[confidence];
   return (
-    <Tag
-      color={color}
-      styles={{
-        root: {
-          marginInline: 0,
-          marginBlock: 0,
-          borderRadius: token.borderRadiusSM,
-        },
-      }}
-    >
-      {confidenceLabel[confidence]}
-    </Tag>
+    <HydraTag tone={tone} icon={showIcon ? confidenceIcon(confidence) : undefined}>
+      {label}
+    </HydraTag>
+  );
+}
+
+const matchLevelTooltip: Record<'figure' | 'sku', string> = {
+  figure:
+    'Matched at the product family (figure) level — pick the exact sellable SKU before saving this line',
+  sku: 'Exact sellable part — ready to add to your workspace',
+};
+
+export function BomMatchLevelTag({ level }: { level: 'figure' | 'sku' | 'none' }) {
+  if (level === 'none') return null;
+  const label = level === 'figure' ? 'Product family' : 'Exact product';
+  return (
+    <Tooltip title={matchLevelTooltip[level]}>
+      <span>
+        <HydraTag tone={level === 'figure' ? 'processing' : 'success'}>{label}</HydraTag>
+      </span>
+    </Tooltip>
   );
 }
 
@@ -73,48 +108,58 @@ const matchStatusLabel: Record<BomItemMatchStatus, string> = {
   pending: 'Pending',
 };
 
+function workspaceMatchBadgeStatus(status: BomItemMatchStatus): AntBadgeStatus {
+  if (status === 'confirmed') return 'success';
+  if (status === 'needs-review') return 'warning';
+  if (status === 'matched') return 'processing';
+  return 'default';
+}
+
 export function BomMatchStatusTag({ status }: { status: BomItemMatchStatus }) {
-  const { token } = theme.useToken();
-  const color =
-    status === 'confirmed'
-      ? 'success'
-      : status === 'needs-review'
-        ? 'warning'
-        : status === 'matched'
-          ? 'processing'
-          : 'default';
   return (
-    <Tag
-      color={color}
-      variant="outlined"
-      styles={{
-        root: {
-          marginInline: 0,
-          marginBlock: 0,
-          borderRadius: token.borderRadiusSM,
-        },
-      }}
-    >
-      {matchStatusLabel[status]}
-    </Tag>
+    <BomStatusBadge status={workspaceMatchBadgeStatus(status)} text={matchStatusLabel[status]} />
   );
 }
 
 export function BomRiskTag({ risk }: { risk: AscSubstitutionRisk }) {
-  const { token } = theme.useToken();
-  const color = risk === 'low' ? 'success' : risk === 'medium' ? 'warning' : 'error';
+  const tone: HydraTagTone = risk === 'low' ? 'success' : risk === 'medium' ? 'warning' : 'error';
+  return <HydraTag tone={tone}>{risk} risk</HydraTag>;
+}
+
+export function BomManualTag() {
+  return <HydraTag tone="processing">Added manually</HydraTag>;
+}
+
+const lineStatusLabel: Record<BomMatchLineStatus, string> = {
+  pending: 'Pending',
+  accepted: 'Accepted',
+  skipped: 'Skipped',
+};
+
+function matchLineBadgeStatus(status: BomMatchLineStatus): AntBadgeStatus {
+  if (status === 'accepted') return 'success';
+  if (status === 'skipped') return 'warning';
+  return 'processing';
+}
+
+export function BomMatchLineStatusTag({ status }: { status: BomMatchLineStatus }) {
+  return <BomStatusBadge status={matchLineBadgeStatus(status)} text={lineStatusLabel[status]} />;
+}
+
+function reviewDisplayBadgeStatus(status: BomReviewDisplayStatus): AntBadgeStatus {
+  if (status === 'confirmed' || status === 'chosen') return 'success';
+  if (status === 'skipped') return 'warning';
+  if (status === 'unresolved' || status === 'needs-sku' || status === 'cant-match') return 'error';
+  return 'processing';
+}
+
+/** Derived guided-review status for matching summary table rows. */
+export function BomReviewDisplayStatusTag({ row }: { row: BomMatchResult }) {
+  const status = deriveReviewDisplayStatus(row);
   return (
-    <Tag
-      color={color}
-      styles={{
-        root: {
-          marginInline: 0,
-          marginBlock: 0,
-          borderRadius: token.borderRadiusSM,
-        },
-      }}
-    >
-      {risk} risk
-    </Tag>
+    <BomStatusBadge
+      status={reviewDisplayBadgeStatus(status)}
+      text={reviewDisplayStatusLabel[status]}
+    />
   );
 }

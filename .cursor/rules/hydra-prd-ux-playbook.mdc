@@ -1,0 +1,87 @@
+---
+description: PRD or new-screen work — read validated app map first; review diffs vs PRD or implement; update map when product intent is adopted
+alwaysApply: false
+---
+
+# Hydra PRD / new-screen UX playbook (entry rule)
+
+**Language:** English (unless the user asks otherwise).
+
+Use this file as an **@** entry point when the user brings a **PRD**, **feature spec**, or asks for a **new page / flow** or material changes to an existing one. It does **not** replace the rules linked below; it **orders** work so existing product UX and the **validated capabilities map** are honored before inventing scope.
+
+## Canonical product map (mandatory first read)
+
+- **Always read first:** **[Documentation/hydra-app-capabilities.md](../../Documentation/hydra-app-capabilities.md)** — adopted routes, shell navigation, module intent, and known gaps.
+- Do **not** implement or assume flagship flows that **contradict** this map unless the user explicitly approves expanding scope **and** the map is updated in the same change (or a clearly linked follow-up PR).
+- **PRD artifacts:** in-repo under **[Documentation/prd/](../../Documentation/prd/)** or an external link + stable ID provided by the user in the task.
+
+## Always in force (do not relax)
+
+Follow **[AGENTS.md](../../AGENTS.md)** and the always-applied workspace rules, especially:
+
+- **[ux-guardrails.mdc](./ux-guardrails.mdc)** — shared/core components and tokens untouched; scope; ambiguity.
+- **[hydra-ui-tokens.mdc](./hydra-ui-tokens.mdc)** — no stray design literals; typography and surfaces from tokens / figma mirrors.
+- **[hydra-ux-composition.mdc](./hydra-ux-composition.mdc)** — local composition only with existing atoms and semantic tokens.
+- **[figma-repo-parity.mdc](./figma-repo-parity.mdc)** — when visuals or theme must match Figma ↔ repo.
+
+## PRD iteration — pick the path
+
+### A) Work already exists for this PRD (branch / uncommitted / described diff)
+
+1. Re-read **hydra-app-capabilities.md** and the **PRD** (file or pasted scope).
+2. Inspect **current code changes** (`git diff` against the user’s base branch when available, or rely on an explicit file list / patch from the user).
+3. **Reconcile:** Does the diff fulfill the PRD **without** violating the map or guardrails? List gaps, risks, and **better alternatives** (clearer hierarchy, safer scope, fewer nav surprises).
+4. **Uncertainty:** If anything is ambiguous, under-specified, or would touch shared systems / other screens, **ask the user** before proposing final edits — do not guess.
+
+### B) Nothing implemented yet for this PRD
+
+1. Clarify scope (**assumptions** vs **facts**); if still ambiguous, **ask** before coding.
+2. Follow **section “Discover existing UX patterns”** below, then implement per **AGENTS.md** and linked rules.
+3. When the user treats work as **ready to merge / adopted**, update **hydra-app-capabilities.md** in the same PR whenever **routes, sidebar targets, or adopted behavior** change (see also `.github/pull_request_template.md`).
+
+## 1. Clarify scope and constraints
+
+- Restate what the PRD asks for; note **assumptions** vs **facts**.
+- Cross-check against **hydra-app-capabilities.md** so new work **extends** the map coherently.
+- If scope would touch **shared components**, **tokens**, **routing used elsewhere**, or **multiple unrelated screens**, **stop and ask** per **AGENTS.md** / **ux-guardrails**.
+
+## 2. Discover existing UX patterns in the codebase (mandatory before new layout)
+
+Before proposing new layout or new interaction models:
+
+- **Search the repo** for similar **screens**, **routes**, **flows**, and **sections** (e.g. list + detail, settings, wizards, tables, filters, empty/error states). Prefer **semantic search** and **grep** for route keys, page titles, and feature names aligned with the PRD.
+- **Reuse or adapt** an existing pattern when it is a **reasonable fit** — same building blocks from **`src/ui/antd.ts`**, same shell/layout patterns, same established states (loading, empty, error, read-only).
+- If multiple patterns exist, pick the one that matches **information density**, **navigation model**, and **primary task** closest to the PRD; briefly say why.
+
+**Principle:** existing in-repo UX is the default “design system” for product behavior and composition; do not bypass it for novelty.
+
+## 3. No close pattern — propose the best UX under guardrails
+
+If no acceptable similar pattern exists:
+
+- Apply the **decision sequence** in **AGENTS.md** (especially: one **primary CTA**, full **state** coverage, no guessing on ambiguity).
+- Build a **local screen-level composition** only: combine **existing** Ant Design / approved components and **semantic tokens** — see **hydra-ux-composition** and **hydra-ui-tokens**.
+- Prefer **clarity, hierarchy, scanability**, and **consistent terminology** over decoration. Secondary actions must not compete with the primary CTA; destructive actions must not read as primary unless the context is explicitly destructive (**ux-guardrails**).
+
+**You do not need new “UX theory” beyond what AGENTS + these rules already encode** — synthesize them into one concrete proposal and, if useful, 2 short alternatives with tradeoffs when the PRD is ambiguous.
+
+## 4. Design reference branch (when the user supplies it)
+
+If the user provides a **Figma URL**, **screenshot**, or **mock** to match:
+
+- Read and follow **[hydra-design-to-code.mdc](./hydra-design-to-code.mdc)** together with **figma-repo-parity** and **hydra-ui-tokens**.
+
+## 5. Optional parity pass
+
+For design-system alignment audits (not routine PRD implementation), use **[ds-parity-auditor.mdc](./ds-parity-auditor.mdc)** when the user asks for an audit or sync check.
+
+## Output checklist (briefly report)
+
+After review or implementation, confirm per **AGENTS.md** output requirements:
+
+- **Path taken:** **A** (reviewed existing diff vs PRD) vs **B** (greenfield from PRD).
+- **hydra-app-capabilities.md** — confirmed still accurate, or **updated** / called out for follow-up.
+- Existing **pattern reused** vs **none found** → local composition.
+- **Components** and **tokens** used (existing only).
+- **Shared/core components** unchanged unless explicitly approved.
+- **Scope** (local vs broader impact) and any **uncertainty** deferred to the user.

@@ -1,6 +1,6 @@
 /** Domain types for the BOM module (aligned with PM prototype data shapes; Hydra app uses mock data only). */
 
-export type BomProjectStatus = 'draft' | 'in-progress' | 'completed' | 'needs-review' | 'failed' | 'partial';
+export type BomProjectStatus = 'ready' | 'needs-review';
 
 export interface BomProject {
   id: string;
@@ -17,6 +17,23 @@ export type BomItemConfidence = 'high' | 'medium' | 'low';
 
 export type BomItemMatchStatus = 'matched' | 'pending' | 'needs-review' | 'confirmed';
 
+/** Parser-reported UPC problem from scientific notation or another invalid UPC value. */
+export type BomUpcParseIssue = {
+  state: 'recovered' | 'invalid';
+  /** Raw UPC text from the uploaded source cell. */
+  rawSource?: string;
+  reason?:
+    | 'scientific-notation'
+    | 'wrong-length'
+    | 'check-digit'
+    | 'truncated'
+    | 'ambiguous'
+    | 'leading-zeros-stripped';
+};
+
+/** Row-level match outlook derived from the UPC issue and current identifiers. */
+export type BomParsingRowSeverity = 'ok' | 'warning' | 'error';
+
 export interface BomItem {
   id: string;
   rowNumber: number;
@@ -29,10 +46,73 @@ export interface BomItem {
   confidence: BomItemConfidence;
   category?: string;
   unit?: string;
+  figureNumber?: string;
+  sku?: string;
+  /** Short variant descriptor (finish, connection) when SKU differs from figure. */
+  variantLabel?: string;
+  manufacturer?: string;
+  upc?: string;
   status?: BomItemMatchStatus;
+  /** How the ASC line was matched during import review. */
+  matchSource?: BomMatchSource;
+  /** Demo submittal / datasheet URL when available for the selected SKU. */
+  submittalUrl?: string;
+  /** Parsed competitor description preserved from the import file. */
+  importedDescription?: string;
+  /** Source row number from the uploaded BOM file. */
+  importedRowNumber?: number;
+  /** In-progress upload preview — not imported into the BOM yet. */
+  pendingUploadId?: string;
+  pendingUploadFileName?: string;
+  importMatchLineStatus?: BomMatchLineStatus;
+  /** UPC-specific parser issue; row severity is derived rather than persisted. */
+  upcParseIssue?: BomUpcParseIssue;
 }
 
+export type BomParsingReviewColumnProfile = 'description' | 'sku-only' | 'upc';
+
+export type BomImportStep = 'map' | 'review' | 'match' | 'done';
+
+export interface BomImportProgress {
+  uploadId: string;
+  fileName: string;
+  bomProjectId: string;
+  currentStep: BomImportStep;
+  totalAscFields: number;
+  mappedAscFields: number;
+  totalRows: number;
+  parsedRows: number;
+  matchedRows: number;
+  acceptedCount: number;
+  skippedCount: number;
+  manualCount: number;
+  startedAt: string;
+  lastUpdatedAt: string;
+}
+
+export type BomMatchLineStatus = 'pending' | 'accepted' | 'skipped';
+
+export type BomMatchSource = 'auto' | 'manual';
+
+export type BomMatchScoreBand = 'high' | 'medium' | 'low' | 'processing';
+
 export type AscSubstitutionRisk = 'low' | 'medium' | 'high';
+
+/** Whether the matcher returned a sellable SKU or only a parent figure number. */
+export type BomMatchLevel = 'sku' | 'figure';
+
+export interface AscSkuVariant {
+  id: string;
+  figureNumber: string;
+  sku: string;
+  description: string;
+  size: string;
+  finish?: string;
+  domesticImport?: 'Domestic' | 'Import';
+  painted?: 'Painted' | 'Unpainted';
+  pressureRating?: string;
+  connectionType?: string;
+}
 
 export interface AscCatalogPart {
   partNumber: string;
@@ -48,6 +128,9 @@ export interface AscCatalogPart {
   ignoredAttributes: string[];
   conversionRule: string;
   substitutionRisk: AscSubstitutionRisk;
+  /** Parent figure when `matchLevel` is figure-only or after SKU resolve. */
+  figureNumber?: string;
+  matchLevel?: BomMatchLevel;
 }
 
 export interface BomMatchResult {
@@ -55,6 +138,18 @@ export interface BomMatchResult {
   originalRequest: string;
   suggestedParts: AscCatalogPart[];
   topMatch?: AscCatalogPart;
+  lineStatus: BomMatchLineStatus;
+  source: BomMatchSource;
+  /** Figure-level match requires `selectedVariantId` before confirm. */
+  matchLevel?: BomMatchLevel;
+  selectedVariantId?: string;
+  /** Parent figure reference kept after SKU selection. */
+  figureNumber?: string;
+  /**
+   * Parsing left no trustworthy identifier — line cannot be auto-matched.
+   * Excluded from matching "needs attention" pending count; imports as unmatched.
+   */
+  parseUnusable?: boolean;
 }
 
 export interface GuidedQuestion {

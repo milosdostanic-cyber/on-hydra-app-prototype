@@ -17,6 +17,7 @@ export {
   Card,
   Checkbox,
   Col,
+  Collapse,
   ConfigProvider,
   DatePicker,
   Descriptions,
@@ -25,7 +26,9 @@ export {
   Dropdown,
   Empty,
   Flex,
+  FloatButton,
   Form,
+  Grid,
   Input,
   InputNumber,
   Layout,
@@ -70,5 +73,5 @@ export type {
   TabsProps,
 } from 'antd';
 
-export { AppSearchInput } from './AppSearchInput';
+export { AppSearchInput, INLINE_SEARCH_CONTROL_SIZE } from './AppSearchInput';
 export type { AppSearchInputProps } from './AppSearchInput';

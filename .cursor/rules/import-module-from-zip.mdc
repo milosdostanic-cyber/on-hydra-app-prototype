@@ -1,0 +1,675 @@
+---
+description: Import a module from a ZIP into the Hydra prototype — preserve UX/flow, map tokens and components to the target repo, dummy data only, no shell changes
+alwaysApply: false
+---
+
+# Skill: Import Module from ZIP
+
+---
+
+## About this skill
+
+> **What is this skill and why does it exist?**
+>
+> Imagine someone hands you a ZIP file from another project — it has a full module with its own pages,
+> components, tokens, and styles — and says: "We want this feature in our app." The instinct is to just
+> copy the files over and tweak things until they work. That's exactly where things go wrong.
+>
+> You end up with duplicate Button components, one-off color variables that don't match your design system,
+> or worse — you accidentally break a sidebar nav that has nothing to do with the new feature.
+>
+> **This skill exists to prevent that.** It gives the AI agent a strict, step-by-step process for safely
+> transplanting a module from a ZIP into an existing repository. The idea is simple:
+> - Take the **flow, pages, layout, and UX** from the ZIP — that stays intact.
+> - Take the **tokens and components** from the *target repo* — nothing gets invented or copied from the ZIP.
+>
+> **When should you use this skill?**
+> - You have a ZIP file (or unzipped folder) with a module/feature you want to add to a repo.
+> - You're asked to "import", "port", or "transplant" a set of screens into an existing project.
+> - The ZIP comes from a different codebase or design system that doesn't match the target repo 1:1.
+>
+> **What the agent WILL do:**
+> - Add the new module's pages, routes, and flow to the target repo.
+> - Preserve the UX/UI layout and flow of the module exactly as it appeared in the ZIP.
+> - Replace every ZIP token and component with the closest equivalent already in the target repo.
+> - Ask you before making any mapping it's not 100% sure about.
+>
+> **What the agent will NOT do:**
+> - Touch any existing module, page, route, or flow.
+> - Touch the sidebar, topbar, or any global layout element.
+> - Invent new tokens or create new components.
+> - Copy token or component files from the ZIP into the target repo.
+> - Make judgment calls on ambiguous mappings — it will always ask first.
+> - Touch any backend code, API layer, server files, or data-fetching infrastructure.
+>   Data in tables and lists is always supplied as **inline dummy data** scoped to the module's
+>   `data/` folder — derived from the table column structure and the module's flow, not from real APIs.
+
+---
+
+## Trigger
+
+Activate this skill when the user provides a ZIP file (or unzipped folder path) containing a module,
+set of pages, or feature screens and asks to integrate it into an existing repository.
+
+---
+
+## Golden Rules
+
+These rules are non-negotiable and apply at every phase:
+
+1. **Never modify existing modules, pages, routes, or flows** in the target repo.
+2. **Never touch the sidebar, topbar, or any global layout/navigation** component.
+3. **Never copy token definitions from the ZIP** — always find and use an existing equivalent in the target repo.
+4. **Never copy component implementations from the ZIP** — always map to an existing component in the target repo.
+5. **Never invent new tokens or create new components.** Reuse only what already exists.
+6. **Preserve the module's UX/UI layout and flow exactly** — structure, page order, and user journey must remain identical.
+7. **When in doubt, stop and ask the user.** Never make a judgment call on a mapping you are not confident about.
+8. **Never use raw hex/rgba/px values** for design intent — every visual value must trace to a token from the target repo's design system.
+9. **Never touch the backend.** Do not create, edit, or delete any server-side files, API routes, database schemas, or data-fetching infrastructure. The module is a frontend prototype only.
+10. **All data in tables and lists is dummy data.** Every table column and list item must be populated with realistic-looking static data placed in `src/<module>/data/`. Derive field names and value shapes from the table column definitions and the module's user flow — not from a real API contract.
+11. **Hydra prototype: follow the BOM project model.** Construction project selection is never inside an imported module. Use `useActiveProject()` (`src/context/ActiveProjectContext.tsx`) as the single source of truth — same as `BomLandingPage`. Skip ZIP project-list / project-create entry screens. Project switching stays in the top bar (`AppTopBar`) — do not modify it or duplicate project selection in the module.
+12. **Visual polish is part of done.** Before closing, run Phase **5h** and the Phase 6 **Visual polish** checklist in the browser. Antd defaults often cause overlap, duplicate chrome, and wrong typography — reconcile with ZIP layout *behaviour* using repo tokens and typography roles.
+13. **No duplicate UI on screen.** The ZIP standalone app repeats chrome (project name, nav, lists) that the Hydra shell already provides. When porting, **drop or merge** — never render the same label, CTA, picker, or status block twice on one viewport. One owner per piece of chrome (see Phase **2f** and **5h-B**).
+
+---
+
+## Phase 0 — Repo Pre-flight (Hydra-specific)
+
+> This phase applies specifically to the **Hydra on-hydra-app-prototype** repository.
+> If the target repo is different, adapt accordingly using Phase 1.
+
+Before touching the ZIP, orient yourself to the Hydra system:
+
+### Token system
+
+All design tokens ultimately trace to these files under `src/theme/`:
+
+| File | What it owns |
+|------|-------------|
+| `antdTheme.ts` | Master Ant Design `ThemeConfig` — `hydraAntdTheme` (light) and `hydraAntdThemeDark` |
+| `hydraAlias.ts` | `hydraLightAlias`, `hydraDarkAlias`, **`shellLayout`** (header height, sider width, etc.) |
+| `hydraSemanticColors.ts` | Neutral / dark-menu chrome literals |
+| `primaryPrimitiveBlue.ts` | `Primary/primary-*` ramps (blue) |
+| `primaryPrimitiveOrange.ts` | `Volcano/volcano-*` ramps (orange) |
+| `buttonPrimaryPalette.ts` | Orange solid Button palette |
+| `sidebarSemantics.ts` | Sidebar-specific color semantics |
+| `hydraTypography.ts` | Named text-style helpers (e.g. `hydraSmallStrong`) |
+| `hydraAntdTypography.ts` | antd typography token (font family, sizes) |
+
+**In components:** always obtain tokens via `theme.useToken()` from antd, `shellLayout`, or imports from the
+files above — never paste raw values.
+
+### Component barrel
+
+All antd components and Hydra-specific UI components are re-exported from **`src/ui/antd.ts`**.
+When porting pages, import components from `@/ui/antd` (or the relative path to `src/ui/antd.ts`),
+never directly from `antd`. Check `src/ui/antd.ts` to confirm a component is exported before using it.
+If it is not yet in the barrel, **stop and ask the user** whether to add it.
+
+### Module folder convention
+
+Follow the `src/bom/` module as the canonical example:
+
+```
+src/<module>/
+  <Module>Routes.tsx       ← module-level nested Routes (uses react-router-dom)
+  <module>State.ts         ← global state / machine for the module (if needed)
+  components/              ← module-specific presentational components
+  pages/                   ← one file per route segment
+  layout/                  ← module layout wrapper (e.g. BomLayout.tsx) used as Route element
+  hooks/                   ← module-specific hooks
+  context/                 ← module-specific React context
+  constants/               ← enums, constants
+  data/                    ← mock/static data, fixtures
+```
+
+### Routing convention
+
+- `src/App.tsx` mounts top-level routes inside `<AppShell />`.
+- Module routes are nested via a single `<Route path="/<module>/*" element={<ModuleRoutes />} />` entry
+  in `App.tsx`.
+- The module's own `<ModuleRoutes />` component uses a `<BomLayout>`-style wrapper as the outer
+  `<Route element={...}>` to share layout across pages.
+- **Never modify existing `<Route>` entries** in `App.tsx`. Only append the new module's entry.
+
+### Active project context — follow `src/bom/` (canonical)
+
+In **on-hydra-app-prototype**, every imported module scopes work to the **active construction project**
+the same way **`BomLandingPage`** does. Read that file before porting any module.
+
+**Reference implementation:** `src/bom/pages/BomLandingPage.tsx`
+
+#### Two levels of “project” (do not conflate)
+
+| Level | What it is | Example (BOM) | Who owns selection |
+|-------|------------|-----------------|-------------------|
+| **Construction project** | Top-level job site / shell project | `projectId` from `useActiveProject()` | **Top bar only** (`AppTopBar`) |
+| **Module entity** | Records inside the module for that job | BOM projects (`mockBomProjects`, route `:bomProjectId`) | Module landing + deep routes |
+
+ZIP apps often blur these (e.g. a construction `ProjectListPage` as module entry). In the prototype,
+**drop construction-level list/create screens** from the ZIP. The module opens on its **own landing
+view** for the already-selected construction project.
+
+#### Required patterns (copy from BOM)
+
+1. **Read construction project from context** — not from an in-module picker:
+
+   ```tsx
+   const { projectId, project } = useActiveProject();
+   ```
+
+2. **Filter mock data by construction `projectId`** — every fixture row carries a `projectId` field:
+
+   ```tsx
+   const scopedRows = useMemo(
+     () => mockModuleEntities.filter((row) => row.projectId === projectId),
+     [projectId],
+   );
+   ```
+
+   See `mockBomProjects` in `src/bom/data/mockData.ts`.
+
+3. **Reset local UI state when `projectId` changes** (selection, search, pagination):
+
+   ```tsx
+   useEffect(() => {
+     setSelectedRowKeys([]);
+     setSearchText('');
+     setPage(1);
+   }, [projectId]);
+   ```
+
+4. **No construction project selected** — show an `Alert` pointing to the top bar (do not build a
+   picker). See BOM: *“Pick a project from the top bar to scope BOM runs…”*
+
+5. **Module-specific IDs in deep routes** — construction `projectId` stays in context; route params
+   name module entities (BOM: `:bomProjectId`; SeisBrace: `:seismicDesignId`, `:braceId`, etc.).
+
+6. **Routes under `/projects/:projectId/…`** — `ProjectWorkspaceLayout` syncs URL →
+   `ActiveProjectContext`; still call `useActiveProject()` in pages (do not rely on URL alone).
+
+#### What to skip from the ZIP
+
+- `ProjectListPage`, `CreateEditFormPage`, or any **construction** project list / create / edit as
+  module entry — shell `/projects` and the top bar own that.
+- In-module construction project dropdowns or switchers.
+
+#### What the module landing may still show
+
+The **first screen after import** is the module’s own content for the active construction project —
+not a construction project picker. Examples:
+
+- **BOM:** table of BOM projects for `projectId` (`/bom` index).
+- **SeisBrace:** designs + brace table for `projectId` (ZIP `ProjectDetailPage` content).
+
+Mock data under `src/<module>/data/` must include `projectId` on every construction-scoped row so the
+top-bar switcher shows distinct fixtures per job site.
+
+### Read-only shell elements
+
+Mark these as **untouchable** for this task:
+- `src/shell/AppShell.tsx` and everything under `src/shell/`
+- `src/context/`
+- `src/theme/` (read only — do not add or modify token files)
+- `src/ui/antd.ts` (read only unless adding a missing antd export, which requires user approval)
+
+---
+
+## Phase 1 — Understand the Target Repo
+
+> Skip this phase for the Hydra repo (Phase 0 covers it). Use this phase for other repos.
+
+Before touching anything from the ZIP, fully audit the target repo.
+
+### 1a. Design tokens
+
+- Locate all token/theme files (e.g. `tokens.ts`, `theme.ts`, `variables.css`, `tailwind.config`, design system exports).
+- Build a mental or explicit list of available tokens: colors, spacing, typography, border-radius, shadows, z-index, etc.
+
+### 1b. Shared components
+
+- Locate the component library / UI kit folder (e.g. `components/ui/`, `src/shared/`, `design-system/`).
+- List all available components, their props, and their variants.
+
+### 1c. Routing and navigation structure
+
+- Understand how routing is set up (file-based, config-based, etc.).
+- Identify where new routes must be registered.
+- Note all existing routes — these must not be changed.
+
+### 1d. Read-only global elements
+
+- Identify the sidebar, topbar, shell layout, and any persistent UI. Mark these as **read-only for this task**.
+
+---
+
+## Phase 2 — Unpack and Audit the ZIP Module
+
+Extract the ZIP (or read the provided folder) and perform a full audit before writing a single line.
+
+### 2a. Inventory pages and routes
+
+- List every page/screen in the module.
+- Map the intended route for each page.
+- Sketch the user flow (which page leads to which).
+- **Hydra prototype:** mark any ZIP **construction** project-list, project-picker, or project-create/edit
+  screens as **out of scope**. Follow the BOM model (Phase 0 *Active project context*): module landing
+  uses `useActiveProject()`, filters mock data by construction `projectId`, and never re-implements
+  project selection (top bar only).
+
+### 2b. Inventory ZIP components
+
+- List every component the module uses (both custom and any imported ones).
+- For each component, note: what it renders, what props it takes, where it is used.
+
+### 2c. Inventory ZIP tokens
+
+- List every design token, CSS variable, Tailwind class, or hardcoded value used in the module.
+- Group them by type: color, spacing, typography, border-radius, shadow, z-index, etc.
+- Flag every raw hex/rgba/px encountered — each must be mapped to a repo token in Phase 3.
+
+### 2d. Inventory ZIP state and data patterns
+
+- Note any global state files, context providers, or state machines the module introduces.
+- Note any mock data or fixture files used for prototyping.
+- These may be ported (as module-local files), but must be renamed to target-repo conventions.
+
+### 2e. Inventory every table and data-driven list
+
+For each `Table`, list view, or data-driven component in the module:
+
+- Record every **column** (field name, label, data type, render pattern — e.g. status badge, currency, date).
+- Record which **page/flow step** the table appears on and what **actions** it exposes (row click, inline edit, bulk select, etc.).
+- Note any **sort, filter, or pagination** the ZIP wired up.
+
+This inventory feeds directly into Phase 4b (dummy data generation).
+Do not skip it — tables without realistic data make the prototype impossible to evaluate.
+
+### 2f. Duplicate UI audit (ZIP screen vs target shell)
+
+Before porting each ZIP screen, list what is **already visible** in the target app without the module
+(top bar, sidebar, workspace tabs, breadcrumbs, active project name). Mark each ZIP element as
+**port**, **merge**, or **skip**:
+
+| ZIP element (common) | Usually already in Hydra shell | Action on import |
+|---------------------|-------------------------------|-------------------|
+| Project list / picker / create | `/projects`, top bar switcher | **Skip** entire screens |
+| Construction project title | `ProjectWorkspaceLayout`, top bar | **Skip** in module |
+| Back to projects link | Shell “All projects” / sidebar | **Skip** unless ZIP-only inner back |
+| Module tab / nav label | Workspace tabs, sidebar item | **Skip** repeat heading |
+| Global search / user menu | `AppTopBar` | **Never** re-add |
+| Breadcrumb trail | `buildAppBreadcrumbItems` | Extend labels only if needed — no second trail |
+| Alert + loading for same state | — | **One** feedback element per state, not both |
+| Card section title + inner panel title | — | **One** title per region |
+| Wizard step title in sidebar + content | — | **Content owns** full title/description; sidebar compact |
+| Primary CTA in header + empty state | — | **One** primary CTA per context (ZIP empty-state *or* header, not both unless ZIP shows both) |
+| File list + upload footer as two headings | — | **Merge** into one “files” region when same purpose |
+| Edit project / settings | Shell or out of scope | **Skip** or disable — do not duplicate |
+
+**Rule:** If the user can already see it outside the module outlet, the module must not render it again
+inside the outlet. Preserve ZIP **layout order and flow**, not a literal copy of every standalone-app
+header.
+
+### 2g. Do NOT import ZIP source files as-is
+
+- No component file from the ZIP should be copied into the target repo unchanged.
+- No token file from the ZIP should be added to the target repo.
+- No ZIP import path (e.g. `from '../../design-system/Button'`) should survive in ported code.
+
+---
+
+## Phase 3 — Token Mapping
+
+For every token found in Phase 2c, find its equivalent in the target repo (Phase 0 / Phase 1a).
+
+### Process
+
+1. Compare the ZIP token's purpose and visual value against the target repo token catalog.
+2. For clear 1:1 matches, record the mapping.
+3. For approximate matches (e.g. ZIP uses `#1A73E8`, target repo has `token.colorPrimary`), evaluate
+   whether the semantic intent is the same. If yes, map it.
+4. For anything where you are not certain — **stop and ask the user** with a specific question:
+   > "The ZIP module uses `[token-name]` (value: `[value]`). The closest match I found in the target repo is
+   > `[repo-token]` (value / usage: `[description]`). Should I use this, or do you want to specify a different one?"
+
+### Hydra token resolution order
+
+When mapping a ZIP token to the Hydra repo, check in this order:
+
+1. **`theme.useToken()`** semantic tokens (e.g. `token.colorPrimary`, `token.colorBgContainer`,
+   `token.paddingMD`, `token.borderRadiusLG`) — prefer these first.
+2. **`shellLayout`** from `hydraAlias.ts` — for structural layout values (header height, sider width).
+3. **Named exports from `src/theme/`** — for brand primitives not exposed via `theme.useToken()`
+   (e.g. `primaryPrimitiveBlue`, `sidebarSemanticsFor`, `buttonPrimaryPalette`).
+4. If none of the above cover it, stop and ask — do not invent or paste raw values.
+
+### Output
+
+Produce a mapping table before proceeding:
+
+| ZIP Token | ZIP Value | Target Repo Token / Usage | Notes |
+|-----------|-----------|--------------------------|-------|
+| `--color-primary` | `#1A73E8` | `token.colorPrimary` | Semantic match |
+| `--spacing-md` | `16px` | `token.paddingMD` | Exact match |
+| `#F05A23` (hardcoded) | — | `primaryPrimitiveOrange.volcanoStep[5]` | Hydra orange brand |
+| ... | ... | ... | ... |
+
+Do not proceed to Phase 5 until this table is complete and confirmed.
+
+---
+
+## Phase 4 — Component Mapping
+
+For every component found in Phase 2b, find its equivalent in the target repo (Phase 1b).
+
+### Process
+
+1. Match by purpose and visual role (e.g. ZIP's `CustomButton` → Hydra's `Button` from `src/ui/antd.ts`).
+2. Verify the target component is exported from `src/ui/antd.ts` (Hydra) or the equivalent barrel.
+3. Check that the target repo component supports the props/variants needed by the module.
+4. If a target repo component is missing a required prop or variant — **stop and ask the user**:
+   > "The ZIP module uses `[ZipComponent]` with `[specific prop/variant]`. The target repo's `[RepoComponent]`
+   > doesn't have this variant. How should I handle this?"
+5. Never create a new component to fill a gap. The answer comes from the user.
+
+### Hydra component notes
+
+- All antd components must be imported from `src/ui/antd.ts`, not from `antd` directly.
+- `Typography`, `Button`, `Table`, `Steps`, `Drawer`, `Modal`, `Tag`, `Alert`, `Progress`, `Upload`,
+  `Form`, `Select`, `Input`, `Tabs`, `Space`, `Flex`, `Card`, `Divider` are all available.
+- Hydra custom components: `AppSearchInput`, `ExportCard`, `HydraTag` (from `src/ui/`).
+- For layout: use `Layout`, `Flex`, `Space`, `Row`, `Col` from antd. Never invent layout wrappers.
+- For navigation / progress indicators within a module: use antd `Steps` or `Breadcrumb`.
+
+### Output
+
+Produce a mapping table before proceeding:
+
+| ZIP Component | Target Repo Component | Import Path | Prop/Variant Notes |
+|---------------|-----------------------|-------------|-------------------|
+| `CustomButton` | `Button` | `src/ui/antd.ts` | Use `type="primary"` |
+| `SideModal` | `Drawer` | `src/ui/antd.ts` | Use `placement="right"` |
+| `ProgressBar` | `Steps` | `src/ui/antd.ts` | Map step indices |
+| ... | ... | ... | ... |
+
+Do not proceed to Phase 4b until this table is complete and confirmed.
+
+---
+
+## Phase 4b — Dummy Data Generation
+
+This phase produces all static data needed to make the module's tables and lists look real.
+**No backend, API call, or data-fetching hook is involved.** Data is always inline TypeScript arrays
+placed in `src/<module>/data/`.
+
+### Rules
+
+- **Never call a real or mocked API.** Data is imported directly as a TypeScript constant.
+- **Never add data to a shared data folder** or to any file outside `src/<module>/data/`.
+- **Never touch backend files**, server routes, or database schemas — not even to read them for shape.
+- Derive field shapes solely from the column inventory (Phase 2e) and the module's user flow.
+- Use realistic-looking values (plausible names, part numbers, quantities, statuses, dates) — not
+  `"foo"`, `"test"`, or `1234`.
+- Generate enough rows to demonstrate at least one of each visible status/variant in the flow
+  (e.g. if the flow shows pending / approved / rejected states, include a row for each).
+- If the ZIP already has mock data files, use their field shapes as the TypeScript type basis but
+  regenerate values to match the target repo's domain.
+- **Hydra prototype:** scope fixtures by `projectId` so the top-bar project switcher shows distinct data per project.
+
+### Process
+
+1. For each table/list inventoried in Phase 2e, define a TypeScript interface that matches the column structure.
+2. Create a file `src/<module>/data/<entityName>MockData.ts` (e.g. `ordersMockData.ts`).
+3. Export a typed array constant (e.g. `export const ordersMockData: Order[] = [...]`).
+4. Include 6–15 rows per table — enough to show pagination or scrolling if present.
+5. Ensure the dummy data covers the states the flow requires (e.g. if a step filters to
+   "unmatched items", include both matched and unmatched rows).
+
+### Output
+
+Before proceeding, list all data files you will create:
+
+| Data file | Entity type | Row count | States/variants covered |
+|-----------|-------------|-----------|------------------------|
+| `ordersMockData.ts` | `Order` | 10 | pending, approved, rejected |
+| `lineItemsMockData.ts` | `LineItem` | 12 | matched, unmatched, partial |
+| ... | ... | ... | ... |
+
+---
+
+## Phase 5 — Implement the Module
+
+Only begin implementation after both mapping tables (Phase 3 and Phase 4) are complete and confirmed.
+
+### 5a. Create the module directory
+
+- Create `src/<module>/` following the Hydra module folder convention (Phase 0).
+- Match the naming convention of existing modules (e.g. `bom`): lowercase, no hyphens.
+
+### 5b. Create the module routes file
+
+- Create `src/<module>/<Module>Routes.tsx`.
+- Mirror the `BomRoutes.tsx` pattern: a nested `<Routes>` with a layout wrapper as the root `<Route element>`.
+- Do not register routes in `App.tsx` yet — wait until Phase 5f.
+
+### 5c. Create the module layout (if needed)
+
+- If the module has a shared chrome (breadcrumb strip, progress bar, etc.) wrapping all pages,
+  create `src/<module>/layout/<Module>Layout.tsx`.
+- Use antd `Layout`, `Flex`, or `Space` — not custom wrapper divs with inline styles.
+- Tokens via `theme.useToken()` and `shellLayout` only.
+
+### 5d. Port pages and flow files
+
+- Create one file per route under `src/<module>/pages/`.
+- **Strip duplicate chrome first** (Phase **2f**, **5h-B**): remove ZIP headers/wrappers the shell already
+  provides before porting content regions — do not paste standalone-app page shells verbatim.
+- Port the JSX structure from the ZIP page — preserve visual hierarchy, section order, and user flow.
+- Do not copy component files or token files from the ZIP.
+- **Hydra prototype:** landing and list pages must use `useActiveProject()` and filter mock data by
+  construction `projectId` exactly like `BomLandingPage` (see Phase 0 *Active project context*).
+- For every table or list on the page, import the corresponding mock data constant from
+  `src/<module>/data/` and pass it directly as the `dataSource` prop (or equivalent).
+  Do not wire up `useEffect` + `fetch`, do not create API hooks, do not call any backend.
+
+### 5e. Apply token and component replacements
+
+- Using the Phase 3 table: replace every ZIP token with its target repo equivalent.
+- Using the Phase 4 table: replace every ZIP component import/usage with the target repo component.
+- No ZIP token, raw hex, or ZIP component should remain in the final code.
+- All antd imports come from `src/ui/antd.ts`.
+- Typography styling via `theme.useToken()` sizes, **`hydraTypography`** named roles, and `Typography` — no raw `fontSize`/`fontWeight` in JSX (see Phase 5h).
+
+### 5f. Wire up routing in App.tsx
+
+- Add exactly one new `<Route path="/<module>/*" element={<ModuleRoutes />} />` inside the `<AppShell>` Route.
+- Do not reorder or modify any existing `<Route>` entries.
+- Import the new `<Module>Routes` at the top of `App.tsx` alongside other module imports.
+
+### 5g. Preserve layout and UX
+
+- The visual structure of each page must remain identical to the ZIP original.
+- The user flow (navigation between pages) must be identical to the ZIP original.
+- Only the implementation primitives (tokens, components) change — not the design.
+
+### 5h. Visual polish pass (required before Phase 6)
+
+> Do **not** treat implementation complete after wiring routes and mock data. Run this pass on **every**
+> screen in the module. Reference the ZIP `.module.scss` / layout for *behaviour* (hover, selection,
+> section order) — reimplement with repo tokens and components, never copy SCSS files.
+
+#### A. Overlap and containment (common antd traps)
+
+| Risk | What to check | Hydra fix |
+|------|---------------|-----------|
+| **`List.Item` `actions`** in a narrow sider | Action icons bleed into the adjacent content column | Do **not** use antd `actions` on side-panel lists. Use custom rows; keep actions **inside** the row (`position: absolute` within `overflow: hidden`, or hover-reveal like ZIP). |
+| **Fixed-width sider + flex layout** | Content overlaps sider or clips incorrectly | Set sider `flex: 0 0 {width}px`, `maxWidth`, `minWidth`, `overflow: hidden`. Parent `Layout` also `overflow: hidden`. Content column: `minWidth: 0`. |
+| **Long labels in narrow panels** | Text pushes into neighbouring regions | `ellipsis` + `tooltip` on titles; `minWidth: 0` on flex children. |
+| **Toolbar / table header row** | Buttons wrap or collide with titles | `Flex` with `justify="space-between"`, `wrap="wrap"`, `gap={token.marginSM}`. |
+
+#### B. No duplicate UI on screen (required)
+
+> **Golden Rule 13.** Standalone ZIP apps show full chrome; Hydra shows most of it in the shell.
+> Porting is **subtraction + merge**, not a 1:1 paste of every ZIP header and label.
+
+**Before adding any module UI element**, ask:
+
+1. Is this already visible in the **shell** (top bar, sidebar, workspace tabs, breadcrumbs)?
+2. Is this already shown **elsewhere on the same screen** (Card title + inner heading, wizard sidebar + content)?
+3. Does the ZIP show **two** controls for the same action (header button + empty-state button)?
+
+If yes to (1) → **do not render** in the module. If yes to (2) or (3) → **keep one owner** (see table in Phase **2f**).
+
+| Duplicate pattern | Keep one | Drop / merge |
+|-------------------|----------|--------------|
+| Shell project name + module `Title` | Shell / `ProjectWorkspaceLayout` | Module page title with project name |
+| Card `"List of designs"` + sider `"Designs"` | Card title (or sider label — pick one) | Second heading |
+| Wizard sidebar title + step panel H2 | Content panel (title + description) | Sidebar paragraphs |
+| Toolbar “Add X” + empty card “Create X” | Whichever ZIP uses in populated state; empty state only when list is empty | Both visible when list has items |
+| `Spin` overlay + `Alert` “Loading…” | One loading pattern | Both at once |
+| Breadcrumb in shell + module `<Breadcrumb />` | Shell trail (extend items if product requires) | Full second breadcrumb bar |
+| Status strip + progress strip for same job | One strip (prefer existing module pattern e.g. BOM) | Parallel duplicate status UI |
+| Footer actions + sticky bar with same buttons | One action row (typically footer or sticky — match ZIP flow) | Duplicate primary/secondary CTAs |
+
+**During Phase 5d (page port):** when translating a ZIP page component, **delete** skipped chrome first,
+then port content regions. Do not port `ProjectDetailHeader`-style wrappers if the shell already provides
+equivalent context.
+
+**Verify in browser:** scan each screen top-to-bottom — every heading, CTA, and nav control should appear
+**once** unless the ZIP intentionally shows two distinct contexts (e.g. parent section vs child row actions).
+
+#### C. Typography (ZIP intent → repo styles)
+
+Never paste ZIP `font-size` / `font-weight` literals. Map ZIP text roles to **`src/theme/hydraTypography.ts`** via `hydraTextStyleToReactCss()`:
+
+| Typical ZIP / UI role | Repo helper |
+|----------------------|-------------|
+| Page / section title | `hydraTitleHeading2` or `hydraTitleHeading3` + matching `Typography.Title` `level` |
+| Card / panel title | `hydraSmallStrong` or `hydraTitleHeading4` |
+| Body / description | `hydraBaseNormal` |
+| Secondary / meta (dates, hints) | `hydraSmallNormal` + `type="secondary"` |
+| Table column header emphasis | `hydraSmallStrong` |
+
+Also use `theme.useToken()` for semantic sizes (`fontSize`, `fontSizeSM`, `colorTextDescription`) where a named role is not needed. Follow existing module patterns (e.g. `BomPageHeader`, `BomLandingPage` table shell).
+
+#### D. Alignment and spacing
+
+- Spacing from **`theme.useToken()`** (`padding*`, `margin*`, `gap` on `Flex` / `Space`) — not ad-hoc px for layout intent.
+- Search fields in toolbars: prefer **`AppSearchInput`** from `src/ui/antd.ts` (same as BOM / catalog), not raw `Input` + `SearchOutlined`.
+- Cards that wrap split layouts (sider + content): `styles={{ body: { padding: 0 } }}`, header border from `colorBorderSecondary`, surface shadow from `token.boxShadowTertiary`, radius from `token.borderRadiusLG`.
+- Dividers: consistent vertical rhythm (e.g. `margin: token.marginLG 0`) — avoid stacked `marginTop` on child **and** `Divider` on parent.
+- Selected list rows (ZIP pattern): `token.colorPrimaryBg` background + **`token.lineWidthBold`** left border in `token.colorPrimary`; default chevron; **hover** swaps chevron for inline actions.
+
+#### E. States to visually verify
+
+For each screen, confirm in the browser (not only in code):
+
+- [ ] Default, empty, loading, error, selected, hover (list actions), disabled controls
+- [ ] No overlapping text, icons, or buttons at common viewport widths
+- [ ] Switching construction project (`useActiveProject`) resets selection and reflows without stale overlap
+- [ ] Wizard: sidebar navigation, content form, footer actions aligned; no double titles
+- [ ] **Duplicate scan:** each heading, project name, breadcrumb, and primary CTA appears **once** per screen (Phase **5h-B**)
+
+If visual parity with the ZIP is unclear, open the ZIP `.module.scss` / component for the *interaction model* (hover, selection, section order) and reconcile — do not ship the first antd default that compiles.
+
+---
+
+## Phase 6 — Validation Checklist
+
+Before declaring the task complete, verify every item:
+
+**System protection**
+- [ ] No new design tokens were introduced.
+- [ ] No new shared components were created.
+- [ ] No existing page, route, or module was modified.
+- [ ] Sidebar, topbar, and global layout (`src/shell/`) are unchanged.
+- [ ] `src/theme/` files are unchanged.
+- [ ] `src/ui/antd.ts` barrel is unchanged (or user approved an addition).
+- [ ] No backend files, API routes, server handlers, or database schemas were touched or created.
+- [ ] No `fetch`, `axios`, `useQuery`, `useSWR`, or equivalent data-fetching calls were introduced.
+
+**Dummy data**
+- [ ] Every table and list in the module is populated with static mock data from `src/<module>/data/`.
+- [ ] Each mock data file exports a typed array constant with a matching TypeScript interface.
+- [ ] Mock data covers all states and variants visible in the module's flow.
+- [ ] Mock data contains realistic values (not placeholder text like "foo" or "test123").
+- [ ] No mock data files were placed outside `src/<module>/data/`.
+
+**Token and component hygiene**
+- [ ] Every ZIP token has been replaced with a target repo token.
+- [ ] Every ZIP component has been replaced with a target repo component.
+- [ ] No raw hex, rgba, or arbitrary px values remain in ported files.
+- [ ] All antd imports in ported files come from `src/ui/antd.ts`, not from `antd` directly.
+- [ ] No ZIP component or token file was added to the target repo.
+
+**UX fidelity**
+- [ ] The module's UX flow is identical to the ZIP original.
+- [ ] The module's page layouts are visually equivalent to the ZIP original.
+- [ ] All relevant UI states are handled: default, loading, empty, error, success, disabled.
+
+**Visual polish (Phase 5h — verify in browser)**
+- [ ] No overlapping text, icons, or toolbars (especially narrow sider + main content split).
+- [ ] Side-panel list actions stay **inside** the panel — no antd `List.Item` `actions` overflow.
+- [ ] No duplicate titles (shell project name, card title, inner section header, wizard sidebar vs content).
+- [ ] Typography uses **`hydraTypography`** roles + `hydraTextStyleToReactCss()` — no ZIP font literals.
+- [ ] Spacing, borders, radii, shadows from **`theme.useToken()`** / `shellLayout`; search uses **`AppSearchInput`** where applicable.
+- [ ] Sider/content split: `overflow: hidden`, content `minWidth: 0`, fixed sider width explicit.
+- [ ] Selected / hover list rows match ZIP *behaviour* (chevron default, actions on hover, primary left accent).
+- [ ] Alignment checked: toolbars, form columns, table headers, wizard footer actions.
+
+**No duplicate UI on screen (Phase 2f + 5h-B — verify in browser)**
+- [ ] Phase **2f** audit done: each ZIP screen marked port / merge / skip before implementation.
+- [ ] No construction project picker, project list, or duplicate project **name/title** in module outlet.
+- [ ] No second breadcrumb bar, back-to-projects link, or global chrome re-created in module.
+- [ ] One section title per region (not Card title + inner panel heading for the same thing).
+- [ ] Wizard: step title/description only in content panel; sidebar is compact steps only.
+- [ ] One primary CTA per context — not header + empty-state duplicate when list is populated.
+- [ ] One loading/error feedback pattern per state (not `Spin` + redundant `Alert` for the same wait).
+- [ ] No duplicate status/progress strips for the same background job (match single-strip BOM pattern when applicable).
+
+**Routing**
+- [ ] New routes are registered in `App.tsx` but existing routes are untouched.
+- [ ] Module routes file follows the `BomRoutes.tsx` pattern.
+- [ ] No existing route was reordered or renamed.
+- [ ] **Hydra prototype:** no construction project-list or project-picker in the module; pages use
+  `useActiveProject()` like `BomLandingPage`, mock data filtered by `projectId`, UI state resets on
+  `projectId` change; top bar untouched.
+
+**Naming and structure**
+- [ ] Module directory follows the `src/<module>/` convention with correct subdirectories.
+- [ ] Page files are under `src/<module>/pages/`.
+- [ ] Layout wrapper (if any) is under `src/<module>/layout/`.
+- [ ] Module state files (if any) are named `<module>*State.ts` or `<module>*FlowState.ts`.
+
+If any item fails, fix it before finishing. If a fix requires a judgment call, ask the user.
+
+---
+
+## Appendix — Common ZIP-to-Hydra Token Mappings
+
+Use this table as a starting point. Always verify against the actual token values in the repo.
+
+| Common ZIP pattern | Hydra equivalent |
+|-------------------|-----------------|
+| Primary brand blue | `token.colorPrimary` |
+| Primary background tint | `token.colorPrimaryBg` |
+| Primary border | `token.colorPrimaryBorder` |
+| Orange / volcano accent | `primaryPrimitiveOrange.volcanoStep[N]` |
+| Default text | `token.colorText` |
+| Secondary text | `token.colorTextSecondary` |
+| Disabled text | `token.colorTextDisabled` |
+| Container background | `token.colorBgContainer` |
+| Subtle fill / alt bg | `token.colorFillAlter` |
+| Border (default) | `token.colorBorder` |
+| Border (secondary) | `token.colorBorderSecondary` |
+| Success green | `token.colorSuccess` |
+| Error red | `token.colorError` |
+| Warning orange | `token.colorWarning` |
+| Base spacing unit | `token.padding` (16 px) |
+| Small spacing | `token.paddingSM` (12 px) |
+| Extra-small spacing | `token.paddingXS` (8 px) |
+| Large spacing | `token.paddingLG` (24 px) |
+| Base border radius | `token.borderRadius` |
+| Large border radius | `token.borderRadiusLG` |
+| Header height | `shellLayout.headerHeight` |
+| Sidebar / sider width | `shellLayout.siderWidth` |

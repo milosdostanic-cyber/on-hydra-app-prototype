@@ -1,24 +1,46 @@
-import { useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { ExclamationCircleOutlined, EyeOutlined } from '@ant-design/icons';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useBomHubPath } from '../../context/ActiveProjectContext';
-import { useBomWorkspace } from '../../context/BomWorkspaceContext';
 import { shellLayout } from '../../theme/hydraAlias';
 import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
 import { readUploadFileName, resolveUploadDestination } from '../bomUploadFlowState';
+import {
+  bomAdvancedFieldMappingRoute,
+  bomMappingSummaryRoute,
+  parsingReviewColumnProfile,
+} from '../bomFieldMappingUtils';
+import { buildParsingReviewReadOnlyColumns } from '../bomParsingReviewColumns';
+import {
+  clearFixedUpcParseIssue,
+  filterParsingReviewByAttention,
+  isParsingReviewUnusableRow,
+  parsingReviewMatchOutlook,
+  parsingReviewProgressStatusLabel,
+  parsingReviewProgressStatusTone,
+  parsingReviewRowSeverity,
+  type ParsingReviewAttentionFilter,
+} from '../bomParsingReviewAlert';
+import { BomParsingReviewQualityAlert } from '../components/BomParsingReviewQualityAlert';
+import { BomParsingReviewRowDrawer } from '../components/BomParsingReviewRowDrawer';
 import { BomUploadFlowStepChrome } from '../components/BomUploadFlowStepChrome';
 import { BomPageHeader } from '../layout/BomPageHeader';
-import { BomAliasConfigurator } from '../components/BomAliasConfigurator';
-import { mockParsedItems, bomProjectById, bomProjectTitleById } from '../data/mockData';
-import type { BomItem } from '../data/types';
-import { BomConfidenceTag } from '../components/BomTags';
 import {
-  Alert,
+  createInitialMatchResults,
+  normalizeParsedItemsForUpload,
+} from '../data/bomImportFlowSeed';
+import { bomProjectById, bomProjectTitleById } from '../data/mockData';
+import { useBomImportFlow } from '../context/BomImportFlowContext';
+import { useBomCancelUpload } from '../hooks/useBomCancelUpload';
+import { useBomImportSession } from '../hooks/useBomImportSession';
+import type { BomItem } from '../data/types';
+import {
+  App,
   Button,
   Card,
+  Empty,
   Flex,
-  Input,
-  InputNumber,
   Pagination,
   Space,
   Table,
@@ -26,19 +48,14 @@ import {
   message,
   theme,
 } from '../../ui/antd';
-import type { TableColumnsType } from '../../ui/antd';
-
-function renumberRows(list: BomItem[]): BomItem[] {
-  return list.map((row, idx) => ({ ...row, rowNumber: idx + 1 }));
-}
 
 export function BomParsingReviewPage() {
   const { token } = theme.useToken();
+  const { modal } = App.useApp();
   const { bomProjectId = '' } = useParams<{ bomProjectId: string }>();
   const navigate = useNavigate();
   const bomHubPath = useBomHubPath();
   const location = useLocation();
-  const { setWorkspaceRows } = useBomWorkspace();
   const uploadState = (location.state ?? {}) as BomUploadFlowLocationState;
   const { destination: uploadDestination, appendTargetId: resolvedAppendId } = resolveUploadDestination(
     bomProjectId,
@@ -46,189 +63,202 @@ export function BomParsingReviewPage() {
   );
   const uploadFileName = readUploadFileName(uploadState);
   const projectMeta = bomProjectById(bomProjectId);
-  const title = bomProjectTitleById(bomProjectId) ?? 'BOM project';
+  const title = bomProjectTitleById(bomProjectId) ?? 'New BOM project';
+  const { session, uploadId } = useBomImportSession(bomProjectId);
+  const { updateProgress, bumpRefresh } = useBomImportFlow();
   const [page, setPage] = useState(1);
-  const [rows, setRows] = useState<BomItem[]>(() => mockParsedItems.map((r) => ({ ...r })));
-  const [aliasOpen, setAliasOpen] = useState(false);
+  const [rows, setRows] = useState<BomItem[]>(() =>
+    normalizeParsedItemsForUpload(undefined, uploadFileName).map((r) => ({ ...r })),
+  );
 
-  const parseSizeValue = (sizeString: string): number | undefined => {
-    const match = sizeString.match(/(\d+\.?\d*|\d+\/\d+)\s*(inch|in)/i);
-    if (match) {
-      const numStr = match[1];
-      if (numStr.includes('/')) {
-        const parts = numStr.split('/').map(Number);
-        return parts[0] / parts[1];
-      }
-      return Number(numStr);
+  const sessionFileName = session?.progress.fileName ?? uploadFileName;
+
+  useEffect(() => {
+    const normalized = normalizeParsedItemsForUpload(session?.parsedItems, sessionFileName);
+    setRows(normalized.map((r) => ({ ...r })));
+
+    const resolvedUploadId = uploadId ?? session?.uploadId;
+    if (
+      resolvedUploadId &&
+      session &&
+      normalized.length !== (session.parsedItems?.length ?? 0)
+    ) {
+      updateProgress(resolvedUploadId, {
+        parsedItems: normalized,
+        matchResults: createInitialMatchResults(normalized, parsingReviewColumnProfile(uploadState.fieldMapping)),
+        totalRows: normalized.length,
+      });
+      bumpRefresh();
     }
-    return undefined;
-  };
+  }, [
+    session?.parsedItems,
+    session?.uploadId,
+    sessionFileName,
+    uploadId,
+    updateProgress,
+    bumpRefresh,
+    uploadState.fieldMapping,
+  ]);
 
-  const parsePressureValue = (pressureString: string): number | undefined => {
-    const match = pressureString.match(/(\d+\.?\d*)\s*PSI/i);
-    if (match) {
-      return Number(match[1]);
+  const [attentionFilter, setAttentionFilter] = useState<ParsingReviewAttentionFilter>('all');
+  const [editRowId, setEditRowId] = useState<string | null>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
+  const countsLiveRef = useRef<HTMLDivElement>(null);
+
+  const columnProfile = parsingReviewColumnProfile(uploadState.fieldMapping);
+  const outlook = useMemo(
+    () => parsingReviewMatchOutlook(rows, columnProfile),
+    [rows, columnProfile],
+  );
+  const unusableCount = outlook.unusable;
+  const degradedCount = outlook.limited;
+  const progressStatus = parsingReviewProgressStatusLabel(rows, columnProfile);
+  const parsingStatusTone = parsingReviewProgressStatusTone(rows, columnProfile);
+
+  const visibleRows = useMemo(
+    () => filterParsingReviewByAttention(rows, columnProfile, attentionFilter),
+    [rows, columnProfile, attentionFilter],
+  );
+
+  const pageSize = shellLayout.tablePageSizeDefault;
+  const maxPage = Math.max(1, Math.ceil(visibleRows.length / pageSize) || 1);
+
+  useEffect(() => {
+    if (page > maxPage) setPage(maxPage);
+  }, [page, maxPage]);
+
+  useEffect(() => {
+    if (countsLiveRef.current) {
+      countsLiveRef.current.textContent = `${outlook.ready} ready · ${outlook.limited} may match poorly · ${outlook.unusable} can't be matched`;
     }
-    return undefined;
-  };
+  }, [outlook]);
 
-  const warningRows = rows.filter((r) => r.confidence === 'medium' || r.confidence === 'low').length;
-  const errorRows = rows.filter((r) => r.confidence === 'low').length;
+  const editRow = editRowId ? rows.find((r) => r.id === editRowId) ?? null : null;
+
+  const updateRow = useCallback((rowId: string, patch: Partial<BomItem>) => {
+    setRows((prev) =>
+      prev.map((r) => {
+        if (r.id !== rowId) return r;
+        const merged = { ...r, ...patch };
+        return {
+          ...merged,
+          upcParseIssue: clearFixedUpcParseIssue(r, patch),
+        };
+      }),
+    );
+  }, []);
+
+  const openEditRow = useCallback((row: BomItem) => {
+    setEditRowId(row.id);
+  }, []);
+
+  const columns = useMemo(
+    () => buildParsingReviewReadOnlyColumns(columnProfile, openEditRow, token, uploadState.fieldMapping),
+    [columnProfile, openEditRow, token, uploadState.fieldMapping],
+  );
 
   const pagedParsedItems = useMemo(() => {
-    const start = (page - 1) * shellLayout.tablePageSizeDefault;
-    return rows.slice(start, start + shellLayout.tablePageSizeDefault);
-  }, [page, rows]);
+    const start = (page - 1) * pageSize;
+    return visibleRows.slice(start, start + pageSize);
+  }, [page, visibleRows, pageSize]);
 
-  const columns: TableColumnsType<BomItem> = [
-    { title: '#', dataIndex: 'rowNumber', key: 'rowNumber', width: 56 },
-    {
-      title: 'Original input',
-      dataIndex: 'originalInput',
-      key: 'originalInput',
-      render: (v: string, record) => (
-        <Input
-          value={v}
-          onChange={(e) =>
-            setRows((prev) => prev.map((r) => (r.id === record.id ? { ...r, originalInput: e.target.value } : r)))
-          }
-        />
-      ),
-    },
-    {
-      title: 'Parsed description',
-      dataIndex: 'parsedDescription',
-      key: 'parsedDescription',
-      render: (v: string, record) => (
-        <Input
-          value={v}
-          onChange={(e) =>
-            setRows((prev) =>
-              prev.map((r) => (r.id === record.id ? { ...r, parsedDescription: e.target.value } : r)),
-            )
-          }
-        />
-      ),
-    },
-    {
-      title: (
-        <Flex vertical>
-          <Typography.Text>Size (in)</Typography.Text>
-        </Flex>
-      ),
-      dataIndex: 'size',
-      key: 'size',
-      render: (v: string, record) => (
-        <InputNumber
-          value={parseSizeValue(v)}
-          onChange={(n) =>
-            setRows((prev) =>
-              prev.map((r) =>
-                r.id === record.id ? { ...r, size: `${typeof n === 'number' ? n : parseSizeValue(v)} inch` } : r,
-              ),
-            )
-          }
-        />
-      ),
-    },
-    {
-      title: 'Pressure (PSI)',
-      dataIndex: 'pressureClass',
-      key: 'pressureClass',
-      render: (v: string, record) => (
-        <InputNumber
-          value={parsePressureValue(v)}
-          onChange={(n) =>
-            setRows((prev) =>
-              prev.map((r) =>
-                r.id === record.id ? { ...r, pressureClass: `${typeof n === 'number' ? n : parsePressureValue(v)} PSI` } : r,
-              ),
-            )
-          }
-        />
-      ),
-    },
-    {
-      title: 'Connection (Type)',
-      dataIndex: 'connectionType',
-      key: 'connectionType',
-      render: (v: string, record) => (
-        <Input
-          value={v}
-          onChange={(e) =>
-            setRows((prev) => prev.map((r) => (r.id === record.id ? { ...r, connectionType: e.target.value } : r)))
-          }
-        />
-      ),
-    },
-    {
-      title: 'Qty',
-      dataIndex: 'quantity',
-      key: 'quantity',
-      width: 100,
-      render: (v: number, record) => (
-        <InputNumber
-          min={0}
-          value={v}
-          onChange={(n) =>
-            setRows((prev) =>
-              prev.map((r) => (r.id === record.id ? { ...r, quantity: typeof n === 'number' ? n : r.quantity } : r)),
-            )
-          }
-        />
-      ),
-    },
-    {
-      title: 'Confidence',
-      dataIndex: 'confidence',
-      key: 'confidence',
-      render: (c: BomItem['confidence']) => <BomConfidenceTag confidence={c} />,
-    },
-  ];
+  const mappingSummaryRoute = bomMappingSummaryRoute(bomProjectId);
+  const advancedFieldMappingRoute = bomAdvancedFieldMappingRoute(bomProjectId);
+  const { confirmCancelUpload } = useBomCancelUpload(bomProjectId);
 
-  const fieldMappingBackState: BomUploadFlowLocationState = {
-    ...uploadState,
-    fieldMapping: undefined,
-  };
-
-  const reviewPrimaryLabel =
-    uploadDestination === 'append' ? 'Add items to workspace' : 'Continue to matching';
+  function commitAndNavigate() {
+    const nextMatchResults = createInitialMatchResults(rows, columnProfile);
+    const resolvedUploadId = uploadId ?? session?.uploadId;
+    if (resolvedUploadId) {
+      updateProgress(resolvedUploadId, {
+        parsedItems: rows,
+        matchResults: nextMatchResults,
+        parsedRows: rows.length,
+        totalRows: rows.length,
+        currentStep: 'match',
+        acceptedCount: 0,
+        skippedCount: 0,
+        manualCount: 0,
+        matchedRows: 0,
+      });
+      bumpRefresh();
+    }
+    navigate(`/bom/projects/${bomProjectId}/matching/review`, {
+      state: { ...uploadState, uploadId: resolvedUploadId },
+    });
+  }
 
   function handleCommitParsingReview() {
     if (rows.length === 0) {
-      message.warning('No parsed rows to continue.');
+      message.warning('No items found to continue.');
       return;
     }
-    if (uploadDestination === 'append') {
-      const targetId = resolvedAppendId ?? bomProjectId;
-      if (!bomProjectById(targetId)) {
-        message.warning('That BOM project was removed. Created a new project from your file.');
-        const stamped = rows.map((r, i) => ({
-          ...r,
-          id: `import-${Date.now()}-${i}-${r.id}`,
-          status: 'needs-review' as const,
-          confidence: 'medium' as const,
-        }));
-        setWorkspaceRows('new', () => renumberRows(stamped));
-        navigate('/bom/projects/new/matching', { state: uploadState });
-        return;
-      }
-      const stamped = rows.map((r, i) => ({
-        ...r,
-        id: `import-${Date.now()}-${i}-${r.id}`,
-        status: 'needs-review' as const,
-        confidence: 'medium' as const,
-      }));
-      setWorkspaceRows(targetId, (prev) => renumberRows([...prev, ...stamped]));
-      const projName = bomProjectTitleById(targetId) ?? 'BOM project';
-      message.success(`${rows.length} item${rows.length === 1 ? '' : 's'} added to ${projName}.`);
-      navigate(`/bom/projects/${targetId}/workspace`, {
-        state: { appendImportBanner: { fileName: uploadFileName, count: rows.length } },
+
+    if (unusableCount > 0) {
+      modal.confirm({
+        title: `${unusableCount} line${unusableCount === 1 ? '' : 's'} can't be matched`,
+        icon: <ExclamationCircleOutlined style={{ color: token.colorWarning }} />,
+        content:
+          unusableCount === rows.length
+            ? "They'll be imported as unmatched lines — nothing is lost, but you'll need to pick parts for them yourself later. You may also want to re-check column mapping first."
+            : "They'll be imported as unmatched lines — nothing is lost, but you'll need to pick parts for them yourself later.",
+        okText: 'Continue anyway',
+        cancelText: 'Go back and fix',
+        centered: true,
+        onOk: commitAndNavigate,
       });
       return;
     }
-    navigate(`/bom/projects/${bomProjectId}/matching`, { state: uploadState });
+
+    commitAndNavigate();
   }
+
+  function handleFilter(filter: ParsingReviewAttentionFilter) {
+    if (filter === 'error' && unusableCount === 0) {
+      message.info('No lines that can’t be matched.');
+      return;
+    }
+    if (filter === 'warning' && degradedCount === 0) {
+      message.info('No lines that may match poorly.');
+      return;
+    }
+    setAttentionFilter(filter);
+    setPage(1);
+    window.setTimeout(() => tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }
+
+  function handleShowAllRows() {
+    setAttentionFilter('all');
+    setPage(1);
+  }
+
+  function handleRowSaved(rowId: string, patch: Partial<BomItem>) {
+    const before = rows.find((r) => r.id === rowId);
+    updateRow(rowId, patch);
+    const after = before
+      ? { ...before, ...patch, upcParseIssue: clearFixedUpcParseIssue(before, patch) }
+      : null;
+    if (before && after) {
+      const wasUnusable = isParsingReviewUnusableRow(before, columnProfile);
+      const nowSeverity = parsingReviewRowSeverity(after, columnProfile);
+      if (wasUnusable && nowSeverity !== 'error') {
+        message.success(`Row ${before.rowNumber} updated — it can be matched now.`);
+        return;
+      }
+    }
+    message.success(before ? `Row ${before.rowNumber} updated.` : 'Row updated.');
+  }
+
+  const headerActions = (
+    <Flex gap={token.marginXS} align="center" wrap="wrap" justify="flex-end">
+      <Button size="large" onClick={() => confirmCancelUpload('review')}>
+        Cancel upload
+      </Button>
+      <Button type="primary" size="large" disabled={rows.length === 0} onClick={handleCommitParsingReview}>
+        Continue with current data
+      </Button>
+    </Flex>
+  );
 
   if (bomProjectId && bomProjectId !== 'new' && !projectMeta) {
     return (
@@ -252,154 +282,195 @@ export function BomParsingReviewPage() {
     return (
       <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
         <BomUploadFlowStepChrome
-          backTo={`/bom/projects/${bomProjectId}/field-mapping`}
-          backLabel="Back to field mapping"
-          backState={fieldMappingBackState}
+          backTo={mappingSummaryRoute}
+          backLabel="Back to column check"
+          backState={uploadState}
           fileName={uploadFileName}
           currentStep={1}
-          statusLabel={`${rows.length} rows parsed`}
+          statusLabel={progressStatus}
+          statusTone={parsingStatusTone}
         />
         <BomPageHeader
-          title="Nothing to parse"
-          description="No line items were produced from your file. Adjust column mapping or upload a different file."
+          title="Review your imported rows"
+          description={`Check row quality before matching. Project: ${title}.`}
           actions={
             <Space wrap>
-              <Button size="large" onClick={() => setAliasOpen(true)}>
-                Change column mapping
+              <Button size="large" onClick={() => confirmCancelUpload('review')}>
+                Cancel upload
               </Button>
               <Button
                 type="primary"
                 size="large"
-                onClick={() =>
-                  navigate(`/bom/projects/${bomProjectId}/field-mapping`, { state: fieldMappingBackState })
-                }
+                onClick={() => navigate(advancedFieldMappingRoute, { state: uploadState })}
               >
-                Open field mapping
+                Review mapping
               </Button>
               {isAppendFlow ? (
-                <Button
-                  size="large"
-                  onClick={() => navigate(`/bom/projects/${appendWorkspaceId}/workspace`)}
-                >
+                <Button size="large" onClick={() => navigate(`/bom/projects/${appendWorkspaceId}/workspace`)}>
                   Cancel — keep workspace as-is
                 </Button>
               ) : null}
-              <Link to={bomHubPath}>
-                <Button size="large">BOM home</Button>
-              </Link>
             </Space>
           }
         />
-        <BomAliasConfigurator open={aliasOpen} onClose={() => setAliasOpen(false)} />
       </Space>
     );
   }
 
-  const parsingStatusLabel =
-    warningRows > 0
-      ? `${rows.length} rows · ${warningRows} may need attention`
-      : `${rows.length} rows parsed`;
+  const toolbarLabel =
+    attentionFilter === 'error'
+      ? `Showing ${visibleRows.length} part${visibleRows.length === 1 ? '' : 's'} that can't be matched`
+      : attentionFilter === 'warning'
+        ? `Showing ${visibleRows.length} part${visibleRows.length === 1 ? '' : 's'} that may match poorly`
+        : `${rows.length} part${rows.length === 1 ? '' : 's'} we found in your file${
+            unusableCount > 0 ? ` · ${unusableCount} can't be matched` : ''
+          }`;
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <BomUploadFlowStepChrome
-        backTo={`/bom/projects/${bomProjectId}/field-mapping`}
-        backLabel="Back to field mapping"
-        backState={fieldMappingBackState}
+        backTo={mappingSummaryRoute}
+        backLabel="Back to column check"
+        backState={uploadState}
         fileName={uploadFileName}
         currentStep={1}
-        statusLabel={parsingStatusLabel}
+        statusLabel={progressStatus}
+        statusTone={parsingStatusTone}
       />
       <BomPageHeader
-        title="Parsing review"
-        description={`Review parsed rows before matching. Project: ${title}.`}
-        actions={
-          <Space wrap>
-            <Button type="primary" size="large" disabled={rows.length === 0} onClick={handleCommitParsingReview}>
-              {reviewPrimaryLabel}
-            </Button>
-            <Link to={bomHubPath}>
-              <Button size="large">BOM home</Button>
-            </Link>
-          </Space>
-        }
+        title="Review your imported rows"
+        description="Your original line comes first; the other columns show how we read it."
+        actions={headerActions}
       />
 
-      <Alert
-        type={errorRows > 0 ? 'warning' : 'info'}
-        showIcon
-        message={`${rows.length} items parsed`}
-        description={
-          warningRows > 0
-            ? `${warningRows} row${warningRows !== 1 ? 's' : ''} may need attention (confidence or missing attributes).`
-            : 'All sample rows parsed with high or medium confidence.'
-        }
-      />
-
-      <Card styles={{ body: { padding: 0 } }}>
-        <Flex
-          wrap
-          gap={token.marginSM}
-          align="center"
-          style={{
-            paddingInline: token.paddingMD,
-            paddingBlock: token.paddingSM,
-            borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-            background: token.colorFillAlter,
-          }}
-        >
-          <Typography.Link onClick={() => setAliasOpen(true)}>Change column mapping</Typography.Link>
-          <Typography.Text type="secondary">·</Typography.Text>
-          <Typography.Link
-            onClick={() =>
-              navigate(`/bom/projects/${bomProjectId}/field-mapping`, { state: fieldMappingBackState })
-            }
-          >
-            Open full field mapping page
-          </Typography.Link>
-        </Flex>
-        <Table<BomItem>
-          rowKey="id"
-          columns={columns}
-          dataSource={pagedParsedItems}
-          pagination={false}
-          scroll={{ x: 'max-content' }}
-          styles={{
-            header: {
-              cell: {
-                background: token.colorFillAlter,
-                borderBottomColor: token.colorBorderSecondary,
-                fontWeight: token.fontWeightStrong,
-              },
-            },
-            body: { cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM } },
-          }}
-        />
-        <Flex
-          justify="flex-end"
-          align="center"
-          style={{
-            paddingInline: token.paddingMD,
-            paddingBlock: token.paddingSM,
-            borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-          }}
-        >
-          <Pagination
-            current={page}
-            pageSize={shellLayout.tablePageSizeDefault}
-            total={rows.length}
-            onChange={setPage}
-            showSizeChanger={false}
-          />
-        </Flex>
-      </Card>
-
-      <BomAliasConfigurator
-        open={aliasOpen}
-        onClose={() => setAliasOpen(false)}
-        onSave={() => {
-          /* Demo: re-parse hook would run here */
+      <div
+        ref={countsLiveRef}
+        aria-live="polite"
+        style={{
+          position: 'absolute',
+          width: 1,
+          height: 1,
+          padding: 0,
+          margin: -1,
+          overflow: 'hidden',
+          clip: 'rect(0, 0, 0, 0)',
+          whiteSpace: 'nowrap',
+          border: 0,
         }}
+      />
+
+      <BomParsingReviewQualityAlert
+        rows={rows}
+        profile={columnProfile}
+      />
+
+      <div ref={tableRef}>
+        <Card styles={{ body: { padding: 0 } }}>
+          <Flex
+            align="center"
+            justify="space-between"
+            gap={token.marginSM}
+            wrap="wrap"
+            style={{
+              paddingInline: token.paddingMD,
+              paddingBlock: token.paddingSM,
+              borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+              background: token.colorFillAlter,
+            }}
+          >
+            <Typography.Text type="secondary">{toolbarLabel}</Typography.Text>
+            <Flex gap={token.marginXS} wrap="wrap">
+              {attentionFilter !== 'all' ? (
+                <Button icon={<EyeOutlined />} onClick={handleShowAllRows}>
+                  Show all rows
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    disabled={unusableCount === 0}
+                    icon={<EyeOutlined />}
+                    onClick={() => handleFilter('error')}
+                  >
+                    Can&apos;t be matched ({unusableCount})
+                  </Button>
+                  <Button
+                    disabled={degradedCount === 0}
+                    icon={<EyeOutlined />}
+                    onClick={() => handleFilter('warning')}
+                  >
+                    May match poorly ({degradedCount})
+                  </Button>
+                </>
+              )}
+            </Flex>
+          </Flex>
+          {visibleRows.length === 0 ? (
+            <Flex
+              vertical
+              align="center"
+              justify="center"
+              style={{ paddingBlock: token.paddingLG, paddingInline: token.paddingMD }}
+            >
+              <Empty
+                description={
+                  attentionFilter === 'error'
+                    ? 'No lines that can’t be matched — nice work.'
+                    : 'No lines that may match poorly.'
+                }
+              >
+                <Button type="primary" onClick={handleShowAllRows}>
+                  Show all rows
+                </Button>
+              </Empty>
+            </Flex>
+          ) : (
+            <Table<BomItem>
+              rowKey="id"
+              columns={columns}
+              dataSource={pagedParsedItems}
+              pagination={false}
+              scroll={{ x: 'max-content' }}
+              styles={{
+                header: {
+                  cell: {
+                    background: token.colorFillAlter,
+                    borderBottomColor: token.colorBorderSecondary,
+                    fontWeight: token.fontWeightStrong,
+                  },
+                },
+                body: {
+                  cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM },
+                },
+              }}
+            />
+          )}
+          <Flex
+            justify="flex-end"
+            align="center"
+            style={{
+              paddingInline: token.paddingMD,
+              paddingBlock: token.paddingSM,
+              borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+            }}
+          >
+            <Pagination
+              current={page}
+              pageSize={pageSize}
+              total={visibleRows.length}
+              onChange={setPage}
+              showSizeChanger={false}
+            />
+          </Flex>
+        </Card>
+      </div>
+
+      <BomParsingReviewRowDrawer
+        open={editRowId != null}
+        row={editRow}
+        profile={columnProfile}
+        fieldMapping={uploadState.fieldMapping}
+        onClose={() => setEditRowId(null)}
+        onSave={handleRowSaved}
       />
     </Space>
   );

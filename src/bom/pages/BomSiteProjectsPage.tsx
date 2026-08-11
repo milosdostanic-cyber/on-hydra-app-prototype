@@ -6,15 +6,19 @@ import {
   UploadOutlined,
 } from '@ant-design/icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import type { Key } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import type { CSSProperties, Key } from 'react';
 
-import { useActiveProject } from '../../context/ActiveProjectContext';
+import { useActiveProject, useBomHubPath } from '../../context/ActiveProjectContext';
+import { useActionTrail } from '../../context/ActionTrailContext';
+import { ActionTrailSubProjectNewTag } from '../../search/components/ActionTrailSubProjectNewTag';
+import { actionTrailTableRowProps } from '../../search/actionTrailStyles';
 import { BomCreateProjectModal } from '../components/BomCreateProjectModal';
 import { BomUploadDestinationModal } from '../components/BomUploadDestinationModal';
 import { BomPageHeader } from '../layout/BomPageHeader';
 import { mockBomProjects } from '../data/mockData';
 import { MAX_UPLOAD_BYTES, VALID_UPLOAD_TYPES } from '../constants/uploadLimits';
+import { resolveBomProjectStatus } from '../bomProjectStatus';
 import { BomProjectStatusTag } from '../components/BomTags';
 import type { BomProject } from '../data/types';
 import { shellLayout } from '../../theme/hydraAlias';
@@ -46,12 +50,8 @@ import type { TableColumnsType } from '../../ui/antd';
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All statuses' },
-  { value: 'draft', label: 'Draft' },
-  { value: 'in-progress', label: 'In Progress' },
+  { value: 'ready', label: 'Ready' },
   { value: 'needs-review', label: 'Needs Review' },
-  { value: 'partial', label: 'Partial' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'failed', label: 'Failed' },
 ];
 
 const SORT_OPTIONS = [
@@ -63,8 +63,15 @@ export function BomSiteProjectsPage() {
   const { token } = theme.useToken();
   const { modal } = App.useApp();
   const navigate = useNavigate();
+  const location = useLocation();
   const { constructionProjectId = '' } = useParams<{ constructionProjectId: string }>();
   const { setProjectId, project } = useActiveProject();
+  const bomHubPath = useBomHubPath();
+  const { entries, unseenSubProjectIds } = useActionTrail();
+  const highlightedProjectIds = useMemo(
+    () => new Set(unseenSubProjectIds('bom')),
+    [entries, unseenSubProjectIds],
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -77,6 +84,14 @@ export function BomSiteProjectsPage() {
   const [hoveredQuickAction, setHoveredQuickAction] = useState<'upload' | 'search' | null>(null);
   const [uploadDestModalOpen, setUploadDestModalOpen] = useState(false);
   const [pendingUpload, setPendingUpload] = useState<{ name: string; size: number } | null>(null);
+  const [projectsListKey, setProjectsListKey] = useState(0);
+
+  useEffect(() => {
+    if (location.state?.refreshBomProjects) {
+      setProjectsListKey((key) => key + 1);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.pathname, location.state, navigate]);
 
   useEffect(() => {
     if (constructionProjectId) setProjectId(constructionProjectId);
@@ -91,8 +106,14 @@ export function BomSiteProjectsPage() {
 
   const projectBoms = useMemo(
     () => mockBomProjects.filter((p) => p.projectId === constructionProjectId && !deletedIds.has(p.id)),
-    [constructionProjectId, deletedIds],
+    [constructionProjectId, deletedIds, projectsListKey],
   );
+
+  useEffect(() => {
+    for (const project of projectBoms) {
+      resolveBomProjectStatus(project.id);
+    }
+  }, [projectBoms]);
 
   const filteredProjects = useMemo(() => {
     let list = [...projectBoms];
@@ -101,7 +122,7 @@ export function BomSiteProjectsPage() {
       list = list.filter((p) => p.name.toLowerCase().includes(q));
     }
     if (statusFilter !== 'all') {
-      list = list.filter((p) => p.status === statusFilter);
+      list = list.filter((p) => resolveBomProjectStatus(p.id) === statusFilter);
     }
     list.sort((a, b) => {
       const diff = new Date(b.lastEdited).getTime() - new Date(a.lastEdited).getTime();
@@ -153,7 +174,7 @@ export function BomSiteProjectsPage() {
             message="This project will be removed from your list"
             description="In this demo the project is only hidden locally until you refresh; there is no server delete."
           />
-          <Descriptions bordered size="small" column={1}>
+          <Descriptions bordered column={1}>
             <Descriptions.Item label="Project name">{row.name}</Descriptions.Item>
             <Descriptions.Item label="Items">{row.items}</Descriptions.Item>
             <Descriptions.Item label="Last edited">{row.lastEdited}</Descriptions.Item>
@@ -196,76 +217,89 @@ export function BomSiteProjectsPage() {
 
   const tableLinkButtonStyle = { padding: 0, height: 'auto' as const };
 
-  const columns: TableColumnsType<BomProject> = [
-    {
-      title: 'Project name',
-      dataIndex: 'name',
-      key: 'name',
-      render: (name: string, row) => (
-        <Button
-          type="link"
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/bom/projects/${row.id}/workspace`);
-          }}
-          style={tableLinkButtonStyle}
-        >
-          {name}
-        </Button>
-      ),
-    },
-    {
-      title: 'Last edited',
-      dataIndex: 'lastEdited',
-      key: 'lastEdited',
-      sorter: (a, b) => new Date(a.lastEdited).getTime() - new Date(b.lastEdited).getTime(),
-    },
-    {
-      title: 'Items',
-      dataIndex: 'items',
-      key: 'items',
-      align: 'center',
-      sorter: (a, b) => a.items - b.items,
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      align: 'left',
-      render: (s: BomProject['status']) => <BomProjectStatusTag status={s} />,
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      width: 150,
-      render: (_: unknown, row: BomProject) => (
-        <Space size={token.marginSM}>
-          <Button
-            type="link"
-            style={tableLinkButtonStyle}
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/bom/projects/${row.id}/workspace`);
-            }}
-          >
-            Edit
-          </Button>
-          <Button
-            type="link"
-            danger
-            style={tableLinkButtonStyle}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              openDeleteProjectModal(row);
-            }}
-          >
-            Delete
-          </Button>
-        </Space>
-      ),
-    },
-  ];
+  const columns: TableColumnsType<BomProject> = useMemo(() => {
+    const base: TableColumnsType<BomProject> = [
+      {
+        title: 'Project name',
+        dataIndex: 'name',
+        key: 'name',
+        render: (name: string, row) => (
+          <Flex align="center" gap={token.marginXS} wrap="wrap">
+            <Button
+              type="link"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/bom/projects/${row.id}/workspace`);
+              }}
+              style={tableLinkButtonStyle}
+            >
+              {name}
+            </Button>
+            <ActionTrailSubProjectNewTag module="bom" subProjectId={row.id} />
+          </Flex>
+        ),
+      },
+      {
+        title: 'Last edited',
+        dataIndex: 'lastEdited',
+        key: 'lastEdited',
+        sorter: (a, b) => new Date(a.lastEdited).getTime() - new Date(b.lastEdited).getTime(),
+      },
+      {
+        title: 'Items',
+        dataIndex: 'items',
+        key: 'items',
+        align: 'center',
+        sorter: (a, b) => a.items - b.items,
+      },
+      {
+        title: 'Status',
+        dataIndex: 'status',
+        key: 'status',
+        align: 'left',
+        render: (_status: BomProject['status'], row: BomProject) => (
+          <BomProjectStatusTag status={resolveBomProjectStatus(row.id)} />
+        ),
+      },
+    ];
+
+    if (hasSelection) return base;
+
+    return [
+      ...base,
+      {
+        title: 'Actions',
+        key: 'actions',
+        width: 150,
+        render: (_: unknown, row: BomProject) => (
+          <Space size={token.marginSM}>
+            <Button
+              type="link"
+              style={tableLinkButtonStyle}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/bom/projects/${row.id}/workspace`);
+              }}
+            >
+              Edit
+            </Button>
+            <Button
+              type="link"
+              danger
+              style={tableLinkButtonStyle}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                openDeleteProjectModal(row);
+              }}
+            >
+              Delete
+            </Button>
+          </Space>
+        ),
+      },
+    ];
+  }, [hasSelection, navigate, token.marginSM]);
 
   const triggerUpload = () => fileInputRef.current?.click();
 
@@ -293,29 +327,40 @@ export function BomSiteProjectsPage() {
     const closeLoading = message.loading('Processing your file…', 0);
     window.setTimeout(() => {
       closeLoading();
-      message.success('File received. Opening field mapping.');
+      message.success('File received. Reviewing column mapping.');
       if (state.uploadDestination === 'new') {
-        navigate('/bom/projects/new/field-mapping', { state });
+        navigate('/bom/projects/new/mapping-summary', {
+          state: {
+            ...state,
+            uploadFlowBackTo: bomHubPath,
+            uploadFlowBackLabel: 'Back to BOM',
+          },
+        });
       } else if (state.appendTargetId) {
-        navigate(`/bom/projects/${state.appendTargetId}/field-mapping`, { state });
+        navigate(`/bom/projects/${state.appendTargetId}/mapping-summary`, {
+          state: {
+            ...state,
+            uploadFlowBackTo: `/bom/projects/${state.appendTargetId}/workspace`,
+            uploadFlowBackLabel: 'Back to workspace',
+          },
+        });
       }
       setPendingUpload(null);
     }, 900);
   };
 
-  const cardFlatStyle = {
-    background: token.colorBgContainer,
-    borderRadius: token.borderRadiusLG,
-    border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-    cursor: 'pointer' as const,
+  const getQuickActionStyle = (kind: 'upload' | 'search'): CSSProperties => {
+    const isHovered = hoveredQuickAction === kind;
+    return {
+      background: token.colorBgContainer,
+      borderRadius: token.borderRadiusLG,
+      border: `${token.lineWidth * 2}px ${token.lineType} ${isHovered ? token.colorPrimaryBorderHover : token.colorPrimaryBorder}`,
+      boxShadow: isHovered ? token.boxShadow : token.boxShadowTertiary,
+      transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
+      cursor: 'pointer',
+      transition: `border-color ${token.motionDurationMid}, box-shadow ${token.motionDurationMid}, transform ${token.motionDurationMid}`,
+    };
   };
-
-  const getQuickActionStyle = (kind: 'upload' | 'search') => ({
-    ...cardFlatStyle,
-    borderColor: hoveredQuickAction === kind ? token.colorPrimaryBorderHover : token.colorBorderSecondary,
-    boxShadow: 'none',
-    transition: `border-color ${token.motionDurationMid}`,
-  });
 
   const tableShellStyle = {
     background: token.colorBgContainer,
@@ -370,7 +415,9 @@ export function BomSiteProjectsPage() {
                   type="secondary"
                   style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
                 >
-                  Excel, CSV, or PDF. We&apos;ll take you to parsing review after a short simulated import.
+                  {hasNoProjects
+                    ? 'Excel or CSV with the columns and quantities you pick.'
+                    : 'Excel, CSV, or PDF. We map your columns, then guide you through review and matching.'}
                 </Typography.Paragraph>
               </Flex>
             </Card>
@@ -386,7 +433,7 @@ export function BomSiteProjectsPage() {
                   flexDirection: 'column',
                 },
               }}
-              onClick={() => navigate('/bom/search')}
+              onClick={() => navigate('/bom/search?mode=competitor')}
               onMouseEnter={() => setHoveredQuickAction('search')}
               onMouseLeave={() => setHoveredQuickAction(null)}
             >
@@ -394,15 +441,17 @@ export function BomSiteProjectsPage() {
                 <Flex align="center" gap={token.marginSM}>
                   <FileSearchOutlined style={{ fontSize: hydraTitleHeading4.fontSize, color: token.colorPrimary }} />
                   <Typography.Title level={4} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading4) }}>
-                    Search Catalogue Parts
+                    Search catalogue parts
                   </Typography.Title>
                 </Flex>
-                <Typography.Paragraph
-                  type="secondary"
-                  style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
-                >
-                  Validate descriptions against the catalog before you commit lines to a BOM.
-                </Typography.Paragraph>
+                {!hasNoProjects ? (
+                  <Typography.Paragraph
+                    type="secondary"
+                    style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
+                  >
+                    Competitor lines or ASC catalog. Match to parts or search and add to your project.
+                  </Typography.Paragraph>
+                ) : null}
               </Flex>
             </Card>
           </Col>
@@ -424,25 +473,20 @@ export function BomSiteProjectsPage() {
                 <Empty
                   description={
                     <Space orientation="vertical" size={token.marginXS}>
-                      <Typography.Text strong>No BOM projects yet</Typography.Text>
+                      <Typography.Text strong>No projects yet</Typography.Text>
                       <Typography.Text type="secondary">
-                        Create your first BOM project or upload a file to get started.
+                        Upload a file, search parts, or start from scratch to create your first BOM.
                       </Typography.Text>
                     </Space>
                   }
                 >
-                  <Flex gap={token.marginSM} justify="center" wrap="wrap">
-                    <Button
-                      type="primary"
-                      icon={<PlusOutlined />}
-                      onClick={() => setCreateModalOpen(true)}
-                    >
-                      Create New BOM Project
-                    </Button>
-                    <Button icon={<UploadOutlined />} onClick={triggerUpload}>
-                      Upload a file
-                    </Button>
-                  </Flex>
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => setCreateModalOpen(true)}
+                  >
+                    New BOM Project
+                  </Button>
                 </Empty>
               </Flex>
             ) : hasNoResults ? (
@@ -502,6 +546,7 @@ export function BomSiteProjectsPage() {
                   ) : (
                     <>
                       <AppSearchInput
+                        size="middle"
                         placeholder="Search Items..."
                         value={searchText}
                         onChange={(e) => {
@@ -539,6 +584,9 @@ export function BomSiteProjectsPage() {
                   columns={columns}
                   dataSource={paginatedProjects}
                   pagination={false}
+                  onRow={(record) =>
+                    actionTrailTableRowProps(token, highlightedProjectIds.has(record.id))
+                  }
                   rowSelection={{
                     selectedRowKeys,
                     onChange: (keys) => setSelectedRowKeys(keys),
