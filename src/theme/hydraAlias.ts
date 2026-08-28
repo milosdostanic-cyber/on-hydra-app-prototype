@@ -1,6 +1,6 @@
 import { theme } from 'antd';
 
-import { bluePrimarySemantics, bluePrimarySemanticsDark } from './primaryPrimitiveBlue';
+import { bluePrimarySemantics, bluePrimarySemanticsDark, blueInfoSemantics, blueInfoSemanticsDark } from './primaryPrimitiveBlue';
 import { hydraAntdTypographyToken } from './hydraAntdTypography';
 import {
   hydraBoxShadow,
@@ -19,6 +19,7 @@ export const hydraLightAlias = theme.getDesignToken({
   token: {
     ...hydraAntdTypographyToken,
     ...bluePrimarySemantics,
+    ...blueInfoSemantics,
     /** Figma `colorBgLayout` → `Neutral/gray-3` (not antd default `#f5f5f5`). */
     colorBgLayout: hydraNeutralGray3Light,
     boxShadow: hydraBoxShadow,
@@ -33,6 +34,7 @@ export const hydraDarkAlias = theme.getDesignToken({
   token: {
     ...hydraAntdTypographyToken,
     ...bluePrimarySemanticsDark,
+    ...blueInfoSemanticsDark,
     /** Figma `colorBgLayout` → `Neutral/gray-3` (not antd dark default `#000000`). */
     colorBgLayout: hydraNeutralGray3Dark,
     boxShadow: hydraBoxShadow,

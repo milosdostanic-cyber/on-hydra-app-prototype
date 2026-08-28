@@ -30,7 +30,7 @@ import { Button, Flex, Layout, Menu, theme } from '../ui/antd';
 import type { MenuProps } from '../ui/antd';
 
 import { ConnectedSidebarBrand } from './ConnectedSidebarBrand';
-import { getLastScopedProjectId } from './lastProjectScope';
+import { getLastScopedProjectId, setLastScopedProjectId } from './lastProjectScope';
 import { productCatalogHomePath } from '../catalog/productCatalogNavigation';
 
 const { Sider } = Layout;
@@ -41,13 +41,14 @@ function primarySideKey(pathname: string): string {
   if (/\/projects\/[^/]+\/catalog(\/|$)/.test(pathname)) return 'part-search';
   if (pathname.startsWith('/bom')) return 'bom';
   if (pathname.startsWith('/seisbrace')) return 'seis';
+  if (pathname.startsWith('/spec')) return 'spec';
   if (pathname.startsWith('/revit-plugin')) return 'revit-plugin';
   if (pathname.startsWith('/knowledge-center')) return 'knowledge-center';
   if (pathname.startsWith('/dashboard')) return 'dash';
   if (pathname.startsWith('/projects')) {
     if (pathname === '/projects' || pathname === '/projects/') return 'dash';
+    if (/\/projects\/[^/]+\/spec(\/|$)/.test(pathname)) return 'spec';
     if (/\/projects\/[^/]+\/seis-brace/.test(pathname)) return 'seis';
-    if (/\/projects\/[^/]+\/sales-brace/.test(pathname)) return 'spec';
     if (/\/projects\/[^/]+\/submittal/.test(pathname)) return 'submittal';
     if (/\/projects\/[^/]+\/content/.test(pathname)) return 'content';
     return 'dash';
@@ -98,7 +99,7 @@ export function AppShellSidebar() {
   const { token } = theme.useToken();
   const location = useLocation();
   const navigate = useNavigate();
-  const { projectId: activeProjectId } = useActiveProject();
+  const { projectId: activeProjectId, setProjectId } = useActiveProject();
 
   const primaryMenuItems: MenuProps['items'] = useMemo(
     () => [
@@ -118,29 +119,29 @@ export function AppShellSidebar() {
   const selectedMenuKeys = useMemo(() => [primarySideKey(location.pathname)], [location.pathname]);
 
   const onMenuClick: MenuProps['onClick'] = ({ key }) => {
-    const pid = getLastScopedProjectId();
-    const projectScoped =
-      key === 'spec' || key === 'submittal' || key === 'content' || key === 'bom' || key === 'seis';
-    if (projectScoped && !pid) {
-      navigate('/dashboard');
-      return;
-    }
+    const scopedProjectId = resolveActiveConstructionProjectId(
+      activeProjectId ?? getLastScopedProjectId(),
+    );
     // Part Search landing = product catalog (cover + Featured Parts + Categories). Always
     // resolve a construction project — bare `/catalog` is the older search-first home.
-    const catalogProjectId = resolveActiveConstructionProjectId(activeProjectId ?? pid);
     const routes: Record<string, string> = {
       dash: '/dashboard',
-      'part-search': productCatalogHomePath(catalogProjectId),
-      content: `/projects/${pid}/content`,
+      'part-search': productCatalogHomePath(scopedProjectId),
+      content: `/projects/${scopedProjectId}/content`,
       bom: '/bom',
-      spec: `/projects/${pid}/sales-brace`,
+      spec: `/projects/${scopedProjectId}/spec`,
       seis: '/seisbrace',
-      submittal: `/projects/${pid}/submittal`,
+      submittal: `/projects/${scopedProjectId}/submittal`,
       'revit-plugin': '/revit-plugin',
       'knowledge-center': '/knowledge-center',
     };
     const path = routes[key];
-    if (path) navigate(path);
+    if (!path) return;
+    if (key === 'content' || key === 'spec' || key === 'submittal' || key === 'part-search') {
+      setProjectId(scopedProjectId);
+      setLastScopedProjectId(scopedProjectId);
+    }
+    navigate(path);
   };
 
   return (

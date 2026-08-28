@@ -1,3 +1,4 @@
+import { specProjectListPath } from '../spec/specNavigation';
 import { flatProjectWorkspacePath } from './umbrellaCompany';
 
 export type DeliverableKind = 'bom' | 'spec' | 'seis-brace' | 'submittal';
@@ -41,7 +42,7 @@ function buildDeliverablePath(projectKey: string, seed: LastDeliverableSeed): st
     case 'bom':
       return `/bom/projects/${seed.bomProjectId}/workspace`;
     case 'spec':
-      return `${flatProjectWorkspacePath(projectKey, 'sales-brace')}?spec=${encodeURIComponent(seed.deliverableId ?? 'default')}`;
+      return specProjectListPath(projectKey);
     case 'seis-brace':
       return `${flatProjectWorkspacePath(projectKey, 'seis-brace')}?design=${encodeURIComponent(seed.deliverableId ?? 'default')}`;
     case 'submittal':

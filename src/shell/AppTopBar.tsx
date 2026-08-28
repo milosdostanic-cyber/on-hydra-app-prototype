@@ -22,6 +22,7 @@ import { Avatar, Button, Dropdown, Flex, List, Modal, Switch, Typography, theme 
 import type { MenuProps } from '../ui/antd';
 import { useActiveProject } from '../context/ActiveProjectContext';
 import { useActionTrail } from '../context/ActionTrailContext';
+import { isSpecModulePath } from '../spec/specNavigation';
 import { type ProjectRow } from './projectSeed';
 
 const shellControlBtnStyle = (color: string): CSSProperties => ({
@@ -40,6 +41,12 @@ function topBarCopyForPath(pathname: string, activeProjectName?: string): TopBar
     return {
       title: 'ConnectED',
       subtitle: 'Home · recent projects, overview, and job site directory',
+    };
+  }
+  if (isSpecModulePath(pathname)) {
+    return {
+      title: 'Spec',
+      subtitle: 'Review, edit, and export specification documents',
     };
   }
   if (scopedFlat || scopedUmbrella) {
@@ -184,7 +191,7 @@ function SwitchProjectModal({ open, onClose }: { open: boolean; onClose: () => v
 }
 
 /**
- * Primary brand strip — contextual title/subtitle on dashboard, workspace, BOM, catalog, and reframing flows.
+ * Primary brand strip — contextual title/subtitle for Home, project workspace, and modules.
  */
 export function AppTopBar() {
   const { token } = theme.useToken();

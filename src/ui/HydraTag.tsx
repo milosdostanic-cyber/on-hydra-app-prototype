@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 
+import { hydraBaseNormal, hydraTextStyleToReactCss } from '../theme/hydraTypography';
 import { Tag, theme } from './antd';
-import { hydraBaseNormal } from '../theme/hydraTypography';
 
 export type HydraTagTone = 'default' | 'success' | 'warning' | 'error' | 'processing';
 
@@ -39,28 +39,18 @@ function toneColors(token: ReturnType<typeof theme.useToken>['token'], tone: Hyd
   };
 }
 
-function tagMetrics(token: ReturnType<typeof theme.useToken>['token']) {
-  return {
-    fontSize: token.fontSize,
-    lineHeight: `${token.fontSize * token.lineHeight}px`,
-  };
-}
-
 function hydraTagRootStyle(
   token: ReturnType<typeof theme.useToken>['token'],
   colors?: { background?: string; borderColor?: string; textColor?: string; borderWidth?: number },
   style?: CSSProperties,
 ): CSSProperties {
-  const metrics = tagMetrics(token);
   return {
     marginInline: 0,
     marginBlock: 0,
     borderRadius: token.borderRadiusSM,
     paddingInline: token.paddingSM,
     paddingBlock: token.paddingXXS,
-    fontSize: metrics.fontSize,
-    lineHeight: metrics.lineHeight,
-    fontWeight: hydraBaseNormal.fontWeight,
+    ...hydraTextStyleToReactCss(hydraBaseNormal),
     borderWidth: colors?.borderWidth ?? token.lineWidth,
     borderStyle: token.lineType,
     borderColor: colors?.borderColor,
@@ -82,7 +72,7 @@ type HydraTagProps = {
   onClick?: () => void;
 };
 
-/** Figma DS `Tag / Default` (node 137:7437) — semantic tones; `bordered={false}` for borderless (e.g. tab counts). */
+/** Figma DS `Tag / Default` (`type=default, border=true`) — Base/Normal 14/22 Regular. `bordered={false}` for borderless chips. */
 export function HydraTag({
   children,
   tone = 'default',
@@ -122,6 +112,8 @@ export function HydraTag({
 type HydraColorfulTagProps = {
   children: ReactNode;
   preset: HydraColorfulPreset;
+  /** Figma `Tag / Colorful` — priority chips use `border=false`. */
+  bordered?: boolean;
   style?: CSSProperties;
 };
 
@@ -129,12 +121,21 @@ type HydraColorfulTagProps = {
  * Figma DS `Tag / Colorful` (node 137:7488) — antd preset ramp `X-1` bg / `X-3` border / `X-6` text.
  * Border is kept (Figma `border=true`); only layout metrics are overridden so colors come from the preset.
  */
-export function HydraColorfulTag({ children, preset, style }: HydraColorfulTagProps) {
+export function HydraColorfulTag({
+  children,
+  preset,
+  bordered = false,
+  style,
+}: HydraColorfulTagProps) {
   const { token } = theme.useToken();
-  const rootStyle = hydraTagRootStyle(token, undefined, style);
+  const rootStyle = hydraTagRootStyle(
+    token,
+    bordered ? undefined : { borderWidth: 0 },
+    style,
+  );
 
   return (
-    <Tag color={preset} styles={{ root: rootStyle }}>
+    <Tag color={preset} bordered={bordered} styles={{ root: rootStyle }}>
       {children}
     </Tag>
   );

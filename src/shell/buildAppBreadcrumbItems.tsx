@@ -2,6 +2,13 @@ import { Link } from 'react-router-dom';
 
 import { bomItemById, bomProjectTitleById } from '../bom/data/mockData';
 import { buildProductCatalogBreadcrumbSegments } from '../catalog/productCatalogNavigation';
+import { getDocumentFromStore } from '../spec/data/specMockStore';
+import {
+  matchSpecListPath,
+  matchSpecWorkspacePath,
+  specAnalyzePath,
+  specProjectListPath,
+} from '../spec/specNavigation';
 import type { BreadcrumbProps } from '../ui/antd';
 
 import { projectTitleById } from './projectSeed';
@@ -72,6 +79,62 @@ export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] 
     return toItems(segs);
   }
 
+  const specWorkspace = matchSpecWorkspacePath(pathname);
+  if (specWorkspace) {
+    const document = getDocumentFromStore(specWorkspace.specId);
+    const specProjectId = specWorkspace.projectId ?? document?.projectId;
+    if (document && specProjectId) {
+      const specProjectTitle = projectTitleById(specProjectId) ?? 'Project';
+      const listPath = specProjectListPath(specProjectId);
+      const leafLabel: Record<string, string> = {
+        analyze: document.title,
+        processing: 'Processing',
+        edit: 'Review',
+        export: 'Export',
+        review: 'Baseline comparison',
+        'baseline-comparison': 'Baseline comparison',
+        products: 'Products',
+        submittals: 'Submittals',
+        substitution: 'Substitution',
+        ask: 'Ask an engineer',
+        'deliver-back': 'Deliver back',
+      };
+      const segs: BreadcrumbSeg[] = [
+        { label: 'Projects', to: '/projects' },
+        { label: specProjectTitle, to: `/projects/${specProjectId}` },
+        { label: 'SPEC', to: listPath },
+      ];
+      if (specWorkspace.leaf === 'analyze') {
+        segs.push({ label: document.title });
+      } else {
+        segs.push({
+          label: document.title,
+          to: specAnalyzePath(document.id, specProjectId),
+        });
+        segs.push({ label: leafLabel[specWorkspace.leaf] ?? specWorkspace.leaf });
+      }
+      return toItems(segs);
+    }
+  }
+
+  if (pathname === '/spec/guide-specs' || pathname === '/spec/guide-specs/') {
+    return toItems([
+      { label: 'Projects', to: '/projects' },
+      { label: 'SPEC', to: '/spec' },
+      { label: 'Guide specs' },
+    ]);
+  }
+
+  const specList = matchSpecListPath(pathname);
+  if (specList) {
+    const specProjectTitle = projectTitleById(specList.projectId) ?? 'Project';
+    return toItems([
+      { label: 'Projects', to: '/projects' },
+      { label: specProjectTitle, to: `/projects/${specList.projectId}` },
+      { label: 'SPEC' },
+    ]);
+  }
+
   if (pathname.startsWith('/projects') && projectId) {
     const catalogCrumbs = buildProductCatalogBreadcrumbSegments(pathname, projectId);
     if (catalogCrumbs) {
@@ -80,7 +143,6 @@ export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] 
 
     const pTitle = projectTitleById(projectId) ?? 'Project';
     const contentPath = `/projects/${projectId}/content`;
-    const specPath = `/projects/${projectId}/sales-brace`;
     const submittalPath = `/projects/${projectId}/submittal`;
 
     if (pathname === contentPath || pathname === `${contentPath}/`) {
@@ -91,10 +153,11 @@ export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] 
       ]);
     }
 
-    if (pathname.includes('/sales-brace')) {
+    if (pathname.includes('/spec')) {
       return toItems([
-        { label: 'Spec', to: specPath },
-        { label: pTitle },
+        { label: 'Projects', to: '/projects' },
+        { label: pTitle, to: `/projects/${projectId}` },
+        { label: 'SPEC' },
       ]);
     }
 

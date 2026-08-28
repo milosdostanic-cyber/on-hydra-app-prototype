@@ -21,6 +21,7 @@ import { useActiveProject } from '../context/ActiveProjectContext';
 import { useSubmittalPackages } from '../context/SubmittalPackagesContext';
 import { productCatalogHomePath } from '../catalog/productCatalogNavigation';
 import { getLastScopedProjectId } from './lastProjectScope';
+import { specProjectListPath } from '../spec/specNavigation';
 import {
   AppSearchInput,
   INLINE_SEARCH_CONTROL_SIZE,
@@ -201,10 +202,14 @@ function ProjectModuleRollupCards({ project }: { project: ProjectRow }) {
   const packageCount = packageCountForProject(pid);
   const submittalPackagesCount = packageCount > 0 ? packageCount : takeCount(seed, 3, 1, 4);
 
-  const go = (path: 'bom' | 'sales-brace' | 'seis-brace' | 'submittal') => {
+  const go = (path: 'bom' | 'spec' | 'seis-brace' | 'submittal') => {
     setProjectId(pid);
     if (path === 'bom') {
       navigate('/bom');
+      return;
+    }
+    if (path === 'spec') {
+      navigate(specProjectListPath(pid));
       return;
     }
     if (path === 'seis-brace') {
@@ -236,7 +241,7 @@ function ProjectModuleRollupCards({ project }: { project: ProjectRow }) {
             title="Spec"
             icon={<FileTextOutlined />}
             countLabel={`${specCount} spec item${specCount === 1 ? '' : 's'}`}
-            onNavigate={() => go('sales-brace')}
+            onNavigate={() => go('spec')}
           />
         </Col>
         <Col xs={24} sm={12} xl={6} style={{ display: 'flex' }}>

@@ -4,16 +4,12 @@ import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 're
 import { useActiveProject } from './context/ActiveProjectContext';
 import { BomRoutes } from './bom/BomRoutes';
 import { SeisBraceRoutes } from './seisbrace/SeisBraceRoutes';
+import { SpecRoutes } from './spec/SpecRoutes';
 import { UnifiedPartDetailPage } from './search/UnifiedPartDetailPage';
 import { UnifiedSearchResultsPage } from './search/UnifiedSearchResultsPage';
 import { AppShell } from './shell/AppShell';
 import { CatalogHome } from './shell/CatalogHome';
-import {
-  ContentModule,
-  KnowledgeCenterModule,
-  RevitPlugInModule,
-  SalesBraceModule,
-} from './shell/ProjectModuleStubs';
+import { ContentModule, KnowledgeCenterModule, RevitPlugInModule } from './shell/ProjectModuleStubs';
 import { CategoryAllPartsPage } from './shell/content/CategoryAllPartsPage';
 import { PartVariantDetailPage } from './shell/content/PartVariantDetailPage';
 import { PartVariantsPage } from './shell/content/PartVariantsPage';
@@ -52,6 +48,16 @@ function SeisBraceStubRedirect() {
   return null;
 }
 
+/**
+ * Legacy `sales-brace` stub path — the sidebar "Spec" item routed here before the real SPEC
+ * module existed (Phase 0/1 decision record). Redirects to the canonical Project SPEC list
+ * instead of showing the stale placeholder content.
+ */
+function SalesBraceLegacyRedirect() {
+  const { projectId = '' } = useParams<{ projectId: string }>();
+  return <Navigate to={`/projects/${projectId}/spec`} replace />;
+}
+
 /** Old Content-module catalog deep links → Part Search catalog (index `/content` stays Content downloads). */
 function LegacyContentCatalogDeepLinkRedirect() {
   const { projectId = '', '*': rest } = useParams<{ projectId: string; '*': string }>();
@@ -77,6 +83,7 @@ export function App() {
         <Route path="/catalog/parts/:partId" element={<CatalogPartRedirect />} />
         <Route path="/bom/*" element={<BomRoutes />} />
         <Route path="/seisbrace/*" element={<SeisBraceRoutes />} />
+        <Route path="/spec/*" element={<SpecRoutes />} />
         <Route path="/revit-plugin" element={<RevitPlugInModule />} />
         <Route path="/knowledge-center" element={<KnowledgeCenterModule />} />
 
@@ -104,10 +111,13 @@ export function App() {
           element={<PartVariantDetailPage />}
         />
 
+        {/* Spec — Project-owned list and document workspace (Phase 0 decision 1). */}
+        <Route path="/projects/:projectId/spec/*" element={<SpecRoutes />} />
+
         <Route path="/projects/:projectId" element={<ProjectWorkspaceLayout />}>
           <Route index element={<Navigate to="content" replace />} />
           <Route path="seis-brace" element={<SeisBraceStubRedirect />} />
-          <Route path="sales-brace" element={<SalesBraceModule />} />
+          <Route path="sales-brace" element={<SalesBraceLegacyRedirect />} />
           <Route path="submittal" element={<SubmittalPackagesPage />} />
           <Route path="content" element={<ContentModule />} />
           {/* Deep links only — exact `content` above wins for Content downloads */}

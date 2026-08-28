@@ -28,7 +28,7 @@ import {
 } from './hydraAntdTypography';
 import type { HydraColorMode } from './hydraColorMode';
 import { hydraDarkAlias, hydraLightAlias, shellLayout } from './hydraAlias';
-import { bluePrimarySemantics, bluePrimarySemanticsDark } from './primaryPrimitiveBlue';
+import { bluePrimarySemantics, bluePrimarySemanticsDark, blueInfoSemantics, blueInfoSemanticsDark } from './primaryPrimitiveBlue';
 import { sidebarSemanticsFor } from './sidebarSemantics';
 
 /** Sidebar + `Layout` sider — Figma `Color/Sidebar/*` + alias surfaces for light / dark app mode. */
@@ -73,7 +73,7 @@ function buildHydraShellComponents(mode: HydraColorMode): NonNullable<ThemeConfi
     /**
      * Figma DS `Tag` defaults (`type=default, border=true`):
      * bg `colorFillQuaternary`, border `colorBorder`, text `colorText`.
-     * Label typography (14/22 Base/Normal) — `applyHydraTagCssVars` + `index.css` (antd defaults to `fontSizeSM`).
+     * Label typography (14/22/400 Base/Normal) — `applyHydraTagCssVars` + `index.css` (antd defaults to `fontSizeSM`).
      */
     Tag: {
       defaultBg: alias.colorFillQuaternary,
@@ -84,6 +84,7 @@ function buildHydraShellComponents(mode: HydraColorMode): NonNullable<ThemeConfi
 
 /**
  * Global primary = `bluePrimarySemantics` ↔ Figma **Colors** `Primary/primary-*` + **Customize Theme** `Color/Primary/*`.
+ * Info / Alert = `blueInfoSemantics` ↔ **Colors** `Daybreak Blue/blue-*` (repo `colorInfo*`; Figma Alert component bindings).
  * Orange solid Button = `buttonPrimaryPalette` ↔ **Colors** `Volcano/volcano-*` + `Color/ButtonPrimary/*`.
  */
 export function createHydraAntdTheme(typographyMode: HydraTypographyMode = 'default'): ThemeConfig {
@@ -108,6 +109,17 @@ export function createHydraAntdTheme(typographyMode: HydraTypographyMode = 'defa
       colorPrimaryText: bluePrimarySemantics.colorPrimaryText,
       colorPrimaryTextHover: bluePrimarySemantics.colorPrimaryTextHover,
       colorPrimaryTextActive: bluePrimarySemantics.colorPrimaryTextActive,
+      /** Figma `Color/Info/*` → Daybreak (Alert `type="info"`). */
+      colorInfo: blueInfoSemantics.colorInfo,
+      colorInfoBg: blueInfoSemantics.colorInfoBg,
+      colorInfoBgHover: blueInfoSemantics.colorInfoBgHover,
+      colorInfoBorder: blueInfoSemantics.colorInfoBorder,
+      colorInfoBorderHover: blueInfoSemantics.colorInfoBorderHover,
+      colorInfoHover: blueInfoSemantics.colorInfoHover,
+      colorInfoActive: blueInfoSemantics.colorInfoActive,
+      colorInfoText: blueInfoSemantics.colorInfoText,
+      colorInfoTextHover: blueInfoSemantics.colorInfoTextHover,
+      colorInfoTextActive: blueInfoSemantics.colorInfoTextActive,
       boxShadow: hydraBoxShadow,
       boxShadowSecondary: hydraBoxShadowSecondary,
       boxShadowTertiary: hydraBoxShadowTertiary,
@@ -142,6 +154,7 @@ export function createHydraAntdThemeDark(typographyMode: HydraTypographyMode = '
     token: {
       ...baseTheme.token,
       ...bluePrimarySemanticsDark,
+      ...blueInfoSemanticsDark,
       colorBgLayout: hydraNeutralGray3Dark,
     },
     components: {
