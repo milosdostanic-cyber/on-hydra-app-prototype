@@ -1,6 +1,5 @@
 import { DownloadOutlined, ExclamationCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import type { BadgeProps } from 'antd';
-import type { Key } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -20,7 +19,6 @@ import {
   Descriptions,
   Empty,
   Flex,
-  Select,
   Space,
   Table,
   Tooltip,
@@ -32,9 +30,7 @@ import { SpecAddDocumentWizardModal } from '../components/SpecAddDocumentWizardM
 import { SpecAnalysisFailedModal } from '../components/SpecAnalysisFailedModal';
 import { SpecConfirmReanalysisModal } from '../components/SpecConfirmReanalysisModal';
 import { SpecDownloadMasterModal } from '../components/SpecDownloadMasterModal';
-import { SpecPendingAnalysisRegion } from '../components/SpecPendingAnalysisRegion';
-import { SpecUploadNewVersionModal } from '../components/SpecUploadNewVersionModal';
-import { systemTypeDivision, systemTypeLabel } from '../constants/specStatusVocabulary';
+import { systemTypeDivision } from '../constants/specStatusVocabulary';
 import {
   SPEC_UPLOAD_ACCEPT_ATTRIBUTE,
   specFileTypeFromName,
@@ -53,8 +49,6 @@ import { useSpecMockStore } from '../data/specMockStore';
 import type { SpecDocument, SpecSystemType } from '../data/types';
 import { trackSpecEvent } from '../specAnalytics';
 import { specAnalyzePath, specDocumentPrimaryPath } from '../specNavigation';
-
-const ANY = 'any';
 
 type AntBadgeStatus = NonNullable<BadgeProps['status']>;
 
@@ -82,7 +76,6 @@ function specNameColumnLabel(title: string): string {
 function specListColumnWidths(token: ReturnType<typeof theme.useToken>['token']) {
   return {
     division: token.sizeUnit * 44,
-    version: token.sizeUnit * 20,
     lastUpdated: token.sizeUnit * 32,
     status: token.sizeUnit * 36,
     actions: token.sizeUnit * 40,
@@ -151,17 +144,13 @@ export function SpecHomePage() {
   const [confirmReanalysis, setConfirmReanalysis] = useState<SpecDocument>();
   const [startingReanalysis, setStartingReanalysis] = useState(false);
   const [query, setQuery] = useState('');
-  const [systemTypeFilter, setSystemTypeFilter] = useState(ANY);
-  const [statusFilter, setStatusFilter] = useState(ANY);
   const [sortField, setSortField] = useState<'title' | 'updatedAt'>('updatedAt');
   const [sortOrder, setSortOrder] = useState<'ascend' | 'descend'>('descend');
-  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [page, setPage] = useState(1);
   const pageSize = shellLayout.tablePageSizeDefault;
 
   const [addOpen, setAddOpen] = useState(false);
   const [downloadOpen, setDownloadOpen] = useState(false);
-  const [newVersionDocId, setNewVersionDocId] = useState<string>();
   const [failedDocId, setFailedDocId] = useState<string>();
   const [retryingFailed, setRetryingFailed] = useState(false);
   const failedReplaceInputRef = useRef<HTMLInputElement>(null);
@@ -191,31 +180,16 @@ export function SpecHomePage() {
     };
   }, [projectId, store.documents, store.scenarioId, reloadKey]);
 
-  const newVersionDoc = docs.find((d) => d.id === newVersionDocId);
   const failedDoc = docs.find((d) => d.id === failedDocId);
-
-  const pendingAnalysisDocs = useMemo(
-    () =>
-      docs.filter((document) => {
-        const status = deriveSpecWorkflowStatus(document);
-        return status === 'processing' || status === 'reanalyzing';
-      }),
-    [docs],
-  );
 
   const filteredDocuments = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     const filtered = docs.filter((document) => {
-      const status = deriveSpecWorkflowStatus(document);
       const matchesQuery =
         !normalizedQuery ||
         document.title.toLowerCase().includes(normalizedQuery) ||
         document.fileName.toLowerCase().includes(normalizedQuery);
-      return (
-        matchesQuery &&
-        (systemTypeFilter === ANY || document.systemType === systemTypeFilter) &&
-        (statusFilter === ANY || status === statusFilter)
-      );
+      return matchesQuery;
     });
     filtered.sort((a, b) => {
       const diff =
@@ -225,21 +199,19 @@ export function SpecHomePage() {
       return sortOrder === 'ascend' ? diff : -diff;
     });
     return filtered;
-  }, [docs, query, sortField, sortOrder, statusFilter, systemTypeFilter]);
+  }, [docs, query, sortField, sortOrder]);
 
   useEffect(() => {
     setPage(1);
-  }, [query, systemTypeFilter, statusFilter]);
+  }, [query]);
 
   const pagedDocuments = useMemo(() => {
     const start = (page - 1) * pageSize;
     return filteredDocuments.slice(start, start + pageSize);
   }, [filteredDocuments, page, pageSize]);
 
-  function clearFilters() {
+  function clearSearch() {
     setQuery('');
-    setSystemTypeFilter(ANY);
-    setStatusFilter(ANY);
   }
 
   async function runPrimaryAction(document: SpecDocument) {
@@ -269,12 +241,11 @@ export function SpecHomePage() {
           <Alert
             type="error"
             showIcon
-            message="This SPEC and its version history will be removed"
+            message="This SPEC will be removed"
             description="This demo only hides it locally. There is no server delete."
           />
           <Descriptions bordered column={1}>
             <Descriptions.Item label="SPEC document">{document.title}</Descriptions.Item>
-            <Descriptions.Item label="Current version">{document.versionLabel}</Descriptions.Item>
             <Descriptions.Item label="Last updated">{formatUpdated(document.updatedAt)}</Descriptions.Item>
           </Descriptions>
         </Space>
@@ -326,6 +297,7 @@ export function SpecHomePage() {
       title: 'Status',
       key: 'status',
       width: col.status,
+      align: 'left',
       ellipsis: true,
       render: (_, document) => {
         const status = deriveSpecWorkflowStatus(document);
@@ -340,6 +312,7 @@ export function SpecHomePage() {
     {
       title: 'Review progress',
       key: 'reviewProgress',
+      align: 'left',
       ellipsis: true,
       render: (_, document) => {
         const status = deriveSpecWorkflowStatus(document);
@@ -357,12 +330,6 @@ export function SpecHomePage() {
           {specDivisionColumnLabel(document)}
         </Typography.Text>
       ),
-    },
-    {
-      title: 'Version',
-      dataIndex: 'versionLabel',
-      key: 'versionLabel',
-      width: col.version,
     },
     {
       title: 'Last updated',
@@ -394,11 +361,6 @@ export function SpecHomePage() {
               maxVisible={0}
               nowrap
               actions={[
-                {
-                  key: 'new-version',
-                  label: 'Upload new version',
-                  onClick: () => setNewVersionDocId(document.id),
-                },
                 { key: 'delete', label: 'Delete SPEC', danger: true, onClick: () => openDeleteConfirm(document) },
               ]}
             />
@@ -413,11 +375,6 @@ export function SpecHomePage() {
 
   return (
     <>
-      <SpecPendingAnalysisRegion
-        documents={pendingAnalysisDocs}
-        onViewProgress={(document) => navigate(specAnalyzePath(document.id))}
-      />
-
       <Flex vertical gap={token.marginLG} style={{ width: '100%' }}>
         <PageBackButton to="/projects">Back to Projects</PageBackButton>
         <BomPageHeader
@@ -480,6 +437,11 @@ export function SpecHomePage() {
                 borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
               }}
             >
+              <Typography.Text type="secondary">
+                {filteredDocuments.length === 1
+                  ? '1 specification'
+                  : `${filteredDocuments.length} specifications`}
+              </Typography.Text>
               <AppSearchInput
                 allowClear
                 size="middle"
@@ -493,39 +455,13 @@ export function SpecHomePage() {
                   background: token.colorBgContainer,
                 }}
               />
-              <Flex gap={token.marginSM} wrap="nowrap">
-                <Select
-                  value={systemTypeFilter}
-                  onChange={setSystemTypeFilter}
-                  style={{ width: token.controlHeight * 5, background: token.colorBgContainer }}
-                  options={[
-                    { value: ANY, label: 'All Divisions' },
-                    ...(Object.keys(systemTypeLabel) as SpecSystemType[]).map((value) => ({
-                      value,
-                      label: systemTypeLabel[value],
-                    })),
-                  ]}
-                />
-                <Select
-                  value={statusFilter}
-                  onChange={setStatusFilter}
-                  style={{ width: token.controlHeight * 5, background: token.colorBgContainer }}
-                  options={[
-                    { value: ANY, label: 'All Statuses' },
-                    ...(Object.keys(specWorkflowStatusLabel) as SpecWorkflowStatus[]).map((value) => ({
-                      value,
-                      label: specWorkflowStatusLabel[value],
-                    })),
-                  ]}
-                />
-              </Flex>
             </Flex>
 
             {hasNoResults ? (
               <div style={{ padding: token.paddingLG * 2 }}>
-                <Empty description="No SPEC documents match your search and filters.">
-                  <Button type="primary" size="large" onClick={clearFilters}>
-                    Clear search and filters
+                <Empty description="No SPEC documents match your search.">
+                  <Button type="primary" size="large" onClick={clearSearch}>
+                    Clear search
                   </Button>
                 </Empty>
               </div>
@@ -538,11 +474,6 @@ export function SpecHomePage() {
                   loading={loading}
                   pagination={false}
                   tableLayout="fixed"
-                  rowSelection={{
-                    selectedRowKeys,
-                    onChange: (keys) => setSelectedRowKeys(keys),
-                    preserveSelectedRowKeys: false,
-                  }}
                   onChange={(_pagination, _filters, sorter) => {
                     const active = Array.isArray(sorter) ? sorter[0] : sorter;
                     if (!active?.field) return;
@@ -591,20 +522,6 @@ export function SpecHomePage() {
       />
 
       <SpecDownloadMasterModal open={downloadOpen} onCancel={() => setDownloadOpen(false)} />
-
-      {newVersionDoc ? (
-        <SpecUploadNewVersionModal
-          open={Boolean(newVersionDocId)}
-          document={newVersionDoc}
-          projectTitle={projectTitle}
-          onCancel={() => setNewVersionDocId(undefined)}
-          onUploaded={(document) => {
-            setNewVersionDocId(undefined);
-            setReloadKey((k) => k + 1);
-            navigate(specAnalyzePath(document.id));
-          }}
-        />
-      ) : null}
 
       <SpecAnalysisFailedModal
         open={Boolean(failedDocId)}

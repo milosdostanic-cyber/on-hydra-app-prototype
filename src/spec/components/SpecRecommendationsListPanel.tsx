@@ -1,12 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Divider, Empty, Flex, Tabs, Typography, theme } from '../../ui/antd';
+import { Button, Divider, Empty, Flex, Select, Tabs, Typography, theme } from '../../ui/antd';
 import { SpecPanelScrollBody } from '../layout/SpecPanelScrollBody';
-import type { SpecRecommendation, SpecRecommendationDecision } from '../data/types';
+import {
+  RECOMMENDATION_ACTION_ORDER,
+  recommendationActionLabel,
+} from '../constants/specStatusVocabulary';
+import type {
+  SpecRecommendation,
+  SpecRecommendationAction,
+  SpecRecommendationDecision,
+} from '../data/types';
 import { SpecRecommendationDetailPanel } from './SpecRecommendationDetailPanel';
 import { SpecRecommendationListCard } from './SpecRecommendationListCard';
 
 type RecommendationListTab = 'all' | 'to-review' | 'resolved';
+type RecommendationActionFilter = 'all' | SpecRecommendationAction;
 
 function matchesListTab(
   decision: SpecRecommendationDecision,
@@ -29,6 +38,7 @@ export function SpecRecommendationsListPanel({
   onOpenSource,
   onSaveProposal,
   onDecision,
+  initialActionFilter,
 }: {
   recommendations: SpecRecommendation[];
   selectedIndex: number;
@@ -43,11 +53,16 @@ export function SpecRecommendationsListPanel({
     decision: Exclude<SpecRecommendationDecision, 'not-reviewed'>,
     options?: { proposedText?: string },
   ) => void;
+  /** Pre-select an action chip — passed from the Analyze dashboard via ?action= URL param. */
+  initialActionFilter?: RecommendationActionFilter;
 }) {
   const { token } = theme.useToken();
   const listRef = useRef<HTMLDivElement | null>(null);
   const selectedRecommendation = recommendations[selectedIndex];
   const [listTab, setListTab] = useState<RecommendationListTab>('all');
+  const [actionFilter, setActionFilter] = useState<RecommendationActionFilter>(
+    initialActionFilter ?? 'all',
+  );
   const panelBorder = `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`;
   const panelChrome = {
     background: token.colorBgContainer,
@@ -56,10 +71,58 @@ export function SpecRecommendationsListPanel({
     border: panelBorder,
   } as const;
 
+  const actionCounts = useMemo(() => {
+    const countsByAction = Object.fromEntries(
+      RECOMMENDATION_ACTION_ORDER.map((action) => [action, 0]),
+    ) as Record<SpecRecommendationAction, number>;
+    for (const recommendation of recommendations) {
+      countsByAction[recommendation.action] += 1;
+    }
+    return {
+      all: recommendations.length,
+      ...countsByAction,
+    };
+  }, [recommendations]);
+
+  const statusCounts = useMemo(() => {
+    let toReview = 0;
+    let resolved = 0;
+    for (const recommendation of recommendations) {
+      if (matchesListTab(recommendation.decision, 'to-review')) toReview += 1;
+      if (matchesListTab(recommendation.decision, 'resolved')) resolved += 1;
+    }
+    return {
+      all: recommendations.length,
+      toReview,
+      resolved,
+    };
+  }, [recommendations]);
+
+  const actionFilterOptions: { value: RecommendationActionFilter; label: string }[] = [
+    { value: 'all', label: 'All action types' },
+    ...RECOMMENDATION_ACTION_ORDER.filter((action) => actionCounts[action] > 0).map(
+      (action) => ({
+        value: action,
+        label: `${recommendationActionLabel[action]} (${actionCounts[action]})`,
+      }),
+    ),
+  ];
+
   const visibleRecommendations = useMemo(
-    () => recommendations.filter((recommendation) => matchesListTab(recommendation.decision, listTab)),
-    [listTab, recommendations],
+    () =>
+      recommendations.filter(
+        (recommendation) =>
+          matchesListTab(recommendation.decision, listTab) &&
+          (actionFilter === 'all' || recommendation.action === actionFilter),
+      ),
+    [actionFilter, listTab, recommendations],
   );
+
+  useEffect(() => {
+    if (actionFilter !== 'all' && actionCounts[actionFilter] === 0) {
+      setActionFilter('all');
+    }
+  }, [actionCounts, actionFilter]);
 
   useEffect(() => {
     if (detailOpen) return;
@@ -120,7 +183,15 @@ export function SpecRecommendationsListPanel({
         </Typography.Title>
         <Divider style={{ margin: 0 }} />
       </Flex>
-      <div style={{ flexShrink: 0, paddingInline: token.padding }}>
+      <Flex
+        vertical
+        gap={token.paddingSM}
+        style={{
+          flexShrink: 0,
+          paddingInline: token.padding,
+          paddingBlockEnd: token.paddingSM,
+        }}
+      >
         <Tabs
           activeKey={listTab}
           aria-label="Recommendation status"
@@ -129,21 +200,39 @@ export function SpecRecommendationsListPanel({
           styles={{ content: { display: 'none' } }}
           onChange={(key) => setListTab(key as RecommendationListTab)}
           items={[
-            { key: 'all', label: 'All' },
-            { key: 'to-review', label: 'To review' },
-            { key: 'resolved', label: 'Resolved' },
+            { key: 'all', label: `All (${statusCounts.all})` },
+            { key: 'to-review', label: `To review (${statusCounts.toReview})` },
+            { key: 'resolved', label: `Resolved (${statusCounts.resolved})` },
           ]}
         />
-      </div>
+        <Select
+          value={actionFilter}
+          aria-label="Filter by action type"
+          onChange={(value) => setActionFilter(value as RecommendationActionFilter)}
+          style={{ width: '100%' }}
+          options={actionFilterOptions}
+        />
+      </Flex>
       {visibleRecommendations.length === 0 ? (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={
-            listTab === 'to-review'
-              ? 'Nothing left to review in this view.'
-              : 'No resolved recommendations yet.'
+            actionFilter !== 'all'
+              ? 'No recommendations match these filters.'
+              : listTab === 'to-review'
+                ? 'Nothing left to review in this view.'
+                : 'No resolved recommendations yet.'
           }
-        />
+        >
+          <Button
+            onClick={() => {
+              setListTab('all');
+              setActionFilter('all');
+            }}
+          >
+            Clear filters
+          </Button>
+        </Empty>
       ) : (
         <SpecPanelScrollBody scrollRef={listRef}>
           <Flex
@@ -152,7 +241,6 @@ export function SpecRecommendationsListPanel({
             style={{
               width: '100%',
               boxSizing: 'border-box',
-              paddingTop: token.padding,
               paddingInline: token.padding,
               paddingBottom: token.padding,
             }}

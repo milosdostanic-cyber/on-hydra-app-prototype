@@ -282,9 +282,20 @@ export function SpecRecommendationDetailPanel({
         </SpecPanelScrollBody>
 
         <Flex
+          align="center"
           gap={token.marginXS}
           style={{ flexShrink: 0, width: '100%', padding: token.padding }}
         >
+          {alreadyDecided || readOnly ? null : (
+            <Button
+              type="link"
+              loading={saving}
+              onClick={() => onDecision('later')}
+              style={{ flex: 1 }}
+            >
+              Skip
+            </Button>
+          )}
           <Button
             disabled={readOnly || alreadyDecided}
             loading={saving}
@@ -292,14 +303,6 @@ export function SpecRecommendationDetailPanel({
             style={{ flex: 1 }}
           >
             Decline
-          </Button>
-          <Button
-            disabled={readOnly || alreadyDecided}
-            loading={saving}
-            onClick={() => onDecision('later')}
-            style={{ flex: 1 }}
-          >
-            Review later
           </Button>
           <Button
             type="primary"
@@ -361,7 +364,7 @@ export function SpecRecommendationDetailPanel({
           onClick={() => onDecision('later')}
           style={{ alignSelf: 'flex-start', paddingInline: 0 }}
         >
-          Review later
+          Skip
         </Button>
       )}
 

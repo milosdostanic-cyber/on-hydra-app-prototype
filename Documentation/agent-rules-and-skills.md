@@ -222,6 +222,20 @@ Skills are folders with `SKILL.md`. Cursor loads them when attached or registere
 
 ---
 
+## hydra-figma-flow-explainer
+
+- **Location:** `.cursor/skills/hydra-figma-flow-explainer/SKILL.md`
+- **Purpose:** Write **How this flow works** explanation copy for a Figma user-flow section, in the same language and card structure as SPEC — ASC Connected core user flows.
+- **What it does:**
+  - Requires a Figma URL with `node-id` for the section flow **or** its **How this flow works** frame.
+  - Reads the linked board/subsection via Official Figma MCP (metadata + screenshots).
+  - Emits one five-part card per subsection: `FLOW XX OF YY`, title, purpose, 2–4 imperative steps, `Next:`.
+  - Keeps the SPEC voice (second person, short sentences, on-screen action names, no implementation jargon).
+  - Default run **must correct Figma**: rename wrong top-level screen frames, then write copy into the **How this flow works** text layers. Chat is only a report after that write. Product screens stay untouched. `use_figma` must switch to the **SPEC** page first (`Node not found` is a page miss). Say `copy only` to skip the Figma write.
+- **How to invoke:** `@hydra-figma-flow-explainer` + Figma URL of the flow section.
+
+---
+
 ## hydra-module-builder
 
 - **Location:** `.cursor/skills/hydra-module-builder/SKILL.md`
@@ -364,6 +378,13 @@ Target: src/bom/pages/BomMatchingPage.tsx
 Audit and fix P0/P1. Allowed files: [from scope]
 ```
 
+**Explain a Figma user-flow section:**
+```
+@hydra-figma-flow-explainer
+
+https://www.figma.com/design/…?node-id=…
+```
+
 **DS / token audit:**
 ```
 @ds-parity-auditor @figma-console-mcp @figma-repo-parity
@@ -376,7 +397,7 @@ Audit and fix P0/P1. Allowed files: [from scope]
 | Folder | Contents |
 |--------|----------|
 | `.cursor/rules/` | All rules (`.mdc`) |
-| `.cursor/skills/` | Project skills (`figma-console-mcp`, `prd-ux-implementation-planner`, `hydra-ux-audit`, `hydra-module-builder`) |
+| `.cursor/skills/` | Project skills (`figma-console-mcp`, `prd-ux-implementation-planner`, `hydra-ux-audit`, `hydra-figma-flow-explainer`, `hydra-module-builder`) |
 | `.agents/skills/` | External skills (`caveman`, `caveman-compress`) |
 | `Documentation/hydra-ai-pack/` | Portable checklist and skill copy |
 | `Documents/plans/` | Plans from `@plan-orchestrator` |

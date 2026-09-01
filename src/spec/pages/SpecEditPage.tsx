@@ -22,7 +22,7 @@ import { SpecReanalysisProgress } from '../components/SpecReanalysisProgress';
 import { SpecSectionNavigator } from '../components/SpecSectionNavigator';
 import { useSpecDemo } from '../context/SpecDemoContext';
 import { useSpecWorkspace } from '../context/SpecWorkspaceContext';
-import { systemTypeDivision } from '../constants/specStatusVocabulary';
+import { RECOMMENDATION_ACTION_ORDER, systemTypeDivision } from '../constants/specStatusVocabulary';
 import {
   mockSpecAnalysisRepository,
   mockSpecEditorRepository,
@@ -35,6 +35,7 @@ import type {
   SpecDocumentBlock,
   SpecEditorLock,
   SpecRecommendation,
+  SpecRecommendationAction,
   SpecRecommendationDecision,
   SpecSection,
   SpecWorkingCopy,
@@ -547,7 +548,6 @@ export function SpecEditPage() {
           canUndo={history.length > 0}
           canRedo={future.length > 0}
           statusHint={saveStatusCopy}
-          onStyleChange={(style) => updateSelectedFormatting({ style })}
           onToggle={updateSelectedFormatting}
           onClearFormatting={clearSelectedFormatting}
           onUndo={undo}
@@ -600,6 +600,13 @@ export function SpecEditPage() {
     </div>
   );
 
+  const actionParamRaw = searchParams.get('action');
+  const initialActionFilter: SpecRecommendationAction | undefined =
+    actionParamRaw &&
+    (RECOMMENDATION_ACTION_ORDER as readonly string[]).includes(actionParamRaw)
+      ? (actionParamRaw as SpecRecommendationAction)
+      : undefined;
+
   const right = (
     <SpecRecommendationsListPanel
       recommendations={recommendations}
@@ -608,6 +615,7 @@ export function SpecEditPage() {
       onDetailOpenChange={setRecommendationDetailOpen}
       readOnly={workspaceReadOnly}
       saving={decisionSaving}
+      initialActionFilter={initialActionFilter}
       onSelect={(index) => navigateRecommendation(index)}
       onOpenSource={() => {
         if (!currentRecommendation) return;

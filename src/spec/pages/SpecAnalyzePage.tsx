@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { BomTablePaginationBar } from '../../bom/components/BomTablePaginationBar';
 import { BomPageHeader } from '../../bom/layout/BomPageHeader';
 import { projectTitleById } from '../../shell/projectSeed';
-import { shellLayout } from '../../theme/hydraAlias';
 import {
   Alert,
   App,
@@ -15,7 +13,6 @@ import {
   Drawer,
   Empty,
   Flex,
-  Radio,
   Row,
   Select,
   Skeleton,
@@ -69,11 +66,12 @@ import { trackSpecEvent } from '../specAnalytics';
 import { specEditPath, specExportPath } from '../specNavigation';
 
 type RecommendationActionFilter = 'all' | SpecRecommendationAction;
-type RecommendationStatusFilter = 'all' | SpecRecommendationDecision;
+type RecommendationStatusFilter = 'all' | 'to-review' | 'resolved';
 
 function specEditPathForRecommendation(
   specId: string,
   recommendation: SpecRecommendation,
+  actionFilter?: RecommendationActionFilter,
 ): string {
   const params = new URLSearchParams({
     recommendation: recommendation.id,
@@ -81,6 +79,9 @@ function specEditPathForRecommendation(
     citation: recommendation.sourceCitation.id,
     version: recommendation.customerVersionLabel,
   });
+  if (actionFilter && actionFilter !== 'all') {
+    params.set('action', actionFilter);
+  }
   return `${specEditPath(specId)}?${params.toString()}`;
 }
 
@@ -100,12 +101,12 @@ function analysisSummary(recommendations: SpecRecommendation[]): string {
     (recommendation) => recommendation.type === 'product',
   ).length;
   if (remaining === 0) {
-    return 'All recommended changes have been reviewed. Export when you are ready, or continue in the editor if you need further edits.';
+    return 'All recommended changes have been reviewed. Export when ready, or open the editor for additional edits.';
   }
   if (product > 0) {
-    return 'The specification can be improved with clearer ASC-friendly language and several product-related updates. Review the remaining recommended changes before continuing to the editor.';
+    return `${remaining} recommended ${remaining === 1 ? 'change' : 'changes'} remaining — the specification has ASC-unfriendly language and product gaps to address. Start review to work through them in document order.`;
   }
-  return 'The specification is generally aligned. Review the recommended changes before continuing to the editor.';
+  return `${remaining} recommended ${remaining === 1 ? 'change' : 'changes'} remaining. Start review to work through them in document order.`;
 }
 
 export function SpecAnalyzePage() {
@@ -119,7 +120,6 @@ export function SpecAnalyzePage() {
   const deepLink = useSpecDeepLink();
   const { retry, replaceFile } = useSpecProcessingSimulation(document);
   const replaceInputRef = useRef<HTMLInputElement>(null);
-  const pageSize = shellLayout.tablePageSizeDefault;
 
   const [sections, setSections] = useState<SpecSection[]>([]);
   const [recommendations, setRecommendations] = useState<SpecRecommendation[]>([]);
@@ -128,7 +128,6 @@ export function SpecAnalyzePage() {
   const [selectedSectionId, setSelectedSectionId] = useState<string>('all');
   const [actionFilter, setActionFilter] = useState<RecommendationActionFilter>('all');
   const [statusFilter, setStatusFilter] = useState<RecommendationStatusFilter>('all');
-  const [listPage, setListPage] = useState(1);
   const [sourceCitation, setSourceCitation] = useState<SpecCitation>();
   const [documentOpen, setDocumentOpen] = useState(false);
   const [failedModalOpen, setFailedModalOpen] = useState(false);
@@ -239,11 +238,10 @@ export function SpecAnalyzePage() {
         if (actionFilter !== 'all' && recommendation.action !== actionFilter) {
           return false;
         }
-        if (statusFilter === 'not-reviewed') {
-          if (!isToReviewDecision(recommendation.decision)) {
-            return false;
-          }
-        } else if (statusFilter !== 'all' && recommendation.decision !== statusFilter) {
+        if (statusFilter === 'to-review' && !isToReviewDecision(recommendation.decision)) {
+          return false;
+        }
+        if (statusFilter === 'resolved' && !isClosedDecision(recommendation.decision)) {
           return false;
         }
         return true;
@@ -278,27 +276,10 @@ export function SpecAnalyzePage() {
   }, [recommendations]);
 
   useEffect(() => {
-    setListPage(1);
-  }, [selectedSectionId, actionFilter, statusFilter]);
-
-  useEffect(() => {
-    const pageCount = Math.max(1, Math.ceil(filteredRecommendations.length / pageSize));
-    if (listPage > pageCount) setListPage(pageCount);
-  }, [filteredRecommendations.length, listPage, pageSize]);
-
-  useEffect(() => {
     if (actionFilter !== 'all' && actionCounts[actionFilter] === 0) {
       setActionFilter('all');
     }
-    if (statusFilter === 'later') {
-      setStatusFilter('not-reviewed');
-    }
-  }, [actionFilter, actionCounts, statusFilter]);
-
-  const pagedRecommendations = useMemo(() => {
-    const start = (listPage - 1) * pageSize;
-    return filteredRecommendations.slice(start, start + pageSize);
-  }, [filteredRecommendations, listPage, pageSize]);
+  }, [actionFilter, actionCounts]);
 
   if (loading) {
     return <Skeleton active paragraph={{ rows: 8 }} />;
@@ -350,7 +331,7 @@ export function SpecAnalyzePage() {
       recommendationId: recommendation.id,
       source: 'dashboard',
     });
-    navigate(specEditPathForRecommendation(document.id, recommendation));
+    navigate(specEditPathForRecommendation(document.id, recommendation, actionFilter));
   };
 
   const retryAnalysis = () => {
@@ -371,14 +352,13 @@ export function SpecAnalyzePage() {
   };
 
   const statusTabItems = [
-    { key: 'all', label: 'All' },
-    { key: 'not-reviewed', label: 'To review' },
-    { key: 'accepted', label: 'Resolved' },
-    { key: 'denied', label: 'Denied' },
+    { key: 'all', label: `All (${assessmentCounts.total})` },
+    { key: 'to-review', label: `To review (${assessmentCounts.toReview})` },
+    { key: 'resolved', label: `Resolved (${assessmentCounts.reviewed})` },
   ];
 
-  const actionTabOptions: { value: RecommendationActionFilter; label: string }[] = [
-    { value: 'all', label: `All actions (${actionCounts.all})` },
+  const actionFilterOptions: { value: RecommendationActionFilter; label: string }[] = [
+    { value: 'all', label: 'All action types' },
     ...RECOMMENDATION_ACTION_ORDER.filter((action) => actionCounts[action] > 0).map(
       (action) => ({
         value: action,
@@ -386,6 +366,7 @@ export function SpecAnalyzePage() {
       }),
     ),
   ];
+  const filterControlWidth = token.controlHeight * 8;
 
   const metricCardStyle = (accent: string) => ({
     flex: '1 1 0%',
@@ -440,10 +421,6 @@ export function SpecAnalyzePage() {
                       : document.processingState === 'failed'
                         ? 'Analysis failed'
                         : 'Analysis complete'}
-              </Typography.Text>
-              <Typography.Text type="secondary">•</Typography.Text>
-              <Typography.Text type="secondary">
-                Division {division} — {systemTypeLabel[document.systemType]}
               </Typography.Text>
               <Typography.Text type="secondary">•</Typography.Text>
               <Typography.Text type="secondary">
@@ -623,25 +600,37 @@ export function SpecAnalyzePage() {
                       label: 'Recommendations',
                       value: String(assessmentCounts.total),
                       accent: token.colorSuccessBorder,
+                      tab: 'all' as RecommendationStatusFilter,
                     },
                     {
                       label: 'To review',
                       value: String(assessmentCounts.toReview),
                       accent: token.colorWarningBorder,
+                      tab: 'to-review' as RecommendationStatusFilter,
                     },
                     {
                       label: 'Reviewed',
                       value: `${assessmentCounts.reviewed} / ${assessmentCounts.total}`,
                       accent: token.colorInfoBorder,
+                      tab: 'resolved' as RecommendationStatusFilter,
                     },
                   ] as const
                 ).map((metric) => (
                   <Flex
                     key={metric.label}
+                    role="button"
+                    tabIndex={0}
                     align="center"
                     justify="space-between"
                     gap={token.marginSM}
-                    style={metricCardStyle(metric.accent)}
+                    style={{
+                      ...metricCardStyle(metric.accent),
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => setStatusFilter(metric.tab)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') setStatusFilter(metric.tab);
+                    }}
                   >
                     <Typography.Text style={{ color: token.colorTextDescription }}>
                       {metric.label}
@@ -679,7 +668,7 @@ export function SpecAnalyzePage() {
                 </Flex>
 
                 <Tabs
-                  activeKey={statusFilter === 'later' ? 'not-reviewed' : statusFilter}
+                  activeKey={statusFilter}
                   aria-label="Review status"
                   tabBarGutter={token.paddingXL}
                   tabBarStyle={{ marginBottom: 0 }}
@@ -690,10 +679,10 @@ export function SpecAnalyzePage() {
                   items={statusTabItems}
                 />
 
-                <Flex gap={token.marginSM} align="center" wrap="wrap">
+                <Flex gap={token.marginXS} align="center" wrap="wrap">
                   <Select
                     value={selectedSectionId}
-                    aria-label="All sections"
+                    aria-label="Filter by section"
                     onChange={(value) => {
                       setSelectedSectionId(value);
                       if (value === 'all') {
@@ -707,7 +696,7 @@ export function SpecAnalyzePage() {
                       });
                       trackSpecEvent('spec_section_selected', { sectionId: value });
                     }}
-                    style={{ width: token.controlHeight * 8 }}
+                    style={{ width: filterControlWidth }}
                     options={[
                       { value: 'all', label: 'All sections' },
                       ...sections.map((section) => ({
@@ -716,15 +705,14 @@ export function SpecAnalyzePage() {
                       })),
                     ]}
                   />
-                  <Radio.Group
+                  <Select
                     value={actionFilter}
-                    optionType="button"
-                    aria-label="Recommendation action"
-                    onChange={(event) =>
-                      setActionFilter(event.target.value as RecommendationActionFilter)
+                    aria-label="Filter by action type"
+                    onChange={(value) =>
+                      setActionFilter(value as RecommendationActionFilter)
                     }
-                    options={actionTabOptions}
-                    style={{ display: 'flex', flexWrap: 'wrap', rowGap: token.marginXXS }}
+                    style={{ width: filterControlWidth }}
+                    options={actionFilterOptions}
                   />
                 </Flex>
 
@@ -746,7 +734,7 @@ export function SpecAnalyzePage() {
                   </Empty>
                 ) : (
                   <Row gutter={[token.paddingXS, token.paddingXS]}>
-                    {pagedRecommendations.map((recommendation) => (
+                    {filteredRecommendations.map((recommendation) => (
                       <Col key={recommendation.id} xs={24} lg={8}>
                         <SpecRecommendationCard
                           recommendation={recommendation}
@@ -757,19 +745,6 @@ export function SpecAnalyzePage() {
                   </Row>
                 )}
               </Flex>
-              {filteredRecommendations.length > 0 ? (
-                <BomTablePaginationBar
-                  current={listPage}
-                  total={filteredRecommendations.length}
-                  onChange={setListPage}
-                  pageSize={pageSize}
-                  summary={
-                    <Typography.Text type="secondary">
-                      {filteredRecommendations.length} of {recommendations.length} recommendations
-                    </Typography.Text>
-                  }
-                />
-              ) : null}
             </Card>
           </>
         )}

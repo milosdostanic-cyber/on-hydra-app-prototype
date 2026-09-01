@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { BomPageHeader } from '../../bom/layout/BomPageHeader';
 import { PageBackButton } from '../../shell/PageBackButton';
@@ -11,6 +11,7 @@ import {
   Card,
   Divider,
   Flex,
+  Modal,
   Progress,
   Radio,
   Typography,
@@ -33,7 +34,7 @@ import type {
   SpecProjectOutputMode,
   SpecRecommendation,
 } from '../data/types';
-import { specHomePath } from '../specNavigation';
+import { specAnalyzePath, specHomePath } from '../specNavigation';
 
 const DOCUMENT_CHOICES = [
   {
@@ -83,7 +84,7 @@ function exportAssessmentCopy({
 }): string {
   const identity = `${title} — ${versionCopy} was analyzed with ASC Master SPEC — Division ${division} — Version ${masterVersion}.`;
   if (undecided > 0) {
-    return `${identity} Export is available even when some recommendations are undecided. Undecided items remain as they appear in the working copy.`;
+    return `${identity} Export is available even when some recommendations are still to review. Those items remain as they appear in the working copy.`;
   }
   if (accepted > 0) {
     return `${identity} Accepted edits are ready to export. You can also create ConnectED Actions from approved product recommendations.`;
@@ -106,6 +107,7 @@ function downloadMockDocument(fileName: string, body: string) {
 export function SpecExportPage() {
   const { token } = theme.useToken();
   const { message } = App.useApp();
+  const navigate = useNavigate();
   const { specId = '' } = useParams<{ specId: string }>();
   const store = useSpecMockStore();
   const document = store.documents.find((entry) => entry.id === specId);
@@ -114,6 +116,7 @@ export function SpecExportPage() {
     'clean-final',
   );
   const [starting, setStarting] = useState(false);
+  const [undecidedWarningOpen, setUndecidedWarningOpen] = useState(false);
   const [outputKind, setOutputKind] = useState<SpecProjectOutputKind | null>(null);
   const [outputMode, setOutputMode] = useState<SpecProjectOutputMode>('create');
   const [outputName, setOutputName] = useState('');
@@ -182,6 +185,23 @@ export function SpecExportPage() {
       : packageOptions.map((pkg) => ({ id: pkg.id, name: pkg.name }));
   const canSubmitOutput =
     outputMode === 'create' ? outputName.trim().length > 0 : Boolean(existingId);
+
+  const startExport = () => {
+    setUndecidedWarningOpen(false);
+    setStarting(true);
+    void mockSpecExportRepository.start(document.id, choice).finally(() => {
+      setStarting(false);
+    });
+  };
+
+  const requestExport = () => {
+    if (stale) return;
+    if (undecided > 0) {
+      setUndecidedWarningOpen(true);
+      return;
+    }
+    startExport();
+  };
 
   const openOutput = (kind: SpecProjectOutputKind, mode: SpecProjectOutputMode) => {
     setOutputKind(kind);
@@ -274,7 +294,7 @@ export function SpecExportPage() {
             [
               { label: 'Accepted', value: accepted, accent: token.colorSuccessBorder },
               { label: 'Denied', value: denied, accent: token.colorErrorBorder },
-              { label: 'Undecided', value: undecided, accent: token.colorInfoBorder },
+              { label: 'To review', value: undecided, accent: token.colorInfoBorder },
             ] as const
           ).map((metric) => (
             <Flex
@@ -422,12 +442,7 @@ export function SpecExportPage() {
                       size="large"
                       disabled={stale}
                       loading={starting}
-                      onClick={() => {
-                        setStarting(true);
-                        void mockSpecExportRepository
-                          .start(document.id, choice)
-                          .finally(() => setStarting(false));
-                      }}
+                      onClick={requestExport}
                     >
                       Export document
                     </Button>
@@ -488,6 +503,44 @@ export function SpecExportPage() {
           </Flex>
         </Card>
       </Flex>
+
+      <Modal
+        open={undecidedWarningOpen}
+        onCancel={() => setUndecidedWarningOpen(false)}
+        destroyOnHidden
+        title="Export with recommendations still open?"
+        footer={
+          <Flex justify="flex-end" gap={token.marginXS}>
+            <Button size="large" onClick={() => setUndecidedWarningOpen(false)}>
+              Go back
+            </Button>
+            <Button type="primary" size="large" loading={starting} onClick={startExport}>
+              Export anyway
+            </Button>
+          </Flex>
+        }
+      >
+        <Flex vertical gap={token.marginMD}>
+          <Alert
+            type="warning"
+            showIcon
+            title={
+              undecided === 1
+                ? '1 recommended change has not been accepted or declined.'
+                : `${undecided} recommended changes have not been accepted or declined.`
+            }
+            description="Language that is still not ASC-friendly stays as it appears in the document. This does not block export."
+          />
+          <Typography.Link
+            onClick={() => {
+              setUndecidedWarningOpen(false);
+              navigate(specAnalyzePath(document.id));
+            }}
+          >
+            Review remaining items
+          </Typography.Link>
+        </Flex>
+      </Modal>
 
       <SpecProjectOutputModal
         kind={outputKind ?? 'bom'}

@@ -12,7 +12,6 @@ import type { CSSProperties } from 'react';
 import { useLocation } from 'react-router-dom';
 
 import {
-  hydraBaseNormal,
   hydraLargeNormal,
   hydraTextStyleToReactCss,
   hydraTitleHeading3,
@@ -45,8 +44,8 @@ function topBarCopyForPath(pathname: string, activeProjectName?: string): TopBar
   }
   if (isSpecModulePath(pathname)) {
     return {
-      title: 'Spec',
-      subtitle: 'Review, edit, and export specification documents',
+      title: 'SPEC',
+      subtitle: 'Analyze and rewrite project specifications',
     };
   }
   if (scopedFlat || scopedUmbrella) {
@@ -242,7 +241,6 @@ export function AppTopBar() {
           paddingInline: token.paddingLG,
           paddingBlock: token.padding,
           background: token.colorPrimary,
-          borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorPrimaryActive}`,
         }}
       >
         <Flex
@@ -274,66 +272,68 @@ export function AppTopBar() {
           </Typography.Text>
         </Flex>
 
-        <Flex align="center" gap={token.paddingLG} style={{ flexShrink: 0 }}>
-          <Button
-            type="text"
-            icon={<FolderOpenOutlined />}
-            onClick={() => setSwitchOpen(true)}
-            style={{
-              color: onPrimary,
-              display: 'flex',
-              alignItems: 'center',
-              gap: token.marginXXS,
-              paddingInline: token.padding,
-            }}
-          >
-            <Flex align="center" gap={token.paddingXS}>
-              <Typography.Text
-                style={{
-                  ...hydraTextStyleToReactCss(hydraBaseNormal),
-                  color: onPrimary,
-                  maxWidth: 200,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {project?.name ?? 'No project'}
-              </Typography.Text>
-              <SwapOutlined style={{ color: onPrimary, fontSize: hydraTitleHeading5.fontSize }} />
-            </Flex>
-          </Button>
+        <Flex
+          align="center"
+          justify="flex-end"
+          gap={token.paddingXL}
+          style={{ flex: 1, minWidth: 0 }}
+        >
+          <Flex align="center" gap={token.paddingSM} style={{ flexShrink: 0 }}>
+            <Typography.Text
+              style={{ ...hydraTextStyleToReactCss(hydraLargeNormal), color: onPrimary }}
+            >
+              Project:
+            </Typography.Text>
+            <Button
+              type="primary"
+              size="large"
+              icon={<FolderOpenOutlined />}
+              onClick={() => setSwitchOpen(true)}
+            >
+              <Flex align="center" gap={token.paddingXS}>
+                <span
+                  style={{
+                    maxWidth: 200,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {project?.name ?? 'Select project'}
+                </span>
+                <SwapOutlined aria-hidden />
+              </Flex>
+            </Button>
+          </Flex>
 
-          <Flex align="center" gap={token.paddingXS}>
+          <Flex align="center" gap={token.paddingXS} style={{ flexShrink: 0 }}>
             <Button
               type="text"
               icon={<QuestionCircleOutlined />}
               aria-label="Help"
-              styles={{ icon: { color: onPrimary } }}
+              styles={{ icon: { color: onPrimary, fontSize: token.sizeMS } }}
               style={shellControlBtnStyle(onPrimary)}
             />
             <Button
               type="text"
               icon={<BellOutlined />}
               aria-label="Notifications"
-              styles={{ icon: { color: onPrimary } }}
+              styles={{ icon: { color: onPrimary, fontSize: token.sizeMS } }}
               style={shellControlBtnStyle(onPrimary)}
             />
-            <Flex align="center" gap={token.marginXXS}>
-              <Avatar
-                style={{ background: token.colorBgContainer, color: token.colorPrimary }}
-                icon={<UserOutlined aria-hidden />}
-              />
-              <Dropdown menu={{ items: userMenuItems }} trigger={['click']}>
-                <Button
-                  type="text"
-                  icon={<DownOutlined />}
-                  aria-label="Account menu"
-                  styles={{ icon: { color: onPrimary } }}
-                  style={shellControlBtnStyle(onPrimary)}
-                />
-              </Dropdown>
-            </Flex>
+            <Dropdown menu={{ items: userMenuItems }} trigger={['click']}>
+              <Flex
+                align="center"
+                gap={token.paddingXS}
+                role="button"
+                tabIndex={0}
+                aria-label="Account menu"
+                style={{ cursor: 'pointer' }}
+              >
+                <Avatar icon={<UserOutlined aria-hidden />} />
+                <DownOutlined style={{ color: onPrimary, fontSize: token.fontSize }} />
+              </Flex>
+            </Dropdown>
           </Flex>
         </Flex>
       </Flex>

@@ -1,4 +1,5 @@
 import type { SpecScenarioId } from './specScenarios';
+import { buildAscSubstitutionSuggestions } from './specAscSubstitutionSeed';
 import {
   buildAddendumEditorFixtures,
   buildClean22EditorFixtures,
@@ -163,7 +164,27 @@ function assemble(
   guideSpecs: SpecGuideSpecsFixtures = buildDefaultGuideSpecsFixtures(),
 ): SpecScenarioFixtures {
   const expandedCore = expandCoreFixtures(core);
-  return { ...expandedCore, ...editor, ...review, ...products, ...artifacts, ...collaboration, ...guideSpecs };
+  const withSubstitutions: SpecProductsFixtures = {
+    productSuggestions: [
+      ...products.productSuggestions,
+      ...buildAscSubstitutionSuggestions({
+        documents: expandedCore.documents,
+        requirements: expandedCore.requirements,
+        redFlags: expandedCore.redFlags,
+        citations: expandedCore.citations,
+        existing: products.productSuggestions,
+      }),
+    ],
+  };
+  return {
+    ...expandedCore,
+    ...editor,
+    ...review,
+    ...withSubstitutions,
+    ...artifacts,
+    ...collaboration,
+    ...guideSpecs,
+  };
 }
 
 const SEVERITY_RANK: Record<SpecSeverity, number> = {

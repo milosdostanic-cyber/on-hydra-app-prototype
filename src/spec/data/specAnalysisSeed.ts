@@ -143,6 +143,10 @@ function recommendationCopy(
   const primaryFlag = redFlags[0];
   const primaryProduct = products.find((product) => product.fit !== 'no-fit') ?? products[0];
   const primaryRequirement = requirements[0];
+  const ascOption =
+    primaryProduct && primaryProduct.fit !== 'no-fit'
+      ? ` ${primaryProduct.name} (${primaryProduct.sku}) meets the listed requirements and may be approved instead.`
+      : '';
 
   if (primaryFlag?.type === 'contradiction') {
     return {
@@ -159,8 +163,7 @@ function recommendationCopy(
     return {
       title: 'Allow approved equivalent manufacturers',
       outcome: 'Removes unnecessary proprietary lock-in while preserving required performance.',
-      proposedText:
-        'Provide the named basis-of-design product or an approved equivalent that meets the listed performance requirements.',
+      proposedText: `Provide the named basis-of-design product or an approved equivalent that meets the listed performance requirements.${ascOption}`,
       reason: primaryFlag.explanation,
       category: 'Product substitution',
     };
@@ -170,8 +173,7 @@ function recommendationCopy(
     return {
       title: 'Add a clear substitution approval path',
       outcome: 'Makes equivalent-product review possible without weakening engineering approval.',
-      proposedText:
-        'Equivalent products may be submitted for approval with supporting compliance and performance evidence.',
+      proposedText: `Equivalent products may be submitted for approval with supporting compliance and performance evidence.${ascOption}`,
       reason: primaryFlag.explanation,
       category: 'Product substitution',
     };
@@ -354,15 +356,10 @@ export function buildSpecRecommendations({
     })
     .filter((recommendation): recommendation is SpecRecommendation => Boolean(recommendation))
     .sort((a, b) => {
-      const priorityOrder: Record<SpecRecommendationPriority, number> = {
-        high: 0,
-        medium: 1,
-        low: 2,
-      };
       return (
-        priorityOrder[a.priority] - priorityOrder[b.priority] ||
-        a.sectionNumber.localeCompare(b.sectionNumber) ||
-        a.paragraphLabel.localeCompare(b.paragraphLabel)
+        a.sectionNumber.localeCompare(b.sectionNumber, undefined, { numeric: true }) ||
+        a.sourceCitation.page - b.sourceCitation.page ||
+        a.paragraphLabel.localeCompare(b.paragraphLabel, undefined, { numeric: true })
       );
     });
 }

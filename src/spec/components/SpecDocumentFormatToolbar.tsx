@@ -12,7 +12,7 @@ import type { CSSProperties, ReactNode } from 'react';
 
 import { specA4Dimensions } from '../constants/specDocumentLayout';
 import type { SpecBlockFormatting } from '../data/types';
-import { Button, Divider, Flex, Select, Tooltip, Typography, theme } from '../../ui/antd';
+import { Button, Divider, Flex, Tooltip, Typography, theme } from '../../ui/antd';
 
 export function SpecDocumentFormatToolbar({
   formatting,
@@ -21,7 +21,6 @@ export function SpecDocumentFormatToolbar({
   canRedo,
   statusHint,
   fillContainer,
-  onStyleChange,
   onToggle,
   onClearFormatting,
   onUndo,
@@ -35,7 +34,6 @@ export function SpecDocumentFormatToolbar({
   statusHint?: ReactNode;
   /** Figma edit workspace — toolbar spans the center panel width. */
   fillContainer?: boolean;
-  onStyleChange: (style: NonNullable<SpecBlockFormatting['style']>) => void;
   onToggle: (patch: Partial<SpecBlockFormatting>) => void;
   onClearFormatting: () => void;
   onUndo: () => void;
@@ -78,19 +76,6 @@ export function SpecDocumentFormatToolbar({
           borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
         }}
       >
-        <Select
-          aria-label="Paragraph style"
-          value={formatting.style ?? 'normal'}
-          disabled={formatDisabled}
-          onChange={onStyleChange}
-          options={[
-            { value: 'normal', label: 'Normal' },
-            { value: 'heading', label: 'Heading' },
-            { value: 'subheading', label: 'Subheading' },
-          ]}
-          style={{ width: token.controlHeight * 5 }}
-        />
-        <Divider type="vertical" style={{ height: token.controlHeightSM, marginInline: token.marginXXS }} />
         <Tooltip title="Bold">
           <Button
             type="text"
