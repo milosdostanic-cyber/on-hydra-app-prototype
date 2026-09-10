@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { BomTablePaginationBar } from '../../bom/components/BomTablePaginationBar';
-import { BomTableRowActions } from '../../bom/components/BomTableRowActions';
 import { BomPageHeader } from '../../bom/layout/BomPageHeader';
 import { PageBackButton } from '../../shell/PageBackButton';
 import { shellLayout } from '../../theme/hydraAlias';
@@ -78,7 +77,8 @@ function specListColumnWidths(token: ReturnType<typeof theme.useToken>['token'])
     division: token.sizeUnit * 44,
     lastUpdated: token.sizeUnit * 32,
     status: token.sizeUnit * 36,
-    actions: token.sizeUnit * 40,
+    /** Figma Actions column 8029:4067 — 214px. */
+    actions: token.sizeUnit * 53 + token.sizeUnit / 2,
   } as const;
 }
 
@@ -347,7 +347,7 @@ export function SpecHomePage() {
       render: (_, document) => {
         const status = deriveSpecWorkflowStatus(document);
         return (
-          <Flex align="center" justify="space-between" gap={token.marginXS}>
+          <Flex align="center" justify="space-between" style={{ width: '100%' }}>
             <Button
               size="small"
               onClick={(event) => {
@@ -357,13 +357,16 @@ export function SpecHomePage() {
             >
               {specWorkflowPrimaryActionLabel[status]}
             </Button>
-            <BomTableRowActions
-              maxVisible={0}
-              nowrap
-              actions={[
-                { key: 'delete', label: 'Delete SPEC', danger: true, onClick: () => openDeleteConfirm(document) },
-              ]}
-            />
+            <Button
+              size="small"
+              danger
+              onClick={(event) => {
+                event.stopPropagation();
+                openDeleteConfirm(document);
+              }}
+            >
+              Delete
+            </Button>
           </Flex>
         );
       },

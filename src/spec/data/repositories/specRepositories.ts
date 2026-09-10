@@ -140,6 +140,8 @@ export type SpecCreateDocumentInput = {
   role: SpecDocumentRole;
   divisionHint?: string;
   systemType: SpecSystemType;
+  /** Divisions confirmed in W01 step 2 (multi-select). */
+  divisions?: string[];
   /** Confirmed in W01 step 2 before the SPEC record exists (audit §6.1, P0 fix). */
   ascMaster: SpecAscMaster;
 };
@@ -263,6 +265,7 @@ export const mockSpecDocumentRepository: SpecDocumentRepository = {
       versionNumber: 1,
       divisionHint: input.divisionHint,
       systemType: input.systemType,
+      divisions: input.divisions,
       // Confirmed in W01 step 2 before this record exists — never persisted unconfirmed.
       ascMaster: input.ascMaster,
       ascMasterConfirmed: true,

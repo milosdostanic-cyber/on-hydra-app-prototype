@@ -93,20 +93,33 @@ function isClosedDecision(decision: SpecRecommendationDecision): boolean {
   return decision === 'accepted' || decision === 'denied';
 }
 
-function analysisSummary(recommendations: SpecRecommendation[]): string {
+function analysisSummary(recommendations: SpecRecommendation[]): {
+  lead: string;
+  follow: string;
+} {
   const remaining = recommendations.filter((recommendation) =>
     isToReviewDecision(recommendation.decision),
   ).length;
   const product = recommendations.filter(
     (recommendation) => recommendation.type === 'product',
   ).length;
+  const changeLabel = remaining === 1 ? 'change' : 'changes';
   if (remaining === 0) {
-    return 'All recommended changes have been reviewed. Export when ready, or open the editor for additional edits.';
+    return {
+      lead: 'All recommended changes have been reviewed.',
+      follow: 'Export when ready, or open the editor for additional edits.',
+    };
   }
   if (product > 0) {
-    return `${remaining} recommended ${remaining === 1 ? 'change' : 'changes'} remaining — the specification has ASC-unfriendly language and product gaps to address. Start review to work through them in document order.`;
+    return {
+      lead: `${remaining} recommended ${changeLabel} remaining — ASC-unfriendly language and product gaps.`,
+      follow: 'Start review to work through them in document order.',
+    };
   }
-  return `${remaining} recommended ${remaining === 1 ? 'change' : 'changes'} remaining. Start review to work through them in document order.`;
+  return {
+    lead: `${remaining} recommended ${changeLabel} remaining.`,
+    follow: 'Start review to work through them in document order.',
+  };
 }
 
 export function SpecAnalyzePage() {
@@ -261,6 +274,7 @@ export function SpecAnalyzePage() {
     }),
     [recommendations],
   );
+  const assessmentCopy = analysisSummary(recommendations);
 
   const actionCounts = useMemo(() => {
     const countsByAction = Object.fromEntries(
@@ -589,9 +603,14 @@ export function SpecAnalyzePage() {
                 <Typography.Title level={5} style={{ margin: 0 }}>
                   Overall assessment
                 </Typography.Title>
-                <Typography.Text style={{ color: token.colorTextDescription }}>
-                  {analysisSummary(recommendations)}
-                </Typography.Text>
+                <Flex vertical>
+                  <Typography.Text style={{ color: token.colorTextDescription }}>
+                    {assessmentCopy.lead}
+                  </Typography.Text>
+                  <Typography.Text style={{ color: token.colorTextDescription }}>
+                    {assessmentCopy.follow}
+                  </Typography.Text>
+                </Flex>
               </Flex>
               <Flex gap={token.padding} wrap="nowrap" style={{ flex: '1 1 0%', minWidth: 0 }}>
                 {(

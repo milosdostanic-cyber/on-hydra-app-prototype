@@ -1,5 +1,6 @@
 import type { BadgeProps } from 'antd';
 
+import type { HydraColorfulPreset } from '../../ui/HydraTag';
 import type {
   SpecAccessLevel,
   SpecAnchorType,
@@ -112,6 +113,33 @@ export const RECOMMENDATION_ACTION_ORDER: SpecRecommendationAction[] = [
   'update-reference',
   'blocked',
 ];
+
+/**
+ * Figma DS `Tag / Colorful` preset per action group (recommendation card, node `8362:7673`).
+ * `update-reference` = purple, `rewrite-language` = blue, `swap-part` = orange (confirmed in
+ * the Figma frame). `add-manufacturer` / `add-product` / `blocked` have no example instance in
+ * that frame yet — assigned cyan / green / red as the closest unused semantic presets
+ * (addition vs. addition vs. blocking-danger) pending a confirmed Figma example.
+ */
+export const recommendationActionColorfulPreset: Record<
+  SpecRecommendationAction,
+  HydraColorfulPreset
+> = {
+  'add-manufacturer': 'cyan',
+  'rewrite-language': 'blue',
+  'swap-part': 'orange',
+  'add-product': 'green',
+  'update-reference': 'purple',
+  blocked: 'red',
+};
+
+/** Decision → Ant Design `Badge` `status` (dot + text) — Figma `Badge__Status`, node `8362:7668`. */
+export const recommendationDecisionBadgeStatus: Record<SpecRecommendationDecision, AntBadgeStatus> = {
+  'not-reviewed': 'processing',
+  accepted: 'success',
+  later: 'default',
+  denied: 'error',
+};
 
 export const documentRoleLabel: Record<SpecDocumentRole, string> = {
   'project-specification': 'Project specification',

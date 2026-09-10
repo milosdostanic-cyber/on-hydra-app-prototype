@@ -1,17 +1,18 @@
 import { CloseOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 
 import {
   hydraBaseNormal,
+  hydraLargeNormal,
   hydraTextStyleToReactCss,
   hydraTitleHeading5,
 } from '../../theme/hydraTypography';
 import {
+  Alert,
   Button,
   Card,
   Empty,
   Flex,
-  Input,
   Typography,
   theme,
 } from '../../ui/antd';
@@ -19,37 +20,36 @@ import type { SpecRecommendation, SpecRecommendationDecision } from '../data/typ
 import { SpecPanelScrollBody } from '../layout/SpecPanelScrollBody';
 import { SpecRecommendationTags } from './SpecRecommendationTags';
 
-function DiffPanel({
-  label,
-  variant,
-  children,
-}: {
-  label: string;
-  variant: 'current' | 'proposed';
-  children: ReactNode;
-}) {
-  const { token } = theme.useToken();
-  const isCurrent = variant === 'current';
+function isRemovalRecommendation(recommendation: SpecRecommendation) {
+  return !recommendation.proposedText.trim();
+}
 
+function RecommendationRationaleAlert({
+  isRemoval,
+  whyCopy,
+}: {
+  isRemoval: boolean;
+  whyCopy: string;
+}) {
   return (
-    <Flex
-      vertical
-      gap={token.marginXXS}
-      style={{
-        minWidth: 0,
-        padding: token.paddingSM,
-        borderRadius: token.borderRadius,
-        background: isCurrent ? token.colorErrorBg : token.colorSuccessBg,
-        border: `${token.lineWidth}px ${token.lineType} ${
-          isCurrent ? token.colorErrorBorder : token.colorSuccessBorder
-        }`,
-      }}
-    >
-      <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
-        {label}
-      </Typography.Text>
-      {children}
-    </Flex>
+    <Alert
+      type="info"
+      showIcon={false}
+      title={isRemoval ? 'Why remove this?' : 'Why this is recommended?'}
+      description={whyCopy}
+    />
+  );
+}
+
+function SuggestedTextAlert({ recommendation }: { recommendation: SpecRecommendation }) {
+  return (
+    <Alert type="success" showIcon={false} title="Suggested text" description={recommendation.proposedText} />
+  );
+}
+
+function TextToRemoveAlert({ text }: { text: string }) {
+  return (
+    <Alert type="error" showIcon={false} title="Text to remove" description={text} style={{ width: '100%' }} />
   );
 }
 
@@ -142,9 +142,13 @@ export function SpecRecommendationDetailPanel({
   const whyCopy =
     recommendation.reason.trim() ||
     'No additional rationale was recorded for this recommendation.';
+  const isRemoval = isRemovalRecommendation(recommendation);
   const alreadyDecided = recommendation.decision !== 'not-reviewed';
   const canEditProposal =
-    recommendation.decision === 'not-reviewed' && !readOnly && Boolean(onSaveProposal);
+    !isRemoval &&
+    recommendation.decision === 'not-reviewed' &&
+    !readOnly &&
+    Boolean(onSaveProposal);
 
   const accept = () => {
     const finalProposal = proposalDraft.trim() || recommendation.proposedText;
@@ -159,8 +163,8 @@ export function SpecRecommendationDetailPanel({
 
   if (embedded) {
     const bodyText = hydraTextStyleToReactCss(hydraBaseNormal);
-    const labelText = {
-      ...bodyText,
+    const currentTextLabelStyle = {
+      ...hydraTextStyleToReactCss(hydraLargeNormal),
       color: token.colorTextDescription,
     };
     const panelBorder = `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`;
@@ -235,49 +239,25 @@ export function SpecRecommendationDetailPanel({
             <EmbeddedRecommendationTags recommendation={recommendation} />
 
             <Flex vertical gap={token.padding}>
-              <Flex vertical gap={token.marginXXS}>
-                <Typography.Text style={labelText}>Current text</Typography.Text>
-                <Typography.Paragraph style={{ marginBottom: 0, color: token.colorText, ...bodyText }}>
-                  {recommendation.existingText}
-                </Typography.Paragraph>
-              </Flex>
+              {isRemoval ? (
+                <TextToRemoveAlert text={recommendation.existingText} />
+              ) : (
+                <>
+                  <Flex vertical gap={token.marginXXS}>
+                    <Typography.Text style={currentTextLabelStyle}>Current text</Typography.Text>
+                    <Typography.Paragraph
+                      style={{ marginBottom: 0, color: token.colorText, ...bodyText }}
+                    >
+                      {recommendation.existingText}
+                    </Typography.Paragraph>
+                  </Flex>
 
-              <Flex vertical gap={token.marginXXS}>
-                <Typography.Text style={labelText}>Suggested text</Typography.Text>
-                {canEditProposal ? (
-                  <Input.TextArea
-                    autoSize={{ minRows: 4, maxRows: 8 }}
-                    value={proposalDraft}
-                    onChange={(event) => setProposalDraft(event.target.value)}
-                    style={{
-                      ...bodyText,
-                      background: token.colorBgContainer,
-                      borderColor: token.colorSuccessBorder,
-                    }}
-                  />
-                ) : (
-                  <Typography.Paragraph style={{ marginBottom: 0, ...bodyText }}>
-                    {recommendation.proposedText}
-                  </Typography.Paragraph>
-                )}
-              </Flex>
+                  <SuggestedTextAlert recommendation={recommendation} />
+                </>
+              )}
             </Flex>
 
-            <Flex
-              vertical
-              gap={token.marginXXS}
-              style={{
-                padding: token.paddingSM,
-                borderRadius: token.borderRadiusLG,
-                border: `${token.lineWidth}px ${token.lineType} ${token.colorInfoBorder}`,
-                background: token.colorInfoBg,
-              }}
-            >
-              <Typography.Text style={labelText}>Why this is recommended?</Typography.Text>
-              <Typography.Paragraph style={{ marginBottom: 0, ...bodyText }}>
-                {whyCopy}
-              </Typography.Paragraph>
-            </Flex>
+            <RecommendationRationaleAlert isRemoval={isRemoval} whyCopy={whyCopy} />
           </Flex>
         </SpecPanelScrollBody>
 
@@ -375,43 +355,30 @@ export function SpecRecommendationDetailPanel({
           Section {recommendation.sectionNumber} · Paragraph {recommendation.paragraphLabel}
         </Typography.Text>
         <Typography.Text strong>{recommendation.title}</Typography.Text>
-        <Typography.Paragraph type="secondary" style={{ marginBottom: 0 }}>
-          {whyCopy}
-        </Typography.Paragraph>
       </Flex>
 
       <Flex vertical gap={token.marginSM}>
-        <DiffPanel label="Current text" variant="current">
-          <Typography.Paragraph style={{ marginBottom: 0, color: token.colorText }}>
-            {recommendation.existingText}
-          </Typography.Paragraph>
-        </DiffPanel>
-        <DiffPanel label="Suggested text" variant="proposed">
-          {canEditProposal ? (
-            <Flex vertical gap={token.marginXS}>
-              <Input.TextArea
-                autoSize={{ minRows: 3, maxRows: 8 }}
-                value={proposalDraft}
-                onChange={(event) => setProposalDraft(event.target.value)}
-                style={{ background: token.colorBgContainer }}
-              />
-              <Button
-                size="small"
-                disabled={!proposalDraft.trim() || proposalDraft.trim() === recommendation.proposedText}
-                loading={saving}
-                onClick={() => onSaveProposal?.(proposalDraft.trim())}
-                style={{ alignSelf: 'flex-start' }}
+        {isRemoval ? (
+          <TextToRemoveAlert text={recommendation.existingText} />
+        ) : (
+          <>
+            <Flex vertical gap={token.marginXXS}>
+              <Typography.Text
+                type="secondary"
+                style={hydraTextStyleToReactCss(hydraLargeNormal)}
               >
-                Save proposal
-              </Button>
+                Current text
+              </Typography.Text>
+              <Typography.Paragraph style={{ marginBottom: 0, color: token.colorText }}>
+                {recommendation.existingText}
+              </Typography.Paragraph>
             </Flex>
-          ) : (
-            <Typography.Paragraph style={{ marginBottom: 0 }}>
-              {recommendation.proposedText}
-            </Typography.Paragraph>
-          )}
-        </DiffPanel>
+            <SuggestedTextAlert recommendation={recommendation} />
+          </>
+        )}
       </Flex>
+
+      <RecommendationRationaleAlert isRemoval={isRemoval} whyCopy={whyCopy} />
 
       {recommendation.productEvidence.length > 0 ? (
         <Flex vertical gap={token.marginXS}>

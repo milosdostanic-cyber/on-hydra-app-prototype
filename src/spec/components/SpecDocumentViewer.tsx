@@ -11,7 +11,7 @@ import {
 } from 'react';
 
 import { SpecCitationHighlightBanner } from './SpecCitationLink';
-import { specA4Dimensions } from '../constants/specDocumentLayout';
+import { SPEC_A4_ASPECT_RATIO, specA4Dimensions } from '../constants/specDocumentLayout';
 import type { SpecBlockFormatting, SpecDocumentBlock } from '../data/types';
 import { Alert, Button, Empty, Flex, Input, Typography, theme } from '../../ui/antd';
 import {
@@ -625,8 +625,6 @@ function DocumentPageSheet({
   totalPages,
   sheetWidth,
   sheetHeight,
-  attachToToolbar,
-  isLastPage,
   fillContainer,
   children,
 }: {
@@ -634,8 +632,6 @@ function DocumentPageSheet({
   totalPages: number;
   sheetWidth: number | string;
   sheetHeight: number;
-  attachToToolbar?: boolean;
-  isLastPage?: boolean;
   fillContainer?: boolean;
   children: ReactNode;
 }) {
@@ -649,19 +645,10 @@ function DocumentPageSheet({
         maxWidth: '100%',
         height: fillContainer ? undefined : sheetHeight,
         minHeight: fillContainer ? undefined : sheetHeight,
+        aspectRatio: fillContainer ? 1 / SPEC_A4_ASPECT_RATIO : undefined,
         background: token.colorBgContainer,
-        borderRadius: fillContainer
-          ? 0
-          : attachToToolbar
-            ? isLastPage
-              ? `0 0 ${token.borderRadiusLG}px ${token.borderRadiusLG}px`
-              : 0
-            : token.borderRadiusLG,
-        boxShadow: fillContainer ? undefined : token.boxShadowSecondary,
-        border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-        borderTop: attachToToolbar ? 'none' : undefined,
-        borderInline: fillContainer ? 'none' : undefined,
-        overflow: fillContainer ? 'visible' : 'hidden',
+        boxShadow: token.boxShadowTertiary,
+        overflow: 'hidden',
         flexShrink: 0,
       }}
     >
@@ -669,10 +656,10 @@ function DocumentPageSheet({
         vertical
         gap={token.marginXXS}
         style={{
-          flex: fillContainer ? undefined : 1,
-          minHeight: fillContainer ? undefined : 0,
+          flex: 1,
+          minHeight: 0,
           padding: token.paddingXL,
-          overflow: fillContainer ? 'visible' : 'hidden',
+          overflow: 'hidden',
         }}
       >
         {children}
@@ -683,7 +670,7 @@ function DocumentPageSheet({
         style={{
           paddingBlock: token.paddingXS,
           borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-          background: token.colorFillAlter,
+          background: token.colorFillQuaternary,
         }}
       >
         <Typography.Text type="secondary">
@@ -842,10 +829,10 @@ function DocumentVariantViewer({
       <Flex
         vertical
         align={fillContainer ? 'stretch' : 'center'}
-        gap={token.marginMD}
+        gap={token.marginXXS}
         style={{ width: resolvedWidth, maxWidth: '100%' }}
       >
-        {pageGroups.map(({ page, blocks: pageBlocks }, pageIndex) => {
+        {pageGroups.map(({ page, blocks: pageBlocks }) => {
           let listCounter = 0;
           return (
             <DocumentPageSheet
@@ -854,8 +841,6 @@ function DocumentVariantViewer({
               totalPages={totalPages}
               sheetWidth={resolvedWidth}
               sheetHeight={sheetHeight}
-              attachToToolbar={attachToToolbar && pageIndex === 0}
-              isLastPage={pageIndex === pageGroups.length - 1}
               fillContainer={fillContainer}
             >
               {pageBlocks.map((block) => {

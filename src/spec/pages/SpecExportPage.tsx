@@ -1,3 +1,4 @@
+import { PlusOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -81,15 +82,25 @@ function exportAssessmentCopy({
   masterVersion: string;
   accepted: number;
   undecided: number;
-}): string {
-  const identity = `${title} — ${versionCopy} was analyzed with ASC Master SPEC — Division ${division} — Version ${masterVersion}.`;
+}): { lead: string; follow: string } {
+  const lead = `${title} — ${versionCopy} was analyzed with ASC Master SPEC ${masterVersion} (Division ${division}).`;
   if (undecided > 0) {
-    return `${identity} Export is available even when some recommendations are still to review. Those items remain as they appear in the working copy.`;
+    return {
+      lead,
+      follow: 'Export is available even when some recommendations are still to review.',
+    };
   }
   if (accepted > 0) {
-    return `${identity} Accepted edits are ready to export. You can also create ConnectED Actions from approved product recommendations.`;
+    return {
+      lead,
+      follow:
+        'Accepted edits are ready to export, including ConnectED Actions from approved products.',
+    };
   }
-  return `${identity} No recommendations were accepted. Export keeps the working copy as it stands.`;
+  return {
+    lead,
+    follow: 'No recommendations were accepted — export keeps the working copy as it stands.',
+  };
 }
 
 function downloadMockDocument(fileName: string, body: string) {
@@ -179,6 +190,14 @@ export function SpecExportPage() {
 
   const division = document.divisionHint ?? systemTypeDivision[document.systemType];
   const versionCopy = customerVersionCopy(document);
+  const assessment = exportAssessmentCopy({
+    title: document.title,
+    versionCopy,
+    division,
+    masterVersion: document.ascMaster?.version ?? 'Not recorded',
+    accepted,
+    undecided,
+  });
   const existingOptions =
     outputKind === 'bom'
       ? bomOptions.map((option) => ({ id: option.id, name: option.name }))
@@ -278,16 +297,10 @@ export function SpecExportPage() {
           <Typography.Title level={5} style={{ margin: 0 }}>
             Overall assessment
           </Typography.Title>
-          <Typography.Text type="secondary">
-            {exportAssessmentCopy({
-              title: document.title,
-              versionCopy,
-              division,
-              masterVersion: document.ascMaster?.version ?? 'Not recorded',
-              accepted,
-              undecided,
-            })}
-          </Typography.Text>
+          <Flex vertical>
+            <Typography.Text type="secondary">{assessment.lead}</Typography.Text>
+            <Typography.Text type="secondary">{assessment.follow}</Typography.Text>
+          </Flex>
         </Flex>
         <Flex gap={token.padding} wrap="wrap" style={{ flex: '1 1 0%', minWidth: 0 }}>
           {(
@@ -320,7 +333,9 @@ export function SpecExportPage() {
               Revised document
             </Typography.Title>
             <Typography.Text type="secondary">
-              Choose the document format to generate.
+              {ready
+                ? 'Your revised specification has been generated and is ready to download.'
+                : 'Choose the document format to generate.'}
             </Typography.Text>
             {ready && run.fileName ? (
               <Flex vertical gap={token.marginMD}>
@@ -453,8 +468,11 @@ export function SpecExportPage() {
           </Flex>
         </Card>
 
-        <Card style={{ flex: '1 1 0%', minWidth: 0 }}>
-          <Flex vertical gap={token.marginMD}>
+        <Card
+          style={{ flex: '1 1 0%', minWidth: 0 }}
+          styles={{ body: { padding: token.paddingLG } }}
+        >
+          <Flex vertical gap={token.paddingSM}>
             <Typography.Title level={5} style={{ margin: 0 }}>
               ConnectED Actions
             </Typography.Title>
@@ -462,44 +480,54 @@ export function SpecExportPage() {
               Create a ConnectED action from approved ASC parts, or add them to an existing one in
               this Project.
             </Typography.Text>
-            <Card size="small">
-              <Flex vertical gap={token.marginSM}>
-                <Typography.Text strong>BOM</Typography.Text>
-                <Typography.Text type="secondary">
-                  Uses approved ASC product recommendations from this SPEC.
-                </Typography.Text>
-                <Button
-                  size="large"
-                  disabled={stale || approvedProducts.length === 0}
-                  onClick={() => openOutput('bom', 'create')}
-                >
-                  Add to BOM
-                </Button>
-              </Flex>
-            </Card>
-            <Card size="small">
-              <Flex vertical gap={token.marginSM}>
-                <Typography.Text strong>Submittal Package</Typography.Text>
-                <Typography.Text type="secondary">
-                  Builds a package from the same approved product recommendations.
-                </Typography.Text>
-                <Button
-                  size="large"
-                  disabled={stale || approvedProducts.length === 0}
-                  onClick={() => openOutput('submittal', 'create')}
-                >
-                  Add to Submittal Package
-                </Button>
-              </Flex>
-            </Card>
-            <Typography.Text type="secondary">
-              Actions remain inside {projectTitle}.
-            </Typography.Text>
-            {approvedProducts.length === 0 ? (
+            <Flex
+              vertical
+              gap={token.paddingSM}
+              style={{
+                width: '100%',
+                background: token.colorFillQuaternary,
+                padding: token.padding,
+                borderRadius: token.borderRadiusLG,
+              }}
+            >
               <Typography.Text type="secondary">
                 Accept a product recommendation before creating a BOM or Submittal Package.
               </Typography.Text>
-            ) : null}
+              <Card
+                styles={{ body: { padding: token.padding } }}
+                style={{ width: '100%', borderColor: token.colorBorderSecondary }}
+              >
+                <Flex vertical gap={token.paddingSM}>
+                  <Typography.Text strong>Submittal Package</Typography.Text>
+                  <Typography.Text type="secondary">
+                    Builds a package from the same approved product recommendations.
+                  </Typography.Text>
+                  <Button
+                    size="large"
+                    block
+                    icon={<PlusOutlined />}
+                    disabled={stale}
+                    onClick={() => openOutput('submittal', 'create')}
+                  >
+                    Add to Submittal Package
+                  </Button>
+                </Flex>
+              </Card>
+              <Card
+                styles={{ body: { padding: token.padding } }}
+                style={{ width: '100%', borderColor: token.colorBorderSecondary }}
+              >
+                <Flex vertical gap={token.paddingSM}>
+                  <Typography.Text strong>BOM</Typography.Text>
+                  <Typography.Text type="secondary">
+                    Uses approved ASC product recommendations from this SPEC.
+                  </Typography.Text>
+                  <Button size="large" block disabled>
+                    Coming Soon
+                  </Button>
+                </Flex>
+              </Card>
+            </Flex>
           </Flex>
         </Card>
       </Flex>

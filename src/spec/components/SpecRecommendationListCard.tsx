@@ -21,6 +21,8 @@ export function SpecRecommendationListCard({
 }) {
   const { token } = theme.useToken();
   const [hovered, setHovered] = useState(false);
+  // Resolved (accepted/denied) → Figma `recommendation_card` "Resolved" state
+  // (node `8362:7688`): colorFillQuaternary fill + colorBorder, full opacity (no dimming).
   const resolved = isResolved(recommendation);
 
   const handleKeyDown = (event: KeyboardEvent) => {
@@ -44,17 +46,22 @@ export function SpecRecommendationListCard({
         padding: token.paddingSM,
         borderRadius: token.borderRadius,
         border: `${token.lineWidth}px ${token.lineType} ${
-          selected ? token.colorPrimary : hovered ? token.colorPrimaryBorderHover : token.colorBorderSecondary
+          resolved
+            ? token.colorBorder
+            : selected
+              ? token.colorPrimary
+              : hovered
+                ? token.colorPrimaryBorderHover
+                : token.colorBorderSecondary
         }`,
-        background: resolved ? token.colorFillAlter : token.colorBgContainer,
+        background: resolved ? token.colorFillQuaternary : token.colorBgContainer,
+        transition: `border-color ${token.motionDurationMid}, background ${token.motionDurationMid}`,
       }}
     >
       <Flex vertical gap={token.paddingXS} justify="center">
         <SpecRecommendationTags recommendation={recommendation} />
         <Flex vertical gap={token.paddingXXS}>
-          <Typography.Text style={resolved ? { color: token.colorTextDescription } : undefined}>
-            {recommendation.title}
-          </Typography.Text>
+          <Typography.Text>{recommendation.title}</Typography.Text>
           <Typography.Text
             style={{
               color: token.colorTextDescription,

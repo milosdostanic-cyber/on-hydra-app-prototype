@@ -1,6 +1,10 @@
-import { HydraTag, type HydraTagTone } from '../../ui/HydraTag';
-import { Flex, theme } from '../../ui/antd';
-import { recommendationActionLabel } from '../constants/specStatusVocabulary';
+import { HydraColorfulTag } from '../../ui/HydraTag';
+import { Badge, Flex, theme } from '../../ui/antd';
+import {
+  recommendationActionColorfulPreset,
+  recommendationActionLabel,
+  recommendationDecisionBadgeStatus,
+} from '../constants/specStatusVocabulary';
 import type { SpecRecommendation, SpecRecommendationDecision } from '../data/types';
 
 const DECISION_LABEL: Record<SpecRecommendationDecision, string> = {
@@ -10,14 +14,11 @@ const DECISION_LABEL: Record<SpecRecommendationDecision, string> = {
   denied: 'Denied',
 };
 
-const DECISION_TONE: Record<SpecRecommendationDecision, HydraTagTone> = {
-  'not-reviewed': 'processing',
-  accepted: 'success',
-  later: 'default',
-  denied: 'error',
-};
-
-/** Action and review-state chips — shared by list cards and detail panel. */
+/**
+ * Action + review-state row — shared by list cards and the detail panel.
+ * Figma `recommendation_card` (node `8362:7673`): colorful action `Tag` on the left,
+ * status `Badge` (dot + text) on the right, `justify-between` across the full width.
+ */
 export function SpecRecommendationTags({
   recommendation,
 }: {
@@ -26,11 +27,18 @@ export function SpecRecommendationTags({
   const { token } = theme.useToken();
 
   return (
-    <Flex gap={token.marginXS} wrap="wrap" align="center">
-      <HydraTag>{recommendationActionLabel[recommendation.action]}</HydraTag>
-      <HydraTag tone={DECISION_TONE[recommendation.decision]}>
-        {DECISION_LABEL[recommendation.decision]}
-      </HydraTag>
+    <Flex justify="space-between" align="center" style={{ width: '100%' }}>
+      <HydraColorfulTag
+        preset={recommendationActionColorfulPreset[recommendation.action]}
+        style={{ textTransform: 'uppercase' }}
+      >
+        {recommendationActionLabel[recommendation.action]}
+      </HydraColorfulTag>
+      <Badge
+        status={recommendationDecisionBadgeStatus[recommendation.decision]}
+        text={DECISION_LABEL[recommendation.decision]}
+        style={{ flexShrink: 0, marginInlineStart: token.marginXS }}
+      />
     </Flex>
   );
 }

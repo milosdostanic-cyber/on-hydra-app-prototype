@@ -14,6 +14,8 @@ export function SpecRecommendationCard({
 }) {
   const { token } = theme.useToken();
   const [hovered, setHovered] = useState(false);
+  // Resolved (accepted/denied) → Figma `recommendation_card` "Resolved" state
+  // (node `8362:7688`): colorFillQuaternary fill + colorBorder, full opacity (no dimming).
   const resolved =
     recommendation.decision === 'accepted' || recommendation.decision === 'denied';
 
@@ -39,22 +41,24 @@ export function SpecRecommendationCard({
       style={{
         height: '100%',
         cursor: 'pointer',
-        borderColor: hovered ? token.colorPrimaryBorderHover : token.colorBorderSecondary,
+        borderColor: resolved
+          ? token.colorBorder
+          : hovered
+            ? token.colorPrimaryBorderHover
+            : token.colorBorderSecondary,
         borderRadius: token.borderRadius,
-        background: resolved ? token.colorFillAlter : token.colorBgContainer,
-        transition: `border-color ${token.motionDurationMid}`,
+        background: resolved ? token.colorFillQuaternary : token.colorBgContainer,
+        transition: `border-color ${token.motionDurationMid}, background ${token.motionDurationMid}`,
       }}
       styles={{ body: { padding: token.paddingSM, height: '100%' } }}
     >
       <Flex vertical gap={token.paddingXS} justify="center" style={{ height: '100%' }}>
         <SpecRecommendationTags recommendation={recommendation} />
         <Flex vertical gap={token.paddingXXS}>
-          <Typography.Text style={resolved ? { color: token.colorTextDescription } : undefined}>
-            {recommendation.title}
-          </Typography.Text>
+          <Typography.Text>{recommendation.title}</Typography.Text>
           {recommendation.reason ? (
             <Typography.Text
-              ellipsis={{ tooltip: recommendation.reason }}
+              ellipsis
               style={{
                 color: token.colorTextDescription,
                 ...hydraTextStyleToReactCss(hydraSmallStrong),
