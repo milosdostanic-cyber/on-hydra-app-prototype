@@ -20,17 +20,18 @@ One-time setup to deploy this prototype on every push to `main`, with password p
 | Production branch | `main` |
 | Framework preset | Vite |
 | Build command | `npm run build` |
+| Deploy command | `npx wrangler deploy` |
 | Build output directory | `dist` |
 | Environment variable (optional) | `NODE_VERSION` = `20` |
 
 The repo includes:
 
-- `functions/_middleware.js` — HTTP Basic Auth on all requests
-- `public/_redirects` — SPA fallback for React Router
+- `wrangler.jsonc` — Worker + static assets. SPA fallback is `assets.not_found_handling: "single-page-application"` (do **not** use `/* /index.html 200` in `_redirects`; Cloudflare rejects that as an infinite loop, error 100324)
+- `workers/auth.js` — HTTP Basic Auth on all requests before assets are served
 
 ## Environment variables
 
-In **Pages project → Settings → Environment variables**, add for **Production** and **Preview**:
+In the Cloudflare project → **Settings → Variables and Secrets**, add for **Production** and **Preview**:
 
 | Name | Value |
 |------|--------|
@@ -50,7 +51,7 @@ If the Cloudflare GitHub App cannot be installed on the private repo, use a work
 - `CLOUDFLARE_API_TOKEN` (Pages edit permission)
 - `CLOUDFLARE_ACCOUNT_ID`
 
-Build and deploy with `npx wrangler pages deploy dist --project-name=<your-project-name>` after `npm run build`.
+Build and deploy with `npm run deploy` (or `npx wrangler deploy` after `npm run build`). Project name comes from `wrangler.jsonc`.
 
 ## Verify
 

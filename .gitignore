@@ -3,6 +3,8 @@ dist
 .DS_Store
 *.local
 .vite
+.wrangler/
+.dev.vars
 
 # Large local BOM reference exports (keep markdown in repo)
 Documents/Bom/*.pdf
