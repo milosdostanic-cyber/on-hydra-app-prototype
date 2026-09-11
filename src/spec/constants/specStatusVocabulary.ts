@@ -18,6 +18,7 @@ import type {
   SpecProductFit,
   SpecProductSuggestionStatus,
   SpecRecommendationAction,
+  SpecRecommendationDecision,
   SpecRedFlagState,
   SpecRedFlagType,
   SpecRequirementCategory,

@@ -147,7 +147,7 @@ export function SpecSectionNavigator({
         >
           Table of contents
         </Typography.Text>
-        <Flex align="center" style={{ height: token.fontHeight, width: '100%' }}>
+        <Flex align="center" style={{ height: hydraBaseNormal.lineHeight, width: '100%' }}>
           <Divider style={{ margin: 0, width: '100%' }} />
         </Flex>
       </Flex>
