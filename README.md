@@ -18,6 +18,14 @@ npm run dev
 
 Open the URL Vite prints (often `http://localhost:5173/`).
 
+### Remote preview (product / stakeholders)
+
+The app can be deployed to **Cloudflare Pages** from the `main` branch. Each push to `main` rebuilds the preview automatically.
+
+- The live URL is shown in the Cloudflare dashboard after the project is connected (typically `https://<project-name>.pages.dev`).
+- Access is protected with **HTTP Basic Auth** (browser username/password prompt). Credentials are **not** stored in this repo; ask engineering or check your team password manager.
+- Setup for maintainers: [Documentation/cloudflare-pages-preview.md](Documentation/cloudflare-pages-preview.md)
+
 ---
 
 ## Cross-Module Action Trail — how to see Level 1, 2, and 3
