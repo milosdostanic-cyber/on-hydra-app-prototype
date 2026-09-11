@@ -269,6 +269,23 @@ Review only, no edits: add `Audit only`
 
 ---
 
+## hydra-figma-flow-explainer
+
+**Location:** `.cursor/skills/hydra-figma-flow-explainer/SKILL.md`
+
+Writes **How this flow works** cards for a Figma user-flow section. Before writing copy, it checks each top-level screen name against the parent section (`NN — Title`) and against what the screen actually shows, and renames leftovers from cloned flows. Then it updates the text on that section's **How this flow works** frame.
+
+Default run **fixes Figma**: screen names first, then the card. Chat is a report of what is already in the file. It does not edit product UI chrome or code. `use_figma` must switch to the **SPEC** page first (`Node not found` is a page miss, not a skipped write). Say `copy only` if you want the draft in chat without a Figma write.
+
+**How to run:**
+```
+@hydra-figma-flow-explainer
+
+https://www.figma.com/design/…?node-id=…
+```
+
+---
+
 ## hydra-module-builder
 
 **Location:** `.cursor/skills/hydra-module-builder/SKILL.md`

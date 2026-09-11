@@ -42,17 +42,33 @@ Node context requested: `204:47936` (file-level token audit executed via Figma M
   - Figma `Colors/Primary/primary-1..10` Light/Dark values match `bluePrimaryPrimitiveLight` and `bluePrimaryPrimitiveDark`.
   - Example:
     - `Primary/primary-6`: Figma Light `#0073A5`, Dark `#03658F` == repo arrays.
+  - Figma `Colors/Daybreak Blue/blue-1..10` Light/Dark match `daybreakBluePrimitiveLight` / `daybreakBluePrimitiveDark` (**Info only**).
+  - Example:
+    - `Daybreak Blue/blue-6`: Figma Light `#1677FF`, Dark `#1668DC` == repo arrays.
 - **Semantic alias parity: MATCH**
-  - Figma `Customize Theme/Color/Primary/*` aliases map to the same steps as `bluePrimarySemantics` and are wired in `hydraAntdTheme.token`.
+  - Figma `Customize Theme/Color/Primary/*` aliases → `Primary/primary-*` (same steps as `bluePrimarySemantics` in `hydraAntdTheme.token` — top bar / links / ghost primary).
   - Verified mappings:
-    - `colorPrimaryBG -> primary-1`
-    - `colorPrimary -> primary-6`
-    - `colorPrimaryActive -> primary-7`
-    - `colorPrimaryTextHover -> primary-4`
-    - `colorLinkHover -> primary-4`
-    - `colorLinkActive -> primary-7`
+    - `colorPrimaryBG -> Primary/primary-1`
+    - `colorPrimaryHover -> Primary/primary-4` (Figma; repo `colorPrimaryHover` uses step 5 for antd hover slot)
+    - `colorPrimary -> Primary/primary-6`
+    - `colorPrimaryActive -> Primary/primary-7`
+    - `colorPrimaryTextHover -> Primary/primary-4`
+    - `colorLinkHover -> Primary/primary-4`
+    - `colorLinkActive -> Primary/primary-7`
+    - `colorPrimaryBgSubtle -> Primary/primary-bg-subtle`
+    - `colorPrimaryBorderSubtle -> Primary/primary-1`
 
-## B. Orange button-primary (Volcano) semantics
+## A2. Info / Alert (Daybreak via `colorInfo*` in code)
+
+- **Figma Customize Theme:** `Color/Info/*` aliases remain on **`Primary/primary-*`** (original tokenization).
+- **Figma Alert component (info variants):** fill / border / icon bind directly to **`Daybreak Blue/blue-*`** primitives (`blue-1`, `blue-3`, `blue-6`).
+- **Repo:** `blueInfoSemantics` maps **`colorInfo*`** → `daybreakBluePrimitive*` in `antdTheme` (Alert `type="info"` only).
+- Verified repo mappings:
+  - `colorInfoBg -> Daybreak Blue/blue-1`
+  - `colorInfoBorder -> Daybreak Blue/blue-3`
+  - `colorInfoHover / colorInfoTextHover -> Daybreak Blue/blue-5`
+  - `colorInfo / colorInfoText -> Daybreak Blue/blue-6`
+  - `colorInfoActive / colorInfoTextActive -> Daybreak Blue/blue-7`
 
 - **Primitive parity: MATCH**
   - Figma `Colors/Volcano/volcano-1..10` Light/Dark match `volcanoPrimitiveLight` and `volcanoPrimitiveDark`.

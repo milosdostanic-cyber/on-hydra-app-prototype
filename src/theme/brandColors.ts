@@ -48,6 +48,7 @@ export function applyHydraTagCssVars(root: HTMLElement): void {
   const tagStyle = hydraTextStyleToReactCss(hydraBaseNormal);
   root.style.setProperty('--hydra-tag-font-size', `${tagStyle.fontSize}px`);
   root.style.setProperty('--hydra-tag-line-height', tagStyle.lineHeight as string);
+  root.style.setProperty('--hydra-tag-font-weight', String(tagStyle.fontWeight));
 }
 
 /**

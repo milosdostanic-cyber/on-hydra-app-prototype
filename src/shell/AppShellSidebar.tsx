@@ -1,16 +1,4 @@
-import {
-  BookOutlined,
-  BuildOutlined,
-  CalculatorOutlined,
-  FileTextOutlined,
-  HomeOutlined,
-  InboxOutlined,
-  LeftOutlined,
-  RightOutlined,
-  ReadOutlined,
-  SearchOutlined,
-  UnorderedListOutlined,
-} from '@ant-design/icons';
+import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -26,11 +14,22 @@ import {
   hydraSidebarCollapseTriggerTopPx,
 } from '../theme/hydraMenuMetrics';
 import { sidebarSemanticsFor } from '../theme/sidebarSemantics';
-import { Button, Flex, Layout, Menu, theme } from '../ui/antd';
+import { Button, ConfigProvider, Flex, Layout, Menu, theme } from '../ui/antd';
 import type { MenuProps } from '../ui/antd';
 
 import { ConnectedSidebarBrand } from './ConnectedSidebarBrand';
-import { getLastScopedProjectId } from './lastProjectScope';
+import {
+  BomNavIcon,
+  ContentNavIcon,
+  HomeNavIcon,
+  KnowledgeCenterNavIcon,
+  PartSearchNavIcon,
+  RevitNavIcon,
+  SeizBraceNavIcon,
+  SpecNavIcon,
+  SubmittalManagerNavIcon,
+} from './sidebarNavIcons';
+import { getLastScopedProjectId, setLastScopedProjectId } from './lastProjectScope';
 import { productCatalogHomePath } from '../catalog/productCatalogNavigation';
 
 const { Sider } = Layout;
@@ -41,13 +40,14 @@ function primarySideKey(pathname: string): string {
   if (/\/projects\/[^/]+\/catalog(\/|$)/.test(pathname)) return 'part-search';
   if (pathname.startsWith('/bom')) return 'bom';
   if (pathname.startsWith('/seisbrace')) return 'seis';
+  if (pathname.startsWith('/spec')) return 'spec';
   if (pathname.startsWith('/revit-plugin')) return 'revit-plugin';
   if (pathname.startsWith('/knowledge-center')) return 'knowledge-center';
   if (pathname.startsWith('/dashboard')) return 'dash';
   if (pathname.startsWith('/projects')) {
     if (pathname === '/projects' || pathname === '/projects/') return 'dash';
+    if (/\/projects\/[^/]+\/spec(\/|$)/.test(pathname)) return 'spec';
     if (/\/projects\/[^/]+\/seis-brace/.test(pathname)) return 'seis';
-    if (/\/projects\/[^/]+\/sales-brace/.test(pathname)) return 'spec';
     if (/\/projects\/[^/]+\/submittal/.test(pathname)) return 'submittal';
     if (/\/projects\/[^/]+\/content/.test(pathname)) return 'content';
     return 'dash';
@@ -98,19 +98,19 @@ export function AppShellSidebar() {
   const { token } = theme.useToken();
   const location = useLocation();
   const navigate = useNavigate();
-  const { projectId: activeProjectId } = useActiveProject();
+  const { projectId: activeProjectId, setProjectId } = useActiveProject();
 
   const primaryMenuItems: MenuProps['items'] = useMemo(
     () => [
-      { key: 'dash', icon: <HomeOutlined />, label: 'Home' },
-      { key: 'part-search', icon: <SearchOutlined />, label: 'Part Search' },
-      trailMenuItem('content', <ReadOutlined />, 'Content', collapsed, token),
-      trailMenuItem('bom', <UnorderedListOutlined />, 'BOM', collapsed, token),
-      { key: 'spec', icon: <FileTextOutlined />, label: 'Spec' },
-      { key: 'seis', icon: <CalculatorOutlined />, label: 'SeisBrace' },
-      trailMenuItem('submittal', <InboxOutlined />, 'Submittal Manager', collapsed, token),
-      { key: 'revit-plugin', icon: <BuildOutlined />, label: 'Revit Plug-in' },
-      { key: 'knowledge-center', icon: <BookOutlined />, label: 'Knowledge Center' },
+      { key: 'dash', icon: <HomeNavIcon />, label: 'Home' },
+      { key: 'part-search', icon: <PartSearchNavIcon />, label: 'Part Search' },
+      trailMenuItem('content', <ContentNavIcon />, 'Content', collapsed, token),
+      trailMenuItem('bom', <BomNavIcon />, 'BOM', collapsed, token),
+      { key: 'spec', icon: <SpecNavIcon />, label: 'Spec' },
+      { key: 'seis', icon: <SeizBraceNavIcon />, label: 'SeisBrace' },
+      trailMenuItem('submittal', <SubmittalManagerNavIcon />, 'Submittal Manager', collapsed, token),
+      { key: 'revit-plugin', icon: <RevitNavIcon />, label: 'Revit Plug-in' },
+      { key: 'knowledge-center', icon: <KnowledgeCenterNavIcon />, label: 'Knowledge Center' },
     ],
     [collapsed, token],
   );
@@ -118,29 +118,29 @@ export function AppShellSidebar() {
   const selectedMenuKeys = useMemo(() => [primarySideKey(location.pathname)], [location.pathname]);
 
   const onMenuClick: MenuProps['onClick'] = ({ key }) => {
-    const pid = getLastScopedProjectId();
-    const projectScoped =
-      key === 'spec' || key === 'submittal' || key === 'content' || key === 'bom' || key === 'seis';
-    if (projectScoped && !pid) {
-      navigate('/dashboard');
-      return;
-    }
+    const scopedProjectId = resolveActiveConstructionProjectId(
+      activeProjectId ?? getLastScopedProjectId(),
+    );
     // Part Search landing = product catalog (cover + Featured Parts + Categories). Always
     // resolve a construction project — bare `/catalog` is the older search-first home.
-    const catalogProjectId = resolveActiveConstructionProjectId(activeProjectId ?? pid);
     const routes: Record<string, string> = {
       dash: '/dashboard',
-      'part-search': productCatalogHomePath(catalogProjectId),
-      content: `/projects/${pid}/content`,
+      'part-search': productCatalogHomePath(scopedProjectId),
+      content: `/projects/${scopedProjectId}/content`,
       bom: '/bom',
-      spec: `/projects/${pid}/sales-brace`,
+      spec: `/projects/${scopedProjectId}/spec`,
       seis: '/seisbrace',
-      submittal: `/projects/${pid}/submittal`,
+      submittal: `/projects/${scopedProjectId}/submittal`,
       'revit-plugin': '/revit-plugin',
       'knowledge-center': '/knowledge-center',
     };
     const path = routes[key];
-    if (path) navigate(path);
+    if (!path) return;
+    if (key === 'content' || key === 'spec' || key === 'submittal' || key === 'part-search') {
+      setProjectId(scopedProjectId);
+      setLastScopedProjectId(scopedProjectId);
+    }
+    navigate(path);
   };
 
   return (
@@ -179,24 +179,41 @@ export function AppShellSidebar() {
             paddingInline: collapsed ? token.paddingSM : token.paddingMD,
             justifyContent: collapsed ? 'center' : 'flex-start',
             background: sidebarSurface.colorSidebarHeader,
-            borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorSplit}`,
           }}
         >
           <ConnectedSidebarBrand collapsed={collapsed} />
         </div>
+        {/**
+         * Figma menu band: `paddingSM` above the first row and an 8px gap between rows. antd collapses the
+         * item's `marginBlock`, so the 8px lives on the item and the band keeps the remaining `paddingXXS`.
+         */}
         <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', paddingBlock: token.paddingXXS }}>
-          <Menu
-            theme="dark"
-            mode="inline"
-            inlineCollapsed={collapsed}
-            selectedKeys={selectedMenuKeys}
-            items={primaryMenuItems}
-            onClick={onMenuClick}
-            style={{ borderInlineEnd: 'none', background: 'transparent' }}
-            styles={{
-              item: { borderRadius: hydraMenuItemBorderRadius },
+          {/* Figma sidebar rows sit at `paddingLG` inset with a 16px icon — wider than the DS `Menu` default. */}
+          <ConfigProvider
+            theme={{
+              components: {
+                Menu: {
+                  itemPaddingInline: token.paddingLG,
+                  iconMarginInlineEnd: token.paddingXS,
+                  iconSize: token.sizeMS,
+                  itemMarginBlock: token.paddingXS,
+                },
+              },
             }}
-          />
+          >
+            <Menu
+              theme="dark"
+              mode="inline"
+              inlineCollapsed={collapsed}
+              selectedKeys={selectedMenuKeys}
+              items={primaryMenuItems}
+              onClick={onMenuClick}
+              style={{ borderInlineEnd: 'none', background: 'transparent' }}
+              styles={{
+                item: { borderRadius: hydraMenuItemBorderRadius },
+              }}
+            />
+          </ConfigProvider>
         </div>
       </div>
       <Button
@@ -205,10 +222,12 @@ export function AppShellSidebar() {
         aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         onClick={() => setCollapsed((c) => !c)}
         icon={collapsed ? <RightOutlined /> : <LeftOutlined />}
+        styles={{ icon: { fontSize: token.sizeMS } }}
         style={{
           position: 'absolute',
           top: hydraSidebarCollapseTriggerTopPx,
-          right: 0,
+          /** Figma overlaps the sider's 1px right border so the tab sits flush with the content edge. */
+          right: -token.lineWidth,
           zIndex: 2,
           height: token.controlHeightSM,
           minWidth: token.controlHeightSM,
@@ -220,7 +239,7 @@ export function AppShellSidebar() {
           borderEndStartRadius: token.borderRadiusSM,
           borderStartEndRadius: 0,
           borderEndEndRadius: 0,
-          boxShadow: token.boxShadowTertiary,
+          boxShadow: token.boxShadow,
         }}
       />
     </Sider>

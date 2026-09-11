@@ -1,6 +1,6 @@
 import {
-  AppstoreOutlined,
   FilePdfOutlined,
+  FileTextOutlined,
   FolderOpenOutlined,
   LeftOutlined,
 } from '@ant-design/icons';
@@ -19,10 +19,9 @@ import { projectTitleById } from './projectSeed';
 
 const { Sider, Content } = Layout;
 
-type ModuleKey = 'sales-brace' | 'submittal' | 'content';
+type ModuleKey = 'submittal' | 'content';
 
 function moduleFromPath(pathname: string): ModuleKey {
-  if (pathname.includes('/sales-brace')) return 'sales-brace';
   if (pathname.includes('/submittal')) return 'submittal';
   return 'content';
 }
@@ -46,8 +45,8 @@ export function ProjectWorkspaceLayout() {
   const items: MenuProps['items'] = useMemo(
     () => [
       {
-        key: 'sales-brace',
-        icon: <AppstoreOutlined />,
+        key: 'spec',
+        icon: <FileTextOutlined />,
         label: 'Spec',
       },
       {
