@@ -224,21 +224,6 @@ export function SpecAnalyzePage() {
     };
   }, [deepLink.citation]);
 
-  const openCitation = (citation: SpecCitation) => {
-    setSourceCitation(citation);
-    setDocumentOpen(true);
-    workspace.openCitation(citation);
-    deepLink.writeDeepLink({
-      section: citation.sectionId,
-      citation: citation.id,
-      version: document?.versionLabel,
-    });
-    trackSpecEvent('spec_citation_opened', {
-      citationId: citation.id,
-      anchorType: citation.anchorType,
-    });
-  };
-
   const filteredRecommendations = useMemo(
     () =>
       recommendations.filter((recommendation) => {
