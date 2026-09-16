@@ -70,6 +70,14 @@ export function ProjectWorkspaceLayout() {
     [submittalCount, token.colorPrimary, token.marginXS],
   );
 
+  /**
+   * Content Downloads uses the app sidebar (Spec / Submittal manager / Content) for navigation.
+   * This in-project rail would just duplicate that menu and steal width from the history table.
+   */
+  if (selected === 'content') {
+    return <Outlet />;
+  }
+
   return (
     <Layout style={{ minHeight: '100%', background: 'transparent' }}>
       <Sider
