@@ -9,8 +9,32 @@ body,
 body {
   font-family: var(--hydra-font-family);
   margin: 0;
+
   /* Prevent layout jump when page starts/stops vertical scrolling (e.g. accordion expand/collapse). */
   scrollbar-gutter: stable;
+}
+
+/*
+ * Heading font — Figma `Typography/Font Family/fontFamilyHeading` = Barlow Condensed.
+ * H1-H2 = fontWeightHeading (800/ExtraBold); H3-H5 = fontWeightStrong (600/SemiBold).
+ * antd has no fontFamilyHeading token, so we override via CSS vars set in `applyHydraBrandCssVars`.
+ */
+h1.ant-typography,
+h2.ant-typography,
+.ant-typography h1,
+.ant-typography h2 {
+  font-family: var(--hydra-heading-font-family);
+  font-weight: var(--hydra-heading-font-weight);
+}
+
+h3.ant-typography,
+h4.ant-typography,
+h5.ant-typography,
+.ant-typography h3,
+.ant-typography h4,
+.ant-typography h5 {
+  font-family: var(--hydra-heading-font-family);
+  font-weight: var(--hydra-subheading-font-weight);
 }
 
 /*

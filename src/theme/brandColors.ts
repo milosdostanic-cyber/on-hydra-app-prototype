@@ -2,6 +2,9 @@ import type { HydraColorMode } from './hydraColorMode';
 import { hydraDarkAlias, hydraLightAlias } from './hydraAlias';
 import {
   brandFontFamily,
+  brandHeadingFontFamily,
+  hydraBrandFontWeightHeading,
+  hydraBrandFontWeightStrong,
   hydraBaseNormal,
   hydraLargeStrong,
   hydraTextStyleToReactCss,
@@ -19,7 +22,7 @@ export const brandColors = {
   primary: bluePrimaryStep(6),
   primaryHover: bluePrimaryStep(5),
   primaryDark: bluePrimaryStep(7),
-  /** Accent cyan; same as `Primary/primary-4` / `colorLinkHover` */
+  /** Same as `Primary/primary-4` / `colorPrimaryBorderHover` (link hover moved to step 7 in the RSFC pass). */
   primaryAccent: bluePrimaryStep(4),
   semantics: bluePrimarySemantics,
 } as const;
@@ -39,6 +42,11 @@ export function applyHydraBrandCssVars(root: HTMLElement, mode: HydraColorMode):
   root.style.setProperty('--hydra-brand-primary-hover', b.primaryHover);
   root.style.setProperty('--hydra-brand-primary-active', b.primaryDark);
   root.style.setProperty('--hydra-font-family', brandFontFamily);
+  root.style.setProperty('--hydra-heading-font-family', brandHeadingFontFamily);
+  /** H1-H2 — Figma `fontWeightHeading` (800/ExtraBold). */
+  root.style.setProperty('--hydra-heading-font-weight', String(hydraBrandFontWeightHeading));
+  /** H3-H5 — Figma `fontWeightStrong` (600/SemiBold), same token antd uses for `fontWeightStrong`. */
+  root.style.setProperty('--hydra-subheading-font-weight', String(hydraBrandFontWeightStrong));
 }
 
 /**

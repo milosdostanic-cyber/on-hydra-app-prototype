@@ -10,7 +10,12 @@
 import type { ThemeConfig } from 'antd';
 import type { AliasToken } from 'antd/es/theme/interface';
 
-import { brandFontFamily, hydraAntdFontMapFromDesign } from './hydraTypography';
+import {
+  brandCodeFontFamily,
+  brandFontFamily,
+  hydraBrandFontWeightHeading,
+  hydraAntdFontMapFromDesign,
+} from './hydraTypography';
 
 export type HydraTypographyMode = 'default' | 'compact';
 
@@ -45,7 +50,8 @@ const hydraCompactFontMap = {
  */
 export const hydraAntdTypographyToken = {
   fontFamily: brandFontFamily,
-  fontFamilyCode: brandFontFamily,
+  /** Figma `Typography/Font Family/fontFamilyCode` = Courier Prime. */
+  fontFamilyCode: brandCodeFontFamily,
   ...hydraAntdFontMapFromDesign,
 } as const satisfies Partial<AliasToken>;
 
@@ -54,7 +60,7 @@ export function getHydraAntdTypographyToken(mode: HydraTypographyMode = 'default
   if (mode === 'compact') {
     return {
       fontFamily: brandFontFamily,
-      fontFamilyCode: brandFontFamily,
+      fontFamilyCode: brandCodeFontFamily,
       ...hydraCompactFontMap,
     };
   }
