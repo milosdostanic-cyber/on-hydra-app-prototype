@@ -34,6 +34,7 @@ import { trackSpecEvent } from '../specAnalytics';
 import { specHomePath } from '../specNavigation';
 import { navigateSpecWorkspaceTab, specWorkspaceTabItems } from '../specWorkspaceTabs';
 import { HydraTag } from '../../ui/HydraTag';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 /**
  * I3 — Submittal obligations register + package builder (reuses PackageCreateEditModal).
@@ -91,7 +92,7 @@ export function SpecSubmittalsPage() {
       dataIndex: 'title',
       render: (_, row) => (
         <Flex vertical gap={token.marginXXS}>
-          <Typography.Text strong>{row.title}</Typography.Text>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{row.title}</Typography.Text>
           <Typography.Text type="secondary">{row.description}</Typography.Text>
         </Flex>
       ),

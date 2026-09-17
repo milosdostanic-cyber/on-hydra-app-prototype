@@ -15,6 +15,7 @@ import {
   theme,
 } from '../../ui/antd';
 import type { ResolvedHistoryVariant, UnresolvedHistoryFigure } from './downloadHistorySelection';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 const COPY = {
   title: 'Choose a variation',
@@ -197,7 +198,7 @@ export function ResolveFigureVariantsDrawer({
               <Alert type="warning" showIcon title={COPY.noneToAdd} />
             ) : (
               <Flex vertical gap={token.marginXS}>
-                <Typography.Text strong>{COPY.willAdd}</Typography.Text>
+                <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{COPY.willAdd}</Typography.Text>
                 {toWrite.map((item) => (
                   <Typography.Text key={`${item.partKey}-${item.variationKey}`}>
                     {item.name} · {item.sku}
@@ -207,7 +208,7 @@ export function ResolveFigureVariantsDrawer({
             )}
             {dropped.length > 0 ? (
               <Flex vertical gap={token.marginXS}>
-                <Typography.Text strong>{COPY.skipped}</Typography.Text>
+                <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{COPY.skipped}</Typography.Text>
                 {dropped.map((figure) => (
                   <Typography.Text key={figure.partKey} type="secondary">
                     {figure.name} · {figure.figureNumber}
@@ -222,7 +223,7 @@ export function ResolveFigureVariantsDrawer({
               {COPY.progress(step + 1, figures.length)}
             </Typography.Text>
             <Flex vertical gap={token.marginXXS}>
-              <Typography.Text strong>{currentFigure.name}</Typography.Text>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{currentFigure.name}</Typography.Text>
               <Typography.Text type="secondary">Figure {currentFigure.figureNumber}</Typography.Text>
             </Flex>
             <Typography.Text>{COPY.hint}</Typography.Text>
@@ -257,7 +258,7 @@ export function ResolveFigureVariantsDrawer({
                         <CatalogThumbnailPlaceholder />
                         <Flex vertical gap={token.marginXXS} style={{ minWidth: 0 }}>
                           <Flex align="center" gap={token.marginXS} wrap="wrap">
-                            <Typography.Text strong>{option.name}</Typography.Text>
+                            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{option.name}</Typography.Text>
                             {option.downloaded ? <HydraTag tone="processing">{COPY.downloaded}</HydraTag> : null}
                           </Flex>
                           <Typography.Text type="secondary">{option.figureNumber}</Typography.Text>

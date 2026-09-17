@@ -16,6 +16,7 @@ import { shellLayout } from '../theme/hydraAlias';
 import { setLastScopedProjectId } from './lastProjectScope';
 import { pageDescriptionStyle } from './pageDescriptionStyle';
 import { projectTitleById } from './projectSeed';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../theme/hydraTypography';
 
 const { Sider, Content } = Layout;
 
@@ -98,7 +99,7 @@ export function ProjectWorkspaceLayout() {
           >
             Home
           </Button>
-          <Typography.Text strong>{title}</Typography.Text>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{title}</Typography.Text>
           <Typography.Paragraph style={{ ...pageDescriptionStyle(token), marginTop: token.marginXXS }}>
             Modules for this project
           </Typography.Paragraph>

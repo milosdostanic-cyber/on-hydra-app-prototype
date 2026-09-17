@@ -6,6 +6,7 @@ import {
   isContentDownloadDemoEnabled,
   useContentDownloadAccess,
 } from './contentDownloadAccess';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 const COPY = {
   tooltip: 'Content demo controls',
@@ -43,7 +44,7 @@ export function ContentDownloadDemoControls() {
           <Alert type="info" showIcon title={COPY.alertTitle} description={COPY.alertDescription} />
 
           <Flex align="center" justify="space-between" gap={token.marginSM}>
-            <Typography.Text strong>{COPY.submittal}</Typography.Text>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{COPY.submittal}</Typography.Text>
             <Switch
               checked={access.canCreateSubmittal}
               onChange={access.setCanCreateSubmittal}
@@ -54,7 +55,7 @@ export function ContentDownloadDemoControls() {
           </Flex>
 
           <Flex align="center" justify="space-between" gap={token.marginSM}>
-            <Typography.Text strong>{COPY.bom}</Typography.Text>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{COPY.bom}</Typography.Text>
             <Switch
               checked={access.canCreateBom}
               onChange={access.setCanCreateBom}

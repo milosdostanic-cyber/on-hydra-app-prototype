@@ -4,9 +4,7 @@ export {
   hydraAntdTypographyToken,
 } from './hydraAntdTypography';
 export {
-  brandCodeFontFamily,
   brandFontFamily,
-  brandHeadingFontFamily,
   hydraBaseDelete,
   hydraBaseItalic,
   hydraBaseNormal,
@@ -18,10 +16,6 @@ export {
   hydraExtraLargeStrong,
   hydraExtraLargeUnderline,
   hydraFontFamilyName,
-  hydraFontFamilyHeadingName,
-  hydraFontFamilyCodeName,
-  hydraBrandFontWeightHeading,
-  hydraBrandFontWeightStrong,
   hydraLargeDelete,
   hydraLargeItalic,
   hydraLargeNormal,
@@ -32,6 +26,7 @@ export {
   hydraSmallNormal,
   hydraSmallStrong,
   hydraSmallUnderline,
+  hydraSubtitleLarge,
   hydraTextBaseNormal,
   hydraTextStyleToReactCss,
   hydraTitleHeading1,

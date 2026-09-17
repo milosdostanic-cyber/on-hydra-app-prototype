@@ -180,7 +180,13 @@ export function buildDownloadHistoryRows(entries: DownloadHistoryEntry[]): Histo
         : firstOverall.queuedAt,
       occurrenceCount: figureEntries.length,
       downloaders: rollupDownloaders(allForRollup),
-      children: children.length > 0 ? children : undefined,
+      /** Variants inherit the parent figure number so the Figure Number column is never blank. */
+      children:
+        children.length > 0
+          ? children.map((child) =>
+              child.figureNumber ? child : { ...child, figureNumber: parentFigure },
+            )
+          : undefined,
     };
 
     rows.push(row);

@@ -7,7 +7,7 @@ import {
 } from '../bomImportProgressState';
 import {
   hydraBaseNormal,
-  hydraLargeStrong,
+  hydraSubtitleLarge,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
 
@@ -72,9 +72,8 @@ export function BomImportProgressStrip({
     >
       <Flex vertical gap={0} style={{ flex: '0 1 auto', minWidth: 0, maxWidth: '100%' }}>
         <Typography.Text
-          strong
           style={{
-            ...hydraTextStyleToReactCss(hydraLargeStrong),
+            ...hydraTextStyleToReactCss(hydraSubtitleLarge),
             color: token.colorText,
           }}
         >

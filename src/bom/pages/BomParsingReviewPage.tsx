@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useBomHubPath } from '../../context/ActiveProjectContext';
 import { shellLayout } from '../../theme/hydraAlias';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 import type { BomUploadFlowLocationState } from '../bomUploadFlowState';
 import { readUploadFileName, resolveUploadDestination } from '../bomUploadFlowState';
 import {
@@ -435,7 +436,7 @@ export function BomParsingReviewPage() {
                   cell: {
                     background: token.colorFillAlter,
                     borderBottomColor: token.colorBorderSecondary,
-                    fontWeight: token.fontWeightStrong,
+                    ...hydraTextStyleToReactCss(hydraBaseStrong),
                   },
                 },
                 body: {

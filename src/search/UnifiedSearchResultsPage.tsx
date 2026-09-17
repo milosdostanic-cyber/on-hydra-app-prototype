@@ -9,6 +9,7 @@ import { PageDescription } from '../shell/PageDescription';
 import { shellTableCardStyle } from '../shell/shellTablePatterns';
 import {
   hydraBaseNormal,
+  hydraBaseStrong,
   hydraTextStyleToReactCss,
   hydraTitleHeading5,
 } from '../theme/hydraTypography';
@@ -86,7 +87,7 @@ function DomainEmptyState({ domain, query }: { domain: SearchDomain | 'all'; que
       image={Empty.PRESENTED_IMAGE_SIMPLE}
       description={
         <Space orientation="vertical" size={token.marginXS}>
-          <Typography.Text strong>No {label} matches</Typography.Text>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No {label} matches</Typography.Text>
           <Typography.Text type="secondary">
             {query.trim() && query !== 'all'
               ? `Nothing in ${label} matched “${query}”. Try another tab or a shorter search term.`
@@ -441,7 +442,7 @@ export function UnifiedSearchResultsPage() {
             <Empty
               description={
                 <Space orientation="vertical" size={token.marginXS}>
-                  <Typography.Text strong>No results found</Typography.Text>
+                  <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No results found</Typography.Text>
                   <PageDescription>
                     {q.trim() ? `Nothing matched “${q}”. Try a shorter term.` : 'No rows to show.'}
                   </PageDescription>

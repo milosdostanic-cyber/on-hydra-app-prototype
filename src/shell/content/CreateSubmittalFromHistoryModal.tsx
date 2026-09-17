@@ -6,6 +6,7 @@ import { useSubmittalDestinationFields } from '../components/useSubmittalDestina
 import { figureRowByPartKey } from './downloadHistorySelection';
 import type { HistoryFigureRow } from './downloadHistoryRows';
 import { Alert, App, Flex, Modal, Space, Typography, theme } from '../../ui/antd';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 const COPY = {
   title: 'Create Submittal Package',
@@ -118,7 +119,7 @@ export function CreateSubmittalFromHistoryModal({
           >
             <Typography.Text type="secondary">{COPY.adding}</Typography.Text>
             {parts.map((part) => (
-              <Typography.Text key={part.partKey} strong>
+              <Typography.Text key={part.partKey} style={hydraTextStyleToReactCss(hydraBaseStrong)}>
                 {part.displayName}
                 {part.figureNumber ? ` · ${part.figureNumber}` : ''}
               </Typography.Text>

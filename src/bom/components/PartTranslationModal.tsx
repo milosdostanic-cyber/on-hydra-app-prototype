@@ -19,8 +19,9 @@ import { HydraTag } from '../../ui/HydraTag';
 import type { BomItem, AscCatalogPart } from '../data/types';
 import {
   hydraBaseNormal,
+  hydraBaseStrong,
   hydraLargeNormal,
-  hydraLargeStrong,
+  hydraSubtitleLarge,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
 
@@ -110,7 +111,7 @@ export function PartTranslationModal({
       >
         {label}
       </Typography.Text>
-      <Typography.Text strong>{value ?? '—'}</Typography.Text>
+      <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{value ?? '—'}</Typography.Text>
     </div>
   );
 
@@ -179,9 +180,8 @@ export function PartTranslationModal({
             }}
           >
             <Typography.Text
-              strong
               style={{
-                ...hydraTextStyleToReactCss(hydraLargeStrong),
+                ...hydraTextStyleToReactCss(hydraSubtitleLarge),
                 display: 'block',
                 marginBottom: token.marginSM,
                 color: token.colorTextSecondary,
@@ -221,9 +221,8 @@ export function PartTranslationModal({
             }}
           >
             <Typography.Text
-              strong
               style={{
-                ...hydraTextStyleToReactCss(hydraLargeStrong),
+                ...hydraTextStyleToReactCss(hydraSubtitleLarge),
                 display: 'block',
                 marginBottom: token.marginSM,
                 color: token.colorPrimary,

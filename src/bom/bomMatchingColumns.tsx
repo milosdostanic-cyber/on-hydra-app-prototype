@@ -11,6 +11,7 @@ import { BomTableRowActions, type BomTableRowAction } from './components/BomTabl
 import { BomConfidenceTag, BomManualTag, BomMatchLevelTag, BomReviewDisplayStatusTag } from './components/BomTags';
 import { Button, Dropdown, Flex, Space, Typography } from '../ui/antd';
 import type { MenuProps, TableColumnsType } from '../ui/antd';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../theme/hydraTypography';
 
 /** Figma `5026:21449` — Matching results table column widths. */
 export const MATCHING_RESULTS_COLUMN_WIDTHS = {
@@ -56,7 +57,7 @@ function OurPartCell({ row, bomProjectId }: { row: BomMatchResult; bomProjectId:
       {sku ? (
         <Typography.Text>
           <Typography.Text type="secondary">SKU </Typography.Text>
-          <Typography.Text strong>{sku}</Typography.Text>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{sku}</Typography.Text>
         </Typography.Text>
       ) : null}
       {row.topMatch?.description ? (

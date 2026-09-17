@@ -6,6 +6,7 @@ import type { SpecSystemType } from '../data/types';
 import { systemTypeLabel } from '../constants/specStatusVocabulary';
 import { trackSpecEvent } from '../specAnalytics';
 import { Alert, App, Button, Checkbox, Flex, Modal, Typography, theme } from '../../ui/antd';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type Props = {
   open: boolean;
@@ -120,7 +121,7 @@ export function SpecDownloadMasterModal({ open, onCancel }: Props) {
               {SPEC_MASTER_CATALOG.map((catalogEntry) => (
                 <Checkbox key={catalogEntry.systemType} value={catalogEntry.systemType}>
                   <Flex vertical gap={token.marginXXS}>
-                    <Typography.Text strong>
+                    <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>
                       Division {catalogEntry.division} — {systemTypeLabel[catalogEntry.systemType]}
                     </Typography.Text>
                     <Typography.Text type="secondary">

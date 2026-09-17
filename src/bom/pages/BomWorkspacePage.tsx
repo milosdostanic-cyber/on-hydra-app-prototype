@@ -67,6 +67,7 @@ import {
 import { shellLayout } from '../../theme/hydraAlias';
 import {
   hydraBaseNormal,
+  hydraBaseStrong,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
 
@@ -530,7 +531,7 @@ export function BomWorkspacePage() {
         <Empty
           description={
             <Space orientation="vertical" size={token.marginXXS}>
-              <Typography.Text strong>No BOM items yet</Typography.Text>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No BOM items yet</Typography.Text>
               <Typography.Text type="secondary">
                 Add a line manually or upload a file to create a new BOM run.
               </Typography.Text>
@@ -543,7 +544,7 @@ export function BomWorkspacePage() {
       <Empty
         description={
           <Space orientation="vertical" size={token.marginXXS}>
-            <Typography.Text strong>No matching rows</Typography.Text>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No matching rows</Typography.Text>
             <Typography.Text type="secondary">
               No confirmed BOM lines match your search.
             </Typography.Text>
@@ -609,7 +610,7 @@ export function BomWorkspacePage() {
             <Empty
               description={
                 <Space orientation="vertical" size={token.marginXS}>
-                  <Typography.Text strong>No BOM items yet</Typography.Text>
+                  <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No BOM items yet</Typography.Text>
                   <Typography.Text type="secondary">
                     Upload a BOM file to import parts, browse the ASC catalog, or add items one by one.
                   </Typography.Text>
@@ -845,7 +846,7 @@ export function BomWorkspacePage() {
             position: ['bottomRight'],
           }}
           styles={{
-            header: { cell: { background: token.colorFillAlter, borderBottomColor: token.colorBorderSecondary, fontWeight: token.fontWeightStrong } },
+            header: { cell: { background: token.colorFillAlter, borderBottomColor: token.colorBorderSecondary, ...hydraTextStyleToReactCss(hydraBaseStrong) } },
             body: { cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM } },
           }}
         />

@@ -24,6 +24,7 @@ import type { BomProject } from '../data/types';
 import { shellLayout } from '../../theme/hydraAlias';
 import {
   hydraBaseNormal,
+  hydraBaseStrong,
   hydraTextStyleToReactCss,
   hydraTitleHeading4,
 } from '../../theme/hydraTypography';
@@ -473,7 +474,7 @@ export function BomSiteProjectsPage() {
                 <Empty
                   description={
                     <Space orientation="vertical" size={token.marginXS}>
-                      <Typography.Text strong>No projects yet</Typography.Text>
+                      <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No projects yet</Typography.Text>
                       <Typography.Text type="secondary">
                         Upload a file, search parts, or start from scratch to create your first BOM.
                       </Typography.Text>
@@ -500,7 +501,7 @@ export function BomSiteProjectsPage() {
                 <Empty
                   description={
                     <Space orientation="vertical" size={token.marginXS}>
-                      <Typography.Text strong>No projects match your filters</Typography.Text>
+                      <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No projects match your filters</Typography.Text>
                       <Typography.Text type="secondary">
                         Try adjusting the search term or status filter.
                       </Typography.Text>
@@ -593,7 +594,7 @@ export function BomSiteProjectsPage() {
                     preserveSelectedRowKeys: false,
                   }}
                   styles={{
-                    header: { cell: { background: token.colorFillAlter, borderBottomColor: token.colorBorderSecondary, fontWeight: token.fontWeightStrong } },
+                    header: { cell: { background: token.colorFillAlter, borderBottomColor: token.colorBorderSecondary, ...hydraTextStyleToReactCss(hydraBaseStrong) } },
                     body: { cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM } },
                   }}
                 />

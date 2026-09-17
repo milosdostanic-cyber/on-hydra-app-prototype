@@ -10,12 +10,7 @@
 import type { ThemeConfig } from 'antd';
 import type { AliasToken } from 'antd/es/theme/interface';
 
-import {
-  brandCodeFontFamily,
-  brandFontFamily,
-  hydraBrandFontWeightHeading,
-  hydraAntdFontMapFromDesign,
-} from './hydraTypography';
+import { brandFontFamily, hydraAntdFontMapFromDesign, hydraBaseStrong } from './hydraTypography';
 
 export type HydraTypographyMode = 'default' | 'compact';
 
@@ -40,7 +35,8 @@ const hydraCompactFontMap = {
   fontHeight: 20,
   fontHeightSM: 18,
   fontHeightLG: 22,
-  fontWeightStrong: 600,
+  // Weight is identical in both Figma modes (Default/Compact) — mirror `Base/Strong`, not a literal.
+  fontWeightStrong: hydraBaseStrong.fontWeight,
 } as const;
 
 /**
@@ -50,8 +46,7 @@ const hydraCompactFontMap = {
  */
 export const hydraAntdTypographyToken = {
   fontFamily: brandFontFamily,
-  /** Figma `Typography/Font Family/fontFamilyCode` = Courier Prime. */
-  fontFamilyCode: brandCodeFontFamily,
+  fontFamilyCode: brandFontFamily,
   ...hydraAntdFontMapFromDesign,
 } as const satisfies Partial<AliasToken>;
 
@@ -60,7 +55,7 @@ export function getHydraAntdTypographyToken(mode: HydraTypographyMode = 'default
   if (mode === 'compact') {
     return {
       fontFamily: brandFontFamily,
-      fontFamilyCode: brandCodeFontFamily,
+      fontFamilyCode: brandFontFamily,
       ...hydraCompactFontMap,
     };
   }

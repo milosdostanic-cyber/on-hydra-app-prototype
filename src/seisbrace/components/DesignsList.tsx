@@ -1,7 +1,7 @@
 import { CopyOutlined, DeleteOutlined, EditOutlined, RightOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 
-import { hydraSmallNormal, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
+import { hydraBaseStrong, hydraSmallNormal, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 import { App, Button, Empty, Flex, Tooltip, Typography, theme } from '../../ui/antd';
 import type { SeismicDesign } from '../types';
 
@@ -80,9 +80,8 @@ export function DesignsList({ designs, selectedId, onSelect, onEdit, onCopy, onD
                 <Flex align="center" justify="space-between" gap={token.marginXS}>
                   <div style={{ minWidth: 0 }}>
                     <Typography.Text
-                      strong
                       ellipsis={{ tooltip: design.displayName }}
-                      style={{ display: 'block', maxWidth: '100%' }}
+                      style={{ ...hydraTextStyleToReactCss(hydraBaseStrong), display: 'block', maxWidth: '100%' }}
                     >
                       {design.displayName}
                     </Typography.Text>

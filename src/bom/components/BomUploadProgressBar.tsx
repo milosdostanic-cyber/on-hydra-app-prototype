@@ -72,7 +72,6 @@ export function BomUploadProgressBar({
         style={{ width: '100%', paddingInline: token.paddingLG }}
       >
         <Typography.Text
-          strong
           style={{ ...hydraTextStyleToReactCss(hydraBaseStrong), flexShrink: 0 }}
         >
           {fileName}

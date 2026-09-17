@@ -15,11 +15,22 @@ import { SPEC_A4_ASPECT_RATIO, specA4Dimensions } from '../constants/specDocumen
 import type { SpecBlockFormatting, SpecDocumentBlock } from '../data/types';
 import { Alert, Button, Empty, Flex, Input, Typography, theme } from '../../ui/antd';
 import {
+  hydraBaseItalic,
   hydraBaseNormal,
+  hydraBaseStrong,
+  hydraBaseUnderline,
   hydraLargeNormal,
   hydraTextStyleToReactCss,
   hydraTitleHeading4,
 } from '../../theme/hydraTypography';
+
+/** Closest existing body role for document inline formatting. Bold wins; no composed styles. */
+function specInlineTextStyle(formatting?: SpecBlockFormatting) {
+  if (formatting?.bold) return hydraBaseStrong;
+  if (formatting?.italic) return hydraBaseItalic;
+  if (formatting?.underline) return hydraBaseUnderline;
+  return hydraBaseNormal;
+}
 
 export type SpecDocumentHighlightSpan = {
   text: string;
@@ -283,7 +294,7 @@ function DocumentEditableBlock({
     ? isSubheading
       ? hydraLargeNormal
       : hydraTitleHeading4
-    : hydraBaseNormal;
+    : specInlineTextStyle(formatting);
   const roleCss = hydraTextStyleToReactCss(roleStyle);
 
   const typographyStyle = {
@@ -292,11 +303,6 @@ function DocumentEditableBlock({
     whiteSpace: 'pre-wrap' as const,
     wordBreak: 'break-word' as const,
     ...roleCss,
-    fontWeight: formatting?.bold ? token.fontWeightStrong : roleCss.fontWeight,
-    fontStyle: formatting?.italic ? ('italic' as const) : (roleCss.fontStyle ?? ('normal' as const)),
-    textDecoration: formatting?.underline
-      ? ('underline' as const)
-      : (roleCss.textDecoration ?? ('none' as const)),
     marginTop: 0,
     cursor: editable ? 'text' : 'default',
   };
@@ -347,10 +353,7 @@ function DocumentEditableBlock({
             style={{
               marginBottom: token.marginXXS,
               flex: 1,
-              ...hydraTextStyleToReactCss(hydraBaseNormal),
-              fontWeight: formatting?.bold ? token.fontWeightStrong : hydraBaseNormal.fontWeight,
-              fontStyle: formatting?.italic ? 'italic' : undefined,
-              textDecoration: formatting?.underline ? 'underline' : undefined,
+              ...hydraTextStyleToReactCss(specInlineTextStyle(formatting)),
             }}
           >
             {body}
@@ -498,12 +501,10 @@ function EditableBlockContent({
   return (
     <Flex gap={token.marginXS} align="flex-start" style={{ flex: 1 }}>
       {formatting?.bulleted || block.kind === 'list-item' ? (
-        <Typography.Text style={{ lineHeight: token.lineHeight }}>•</Typography.Text>
+        <Typography.Text style={hydraTextStyleToReactCss(hydraBaseNormal)}>•</Typography.Text>
       ) : null}
       <Typography.Paragraph
-        strong={formatting?.bold}
-        italic={formatting?.italic}
-        style={{ marginBottom: 0, flex: 1 }}
+        style={{ ...hydraTextStyleToReactCss(specInlineTextStyle(formatting)), marginBottom: 0, flex: 1 }}
       >
         {block.text}
       </Typography.Paragraph>

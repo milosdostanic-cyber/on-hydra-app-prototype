@@ -35,6 +35,7 @@ import {
 } from './downloadHistorySelection';
 import { historyEntriesForProject } from './downloadHistorySeed';
 import { ActionTrailNewTag } from '../../search/components/ActionTrailNewTag';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 /** Ties variant rows visually to their parent figure — antd nesting alone reads as sibling rows once expanded. */
 const HISTORY_VARIANT_ROW_CLASS = 'download-history-variant-row';
@@ -55,22 +56,20 @@ const COPY = {
     const variationLabel = `${variations} variation${variations === 1 ? '' : 's'}`;
     return `${figureLabel}, ${variationLabel} selected`;
   },
-  clearSelection: 'Clear selection',
+  clearSelection: 'Clear Selection',
   createSubmittal: 'Create Submittal Package',
   createBom: 'Create BOM',
   needSelection: 'Select at least one figure or variation.',
   needBomAccess: 'You need BOM create access to do this.',
   needSubmittalAccess: 'You need Submittal create access to do this.',
   colPart: 'Part / figure',
-  colType: 'Type',
+  colFigureNumber: 'Figure Number',
   colFormats: 'Formats',
   colDownloaded: 'Downloaded',
   colBy: 'By',
-  typeFigure: 'Figure',
-  typeVariation: 'Variation',
-  figurePrefix: (value: string) => `Fig. ${value}`,
   skuPrefix: (value: string) => `SKU ${value}`,
   variantsOnly: 'Variants only',
+  empty: '—',
 };
 
 function formatDownloadedDate(iso: string): string {
@@ -140,7 +139,8 @@ function HistoryPartCell({
 }) {
   const { token } = theme.useToken();
   const isFigure = isHistoryFigureRow(row);
-  const code = isFigure ? COPY.figurePrefix(row.figureNumber) : COPY.skuPrefix(row.sku);
+  /** Figure rows carry their code in the Figure Number column; variants are identified by SKU. */
+  const code = isFigure ? '' : COPY.skuPrefix(row.sku);
 
   /** Fixed-size thumbnail slot keeps figure and variant names on the same left edge. */
   const thumbSlotStyle = {
@@ -171,12 +171,14 @@ function HistoryPartCell({
         ) : null}
       </span>
       <Flex align="center" gap={token.marginXS} wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
-        <Typography.Text strong ellipsis={{ tooltip: row.name }} style={{ minWidth: 0 }}>
+        <Typography.Text ellipsis={{ tooltip: row.name }} style={{ minWidth: 0 }}>
           {row.name}
         </Typography.Text>
-        <Typography.Text type="secondary" style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>
-          · {code}
-        </Typography.Text>
+        {code ? (
+          <Typography.Text type="secondary" style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>
+            · {code}
+          </Typography.Text>
+        ) : null}
         <ActionTrailNewTag module="content" subProjectId={projectId} itemId={row.key} />
       </Flex>
     </Flex>
@@ -289,6 +291,7 @@ export function DownloadCenterPage() {
     : COPY.needSelection;
   const bomTooltip = !access.canCreateBom ? COPY.needBomAccess : COPY.needSelection;
 
+  /** Clear sits last in the action group — same order as the BOM workspace bulk-selection toolbar. */
   const createActions = (
     <Flex align="center" gap={token.marginXS} wrap="wrap">
       <GatedActionButton
@@ -304,8 +307,33 @@ export function DownloadCenterPage() {
         tooltip={bomTooltip}
         onClick={() => setBomOpen(true)}
       />
+      {hasSelection ? (
+        <Button size="large" onClick={() => setSelectedRowKeys([])}>
+          {COPY.clearSelection}
+        </Button>
+      ) : null}
     </Flex>
   );
+
+  /**
+   * Every column except `part` is width-pinned so expanding/collapsing or selecting rows can never
+   * reflow the grid — `part` is the single flexible column that absorbs the remaining space.
+   */
+  const columnWidth = {
+    selection: token.controlHeight,
+    partMin: token.controlHeightLG * 8,
+    figureNumber: token.controlHeight * 4,
+    formats: token.controlHeightLG * 4,
+    downloaded: token.controlHeightLG * 4,
+    by: token.controlHeightLG * 6,
+  };
+  const tableMinWidth =
+    columnWidth.selection +
+    columnWidth.partMin +
+    columnWidth.figureNumber +
+    columnWidth.formats +
+    columnWidth.downloaded +
+    columnWidth.by;
 
   const columns: TableColumnsType<HistoryTableRow> = [
     {
@@ -314,15 +342,25 @@ export function DownloadCenterPage() {
       render: (_, row) => <HistoryPartCell row={row} projectId={projectId} />,
     },
     {
-      title: COPY.colType,
-      key: 'type',
-      render: (_, row) => (
-        <HydraTag>{isHistoryFigureRow(row) ? COPY.typeFigure : COPY.typeVariation}</HydraTag>
-      ),
+      title: COPY.colFigureNumber,
+      key: 'figureNumber',
+      width: columnWidth.figureNumber,
+      render: (_, row) =>
+        row.figureNumber ? (
+          <Typography.Text
+            type={isHistoryFigureRow(row) ? undefined : 'secondary'}
+            ellipsis={{ tooltip: row.figureNumber }}
+          >
+            {row.figureNumber}
+          </Typography.Text>
+        ) : (
+          <Typography.Text type="secondary">{COPY.empty}</Typography.Text>
+        ),
     },
     {
       title: COPY.colFormats,
       key: 'formats',
+      width: columnWidth.formats,
       render: (_, row) => {
         if (isHistoryFigureRow(row) && !row.figureLevelDownloaded) {
           return <HydraTag bordered={false}>{COPY.variantsOnly}</HydraTag>;
@@ -341,6 +379,7 @@ export function DownloadCenterPage() {
     {
       title: COPY.colDownloaded,
       key: 'downloaded',
+      width: columnWidth.downloaded,
       render: (_, row) => (
         <Flex align="center" gap={token.marginXS} wrap="wrap">
           <Typography.Text>{formatDownloadedDate(row.latestAt)}</Typography.Text>
@@ -351,7 +390,7 @@ export function DownloadCenterPage() {
     {
       title: COPY.colBy,
       key: 'by',
-      width: token.controlHeightLG * 8,
+      width: columnWidth.by,
       render: (_, row) =>
         isHistoryFigureRow(row) ? (
           <AttributionCell downloaders={row.downloaders} />
@@ -374,7 +413,7 @@ export function DownloadCenterPage() {
         image={Empty.PRESENTED_IMAGE_SIMPLE}
         description={
           <Space orientation="vertical" size={token.marginXXS}>
-            <Typography.Text strong>{COPY.emptyTitle}</Typography.Text>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{COPY.emptyTitle}</Typography.Text>
             <Typography.Text type="secondary">{COPY.emptyDescription}</Typography.Text>
           </Space>
         }
@@ -407,18 +446,12 @@ export function DownloadCenterPage() {
           borderRadius: token.borderRadiusLG,
         }}
       >
-        <Flex vertical gap={token.marginXXS} style={{ minWidth: 0 }}>
-          <Typography.Text>
-            {hasSelection
-              ? COPY.selectionSummary(granularity.figureCount, granularity.variationCount)
-              : COPY.selectHint}
-          </Typography.Text>
-          {hasSelection ? (
-            <Button type="text" onClick={() => setSelectedRowKeys([])}>
-              {COPY.clearSelection}
-            </Button>
-          ) : null}
-        </Flex>
+        {/* Single line in both states so the table never shifts vertically on select. */}
+        <Typography.Text type="secondary" style={{ minWidth: 0 }}>
+          {hasSelection
+            ? COPY.selectionSummary(granularity.figureCount, granularity.variationCount)
+            : COPY.selectHint}
+        </Typography.Text>
         {createActions}
       </Flex>
 
@@ -442,8 +475,11 @@ export function DownloadCenterPage() {
                 onChange: (keys) => setSelectedRowKeys(keys),
                 preserveSelectedRowKeys: false,
                 checkStrictly: false,
+                columnWidth: columnWidth.selection,
               }}
-              scroll={{ x: 'max-content' }}
+              /** `fixed` + pinned widths: auto layout re-measured the grid on every expand/collapse. */
+              tableLayout="fixed"
+              scroll={{ x: tableMinWidth }}
               styles={shellTableStyles(token)}
               rowClassName={(row) => (isHistoryFigureRow(row) ? '' : HISTORY_VARIANT_ROW_CLASS)}
               onRow={(row) => actionTrailTableRowProps(token, trailItemIds.has(row.key))}

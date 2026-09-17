@@ -6,9 +6,13 @@
 import type { CSSProperties } from 'react';
 
 const W_REG = 400;
+/**
+ * `Title/Heading 3-5`, `Subtitle` roles, and (since 2026-09-17) every body `Strong` role
+ * (`Base`, `Small`, `Large`, `Extra Large`) — mirrors `Typography/Font Weight/fontWeightMedium`.
+ */
+const W_MEDIUM = 500;
+/** `Title/Heading 1-2` (since 2026-09-17) — mirrors `Typography/Font Weight/fontWeightStrong`. */
 const W_SEMI = 600;
-/** Figma `Typography/Font Weight/fontWeightHeading` = 800 — Barlow Condensed ExtraBold. */
-const W_HEADING = 800;
 
 export type HydraTextStyle = Readonly<{
   /** Design style path, e.g. `Title/Heading 4` */
@@ -16,28 +20,13 @@ export type HydraTextStyle = Readonly<{
   fontSize: number;
   lineHeight: number;
   fontWeight: number;
-  /** When set, overrides the global body family (e.g. Barlow Condensed for headings). */
-  fontFamily?: string;
   fontStyle?: 'normal' | 'italic';
   textDecoration?: 'none' | 'underline' | 'line-through';
 }>;
 
-/** Figma `Typography/Font Family/fontFamily` — body / base text. */
 export const hydraFontFamilyName = 'Barlow' as const;
-/** Figma `Typography/Font Family/fontFamilyHeading` — all Title/Heading styles. */
-export const hydraFontFamilyHeadingName = 'Barlow Condensed' as const;
-/** Figma `Typography/Font Family/fontFamilyCode` — monospace / code text. */
-export const hydraFontFamilyCodeName = 'Courier Prime' as const;
-
 export const hydraFontFamilyFallback = 'sans-serif' as const;
 export const brandFontFamily = `'${hydraFontFamilyName}', ${hydraFontFamilyFallback}`;
-export const brandHeadingFontFamily = `'${hydraFontFamilyHeadingName}', ${hydraFontFamilyFallback}`;
-export const brandCodeFontFamily = `'${hydraFontFamilyCodeName}', monospace`;
-
-/** Figma `Typography/Font Weight/fontWeightHeading` (800) — H1-H2 only. Exported for CSS-var and antd wiring. */
-export const hydraBrandFontWeightHeading = W_HEADING;
-/** Figma `Typography/Font Weight/fontWeightStrong` (600) — H3-H5 (Barlow Condensed SemiBold). Same token antd uses for `fontWeightStrong`. */
-export const hydraBrandFontWeightStrong = W_SEMI;
 
 function unitlessLineHeight(lineHeightPx: number, fontSize: number): number {
   return lineHeightPx / fontSize;
@@ -47,41 +36,35 @@ export const hydraTitleHeading1 = {
   designPath: 'Title/Heading 1',
   fontSize: 38,
   lineHeight: 46,
-  fontWeight: W_HEADING,
-  fontFamily: hydraFontFamilyHeadingName,
+  fontWeight: W_SEMI,
 } as const satisfies HydraTextStyle;
 
 export const hydraTitleHeading2 = {
   designPath: 'Title/Heading 2',
   fontSize: 30,
   lineHeight: 38,
-  fontWeight: W_HEADING,
-  fontFamily: hydraFontFamilyHeadingName,
+  fontWeight: W_SEMI,
 } as const satisfies HydraTextStyle;
 
-/** Figma: rebound to `fontWeightStrong` (600/SemiBold) — H3-H5 use the shared 600 weight token, H1-H2 stay ExtraBold. */
 export const hydraTitleHeading3 = {
   designPath: 'Title/Heading 3',
   fontSize: 24,
   lineHeight: 32,
-  fontWeight: W_SEMI,
-  fontFamily: hydraFontFamilyHeadingName,
+  fontWeight: W_MEDIUM,
 } as const satisfies HydraTextStyle;
 
 export const hydraTitleHeading4 = {
   designPath: 'Title/Heading 4',
   fontSize: 20,
   lineHeight: 28,
-  fontWeight: W_SEMI,
-  fontFamily: hydraFontFamilyHeadingName,
+  fontWeight: W_MEDIUM,
 } as const satisfies HydraTextStyle;
 
 export const hydraTitleHeading5 = {
   designPath: 'Title/Heading 5',
   fontSize: 16,
   lineHeight: 24,
-  fontWeight: W_SEMI,
-  fontFamily: hydraFontFamilyHeadingName,
+  fontWeight: W_MEDIUM,
 } as const satisfies HydraTextStyle;
 
 export const hydraBaseNormal = {
@@ -95,7 +78,7 @@ export const hydraBaseStrong = {
   designPath: 'Base/Strong',
   fontSize: 14,
   lineHeight: 22,
-  fontWeight: W_SEMI,
+  fontWeight: W_MEDIUM,
 } as const satisfies HydraTextStyle;
 
 export const hydraBaseUnderline = {
@@ -133,7 +116,7 @@ export const hydraSmallStrong = {
   designPath: 'Small/Strong',
   fontSize: 12,
   lineHeight: 20,
-  fontWeight: W_SEMI,
+  fontWeight: W_MEDIUM,
 } as const satisfies HydraTextStyle;
 
 export const hydraSmallUnderline = {
@@ -167,11 +150,15 @@ export const hydraLargeNormal = {
   fontWeight: W_REG,
 } as const satisfies HydraTextStyle;
 
+/**
+ * Medium (500) since 2026-09-17 — bound to `fontWeightMedium` again, so it now resolves the same
+ * as {@link hydraSubtitleLarge}. Design `Large/Strong` is what `Alert` titles use.
+ */
 export const hydraLargeStrong = {
   designPath: 'Large/Strong',
   fontSize: 16,
   lineHeight: 24,
-  fontWeight: W_SEMI,
+  fontWeight: W_MEDIUM,
 } as const satisfies HydraTextStyle;
 
 export const hydraLargeUnderline = {
@@ -209,7 +196,7 @@ export const hydraExtraLargeStrong = {
   designPath: 'Extra Large/Strong',
   fontSize: 20,
   lineHeight: 28,
-  fontWeight: W_SEMI,
+  fontWeight: W_MEDIUM,
 } as const satisfies HydraTextStyle;
 
 export const hydraExtraLargeUnderline = {
@@ -234,6 +221,14 @@ export const hydraExtraLargeItalic = {
   lineHeight: 28,
   fontWeight: W_REG,
   fontStyle: 'italic',
+} as const satisfies HydraTextStyle;
+
+/** The Medium (500) tier at Large metrics — emphasized 16px titles (modal and panel headings). */
+export const hydraSubtitleLarge = {
+  designPath: 'Subtitle/Large',
+  fontSize: 16,
+  lineHeight: 24,
+  fontWeight: W_MEDIUM,
 } as const satisfies HydraTextStyle;
 
 export const hydraTextBaseNormal = hydraBaseNormal;
@@ -264,16 +259,15 @@ export const hydraAntdFontMapFromDesign = {
 
 export function hydraTextStyleToReactCss(
   style: HydraTextStyle,
-): Pick<CSSProperties, 'fontFamily' | 'fontSize' | 'lineHeight' | 'fontWeight' | 'fontStyle' | 'textDecoration'> {
+): Pick<CSSProperties, 'fontSize' | 'lineHeight' | 'fontWeight' | 'fontStyle' | 'textDecoration'> {
   const css: Pick<
     CSSProperties,
-    'fontFamily' | 'fontSize' | 'lineHeight' | 'fontWeight' | 'fontStyle' | 'textDecoration'
+    'fontSize' | 'lineHeight' | 'fontWeight' | 'fontStyle' | 'textDecoration'
   > = {
     fontSize: style.fontSize,
     lineHeight: `${style.lineHeight}px`,
     fontWeight: style.fontWeight,
   };
-  if (style.fontFamily) css.fontFamily = style.fontFamily;
   if (style.fontStyle) css.fontStyle = style.fontStyle;
   if (style.textDecoration && style.textDecoration !== 'none') css.textDecoration = style.textDecoration;
   return css;

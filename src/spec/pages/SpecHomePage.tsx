@@ -48,6 +48,7 @@ import { useSpecMockStore } from '../data/specMockStore';
 import type { SpecDocument, SpecSystemType } from '../data/types';
 import { trackSpecEvent } from '../specAnalytics';
 import { specAnalyzePath, specDocumentPrimaryPath } from '../specNavigation';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type AntBadgeStatus = NonNullable<BadgeProps['status']>;
 
@@ -410,7 +411,7 @@ export function SpecHomePage() {
             <Empty
               description={
                 <Flex vertical gap={token.marginXS}>
-                  <Typography.Text strong>No SPECs in this Project</Typography.Text>
+                  <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No SPECs in this Project</Typography.Text>
                   <Typography.Text type="secondary">
                     Upload a customer specification to start analysis, or download an editable ASC Master.
                   </Typography.Text>
@@ -489,7 +490,7 @@ export function SpecHomePage() {
                       cell: {
                         background: token.colorFillAlter,
                         borderBottomColor: token.colorBorderSecondary,
-                        fontWeight: token.fontWeightStrong,
+                        ...hydraTextStyleToReactCss(hydraBaseStrong),
                       },
                     },
                     body: {

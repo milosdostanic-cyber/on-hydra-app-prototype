@@ -6,6 +6,7 @@ import {
   equivalenceOutcomeTone,
 } from '../constants/specStatusVocabulary';
 import type { SpecEquivalenceAttribute } from '../data/types';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 /**
  * PRD FR-15 — attribute-by-attribute equivalence matrix.
@@ -27,7 +28,7 @@ export function SpecEquivalenceMatrix({
       title: 'Attribute',
       dataIndex: 'attribute',
       key: 'attribute',
-      render: (value: string) => <Typography.Text strong>{value}</Typography.Text>,
+      render: (value: string) => <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{value}</Typography.Text>,
     },
     {
       title: 'Specified',

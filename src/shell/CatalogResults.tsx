@@ -6,7 +6,7 @@ import { catalogPartReturnFrom } from '../catalog/catalogPartNavigation';
 import { BomPageHeader } from '../bom/layout/BomPageHeader';
 import { shellLayout } from '../theme/hydraAlias';
 import { PageBackButton } from './PageBackButton';
-import { hydraBaseStrong } from '../theme/hydraTypography';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../theme/hydraTypography';
 import type { CatalogPartRow } from '../catalog/catalogDemoData';
 import { Button, Empty, Flex, Pagination, Space, Table, Typography, theme } from '../ui/antd';
 import type { TableColumnsType } from '../ui/antd';
@@ -75,7 +75,7 @@ export function CatalogResults() {
         <Empty
           description={
             <Space orientation="vertical" size={token.marginXXS}>
-              <Typography.Text strong>No parts found</Typography.Text>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No parts found</Typography.Text>
               <Typography.Text type="secondary">
                 {q.trim() ? `Nothing matched “${q}”. Try a shorter term or clear the search.` : 'No rows to show.'}
               </Typography.Text>

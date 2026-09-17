@@ -11,6 +11,7 @@ import { PageBackButton } from '../../shell/PageBackButton';
 import { shellLayout } from '../../theme/hydraAlias';
 import { Button, Card, Empty, Flex, Pagination, Space, Table, Typography, theme } from '../../ui/antd';
 import type { TableColumnsType } from '../../ui/antd';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 export function BomCompetitorSearchResultsPage() {
   const { token } = theme.useToken();
@@ -97,7 +98,7 @@ export function BomCompetitorSearchResultsPage() {
             <Empty
               description={
                 <Space orientation="vertical" size={token.marginXXS}>
-                  <Typography.Text strong>No ASC matches found</Typography.Text>
+                  <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No ASC matches found</Typography.Text>
                   <Typography.Text type="secondary">
                     Try a competitor part number or plain-language description.
                   </Typography.Text>

@@ -21,7 +21,8 @@ import { BomConfidenceTag, BomManualTag } from './BomTags';
 import { HydraTag } from '../../ui/HydraTag';
 import {
   hydraBaseNormal,
-  hydraLargeStrong,
+  hydraBaseStrong,
+  hydraSubtitleLarge,
   hydraTextStyleToReactCss,
   hydraTitleHeading5,
 } from '../../theme/hydraTypography';
@@ -77,13 +78,13 @@ function PanelColumnHeaderBlock({
       <Flex align="flex-start" justify="space-between" gap={token.marginSM} wrap="wrap">
         <Flex vertical gap={token.marginXXS} style={{ minWidth: 0 }}>
           <Flex align="center" gap={token.marginXS} wrap="wrap">
-            <Typography.Text strong style={hydraTextStyleToReactCss(hydraLargeStrong)}>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraSubtitleLarge)}>
               {title}
             </Typography.Text>
             {titleExtra}
           </Flex>
           {subtitle ? (
-            <Typography.Text strong style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>
               {subtitle}
             </Typography.Text>
           ) : null}

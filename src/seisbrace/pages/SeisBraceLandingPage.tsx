@@ -29,6 +29,7 @@ import { SubmittalOptionsModal } from '../components/SubmittalOptionsModal';
 import { useSeisBrace } from '../context/SeisBraceContext';
 import { useSeisBraceWizard } from '../context/SeisBraceWizardContext';
 import type { Brace, SeisBraceFile, SeismicDesign } from '../types';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type SortKey = 'date' | 'name';
 
@@ -254,7 +255,7 @@ export function SeisBraceLandingPage() {
               <Empty
                 description={
                   <Space orientation="vertical" size={token.marginXXS}>
-                    <Typography.Text strong>No seismic designs yet</Typography.Text>
+                    <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No seismic designs yet</Typography.Text>
                     <Typography.Text type="secondary">
                       Create your first seismic design to start configuring braces.
                     </Typography.Text>

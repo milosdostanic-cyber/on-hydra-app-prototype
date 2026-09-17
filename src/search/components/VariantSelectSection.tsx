@@ -7,6 +7,7 @@ import type { PartDetailContent, PartVariationRow } from '../partDetailDemoData'
 import { variationSpecValue } from '../partDetailDemoData';
 import {
   hydraBaseNormal,
+  hydraBaseStrong,
   hydraTextStyleToReactCss,
   hydraTitleHeading4,
   hydraTitleHeading5,
@@ -359,7 +360,7 @@ export function VariantSelectSection({
                     <VariationThumbnail variation={variation} size={listThumbnailSize} />
                     <Flex vertical gap={0} style={{ flex: 1, minWidth: 0 }}>
                       <Flex justify="space-between" align="center" gap={token.marginSM}>
-                        <Typography.Text strong ellipsis style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+                        <Typography.Text ellipsis style={hydraTextStyleToReactCss(hydraBaseStrong)}>
                           SKU: {variation.sku}
                         </Typography.Text>
                         {isPending && (

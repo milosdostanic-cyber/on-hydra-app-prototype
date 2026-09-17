@@ -26,6 +26,7 @@ import {
   type TableColumnsType,
 } from '../../../ui/antd';
 import type { BraceOrientation, SegmentRow } from '../../types';
+import { hydraBaseNormal, hydraBaseStrong, hydraTextStyleToReactCss } from '../../../theme/hydraTypography';
 
 export function BraceConfigurationStep() {
   const { token } = theme.useToken();
@@ -182,7 +183,7 @@ export function BraceConfigurationStep() {
                   background: selected ? token.colorPrimaryBg : token.colorBgContainer,
                 }}
               >
-                <Typography.Text strong={selected}>{opt.label}</Typography.Text>
+                <Typography.Text style={hydraTextStyleToReactCss(selected ? hydraBaseStrong : hydraBaseNormal)}>{opt.label}</Typography.Text>
               </div>
             );
           })}

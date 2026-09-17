@@ -12,6 +12,8 @@ import type { CSSProperties } from 'react';
 import { useLocation } from 'react-router-dom';
 
 import {
+  hydraBaseNormal,
+  hydraBaseStrong,
   hydraLargeNormal,
   hydraTextStyleToReactCss,
   hydraTitleHeading3,
@@ -133,7 +135,7 @@ function SwitchProjectModal({ open, onClose }: { open: boolean; onClose: () => v
           >
             <Flex align="center" justify="space-between" style={{ width: '100%' }}>
               <Flex vertical gap={2}>
-                <Typography.Text strong={noProjectSelected}>No project selected</Typography.Text>
+                <Typography.Text style={hydraTextStyleToReactCss(noProjectSelected ? hydraBaseStrong : hydraBaseNormal)}>No project selected</Typography.Text>
                 <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
                   Search and browse without scoping to a job site
                 </Typography.Text>
@@ -172,7 +174,7 @@ function SwitchProjectModal({ open, onClose }: { open: boolean; onClose: () => v
             >
               <Flex align="center" justify="space-between" style={{ width: '100%' }}>
                 <Flex vertical gap={2}>
-                  <Typography.Text strong={isActive}>{row.name}</Typography.Text>
+                  <Typography.Text style={hydraTextStyleToReactCss(isActive ? hydraBaseStrong : hydraBaseNormal)}>{row.name}</Typography.Text>
                   <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
                     {row.city}, {row.state} · Last opened {row.lastOpened}
                   </Typography.Text>

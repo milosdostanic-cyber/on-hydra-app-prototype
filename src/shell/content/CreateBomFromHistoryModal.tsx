@@ -13,6 +13,7 @@ import { buildCatalogBomItem, isSkuInBomRows } from '../../search/catalogBomAdd'
 import { Alert, App, Flex, Modal, Space, Typography, theme } from '../../ui/antd';
 import type { ResolvedHistoryVariant, UnresolvedHistoryFigure } from './downloadHistorySelection';
 import { ResolveFigureVariantsDrawer } from './ResolveFigureVariantsDrawer';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 const COPY = {
   title: 'Create BOM',
@@ -168,7 +169,7 @@ export function CreateBomFromHistoryModal({
                 >
                   <Typography.Text type="secondary">{COPY.addingVariants}</Typography.Text>
                   {variants.map((variant) => (
-                    <Typography.Text key={`${variant.partKey}-${variant.variationKey}`} strong>
+                    <Typography.Text key={`${variant.partKey}-${variant.variationKey}`} style={hydraTextStyleToReactCss(hydraBaseStrong)}>
                       {variant.name} · {variant.sku}
                     </Typography.Text>
                   ))}

@@ -3,6 +3,7 @@ import { CheckOutlined } from '@ant-design/icons';
 import { WIZARD_STEPS } from '../constants/wizardSteps';
 import { useSeisBraceWizard } from '../context/SeisBraceWizardContext';
 import { Flex, Typography, theme } from '../../ui/antd';
+import { hydraBaseNormal, hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type Props = {
   currentStepNumber: number;
@@ -15,7 +16,7 @@ export function WizardSteps({ currentStepNumber }: Props) {
 
   return (
     <Flex vertical gap={token.marginXS} style={{ padding: token.padding }}>
-      <Typography.Text strong style={{ marginBottom: token.marginXS }}>
+      <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraBaseStrong), marginBottom: token.marginXS }}>
         Brace setup
       </Typography.Text>
       {WIZARD_STEPS.map((step) => {
@@ -58,16 +59,15 @@ export function WizardSteps({ currentStepNumber }: Props) {
                   borderRadius: '50%',
                   background: circleBg,
                   color: circleColor,
-                  fontWeight: token.fontWeightStrong,
+                  ...hydraTextStyleToReactCss(hydraBaseStrong),
                 }}
               >
                 {isCompleted && !isActive ? <CheckOutlined /> : step.number}
               </Flex>
               <div style={{ minWidth: 0, alignSelf: 'center' }}>
                 <Typography.Text
-                  strong={isActive}
                   ellipsis={{ tooltip: step.title }}
-                  style={{ display: 'block' }}
+                  style={{ ...hydraTextStyleToReactCss(isActive ? hydraBaseStrong : hydraBaseNormal), display: 'block' }}
                 >
                   {step.title}
                 </Typography.Text>

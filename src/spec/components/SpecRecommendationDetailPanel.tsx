@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 import {
   hydraBaseNormal,
+  hydraBaseStrong,
   hydraLargeNormal,
   hydraTextStyleToReactCss,
   hydraTitleHeading5,
@@ -354,7 +355,7 @@ export function SpecRecommendationDetailPanel({
         <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
           Section {recommendation.sectionNumber} · Paragraph {recommendation.paragraphLabel}
         </Typography.Text>
-        <Typography.Text strong>{recommendation.title}</Typography.Text>
+        <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{recommendation.title}</Typography.Text>
       </Flex>
 
       <Flex vertical gap={token.marginSM}>
@@ -382,7 +383,7 @@ export function SpecRecommendationDetailPanel({
 
       {recommendation.productEvidence.length > 0 ? (
         <Flex vertical gap={token.marginXS}>
-          <Typography.Text strong>Catalog products</Typography.Text>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Catalog products</Typography.Text>
           {recommendation.productEvidence.map((product) => (
             <Card
               key={product.suggestionId}
@@ -390,7 +391,7 @@ export function SpecRecommendationDetailPanel({
               style={{ background: token.colorPrimaryBg, borderColor: token.colorPrimaryBorder }}
             >
               <Flex vertical gap={token.marginXXS}>
-                <Typography.Text strong>
+                <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>
                   {product.sku} · {product.name}
                 </Typography.Text>
                 <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>

@@ -36,6 +36,7 @@ import type {
   SpecRecommendation,
 } from '../data/types';
 import { specAnalyzePath, specHomePath } from '../specNavigation';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 const DOCUMENT_CHOICES = [
   {
@@ -415,7 +416,7 @@ export function SpecExportPage() {
                       >
                         <Radio value={option.value}>
                           <Flex vertical gap={token.marginXXS}>
-                            <Typography.Text strong>{option.title}</Typography.Text>
+                            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{option.title}</Typography.Text>
                             <Typography.Text type="secondary">
                               {option.description}
                             </Typography.Text>
@@ -498,7 +499,7 @@ export function SpecExportPage() {
                 style={{ width: '100%', borderColor: token.colorBorderSecondary }}
               >
                 <Flex vertical gap={token.paddingSM}>
-                  <Typography.Text strong>Submittal Package</Typography.Text>
+                  <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Submittal Package</Typography.Text>
                   <Typography.Text type="secondary">
                     Builds a package from the same approved product recommendations.
                   </Typography.Text>
@@ -518,7 +519,7 @@ export function SpecExportPage() {
                 style={{ width: '100%', borderColor: token.colorBorderSecondary }}
               >
                 <Flex vertical gap={token.paddingSM}>
-                  <Typography.Text strong>BOM</Typography.Text>
+                  <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>BOM</Typography.Text>
                   <Typography.Text type="secondary">
                     Uses approved ASC product recommendations from this SPEC.
                   </Typography.Text>

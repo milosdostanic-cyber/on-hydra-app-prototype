@@ -43,7 +43,7 @@ import {
 } from '../ui/antd';
 import type { TableColumnsType, TabsProps } from '../ui/antd';
 
-import { hydraBaseNormal, hydraTextStyleToReactCss, hydraTitleHeading4, hydraTitleHeading5 } from '../theme/hydraTypography';
+import { hydraBaseNormal, hydraBaseStrong, hydraTextStyleToReactCss, hydraTitleHeading4, hydraTitleHeading5 } from '../theme/hydraTypography';
 import { shellTableCardStyle, shellTableLinkButtonStyle, shellTableStyles } from './shellTablePatterns';
 import { lastDeliverableForProject } from './projectLastDeliverable';
 import {
@@ -583,7 +583,7 @@ export function HomeHubPage() {
             <Empty
               description={
                 <Space orientation="vertical" size={token.marginXS}>
-                  <Typography.Text strong>No projects found</Typography.Text>
+                  <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No projects found</Typography.Text>
                   <Typography.Text type="secondary">Create your first project to get started.</Typography.Text>
                 </Space>
               }
@@ -598,7 +598,7 @@ export function HomeHubPage() {
             <Empty
               description={
                 <Space orientation="vertical" size={token.marginXS}>
-                  <Typography.Text strong>
+                  <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>
                     {starredEmpty
                       ? 'No starred projects yet'
                       : recentEmpty
@@ -677,7 +677,7 @@ export function HomeHubPage() {
                           lineHeight: token.lineHeight,
                         }}
                       >
-                        <Typography.Text strong>{record.address}</Typography.Text>
+                        <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{record.address}</Typography.Text>
                         <Typography.Text type="secondary"> · </Typography.Text>
                         <Typography.Text type="secondary">
                           {record.city}, {record.state}

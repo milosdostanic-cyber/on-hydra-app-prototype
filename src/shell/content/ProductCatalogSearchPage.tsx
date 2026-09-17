@@ -16,6 +16,7 @@ import { Button, Empty, Flex, Pagination, Space, Table, Typography, theme } from
 import type { TableColumnsType } from '../../ui/antd';
 
 import { catalogBrowseTableHeaderStyles } from './catalogBrowseTableStyles';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type Row = {
   key: string;
@@ -103,7 +104,7 @@ export function ProductCatalogSearchPage() {
         <Empty
           description={
             <Space orientation="vertical" size={token.marginXXS}>
-              <Typography.Text strong>No parts found</Typography.Text>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No parts found</Typography.Text>
               <Typography.Text type="secondary">
                 {q.trim() ? `Nothing matched “${q}”. Try “fire” or clear the query.` : 'No rows to show.'}
               </Typography.Text>

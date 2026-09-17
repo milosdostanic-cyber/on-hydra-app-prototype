@@ -41,6 +41,7 @@ import { useSpecDocument } from '../hooks/useSpecDocument';
 import { trackSpecEvent } from '../specAnalytics';
 import { specHomePath } from '../specNavigation';
 import { navigateSpecWorkspaceTab, specWorkspaceTabItems } from '../specWorkspaceTabs';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 /**
  * I4 — Deliver-Back lifecycle and approvals (AC-032 → AC-034, AC-033 permissions).
@@ -176,7 +177,7 @@ export function SpecDeliverBackPage() {
                     }}
                   >
                     <Flex vertical gap={token.marginXXS}>
-                      <Typography.Text strong>{item.title}</Typography.Text>
+                      <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{item.title}</Typography.Text>
                       <Badge
                         status={deliverBackBadgeStatus(item.status)}
                         text={deliverBackStatusLabel[item.status]}
@@ -194,7 +195,7 @@ export function SpecDeliverBackPage() {
                 size="small"
                 title={
                   <Flex gap={token.marginSM} wrap="wrap" align="center">
-                    <Typography.Text strong>{selected.title}</Typography.Text>
+                    <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{selected.title}</Typography.Text>
                     <Badge
                       status={deliverBackBadgeStatus(selected.status)}
                       text={deliverBackStatusLabel[selected.status]}
@@ -381,7 +382,7 @@ export function SpecDeliverBackPage() {
                     <Flex vertical gap={token.marginSM}>
                       {selected.comments.map((c) => (
                         <Flex key={c.id} vertical gap={token.marginXXS}>
-                          <Typography.Text strong>
+                          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>
                             {c.author} · {new Date(c.createdAt).toLocaleString()}
                           </Typography.Text>
                           <Typography.Text type="secondary">{c.body}</Typography.Text>
@@ -424,7 +425,7 @@ export function SpecDeliverBackPage() {
                   <Flex vertical gap={token.marginSM}>
                     {[...selected.notifications].reverse().map((n) => (
                       <Flex key={n.id} vertical gap={token.marginXXS}>
-                        <Typography.Text strong>{n.title}</Typography.Text>
+                        <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{n.title}</Typography.Text>
                         <Typography.Text type="secondary">
                           {new Date(n.at).toLocaleString()} — {n.body}
                         </Typography.Text>

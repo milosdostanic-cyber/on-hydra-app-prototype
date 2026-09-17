@@ -6,6 +6,7 @@ import {
 import type { SpecProductSuggestion } from '../data/types';
 import { Button, Card, Flex, Typography, theme } from '../../ui/antd';
 import { HydraTag } from '../../ui/HydraTag';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 /**
  * Local product suggestion card — mirrors BOM SkuMatchCard composition without shared edits.
@@ -58,7 +59,7 @@ export function SpecProductSuggestionCard({
             <HydraTag tone={productFitTone(suggestion.fit)}>{productFitLabel[suggestion.fit]}</HydraTag>
             <HydraTag>{productSuggestionStatusLabel[suggestion.status]}</HydraTag>
           </Flex>
-          <Typography.Text strong>{suggestion.name}</Typography.Text>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{suggestion.name}</Typography.Text>
           <Typography.Text type="secondary">
             {suggestion.sku}
             {suggestion.series ? ` · ${suggestion.series}` : ''}

@@ -1,5 +1,6 @@
 import type { SpecDeliverBackActivity } from '../data/types';
 import { List, Typography, theme } from '../../ui/antd';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 /**
  * G10 — chronological activity for Deliver-Back.
@@ -19,7 +20,7 @@ export function SpecActivityTimeline({ activity }: { activity: SpecDeliverBackAc
       renderItem={(item) => (
         <List.Item key={item.id}>
           <List.Item.Meta
-            title={<Typography.Text strong>{item.action}</Typography.Text>}
+            title={<Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{item.action}</Typography.Text>}
             description={
               <Typography.Text type="secondary">
                 {item.actor} · {new Date(item.at).toLocaleString()}

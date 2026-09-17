@@ -17,6 +17,7 @@ import {
   theme,
 } from '../../ui/antd';
 import { HydraTag } from '../../ui/HydraTag';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type CompareMode = 'side-by-side' | 'inline';
 
@@ -71,7 +72,7 @@ export function SpecCompareRegions({
           padding: token.paddingSM,
         }}
       >
-        <Typography.Text strong style={{ display: 'block', marginBottom: token.marginSM }}>
+        <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraBaseStrong), display: 'block', marginBottom: token.marginSM }}>
           Alignment
         </Typography.Text>
         <Flex vertical gap={token.marginXS}>
@@ -109,7 +110,7 @@ export function SpecCompareRegions({
 
       <div style={{ flex: 1, minWidth: 0, padding: token.paddingMD, overflow: 'auto' }}>
         <Flex justify="space-between" align="center" gap={token.marginSM} style={{ marginBottom: token.marginMD }}>
-          <Typography.Text strong>{selected?.title}</Typography.Text>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{selected?.title}</Typography.Text>
           <Radio.Group
             value={mode}
             optionType="button"
@@ -167,7 +168,7 @@ export function SpecCompareRegions({
       >
         {selected ? (
           <Flex vertical gap={token.marginSM}>
-            <Typography.Text strong>Selected difference</Typography.Text>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Selected difference</Typography.Text>
             <Badge
               status={
                 selected.category === 'added'
