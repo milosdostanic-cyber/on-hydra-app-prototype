@@ -298,11 +298,16 @@ export function SeisBraceLandingPage() {
               <div style={{ flex: 1, minWidth: 0, padding: token.paddingLG }}>
                 <BraceTable
                   design={selectedDesign}
+                  designs={designs}
                   braces={braces}
                   selectedKeys={selectedBraceKeys}
                   onSelectionChange={setSelectedBraceKeys}
                   onEditBrace={startEditBrace}
                   onNewBrace={startNewBrace}
+                  onBraceCopied={(designId) => {
+                    setSelectedDesignId(designId);
+                    message.success('Brace copied.');
+                  }}
                 />
 
                 {submittalFiles.length > 0 || userFiles.length > 0 ? (

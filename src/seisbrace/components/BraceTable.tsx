@@ -6,9 +6,10 @@ import {
   ExclamationCircleFilled,
   PlusOutlined,
 } from '@ant-design/icons';
-import type { Key } from 'react';
+import { useState, type Key } from 'react';
 
 import { ORIENTATION_LABELS } from '../constants/options';
+import { CopyBraceDestinationModal, type CopyBraceDestination } from './CopyBraceDestinationModal';
 import { useSeisBrace } from '../context/SeisBraceContext';
 import {
   Alert,
@@ -26,21 +27,53 @@ import type { Brace, SeismicDesign } from '../types';
 
 type Props = {
   design: SeismicDesign | undefined;
+  designs: SeismicDesign[];
   braces: Brace[];
   selectedKeys: Key[];
   onSelectionChange: (keys: Key[]) => void;
   onEditBrace: (brace: Brace) => void;
   onNewBrace: () => void;
+  onBraceCopied: (designId: string) => void;
 };
 
 /** Brace configurations table (ZIP `BraceTable`). Drag reorder → move up/down (no DnD dep). */
-export function BraceTable({ design, braces, selectedKeys, onSelectionChange, onEditBrace, onNewBrace }: Props) {
+export function BraceTable({
+  design,
+  designs,
+  braces,
+  selectedKeys,
+  onSelectionChange,
+  onEditBrace,
+  onNewBrace,
+  onBraceCopied,
+}: Props) {
   const { token } = theme.useToken();
   const { modal } = App.useApp();
-  const { deleteBraces, copyBrace, moveBrace } = useSeisBrace();
+  const { deleteBraces, copyBrace, createDesign, moveBrace } = useSeisBrace();
+  const [braceToCopy, setBraceToCopy] = useState<Brace | null>(null);
 
   const unitSuffix = design?.unit === 'METRIC' ? 'N' : 'lbf';
   const hasUserDefined = braces.some((b) => b.isStructureUserDefined || b.isFastenerUserDefined);
+
+  const handleCopyConfirm = (destination: CopyBraceDestination) => {
+    if (!braceToCopy || !design) return;
+    let targetId = design.id;
+    if (destination.kind === 'existing') {
+      targetId = destination.designId;
+    } else if (destination.kind === 'new') {
+      targetId = createDesign(design.projectId, {
+        name: destination.name,
+        projectDate: new Date().toISOString(),
+        codeRequirement: design.codeRequirement,
+        loadType: design.loadType,
+        unit: design.unit,
+        notes: design.notes,
+      });
+    }
+    const newId = copyBrace(braceToCopy.id, targetId);
+    setBraceToCopy(null);
+    if (newId) onBraceCopied(targetId);
+  };
 
   const confirmDelete = (brace: Brace) => {
     modal.confirm({
@@ -153,7 +186,7 @@ export function BraceTable({ design, braces, selectedKeys, onSelectionChange, on
             style={{ padding: 0, height: 'auto' }}
             icon={<CopyOutlined />}
             aria-label="Copy brace"
-            onClick={() => copyBrace(row.id)}
+            onClick={() => setBraceToCopy(row)}
           />
           <Button
             type="link"
@@ -213,6 +246,15 @@ export function BraceTable({ design, braces, selectedKeys, onSelectionChange, on
       >
         New brace configuration
       </Button>
+
+      <CopyBraceDestinationModal
+        open={braceToCopy !== null}
+        braceName={braceToCopy?.displayName ?? ''}
+        sourceDesign={design}
+        designs={designs}
+        onConfirm={handleCopyConfirm}
+        onCancel={() => setBraceToCopy(null)}
+      />
     </Space>
   );
 }
