@@ -96,10 +96,10 @@ function threadedRodVariationsForP100(partKey: string, thumbnailUrl?: string): P
       allDrawingFileTypes: allTypes,
       description,
       specifications: variantSpecs(sku, name, [
-        { key: 'nominal-size', label: 'Nominal size', value: diameter },
+        { key: 'pipeSize', label: 'Pipe Size', value: diameter },
         { key: 'length', label: 'Length', value: `${lengthIn} in` },
         { key: 'material', label: 'Material', value: finish.material },
-        { key: 'finish', label: 'Finish', value: finish.label },
+        { key: 'coating', label: 'Coating / Finish', value: finish.label },
       ]),
     });
   };
@@ -134,6 +134,135 @@ function threadedRodVariationsForP100(partKey: string, thumbnailUrl?: string): P
   return variations;
 }
 
+function demoVariation(
+  partKey: string,
+  index: number,
+  sku: string,
+  name: string,
+  specs: PartSpecField[],
+  thumbnailUrl?: string,
+): PartVariationRow {
+  const drawingFileTypes = ['PDF', 'DWG'];
+  return {
+    key: `${partKey}-v-${index}`,
+    name,
+    sku,
+    thumbnailUrl,
+    fileTypes: drawingFileTypes.join(', '),
+    drawingFileTypes,
+    allDrawingFileTypes: [...ALL_DRAWING_FILE_TYPES],
+    description: name,
+    specifications: [
+      { key: 'sku', label: 'SKU', value: sku },
+      { key: 'configuration', label: 'Configuration', value: name },
+      ...specs,
+    ],
+  };
+}
+
+/**
+ * End connections (weight 100) stay ahead of coating (weight 80).
+ * One SKU omits End Connection 2 so that cell is an em dash.
+ */
+function groovedCouplingVariations(partKey: string, thumbnailUrl?: string): PartVariationRow[] {
+  const rows: Array<{ sku: string; name: string; end1: string; end2?: string; coating: string }> = [
+    { sku: '7001-020-GRV', name: '2 in Groove x Groove', end1: 'Groove', end2: 'Groove', coating: 'Rust-inhibiting orange' },
+    { sku: '7001-020-FLG', name: '2 in Flange x Flange', end1: 'Flange', end2: 'Flange', coating: 'Hot-dip galvanized' },
+    { sku: '7001-040-GRV', name: '4 in Groove, outlet not set', end1: 'Groove', coating: 'Rust-inhibiting orange' },
+    { sku: '7001-040-MIX', name: '4 in Flange x Groove', end1: 'Flange', end2: 'Groove', coating: 'Hot-dip galvanized' },
+  ];
+  return rows.map((row, index) =>
+    demoVariation(
+      partKey,
+      index + 1,
+      row.sku,
+      row.name,
+      [
+        { key: 'endConnectionOne', label: 'End Connection 1', value: row.end1 },
+        ...(row.end2 ? [{ key: 'endConnectionTwo', label: 'End Connection 2', value: row.end2 }] : []),
+        { key: 'coating', label: 'Coating / Finish', value: row.coating },
+      ],
+      thumbnailUrl,
+    ),
+  );
+}
+
+/** Class (geekblue) outranks pressure (red) and temperature (volcano). */
+function valveVariations(partKey: string, thumbnailUrl?: string): PartVariationRow[] {
+  const rows = [
+    { sku: 'GV-150-6', name: 'Class 150, 6 in', pressureClass: 'Class 150', pressure: '175 psi', temperature: '230 °F' },
+    { sku: 'GV-300-6', name: 'Class 300, 6 in', pressureClass: 'Class 300', pressure: '300 psi', temperature: '400 °F' },
+    { sku: 'GV-150-4', name: 'Class 150, 4 in', pressureClass: 'Class 150', pressure: '200 psi', temperature: '230 °F' },
+  ];
+  return rows.map((row, index) =>
+    demoVariation(
+      partKey,
+      index + 1,
+      row.sku,
+      row.name,
+      [
+        { key: 'pressureClass', label: 'Pressure Class', value: row.pressureClass },
+        { key: 'maximumPressure', label: 'Maximum Pressure', value: row.pressure },
+        { key: 'maximumTemperatureF', label: 'Maximum Temperature (°F)', value: row.temperature },
+      ],
+      thumbnailUrl,
+    ),
+  );
+}
+
+/**
+ * Length and height differ on every row, but weight 40 loses to pipe size,
+ * coating, and material.
+ */
+function elbowGeometryVariations(partKey: string, thumbnailUrl?: string): PartVariationRow[] {
+  const rows = [
+    { sku: 'ELB-2-GAL', name: '2 in galvanized elbow', size: '2 in', material: 'Ductile iron', coating: 'Hot-dip galvanized', length: '3.25 in', height: '2.5 in' },
+    { sku: 'ELB-2-ORG', name: '2 in painted elbow', size: '2 in', material: 'Ductile iron', coating: 'Rust-inhibiting orange', length: '3.5 in', height: '2.75 in' },
+    { sku: 'ELB-4-SS', name: '4 in stainless elbow', size: '4 in', material: 'Stainless 304', coating: 'Plain', length: '5 in', height: '4.25 in' },
+    { sku: 'ELB-6-GAL', name: '6 in galvanized elbow', size: '6 in', material: 'Ductile iron', coating: 'Hot-dip galvanized', length: '6.5 in', height: '5.5 in' },
+  ];
+  return rows.map((row, index) =>
+    demoVariation(
+      partKey,
+      index + 1,
+      row.sku,
+      row.name,
+      [
+        { key: 'pipeSize', label: 'Pipe Size', value: row.size },
+        { key: 'material', label: 'Material', value: row.material },
+        { key: 'coating', label: 'Coating / Finish', value: row.coating },
+        { key: 'length', label: 'Length', value: row.length },
+        { key: 'height', label: 'Height', value: row.height },
+      ],
+      thumbnailUrl,
+    ),
+  );
+}
+
+/** Only coating differs, so the table has a single tag column. */
+function sparseCoatingVariations(partKey: string, thumbnailUrl?: string): PartVariationRow[] {
+  const rows = [
+    { sku: 'CLP-2-GAL', name: '2 in galvanized clamp', coating: 'Hot-dip galvanized' },
+    { sku: 'CLP-2-ORG', name: '2 in painted clamp', coating: 'Rust-inhibiting orange' },
+    { sku: 'CLP-2-PLN', name: '2 in plain clamp', coating: 'Plain' },
+  ];
+  return rows.map((row, index) =>
+    demoVariation(
+      partKey,
+      index + 1,
+      row.sku,
+      row.name,
+      [
+        { key: 'pipeSize', label: 'Pipe Size', value: '2 in' },
+        { key: 'material', label: 'Material', value: 'Ductile iron' },
+        { key: 'coating', label: 'Coating / Finish', value: row.coating },
+        { key: 'length', label: 'Length', value: '4 in' },
+      ],
+      thumbnailUrl,
+    ),
+  );
+}
+
 function defaultVariationsFor(part: CatalogPartRow, thumbnailUrl?: string): PartVariationRow[] {
   const baseSku = part.sku.replace(/-[A-Z]$/, '');
   const allTypes = [...ALL_DRAWING_FILE_TYPES];
@@ -149,9 +278,9 @@ function defaultVariationsFor(part: CatalogPartRow, thumbnailUrl?: string): Part
       allDrawingFileTypes: allTypes,
       description: `${part.description} — standard configuration.`,
       specifications: variantSpecs(part.sku, part.description, [
-        { key: 'nominal-size', label: 'Nominal size', value: 'Per cut sheet' },
+        { key: 'pipeSize', label: 'Pipe Size', value: 'Per cut sheet' },
         { key: 'material', label: 'Material', value: 'Varies by configuration' },
-        { key: 'finish', label: 'Finish', value: 'Factory standard' },
+        { key: 'coating', label: 'Coating / Finish', value: 'Factory standard' },
       ]),
     },
     {
@@ -164,9 +293,9 @@ function defaultVariationsFor(part: CatalogPartRow, thumbnailUrl?: string): Part
       allDrawingFileTypes: allTypes,
       description: `${part.description} with alternate factory finish.`,
       specifications: variantSpecs(`${baseSku}-ALT`, `${part.description} — alternate finish`, [
-        { key: 'nominal-size', label: 'Nominal size', value: 'Per cut sheet' },
+        { key: 'pipeSize', label: 'Pipe Size', value: 'Per cut sheet' },
         { key: 'material', label: 'Material', value: 'Varies by configuration' },
-        { key: 'finish', label: 'Finish', value: 'Alternate factory' },
+        { key: 'coating', label: 'Coating / Finish', value: 'Alternate factory' },
       ]),
     },
     {
@@ -179,20 +308,37 @@ function defaultVariationsFor(part: CatalogPartRow, thumbnailUrl?: string): Part
       allDrawingFileTypes: allTypes,
       description: `${part.description} — metric sizing variant.`,
       specifications: variantSpecs(`${baseSku}-M`, `${part.description} — metric sizing`, [
-        { key: 'nominal-size', label: 'Nominal size', value: 'Metric' },
+        { key: 'pipeSize', label: 'Pipe Size', value: 'Metric' },
         { key: 'material', label: 'Material', value: 'Varies by configuration' },
-        { key: 'finish', label: 'Finish', value: 'Factory standard' },
+        { key: 'coating', label: 'Coating / Finish', value: 'Factory standard' },
       ]),
     },
   ];
 }
 
 /** Stub part-detail content derived from catalog row shape — not tied to any single real product. */
+const DEMO_VARIATION_BUILDERS: Record<
+  string,
+  (partKey: string, thumbnailUrl?: string) => PartVariationRow[]
+> = {
+  'p-100': threadedRodVariationsForP100,
+  'p-400': groovedCouplingVariations,
+  'p-500': valveVariations,
+  'p-700': elbowGeometryVariations,
+  'p-800': sparseCoatingVariations,
+};
+
+const DEMO_PRODUCT_NAMES: Record<string, string> = {
+  'p-400': 'Gruvlok Fig. 7001 Rigid Coupling',
+  'p-500': 'Class 150/300 Gate Valve',
+  'p-700': '90° Grooved Elbow',
+  'p-800': 'Adjustable Pipe Clamp',
+};
+
 export function partDetailContentFor(part: CatalogPartRow): PartDetailContent {
   const isThreadedRodDemo = part.key === 'p-100';
-  const variations = isThreadedRodDemo
-    ? threadedRodVariationsForP100(part.key, part.featuredImageUrl)
-    : defaultVariationsFor(part, part.featuredImageUrl);
+  const buildVariations = DEMO_VARIATION_BUILDERS[part.key] ?? defaultVariationsFor;
+  const variations = buildVariations(part.key, part.featuredImageUrl);
 
   const variationCount = variations.length;
   const variationLabel =
@@ -205,7 +351,7 @@ export function partDetailContentFor(part: CatalogPartRow): PartDetailContent {
           metaLine: `ASC Engineered Solutions · ${variationLabel} across diameters, lengths, and finishes`,
         }
       : {
-          productName: part.description,
+          productName: DEMO_PRODUCT_NAMES[part.key] ?? part.description,
           metaLine: `ASC Engineered Solutions · ${variationLabel}`,
         },
     description: isThreadedRodDemo

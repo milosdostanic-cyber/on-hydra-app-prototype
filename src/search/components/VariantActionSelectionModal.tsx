@@ -1,4 +1,4 @@
-import { FilePdfOutlined, PictureOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons';
+import { FilePdfOutlined, PictureOutlined, SearchOutlined } from '@ant-design/icons';
 import type { InputRef } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -22,13 +22,18 @@ import {
   Flex,
   Input,
   Modal,
-  Popover,
   Table,
   Typography,
   theme,
 } from '../../ui/antd';
 import type { TableColumnsType } from '../../ui/antd';
+import { HydraColorfulTag, HydraTag } from '../../ui/HydraTag';
 
+import {
+  isEmptyDistinguishingValue,
+  selectDistinguishingAttributes,
+  type DistinguishingAttribute,
+} from './variantDistinguishingAttributes';
 import {
   fileTypeForSelectionAction,
   isPlaceholderSpecValue,
@@ -124,7 +129,6 @@ export function VariantActionSelectionModal({
   /** Snapshot of session keys at open — orange “already selected” highlight. */
   const [carriedKeys, setCarriedKeys] = useState<string[]>([]);
   const [searchText, setSearchText] = useState('');
-  const [hiddenColumnKeys, setHiddenColumnKeys] = useState<string[]>([]);
   const searchInputRef = useRef<InputRef>(null);
   const wasOpenRef = useRef(false);
   const listThumbnailSize = token.controlHeight;
@@ -135,7 +139,6 @@ export function VariantActionSelectionModal({
       setPendingKeys(selectedKeys);
       setCarriedKeys(selectedKeys);
       setSearchText('');
-      setHiddenColumnKeys([]);
     }
     wasOpenRef.current = open;
   }, [open, selectedKeys]);
@@ -158,16 +161,12 @@ export function VariantActionSelectionModal({
   }, [sortedVariations, searchText]);
 
   const { uniform, varying } = useMemo(() => partitionVariationSpecs(variations), [variations]);
-
-  const visibleVarying = useMemo(
-    () => varying.filter((column) => !hiddenColumnKeys.includes(column.key)),
-    [varying, hiddenColumnKeys],
-  );
+  const distinguishing = useMemo(() => selectDistinguishingAttributes(variations), [variations]);
 
   const uniformKeys = useMemo(() => new Set(uniform.map((spec) => spec.key)), [uniform]);
   const visibleColumnKeys = useMemo(
-    () => new Set(visibleVarying.map((column) => column.key)),
-    [visibleVarying],
+    () => new Set(distinguishing.map((attribute) => attribute.key)),
+    [distinguishing],
   );
 
   const headerSpecs = useMemo(() => {
@@ -267,15 +266,13 @@ export function VariantActionSelectionModal({
         </Flex>
       ),
     },
-    ...visibleVarying.map((column) => ({
-      title: column.label,
-      key: column.key,
+    ...distinguishing.map((attribute) => ({
+      title: attribute.label,
+      key: attribute.key,
       sorter: (a: PartVariationRow, b: PartVariationRow) =>
-        (variationSpecValue(a, column.key) ?? '').localeCompare(variationSpecValue(b, column.key) ?? ''),
+        (variationSpecValue(a, attribute.key) ?? '').localeCompare(variationSpecValue(b, attribute.key) ?? ''),
       render: (_: unknown, variation: PartVariationRow) => (
-        <Typography.Text style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-          {variationSpecValue(variation, column.key) ?? '—'}
-        </Typography.Text>
+        <AttributeValueTag attribute={attribute} value={variationSpecValue(variation, attribute.key)} />
       ),
     })),
     {
@@ -397,35 +394,6 @@ export function VariantActionSelectionModal({
               aria-label="Search variations"
               style={{ width: token.sizeUnit * 56 }}
             />
-            {varying.length > 0 ? (
-              <Popover
-                trigger="click"
-                placement="bottomRight"
-                content={
-                  <Flex vertical gap={token.marginXS}>
-                    {varying.map((column) => (
-                      <Checkbox
-                        key={column.key}
-                        checked={!hiddenColumnKeys.includes(column.key)}
-                        onChange={(event) => {
-                          setHiddenColumnKeys((current) =>
-                            event.target.checked
-                              ? current.filter((key) => key !== column.key)
-                              : [...current, column.key],
-                          );
-                        }}
-                      >
-                        {column.label}
-                      </Checkbox>
-                    ))}
-                  </Flex>
-                }
-              >
-                <Button icon={<SettingOutlined />} aria-label="Choose columns">
-                  Columns ({visibleVarying.length}/{varying.length})
-                </Button>
-              </Popover>
-            ) : null}
           </Flex>
         </Flex>
 
@@ -496,6 +464,26 @@ export function VariantActionSelectionModal({
       </Flex>
     </Modal>
   );
+}
+
+function AttributeValueTag({
+  attribute,
+  value,
+}: {
+  attribute: DistinguishingAttribute;
+  value: string | undefined;
+}) {
+  if (isEmptyDistinguishingValue(value)) {
+    return (
+      <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+        —
+      </Typography.Text>
+    );
+  }
+  if (attribute.tag === 'default') {
+    return <HydraTag>{value}</HydraTag>;
+  }
+  return <HydraColorfulTag preset={attribute.tag}>{value}</HydraColorfulTag>;
 }
 
 function SpecChip({ spec }: { spec: PartSpecField }) {

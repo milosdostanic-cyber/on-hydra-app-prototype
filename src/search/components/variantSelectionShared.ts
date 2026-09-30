@@ -1,7 +1,7 @@
 import type { PartSpecField, PartVariationRow } from '../partDetailDemoData';
 import { variationSpecValue } from '../partDetailDemoData';
 
-export const DISTINGUISHING_SPEC_KEYS = ['nominal-size', 'length', 'material', 'finish'] as const;
+export const DISTINGUISHING_SPEC_KEYS = ['pipeSize', 'length', 'material', 'coating'] as const;
 
 function normalizePimText(text: string): string {
   return text
