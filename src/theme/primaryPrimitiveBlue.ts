@@ -3,19 +3,22 @@ import type { HydraColorMode } from './hydraColorMode';
 /**
  * Blue primitives `Primary/primary-1` … `primary-10` in Figma **Colors**.
  *
- * **Light** (`5:0`): mirrors **Figma Colors** `Primary/primary-*` (linked community file is source of truth).
- * **Dark** (`5:4`): from `@ant-design/colors` `generate('#0073A5', { theme: 'dark', backgroundColor: '#141414' })`
- * — same model as antd preset dark palettes (e.g. `blueDark`).
+ * **Light** (`5:0`): steps 1–6 from `generate('#2576BB')` (RSFC brand Light Blue); steps 7–10 pinned to the
+ * brand Navy end (`#004173` … `#001D35`) so `Color/Sidebar/*` keeps resolving to Navy.
+ * **Dark** (`5:4`): `generate('#2576BB', { theme: 'dark', backgroundColor: '#141414' })` — the dark ramp
+ * inverts by antd convention, so Navy is not pinned there.
+ *
+ * Pre-RSFC values are preserved in the Figma **Colors** `Legacy (pre-RSFC)` mode (`1384:0`).
  *
  * Used by global primary / links / top bar (`Color/Primary/*`) and Sidebar.
  */
 export const bluePrimaryPrimitiveLight = [
-  '#B8EAFF',
-  '#8BCCD9',
-  '#62B7CC',
-  '#00B9F0',
-  '#1D8BB3',
-  '#0073A5',
+  '#EBF5FA',
+  '#C7E1ED',
+  '#99C6E0',
+  '#6EABD4',
+  '#4890C7',
+  '#2576BB',
   '#004173',
   '#00365F',
   '#002A4A',
@@ -23,16 +26,16 @@ export const bluePrimaryPrimitiveLight = [
 ] as const;
 
 export const bluePrimaryPrimitiveDark = [
-  '#111A1E',
-  '#0F242F',
-  '#0E3140',
-  '#0B3F55',
-  '#075272',
-  '#03658F',
-  '#1C7FA3',
-  '#3B9AB6',
-  '#60B2C6',
-  '#89C8D5',
+  '#131A22',
+  '#152434',
+  '#193146',
+  '#1C405F',
+  '#1F5481',
+  '#2267A2',
+  '#4384B5',
+  '#6AA3CA',
+  '#95C1DA',
+  '#C3DDE9',
 ] as const;
 
 /**
@@ -97,14 +100,18 @@ export function daybreakBlueStep(
 
 /**
  * Softer primary fill for chips / mapped-column highlights — lighter than `primary-1` (`colorPrimaryBg`).
- * Light: ~6% `primary-6` on white; border uses `primary-1`.
+ * Light: ~4% `primary-6` on white; border uses `primary-1`.
  */
-export const bluePrimaryBgSubtleLight = '#E6F4F8' as const;
+export const bluePrimaryBgSubtleLight = '#F6FAFC' as const;
 export const bluePrimaryBorderSubtleLight = bluePrimaryPrimitiveLight[0];
 
 export const bluePrimaryBgSubtleDark = bluePrimaryPrimitiveDark[1];
 export const bluePrimaryBorderSubtleDark = bluePrimaryPrimitiveDark[2];
 
+/**
+ * Fills lighten on hover (antd convention, step 5), but **text and links darken** (steps 7 → 8).
+ * Lightening text hover put it below WCAG AA on white, so the brand Navy end of the ramp is used instead.
+ */
 function semanticsFromRamp(
   ramp: readonly string[],
   bgSubtle: string,
@@ -137,12 +144,12 @@ function semanticsFromRamp(
     colorPrimaryHover: s(5),
     colorPrimary: s(6),
     colorPrimaryActive: s(7),
-    colorPrimaryTextHover: s(4),
+    colorPrimaryTextHover: s(7),
     colorPrimaryText: s(6),
-    colorPrimaryTextActive: s(7),
+    colorPrimaryTextActive: s(8),
     colorLink: s(6),
-    colorLinkHover: s(4),
-    colorLinkActive: s(7),
+    colorLinkHover: s(7),
+    colorLinkActive: s(8),
   };
 }
 

@@ -7,6 +7,7 @@ import { sortBomProjectsByLastEditedDesc } from '../bomUploadFlowState';
 import {
   hydraBaseNormal,
   hydraLargeStrong,
+  hydraSubtitleLarge,
   hydraTextStyleToReactCss,
   hydraTitleHeading5,
 } from '../../theme/hydraTypography';
@@ -76,7 +77,7 @@ export function BomUploadDestinationModal({
         value: p.id,
         label: (
           <Flex vertical gap={token.marginXXS}>
-            <Typography.Text strong style={hydraTextStyleToReactCss(hydraLargeStrong)}>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraSubtitleLarge)}>
               {p.name}
             </Typography.Text>
             <Flex gap={token.marginSM} align="center" wrap="wrap">

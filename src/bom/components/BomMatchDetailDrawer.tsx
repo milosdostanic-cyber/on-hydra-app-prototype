@@ -18,6 +18,7 @@ import { BomConfidenceTag, BomManualTag } from './BomTags';
 import type { BomItem, BomMatchResult } from '../data/types';
 import {
   hydraBaseNormal,
+  hydraBaseStrong,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
 import {
@@ -247,7 +248,7 @@ export function BomMatchDetailDrawer({
               >
                 Original imported part
               </Typography.Text>
-              <Typography.Text strong>{matchRow.originalRequest}</Typography.Text>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{matchRow.originalRequest}</Typography.Text>
               {parsedItem?.parsedDescription ? (
                 <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
                   {parsedItem.parsedDescription}

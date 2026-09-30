@@ -132,6 +132,7 @@ export function UnifiedPartDetailPage() {
 
   const variationsRailCardStyle: CSSProperties = {
     ...surfaceCardStyle,
+    border: 'none',
     boxShadow: token.boxShadowTertiary,
   };
 

@@ -12,6 +12,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { bomSitePath, useActiveProject } from '../context/ActiveProjectContext';
 import {
   hydraBaseNormal,
+  hydraBaseStrong,
   hydraLargeNormal,
   hydraTextStyleToReactCss,
 } from '../theme/hydraTypography';
@@ -100,7 +101,7 @@ export function ConstructionProjectSwitcherModal({ open, onClose }: Construction
       cancelText: 'Cancel',
       content: (
         <Typography.Paragraph style={{ marginTop: token.marginSM, marginBottom: 0 }}>
-          Remove <Typography.Text strong>{row.name}</Typography.Text> from your list? This demo only updates local
+          Remove <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{row.name}</Typography.Text> from your list? This demo only updates local
           state.
         </Typography.Paragraph>
       ),
@@ -223,7 +224,7 @@ export function ConstructionProjectSwitcherModal({ open, onClose }: Construction
                 >
                   <Flex align="center" justify="space-between" style={{ width: '100%', minWidth: 0 }}>
                     <Flex vertical gap={2} style={{ minWidth: 0, flex: 1 }}>
-                      <Typography.Text strong={isActive} ellipsis>
+                      <Typography.Text ellipsis style={hydraTextStyleToReactCss(isActive ? hydraBaseStrong : hydraBaseNormal)}>
                         {row.name}
                       </Typography.Text>
                       <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)} ellipsis>

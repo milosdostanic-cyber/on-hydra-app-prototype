@@ -41,6 +41,7 @@ import { trackSpecEvent } from '../specAnalytics';
 import { specAnalyzePath, specAskPath, specHomePath, specProductsPath } from '../specNavigation';
 import { navigateSpecWorkspaceTab, specWorkspaceTabItems } from '../specWorkspaceTabs';
 import { HydraTag } from '../../ui/HydraTag';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 function countNonMeets(lines: SpecSubstitutionLine[]) {
   return lines.reduce(
@@ -132,7 +133,7 @@ export function SpecSubstitutionPage() {
             written.
           </Typography.Text>
           {nonMeets > 0 ? (
-            <Typography.Text type="danger" strong>
+            <Typography.Text type="danger" style={hydraTextStyleToReactCss(hydraBaseStrong)}>
               {nonMeets} attribute {nonMeets === 1 ? 'does' : 'do'} not meet the specification. The
               request states this openly rather than omitting it.
             </Typography.Text>
@@ -227,7 +228,7 @@ export function SpecSubstitutionPage() {
           <Empty
             description={
               <Flex vertical gap={token.marginXS}>
-                <Typography.Text strong>No substitution lines yet</Typography.Text>
+                <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No substitution lines yet</Typography.Text>
                 <Typography.Text type="secondary">
                   Add an ASC suggestion on Products to start an or-equal, or Ask an Engineer when
                   the catalog has no fit.
@@ -282,7 +283,7 @@ export function SpecSubstitutionPage() {
                 <Flex vertical gap={token.marginMD}>
                   <Flex vertical gap={token.marginXXS}>
                     <Typography.Text type="secondary">Proposed equal</Typography.Text>
-                    <Typography.Text strong>
+                    <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>
                       {line.proposedName} ({line.proposedSku})
                     </Typography.Text>
                     <Typography.Text type="secondary">{line.rationale}</Typography.Text>
@@ -290,7 +291,7 @@ export function SpecSubstitutionPage() {
 
                   {line.equivalence.length > 0 ? (
                     <Flex vertical gap={token.marginXS}>
-                      <Typography.Text strong>Equivalence matrix</Typography.Text>
+                      <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Equivalence matrix</Typography.Text>
                       <SpecEquivalenceMatrix
                         attributes={line.equivalence}
                         onOpenCitation={(citationId) =>
@@ -306,7 +307,7 @@ export function SpecSubstitutionPage() {
                             <Flex vertical gap={token.marginXXS}>
                               {lineNonMeets.map((a) => (
                                 <Typography.Text key={a.id}>
-                                  <Typography.Text strong>{a.attribute}:</Typography.Text>{' '}
+                                  <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{a.attribute}:</Typography.Text>{' '}
                                   {a.note ?? `${a.proposedValue} against ${a.specifiedValue}.`}
                                 </Typography.Text>
                               ))}
@@ -326,7 +327,7 @@ export function SpecSubstitutionPage() {
 
                   {line.savings ? (
                     <Flex vertical gap={token.marginXS}>
-                      <Typography.Text strong>Savings</Typography.Text>
+                      <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Savings</Typography.Text>
                       <Descriptions
                         size="small"
                         column={{ xs: 1, sm: 1, md: 3 }}
@@ -342,7 +343,7 @@ export function SpecSubstitutionPage() {
 
                   {line.attachments.length > 0 ? (
                     <Flex vertical gap={token.marginXS}>
-                      <Typography.Text strong>Supporting documents</Typography.Text>
+                      <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Supporting documents</Typography.Text>
                       <Flex vertical gap={token.marginXS}>
                         {line.attachments.map((att) => (
                           <Flex key={att.id} gap={token.marginXS} align="flex-start" wrap="wrap">
@@ -381,7 +382,7 @@ export function SpecSubstitutionPage() {
           <Divider style={{ margin: 0 }} />
 
           <Flex vertical gap={token.marginXS}>
-            <Typography.Text strong>Notes for the engineer</Typography.Text>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Notes for the engineer</Typography.Text>
             <Input.TextArea
               rows={4}
               value={notes}

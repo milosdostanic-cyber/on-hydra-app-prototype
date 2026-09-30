@@ -7,7 +7,8 @@ import { BomConfidenceTag } from './BomTags';
 import { matchScoreBand } from '../data/bomImportFlowSeed';
 import {
   hydraBaseNormal,
-  hydraLargeStrong,
+  hydraBaseStrong,
+  hydraSubtitleLarge,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
 import { Button, Card, Col, Flex, Modal, Row, Space, Typography, theme } from '../../ui/antd';
@@ -46,7 +47,7 @@ function MatchCandidateCard({
       style={{
         borderColor: selected ? token.colorPrimary : token.colorBorderSecondary,
         background: selected ? token.colorPrimaryBgSubtle : token.colorBgContainer,
-        boxShadow: selected ? token.boxShadowSecondary : token.boxShadowTertiary,
+        boxShadow: token.boxShadowTertiary,
         cursor: 'pointer',
         height: '100%',
       }}
@@ -78,7 +79,7 @@ function MatchCandidateCard({
           <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
             Fig. {figureRef}
           </Typography.Text>
-          <Typography.Text strong style={hydraTextStyleToReactCss(hydraLargeStrong)}>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraSubtitleLarge)}>
             {part.partNumber}
           </Typography.Text>
           <Typography.Text
@@ -155,7 +156,7 @@ export function BomSuggestedPartsModal({
           <Flex vertical align="flex-end" gap={token.marginXXS} style={{ flex: 1, minWidth: 200 }}>
             {selectedPart ? (
               <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-                Selected: <Typography.Text strong>{selectedPart.figureNumber ?? selectedPart.partNumber}</Typography.Text>
+                Selected: <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{selectedPart.figureNumber ?? selectedPart.partNumber}</Typography.Text>
                 {' — '}
                 {selectedPart.description}
               </Typography.Text>
@@ -185,7 +186,7 @@ export function BomSuggestedPartsModal({
           <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
             Multiple figure matches — pick the best fit
           </Typography.Text>
-          <Typography.Text strong style={hydraTextStyleToReactCss(hydraLargeStrong)}>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraSubtitleLarge)}>
             {matchRow.originalRequest}
           </Typography.Text>
         </Flex>

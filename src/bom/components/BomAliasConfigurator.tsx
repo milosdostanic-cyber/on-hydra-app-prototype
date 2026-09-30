@@ -14,6 +14,7 @@ import {
 import {
   hydraLargeNormal,
   hydraLargeStrong,
+  hydraSubtitleLarge,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
 
@@ -128,15 +129,14 @@ export function BomAliasConfigurator({ open, onClose, onSave }: BomAliasConfigur
         <Flex gap={token.marginSM} align="center">
           <div style={{ flex: 1, textAlign: 'center' }}>
             <Typography.Text
-              strong
-              style={{ ...hydraTextStyleToReactCss(hydraLargeStrong), color: token.colorTextSecondary }}
+              style={{ ...hydraTextStyleToReactCss(hydraSubtitleLarge), color: token.colorTextSecondary }}
             >
               YOUR BOM FIELD
             </Typography.Text>
           </div>
           <div style={{ width: 28 }} />
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <Typography.Text strong style={{ ...hydraTextStyleToReactCss(hydraLargeStrong), color: token.colorPrimary }}>
+            <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraSubtitleLarge), color: token.colorPrimary }}>
               ASC FIELD
             </Typography.Text>
           </div>

@@ -77,7 +77,7 @@ function MappingColumnHeaders({
       }}
     >
       <Flex align="center" gap={token.marginSM} style={{ flex: 1, minWidth: 0 }}>
-        <Typography.Text strong style={headerTextStyle}>
+        <Typography.Text style={headerTextStyle}>
           IN YOUR FILE
         </Typography.Text>
         {showReset && onResetDefaults ? (
@@ -92,7 +92,7 @@ function MappingColumnHeaders({
         style={{ width: MAPPING_ARROW_SLOT_WIDTH, flexShrink: 0 }}
       />
       <Flex align="center" style={{ flex: 1, minWidth: 0 }}>
-        <Typography.Text strong style={headerTextStyle}>
+        <Typography.Text style={headerTextStyle}>
           PART DETAIL WE NEED
         </Typography.Text>
       </Flex>

@@ -13,8 +13,9 @@ import { useNavigate } from 'react-router-dom';
 
 import { shellLayout } from '../theme/hydraAlias';
 import {
+  hydraBaseStrong,
   hydraLargeNormal,
-  hydraLargeStrong,
+  hydraSubtitleLarge,
   hydraTextStyleToReactCss,
   hydraTitleHeading5,
 } from '../theme/hydraTypography';
@@ -152,10 +153,9 @@ export function ProjectDetailDrawer({ project, open, onClose }: Props) {
           }}
         >
           <Typography.Text
-            strong
             type="secondary"
             style={{
-              ...hydraTextStyleToReactCss(hydraLargeStrong),
+              ...hydraTextStyleToReactCss(hydraSubtitleLarge),
               textTransform: 'uppercase',
               letterSpacing: 0.5,
             }}
@@ -198,7 +198,7 @@ export function ProjectDetailDrawer({ project, open, onClose }: Props) {
                       {mod.icon}
                     </Flex>
                     <div style={{ minWidth: 0 }}>
-                      <Typography.Text strong>{mod.label}</Typography.Text>
+                      <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{mod.label}</Typography.Text>
                       <br />
                       <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
                         {mod.description}
@@ -214,10 +214,9 @@ export function ProjectDetailDrawer({ project, open, onClose }: Props) {
           <Divider style={{ margin: `${token.marginLG}px 0` }} />
 
           <Typography.Text
-            strong
             type="secondary"
             style={{
-              ...hydraTextStyleToReactCss(hydraLargeStrong),
+              ...hydraTextStyleToReactCss(hydraSubtitleLarge),
               textTransform: 'uppercase',
               letterSpacing: 0.5,
             }}
@@ -256,7 +255,7 @@ export function ProjectDetailDrawer({ project, open, onClose }: Props) {
                   <GlobalOutlined />
                 </Flex>
                 <div style={{ minWidth: 0 }}>
-                  <Typography.Text strong>Browse catalog</Typography.Text>
+                  <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Browse catalog</Typography.Text>
                   <br />
                   <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
                     Explore products without selecting a project

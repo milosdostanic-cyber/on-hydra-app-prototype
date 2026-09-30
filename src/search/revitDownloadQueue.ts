@@ -31,6 +31,10 @@ export type DownloadHistoryEntry = {
   figureNumber?: string;
   thumbnailUrl?: string;
   queuedAt: string;
+  /** Teammate who downloaded this occurrence — optional so existing queue writers stay valid. */
+  downloadedBy?: string;
+  /** Formats delivered in this occurrence. Falls back to `fileType` when absent. */
+  fileFormats?: string[];
 };
 
 /** @deprecated Use {@link DownloadQueueItem}. */

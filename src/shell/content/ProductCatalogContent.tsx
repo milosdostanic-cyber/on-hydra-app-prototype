@@ -49,7 +49,7 @@ function CategoryCard({ token, projectId, categoryId, title, totalParts, subcate
   const navigate = useNavigate();
   return (
     <Card
-      bordered={false}
+      variant="borderless"
       style={{
         borderRadius: token.borderRadiusLG,
         boxShadow: token.boxShadowTertiary,
@@ -247,7 +247,6 @@ export function ProductCatalogContent() {
                   background: hydraFeaturedPartsPanelBgLight,
                   borderRadius: token.borderRadiusLG,
                   boxShadow: token.boxShadowTertiary,
-                  border: `${token.lineWidth}px ${token.lineType} ${token.colorInfoBorder}`,
                 }}
               >
                 <FeaturedParts emphasized />

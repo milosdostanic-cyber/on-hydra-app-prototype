@@ -190,7 +190,6 @@ export function FeaturedParts({ contextNote, emphasized = false, panel = false }
           background: hydraFeaturedPartsPanelBgLight,
           borderRadius: token.borderRadiusLG,
           boxShadow: token.boxShadowTertiary,
-          border: `${token.lineWidth}px ${token.lineType} ${token.colorInfoBorder}`,
         }}
       >
         {node}

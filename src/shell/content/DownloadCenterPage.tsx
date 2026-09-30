@@ -1,21 +1,12 @@
-import { DeleteOutlined, DownloadOutlined } from '@ant-design/icons';
-import { useMemo } from 'react';
+import { useMemo, useState, type Key, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { BomPageHeader } from '../../bom/layout/BomPageHeader';
 import { CatalogThumbnailPlaceholder } from '../../catalog/CatalogThumbnailPlaceholder';
 import { useActionTrail, useActionTrailModuleLifecycle } from '../../context/ActionTrailContext';
 import { actionTrailTableRowProps } from '../../search/actionTrailStyles';
-import { ActionTrailNewTag } from '../../search/components/ActionTrailNewTag';
-import {
-  type DownloadQueueItem,
-  useDownloadHistory,
-  useRevitDownloadQueue,
-} from '../../search/revitDownloadQueue';
-import {
-  hydraTextStyleToReactCss,
-  hydraTitleHeading4,
-} from '../../theme/hydraTypography';
+import { useDownloadHistory } from '../../search/revitDownloadQueue';
+import { HydraColorfulTag, HydraTag, type HydraColorfulPreset } from '../../ui/HydraTag';
 import {
   App,
   Avatar,
@@ -23,10 +14,8 @@ import {
   Card,
   Empty,
   Flex,
-  List,
   Space,
   Table,
-  Tag,
   Tooltip,
   Typography,
   theme,
@@ -35,73 +24,187 @@ import {
 import { PageBackButton } from '../PageBackButton';
 import { projectTitleById } from '../projectSeed';
 import { shellTableCardStyle, shellTableStyles } from '../shellTablePatterns';
+import { ContentDownloadDemoControls } from './ContentDownloadDemoControls';
+import { useContentDownloadAccess } from './contentDownloadAccess';
+import { CreateBomFromHistoryModal } from './CreateBomFromHistoryModal';
+import { CreateSubmittalFromHistoryModal } from './CreateSubmittalFromHistoryModal';
+import { buildDownloadHistoryRows, isHistoryFigureRow, type HistoryTableRow } from './downloadHistoryRows';
+import {
+  countSelectedGranularity,
+  resolveSelection,
+} from './downloadHistorySelection';
+import { historyEntriesForProject } from './downloadHistorySeed';
+import { ActionTrailNewTag } from '../../search/components/ActionTrailNewTag';
+import { hydraBaseNormal, hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
-type CategoryRow = {
-  key: string;
-  categoryName: string;
-  partCount: number;
+/** Ties variant rows visually to their parent figure — antd nesting alone reads as sibling rows once expanded. */
+const HISTORY_VARIANT_ROW_CLASS = 'download-history-variant-row';
+const HISTORY_TABLE_CLASS = 'download-history-table';
+const HISTORY_INDENT = (token: ReturnType<typeof theme.useToken>['token']) => token.marginLG;
+
+const COPY = {
+  title: 'Content Downloads',
+  back: 'Back to Part Search',
+  description: (figures: number, variations: number, project: string) =>
+    `${figures} figure${figures === 1 ? '' : 's'} · ${variations} variation${variations === 1 ? '' : 's'} downloaded · ${project}`,
+  emptyTitle: 'No downloads yet',
+  emptyDescription:
+    'Download history starts from the release date — anything downloaded before then is not shown.',
+  emptyCta: 'Browse Part Search',
+  selectHint: 'Select figures or variations to create a submittal package or a BOM.',
+  selectionSummary: (figures: number, variations: number) => {
+    const figureLabel = `${figures} figure${figures === 1 ? '' : 's'}`;
+    const variationLabel = `${variations} variation${variations === 1 ? '' : 's'}`;
+    return `${figureLabel}, ${variationLabel} selected`;
+  },
+  clearSelection: 'Clear Selection',
+  createSubmittal: 'Create Submittal Package',
+  createBom: 'Create BOM',
+  needSelection: 'Select at least one figure or variation.',
+  needBomAccess: 'You need BOM create access to do this.',
+  needSubmittalAccess: 'You need Submittal create access to do this.',
+  colPart: 'Part / figure',
+  colFigureNumber: 'Figure Number',
+  colFormats: 'Formats',
+  colDownloaded: 'Downloaded',
+  colBy: 'By',
+  skuPrefix: (value: string) => `SKU ${value}`,
+  variantsOnly: 'Variants only',
+  roleVariation: 'Variation',
+  empty: '—',
 };
 
-function fileBadgeLabel(item: DownloadQueueItem): string {
-  if (item.fileType) return item.fileType.toUpperCase();
-  if (item.kind === 'revit') return 'RFA';
-  const ext = item.fileName.split('.').pop();
-  return (ext ?? 'FILE').toUpperCase();
+function formatDownloadedDate(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function partDisplayName(item: DownloadQueueItem): string {
-  return item.displayName?.trim() || item.fileName;
+/** Figma `Tag / Colorful` presets; status hues (red, green, gold) stay reserved for state. */
+const FORMAT_PRESETS: Record<string, HydraColorfulPreset> = {
+  RFA: 'geekblue',
+  PDF: 'magenta',
+  DWG: 'cyan',
+  STEP: 'purple',
+};
+
+/** Preset step 3 is the border that belongs to the same ramp as the chip fill. */
+function formatChipBorder(preset: HydraColorfulPreset): string {
+  return `var(--ant-${preset}-3)`;
 }
 
-/**
- * Content module Download Center — queued files table, category empty state, download footer.
- * Pattern: Submittal `PackageCard` table + `shellTablePatterns` card chrome.
- */
-export function DownloadCenterPage() {
+/** Part actions panel order; unknown codes follow in their original order. */
+const FORMAT_ORDER = ['RFA', 'PDF', 'DWG', 'STEP'];
+
+function sortFormats(formats: string[]): string[] {
+  const known = FORMAT_ORDER.filter((code) => formats.includes(code));
+  const unknown = formats.filter((code) => !FORMAT_ORDER.includes(code));
+  return [...known, ...unknown];
+}
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
+
+function GatedActionButton({
+  label,
+  disabled,
+  tooltip,
+  type,
+  onClick,
+}: {
+  label: string;
+  disabled: boolean;
+  tooltip: string;
+  type?: 'primary' | 'default';
+  onClick: () => void;
+}) {
+  const button = (
+    <Button
+      type={type}
+      size="large"
+      disabled={disabled}
+      aria-disabled={disabled}
+      onClick={disabled ? undefined : onClick}
+    >
+      {label}
+    </Button>
+  );
+
+  return disabled ? (
+    <Tooltip title={tooltip}>
+      <span>{button}</span>
+    </Tooltip>
+  ) : (
+    button
+  );
+}
+
+function RepeatTag({ count, firstAt, latestAt }: { count: number; firstAt: string; latestAt: string }) {
+  if (count <= 1) return null;
+  return (
+    <Tooltip title={`First ${formatDownloadedDate(firstAt)} · Latest ${formatDownloadedDate(latestAt)}`}>
+      <span>
+        <HydraTag bordered={false}>×{count}</HydraTag>
+      </span>
+    </Tooltip>
+  );
+}
+
+function HistoryPartCell({
+  row,
+  projectId,
+}: {
+  row: HistoryTableRow;
+  projectId: string;
+}) {
   const { token } = theme.useToken();
-  const { message } = App.useApp();
-  const { projectId = '' } = useParams<{ projectId: string }>();
-  const navigate = useNavigate();
-  useActionTrailModuleLifecycle('content');
-  const { entries, pendingItemIds } = useActionTrail();
-  const trailItemIds = useMemo(
-    () => new Set(pendingItemIds('content', projectId)),
-    [entries, pendingItemIds, projectId],
-  );
-  const title = projectTitleById(projectId) ?? 'Project';
+  const isFigure = isHistoryFigureRow(row);
+  /** Figure rows carry their code in the Figure Number column; variants are identified by SKU. */
+  const code = isFigure ? '' : COPY.skuPrefix(row.sku);
 
-  const { items: queueItems, clearQueue, removeItem } = useRevitDownloadQueue();
-  const projectQueueItems = useMemo(
-    () => queueItems.filter((item) => item.projectId === projectId),
-    [queueItems, projectId],
-  );
+  /**
+   * The figure name starts after its thumbnail. The variation indent is smaller than that slot, so the
+   * variation block needs the remainder to start on the same left edge.
+   */
+  const nameAlignInset = isFigure
+    ? 0
+    : Math.max(0, token.controlHeight + token.marginSM - HISTORY_INDENT(token));
+  /**
+   * antd renders the row indent and expand icon inline before this cell; without a bounded width the
+   * content wraps below the icon. Icon box = `controlInteractiveSize + lineWidth`, trailing gap = `paddingXS`.
+   */
+  const reservedInline =
+    (isFigure ? 0 : HISTORY_INDENT(token) + nameAlignInset) +
+    token.controlInteractiveSize +
+    token.lineWidth +
+    token.paddingXS;
 
-  const { historyForProject } = useDownloadHistory();
-  const projectHistory = historyForProject(projectId);
-
-  const partsCount = projectQueueItems.length;
-  const groupsCount = 0;
-  const categoryRows: CategoryRow[] = [];
-
-  const handleDownloadAll = () => {
-    if (partsCount === 0) return;
-    message.success(
-      `Downloading ${partsCount} file${partsCount === 1 ? '' : 's'} as zip (stub) · ${title}.`,
-    );
-    clearQueue();
+  const thumbSlotStyle = {
+    display: 'inline-flex' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    width: token.controlHeight,
+    minWidth: token.controlHeight,
+    height: token.controlHeight,
+    flexShrink: 0,
   };
 
-  const handleClearAll = () => {
-    clearQueue();
-    message.info('Download queue cleared.');
-  };
-
-  const partColumns: TableColumnsType<DownloadQueueItem> = [
-    {
-      title: 'Part Name',
-      key: 'partName',
-      render: (_, row) => (
-        <Flex align="flex-start" gap={token.marginSM} style={{ minWidth: 0 }}>
+  return (
+    <Flex
+      align="center"
+      gap={token.marginSM}
+      style={{
+        minWidth: 0,
+        width: `calc(100% - ${reservedInline}px)`,
+        marginInlineStart: nameAlignInset,
+      }}
+    >
+      {isFigure ? (
+        <span style={thumbSlotStyle}>
           {row.thumbnailUrl ? (
             <Avatar
               shape="square"
@@ -113,194 +216,415 @@ export function DownloadCenterPage() {
           ) : (
             <CatalogThumbnailPlaceholder />
           )}
-          <Flex vertical gap={token.marginXXS} style={{ minWidth: 0, flex: 1 }}>
-            <Flex align="center" gap={token.marginXS} wrap="wrap">
-              <Typography.Text strong ellipsis={{ tooltip: partDisplayName(row) }}>
-                {partDisplayName(row)}
-              </Typography.Text>
-              <ActionTrailNewTag module="content" subProjectId={projectId} itemId={row.id} />
-            </Flex>
-            <Tag color="purple" style={{ width: 'fit-content', marginInlineEnd: 0 }}>
-              {fileBadgeLabel(row)}
-            </Tag>
+        </span>
+      ) : null}
+      <Flex align="center" gap={token.marginXS} wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
+        <Typography.Text
+          type={isFigure ? undefined : 'secondary'}
+          ellipsis={{ tooltip: row.name }}
+          style={{ minWidth: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
+        >
+          {row.name}
+        </Typography.Text>
+        {isFigure ? null : (
+          <HydraTag bordered={false}>{COPY.roleVariation}</HydraTag>
+        )}
+        {isFigure && row.figureLevelDownloaded ? <HydraTag>Figure-level file</HydraTag> : null}
+        {code ? (
+          <Typography.Text type="secondary" style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>
+            · {code}
+          </Typography.Text>
+        ) : null}
+        <ActionTrailNewTag module="content" subProjectId={projectId} itemId={row.key} />
+      </Flex>
+    </Flex>
+  );
+}
+
+function AttributionCell({
+  downloaders,
+  compactName,
+}: {
+  downloaders: { name: string; latestAt: string }[];
+  compactName?: string;
+}) {
+  const { token } = theme.useToken();
+  if (downloaders.length === 0) {
+    return <Typography.Text type="secondary">{compactName || '—'}</Typography.Text>;
+  }
+  const primary = downloaders[0];
+  const overflow = downloaders.length - 1;
+  const tooltip = (
+    <Space orientation="vertical" size={token.marginXXS}>
+      {downloaders.map((person) => (
+        <span key={person.name}>
+          {person.name} · {formatDownloadedDate(person.latestAt)}
+        </span>
+      ))}
+    </Space>
+  );
+
+  return (
+    <Tooltip title={tooltip}>
+      <Flex align="center" gap={token.marginXS} style={{ minWidth: 0 }}>
+        <Avatar.Group size="small">
+          {downloaders.map((person) => (
+            <Avatar key={person.name} style={{ backgroundColor: token.colorPrimary }}>
+              {initials(person.name)}
+            </Avatar>
+          ))}
+        </Avatar.Group>
+        <Typography.Text ellipsis>
+          {primary.name}
+          {overflow > 0 ? ` +${overflow}` : ''}
+        </Typography.Text>
+      </Flex>
+    </Tooltip>
+  );
+}
+
+/**
+ * Content module download history — two-level figure/variant table replacing the cart (FR-7–FR-13).
+ * Pattern: BomPageHeader + shell table card, mixed-granularity selection, gated create actions.
+ */
+export function DownloadCenterPage() {
+  const { token } = theme.useToken();
+  const { notification } = App.useApp();
+  const { projectId = '' } = useParams<{ projectId: string }>();
+  const navigate = useNavigate();
+  useActionTrailModuleLifecycle('content');
+  const { entries, pendingItemIds } = useActionTrail();
+  const trailItemIds = useMemo(
+    () => new Set(pendingItemIds('content', projectId)),
+    [entries, pendingItemIds, projectId],
+  );
+  const title = projectTitleById(projectId) ?? 'Project';
+
+  const { historyForProject } = useDownloadHistory();
+  const liveHistory = historyForProject(projectId);
+  const rows = useMemo(
+    () => buildDownloadHistoryRows(historyEntriesForProject(projectId, liveHistory)),
+    [projectId, liveHistory],
+  );
+
+  const figureCount = rows.length;
+  const variationCount = rows.reduce((sum, row) => sum + (row.children?.length ?? 0), 0);
+
+  /**
+   * While a figure is open, one primary line runs down the left of that figure and its variations.
+   * The mark overlaps each row border by `lineWidth`, so the row separators do not cut it.
+   * The fill on variation rows steps aside for hover and selection.
+   * The expand icon rules drop antd's float + single-line `marginTop`, which centres the icon on the first text
+   * line rather than the cell. Same `float:none` / `inline-flex` pairing antd uses for its own expand-icon cell.
+   */
+  const groupMark =
+    `content:"";position:absolute;inset-inline-start:0;top:0;bottom:-${token.lineWidth}px;` +
+    `width:${token.lineWidthBold}px;background:${token.colorPrimary};z-index:1;pointer-events:none`;
+  const downloadHistoryTableStyles = useMemo(
+    () =>
+      `.${HISTORY_TABLE_CLASS} tr:has(.ant-table-row-expand-icon-expanded) > td:first-child,` +
+      `.${HISTORY_TABLE_CLASS} .${HISTORY_VARIANT_ROW_CLASS} > td:first-child{position:relative;overflow:visible}` +
+      `.${HISTORY_TABLE_CLASS} tr:has(.ant-table-row-expand-icon-expanded) > td:first-child::after,` +
+      `.${HISTORY_TABLE_CLASS} .${HISTORY_VARIANT_ROW_CLASS} > td:first-child::after{${groupMark}}` +
+      `.${HISTORY_TABLE_CLASS} tr:has(.ant-table-row-expand-icon-expanded):not(.ant-table-row-selected):not(:hover) > td{background:color-mix(in srgb, ${token.colorPrimaryBg} 45%, ${token.colorBgContainer})}` +
+      `.${HISTORY_TABLE_CLASS} .${HISTORY_VARIANT_ROW_CLASS}:not(.ant-table-row-selected):not(:hover) > td{background:${token.colorFillAlter}}` +
+      `.${HISTORY_TABLE_CLASS} .ant-table-row-indent + .ant-table-row-expand-icon{float:none;display:inline-flex;vertical-align:middle;margin-top:0}` +
+      `.${HISTORY_TABLE_CLASS} td.ant-table-cell-with-append{white-space:nowrap}` +
+      `.${HISTORY_TABLE_CLASS} td.ant-table-cell-with-append > .ant-flex{display:inline-flex;vertical-align:middle}`,
+    [groupMark, token.colorFillAlter, token.colorPrimaryBg, token.colorBgContainer],
+  );
+
+
+  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+  const [submittalOpen, setSubmittalOpen] = useState(false);
+  const [bomOpen, setBomOpen] = useState(false);
+
+  const access = useContentDownloadAccess();
+  const resolution = useMemo(
+    () => resolveSelection(rows, selectedRowKeys),
+    [rows, selectedRowKeys],
+  );
+  const granularity = useMemo(
+    () => countSelectedGranularity(rows, selectedRowKeys),
+    [rows, selectedRowKeys],
+  );
+  const hasSelection = selectedRowKeys.length > 0;
+
+  const submittalDisabled = !access.canCreateSubmittal || !hasSelection;
+  const bomDisabled = !access.canCreateBom || !hasSelection;
+  const submittalTooltip = !access.canCreateSubmittal
+    ? COPY.needSubmittalAccess
+    : COPY.needSelection;
+  const bomTooltip = !access.canCreateBom ? COPY.needBomAccess : COPY.needSelection;
+
+  /** Clear sits last in the action group — same order as the BOM workspace bulk-selection toolbar. */
+  const createActions = (
+    <Flex align="center" gap={token.marginXS} wrap="wrap">
+      <GatedActionButton
+        label={COPY.createSubmittal}
+        type="primary"
+        disabled={submittalDisabled}
+        tooltip={submittalTooltip}
+        onClick={() => setSubmittalOpen(true)}
+      />
+      <GatedActionButton
+        label={COPY.createBom}
+        disabled={bomDisabled}
+        tooltip={bomTooltip}
+        onClick={() => setBomOpen(true)}
+      />
+      {hasSelection ? (
+        <Button size="large" onClick={() => setSelectedRowKeys([])}>
+          {COPY.clearSelection}
+        </Button>
+      ) : null}
+    </Flex>
+  );
+
+  /**
+   * Every column except `part` is width-pinned so expanding/collapsing or selecting rows can never
+   * reflow the grid — `part` is the single flexible column that absorbs the remaining space.
+   */
+  const columnWidth = {
+    selection: token.controlHeight,
+    partMin: token.controlHeightLG * 8,
+    figureNumber: token.controlHeight * 4,
+    formats: token.controlHeightLG * 5,
+    downloaded: token.controlHeightLG * 4,
+    by: token.controlHeightLG * 6,
+  };
+  const tableMinWidth =
+    columnWidth.selection +
+    columnWidth.partMin +
+    columnWidth.figureNumber +
+    columnWidth.formats +
+    columnWidth.downloaded +
+    columnWidth.by;
+
+  const columns: TableColumnsType<HistoryTableRow> = [
+    {
+      title: COPY.colPart,
+      key: 'part',
+      render: (_, row) => <HistoryPartCell row={row} projectId={projectId} />,
+    },
+    {
+      title: COPY.colFigureNumber,
+      key: 'figureNumber',
+      width: columnWidth.figureNumber,
+      render: (_, row) =>
+        row.figureNumber ? (
+          <Typography.Text
+            type={isHistoryFigureRow(row) ? undefined : 'secondary'}
+            ellipsis={{ tooltip: row.figureNumber }}
+          >
+            {row.figureNumber}
+          </Typography.Text>
+        ) : (
+          <Typography.Text type="secondary">{COPY.empty}</Typography.Text>
+        ),
+    },
+    {
+      title: COPY.colFormats,
+      key: 'formats',
+      width: columnWidth.formats,
+      render: (_, row) => {
+        if (isHistoryFigureRow(row) && !row.figureLevelDownloaded) {
+          return <HydraTag bordered={false}>{COPY.variantsOnly}</HydraTag>;
+        }
+        return (
+          <Flex gap={token.marginXXS} wrap="wrap">
+            {sortFormats(row.formats).map((format) => {
+              const preset = FORMAT_PRESETS[format];
+              return preset ? (
+                <HydraColorfulTag
+                  key={format}
+                  preset={preset}
+                  bordered
+                  style={{ borderColor: formatChipBorder(preset) }}
+                >
+                  {format}
+                </HydraColorfulTag>
+              ) : (
+                <HydraTag key={format}>{format}</HydraTag>
+              );
+            })}
           </Flex>
+        );
+      },
+    },
+    {
+      title: COPY.colDownloaded,
+      key: 'downloaded',
+      width: columnWidth.downloaded,
+      render: (_, row) => (
+        <Flex align="center" gap={token.marginXS} wrap="wrap">
+          <Typography.Text>{formatDownloadedDate(row.latestAt)}</Typography.Text>
+          <RepeatTag count={row.occurrenceCount} firstAt={row.firstAt} latestAt={row.latestAt} />
         </Flex>
       ),
     },
     {
-      title: 'Type',
-      key: 'type',
-      width: 120,
-      render: (_, row) => (
-        <Tag style={{ marginInlineEnd: 0 }}>{row.variationKey ? 'Variation' : 'Part'}</Tag>
-      ),
-    },
-    {
-      title: 'Figure Number',
-      key: 'figureNumber',
-      width: 140,
-      render: (_, row) => (
-        <Typography.Text type="secondary">{row.figureNumber?.trim() || ''}</Typography.Text>
-      ),
-    },
-    {
-      title: 'SKU',
-      dataIndex: 'sku',
-      key: 'sku',
-      width: 140,
-    },
-    {
-      title: '',
-      key: 'remove',
-      width: 48,
-      render: (_, row) => (
-        <Tooltip title="Remove from queue">
-          <Button
-            type="text"
-            size="small"
-            icon={<DeleteOutlined />}
-            onClick={() => removeItem(row.id)}
-            aria-label={`Remove ${partDisplayName(row)} from queue`}
-            danger
+      title: COPY.colBy,
+      key: 'by',
+      width: columnWidth.by,
+      render: (_, row) =>
+        isHistoryFigureRow(row) ? (
+          <AttributionCell downloaders={row.downloaders} />
+        ) : (
+          <AttributionCell
+            downloaders={row.downloaders.slice(0, 1)}
+            compactName={row.downloadedBy}
           />
-        </Tooltip>
-      ),
+        ),
     },
   ];
 
-  const categoryColumns: TableColumnsType<CategoryRow> = [
-    { title: 'Category Name', dataIndex: 'categoryName', key: 'categoryName' },
-    { title: 'Number of parts', dataIndex: 'partCount', key: 'partCount', width: 160 },
-  ];
+  const emptyState: ReactNode = (
+    <Flex
+      align="center"
+      justify="center"
+      style={{ paddingBlock: token.paddingLG, paddingInline: token.paddingMD }}
+    >
+      <Empty
+        image={Empty.PRESENTED_IMAGE_SIMPLE}
+        description={
+          <Space orientation="vertical" size={token.marginXXS}>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{COPY.emptyTitle}</Typography.Text>
+            <Typography.Text type="secondary">{COPY.emptyDescription}</Typography.Text>
+          </Space>
+        }
+      >
+        <Button type="primary" size="large" onClick={() => navigate('/search/results?q=all')}>
+          {COPY.emptyCta}
+        </Button>
+      </Empty>
+    </Flex>
+  );
 
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
-      <PageBackButton to="/search/results?q=all">Back to Part Search</PageBackButton>
+      <PageBackButton to="/search/results?q=all">{COPY.back}</PageBackButton>
 
       <BomPageHeader
-        title="Download Center"
-        description={`${partsCount} Individual Parts / Variations · ${groupsCount} Groups · ${title}`}
-        actions={
-          <Button
-            icon={<DeleteOutlined />}
-            onClick={handleClearAll}
-            disabled={partsCount === 0}
-            aria-label="Clear all items"
-          >
-            Clear all Items
-          </Button>
-        }
+        title={COPY.title}
+        description={COPY.description(figureCount, variationCount, title)}
       />
 
-      <Card
-        style={shellTableCardStyle(token)}
-        styles={{ body: { padding: 0 } }}
+      <Flex
+        align="center"
+        justify="space-between"
+        gap={token.marginMD}
+        wrap="wrap"
+        style={{
+          paddingBlock: token.paddingSM,
+          paddingInline: token.paddingMD,
+          background: token.colorFillAlter,
+          borderRadius: token.borderRadiusLG,
+        }}
       >
-        {partsCount === 0 ? (
-          <Flex
-            align="center"
-            justify="center"
-            style={{ paddingBlock: token.paddingLG, paddingInline: token.paddingMD }}
-          >
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description={
-                <span>
-                  Queue is empty.{' '}
-                  <Typography.Link onClick={() => navigate('/search/results?q=all')}>
-                    Add files from Part Search.
-                  </Typography.Link>
-                </span>
-              }
-            />
-          </Flex>
+        {/* Single line in both states so the table never shifts vertically on select. */}
+        <Typography.Text type="secondary" style={{ minWidth: 0 }}>
+          {hasSelection
+            ? COPY.selectionSummary(granularity.figureCount, granularity.variationCount)
+            : COPY.selectHint}
+        </Typography.Text>
+        {createActions}
+      </Flex>
+
+      <Card variant="borderless" style={shellTableCardStyle(token)} styles={{ body: { padding: 0 } }}>
+        {figureCount === 0 ? (
+          emptyState
         ) : (
-          <Table<DownloadQueueItem>
-            rowKey="id"
-            size="middle"
-            pagination={false}
-            columns={partColumns}
-            dataSource={projectQueueItems}
-            styles={shellTableStyles(token)}
-            onRow={(row) => actionTrailTableRowProps(token, trailItemIds.has(row.id))}
-          />
+          <>
+            <style>{downloadHistoryTableStyles}</style>
+            <Table<HistoryTableRow>
+              className={HISTORY_TABLE_CLASS}
+              rowKey="key"
+              size="middle"
+              pagination={false}
+              columns={columns}
+              dataSource={rows}
+              indentSize={HISTORY_INDENT(token)}
+              expandable={{ defaultExpandAllRows: true, childrenColumnName: 'children' }}
+              rowSelection={{
+                selectedRowKeys,
+                onChange: (keys) => setSelectedRowKeys(keys),
+                preserveSelectedRowKeys: false,
+                checkStrictly: false,
+                columnWidth: columnWidth.selection,
+              }}
+              /** `fixed` + pinned widths: auto layout re-measured the grid on every expand/collapse. */
+              tableLayout="fixed"
+              scroll={{ x: tableMinWidth }}
+              styles={shellTableStyles(token)}
+              rowClassName={(row) => (isHistoryFigureRow(row) ? '' : HISTORY_VARIANT_ROW_CLASS)}
+              onRow={(row) => actionTrailTableRowProps(token, trailItemIds.has(row.key))}
+            />
+          </>
         )}
-
-        <Table<CategoryRow>
-          rowKey="key"
-          size="middle"
-          pagination={false}
-          columns={categoryColumns}
-          dataSource={categoryRows}
-          locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No data" /> }}
-          styles={shellTableStyles(token)}
-        />
-
-        <Flex
-          align="center"
-          justify="space-between"
-          gap={token.marginMD}
-          wrap="wrap"
-          style={{
-            paddingBlock: token.paddingMD,
-            paddingInline: token.paddingLG,
-            background: token.colorPrimaryBg,
-            borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-          }}
-        >
-          <Flex vertical gap={token.marginXXS}>
-            <Typography.Text strong>Total: {partsCount} items</Typography.Text>
-            <Typography.Text type="secondary">
-              {partsCount === 0
-                ? 'No parts / variations queued'
-                : `${partsCount} part${partsCount === 1 ? '' : 's'} / variations will be downloaded`}
-            </Typography.Text>
-          </Flex>
-          <Button
-            type="primary"
-            size="large"
-            icon={<DownloadOutlined />}
-            onClick={handleDownloadAll}
-            disabled={partsCount === 0}
-          >
-            Download All Files
-          </Button>
-        </Flex>
       </Card>
 
-      {projectHistory.length > 0 ? (
-        <Card
-          title={
-            <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraTitleHeading4) }}>
-              Download history
-            </Typography.Text>
-          }
-          styles={{
-            header: {
-              borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-            },
-            body: { padding: token.paddingMD },
-          }}
-        >
-          <List
-            size="small"
-            dataSource={projectHistory.slice(0, 20)}
-            renderItem={(item) => (
-              <List.Item>
-                <Flex vertical gap={token.marginXXS} style={{ minWidth: 0, width: '100%' }}>
-                  <Typography.Text ellipsis>
-                    {item.displayName?.trim() || item.fileName}
-                  </Typography.Text>
-                  <Typography.Text type="secondary">
-                    {item.kind === 'revit' ? 'Revit' : 'Drawing'} · SKU {item.sku}
-                    {item.variationKey ? ` · variant ${item.variationKey}` : ''}
-                  </Typography.Text>
-                </Flex>
-              </List.Item>
-            )}
-          />
-        </Card>
-      ) : null}
+      <ContentDownloadDemoControls />
+
+      <CreateSubmittalFromHistoryModal
+        open={submittalOpen}
+        projectId={projectId}
+        partKeys={resolution.partKeys}
+        rows={rows}
+        onCancel={() => setSubmittalOpen(false)}
+        onCreated={({ packageName, partCount }) => {
+          setSubmittalOpen(false);
+          setSelectedRowKeys([]);
+          notification.success({
+            message: 'Added to submittal package',
+            description: `${partCount} part${partCount === 1 ? '' : 's'} added to “${packageName}”.`,
+            btn: (
+              <Button
+                type="primary"
+                size="small"
+                onClick={() => {
+                  notification.destroy();
+                  navigate(`/projects/${projectId}/submittal`);
+                }}
+              >
+                Go to packages
+              </Button>
+            ),
+          });
+        }}
+      />
+
+      <CreateBomFromHistoryModal
+        open={bomOpen}
+        projectId={projectId}
+        variants={resolution.variants}
+        unresolvedFigures={resolution.unresolvedFigures}
+        onCancel={() => setBomOpen(false)}
+        onCreated={({ bomProjectId, bomProjectName, itemCount, alreadyInBomCount }) => {
+          setBomOpen(false);
+          setSelectedRowKeys([]);
+          const extra =
+            alreadyInBomCount > 0
+              ? ` ${alreadyInBomCount} already in the BOM were skipped.`
+              : '';
+          notification.success({
+            message: 'Added to BOM',
+            description: `${itemCount} item${itemCount === 1 ? '' : 's'} added to “${bomProjectName}”.${extra}`,
+            btn: (
+              <Button
+                type="primary"
+                size="small"
+                onClick={() => {
+                  notification.destroy();
+                  navigate(`/bom/projects/${bomProjectId}/workspace`);
+                }}
+              >
+                Open BOM
+              </Button>
+            ),
+          });
+        }}
+      />
     </Space>
   );
 }

@@ -49,6 +49,7 @@ import type {
 } from '../data/types';
 import { trackSpecEvent } from '../specAnalytics';
 import { specEditPath, specHomePath } from '../specNavigation';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type ExportKey = (typeof GUIDE_EXPORT_CHOICES)[number]['key'];
 
@@ -266,7 +267,7 @@ export function SpecGuideSpecsPage() {
           <Empty
             description={
               <Flex vertical gap={token.marginXS}>
-                <Typography.Text strong>No guide language yet</Typography.Text>
+                <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No guide language yet</Typography.Text>
                 <Typography.Text type="secondary">
                   Switch to Clean Division 22 (or another full scenario) in the demo drawer to load
                   the guide-language library.
@@ -377,7 +378,7 @@ export function SpecGuideSpecsPage() {
                         }}
                       >
                         <Flex vertical gap={token.marginXXS} style={{ width: '100%' }}>
-                          <Typography.Text strong>{guide.title}</Typography.Text>
+                          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{guide.title}</Typography.Text>
                           <Flex gap={token.marginXS} wrap="wrap" align="center">
                             <Badge
                               status={guideApprovalBadgeStatus(guide.approvalStatus)}

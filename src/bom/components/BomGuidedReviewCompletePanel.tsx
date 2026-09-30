@@ -32,7 +32,7 @@ export function BomGuidedReviewCompletePanel({
     padding: token.paddingMD,
     borderRadius: token.borderRadiusLG,
     background: token.colorBgContainer,
-    border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+    border: 'none',
     borderLeft: `${token.sizeUnit}px solid ${accentColor}`,
     boxShadow: token.boxShadowTertiary,
   });

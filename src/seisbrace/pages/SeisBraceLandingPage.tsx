@@ -29,6 +29,7 @@ import { SubmittalOptionsModal } from '../components/SubmittalOptionsModal';
 import { useSeisBrace } from '../context/SeisBraceContext';
 import { useSeisBraceWizard } from '../context/SeisBraceWizardContext';
 import type { Brace, SeisBraceFile, SeismicDesign } from '../types';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type SortKey = 'date' | 'name';
 
@@ -184,6 +185,7 @@ export function SeisBraceLandingPage() {
   const cardShellStyle = {
     background: token.colorBgContainer,
     borderRadius: token.borderRadiusLG,
+    border: 'none' as const,
     boxShadow: token.boxShadowTertiary,
     overflow: 'hidden' as const,
   };
@@ -248,13 +250,13 @@ export function SeisBraceLandingPage() {
           </Flex>
         ) : null}
 
-        <Card styles={{ body: { padding: 0 } }} style={cardShellStyle}>
+        <Card variant="borderless" styles={{ body: { padding: 0 } }} style={cardShellStyle}>
           {!hasDesigns ? (
             <Flex vertical align="center" justify="center" style={{ padding: `${token.paddingLG * 2}px ${token.paddingLG}px` }}>
               <Empty
                 description={
                   <Space orientation="vertical" size={token.marginXXS}>
-                    <Typography.Text strong>No seismic designs yet</Typography.Text>
+                    <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No seismic designs yet</Typography.Text>
                     <Typography.Text type="secondary">
                       Create your first seismic design to start configuring braces.
                     </Typography.Text>

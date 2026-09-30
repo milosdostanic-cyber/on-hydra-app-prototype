@@ -7,6 +7,7 @@ import { shellLayout } from '../../theme/hydraAlias';
 import { bluePrimaryPrimitiveLight } from '../../theme/primaryPrimitiveBlue';
 import {
   hydraBaseNormal,
+  hydraBaseStrong,
   hydraTextStyleToReactCss,
   hydraTitleHeading3,
 } from '../../theme/hydraTypography';
@@ -517,7 +518,7 @@ export function BomMatchingPage() {
               cell: {
                 background: token.colorFillAlter,
                 borderBottomColor: token.colorBorderSecondary,
-                fontWeight: token.fontWeightStrong,
+                ...hydraTextStyleToReactCss(hydraBaseStrong),
               },
             },
             body: { cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM } },

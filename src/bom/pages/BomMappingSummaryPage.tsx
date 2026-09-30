@@ -253,7 +253,6 @@ export function BomMappingSummaryPage() {
         topStrip={
           <>
             <Typography.Text
-              strong
               style={{ ...hydraTextStyleToReactCss(hydraBaseStrong), color: token.colorTextSecondary }}
             >
               HOW WE LINKED YOUR COLUMNS

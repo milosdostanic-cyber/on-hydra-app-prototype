@@ -82,7 +82,6 @@ export function SelectedVariantPanel({ partKey, variation, cardShellStyle }: Pro
               SKU
             </Typography.Text>
             <Typography.Text
-              strong
               style={{ display: 'block', ...hydraTextStyleToReactCss(hydraSmallStrong) }}
             >
               {variation.sku}

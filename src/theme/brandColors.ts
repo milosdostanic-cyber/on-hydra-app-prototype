@@ -19,7 +19,7 @@ export const brandColors = {
   primary: bluePrimaryStep(6),
   primaryHover: bluePrimaryStep(5),
   primaryDark: bluePrimaryStep(7),
-  /** Accent cyan; same as `Primary/primary-4` / `colorLinkHover` */
+  /** Same as `Primary/primary-4` / `colorPrimaryBorderHover` (link hover moved to step 7 in the RSFC pass). */
   primaryAccent: bluePrimaryStep(4),
   semantics: bluePrimarySemantics,
 } as const;

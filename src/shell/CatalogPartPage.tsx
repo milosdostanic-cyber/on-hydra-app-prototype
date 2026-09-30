@@ -6,7 +6,7 @@ import { readCatalogPartReturnState } from '../catalog/catalogPartNavigation';
 import { BomPageHeader } from '../bom/layout/BomPageHeader';
 import { PageBackButton } from './PageBackButton';
 import { PageDescription } from './PageDescription';
-import { hydraSmallNormal, hydraTextStyleToReactCss } from '../theme/hydraTypography';
+import { hydraBaseStrong, hydraSmallNormal, hydraTextStyleToReactCss } from '../theme/hydraTypography';
 import { useSubmittalDraft } from '../context/SubmittalDraftContext';
 import { PROJECT_SEED_ROWS } from './projectSeed';
 import {
@@ -68,9 +68,9 @@ export function CatalogPartPage() {
       <PageBackButton to={catalogReturnTo}>{catalogReturnLabel}</PageBackButton>
       <BomPageHeader title={partTitle} />
       <PageDescription>
-        The cut sheet PDF for this part can be added to a <Typography.Text strong>submittal package</Typography.Text>{' '}
+        The cut sheet PDF for this part can be added to a <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>submittal package</Typography.Text>{' '}
         under a project. Submittal PDFs are managed in{' '}
-        <Typography.Text strong>Submittal manager</Typography.Text> for the project you choose.
+        <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Submittal manager</Typography.Text> for the project you choose.
       </PageDescription>
 
       <Descriptions column={1} size="small" bordered styles={{ label: { width: token.controlHeight * 5 } }}>
@@ -104,7 +104,7 @@ export function CatalogPartPage() {
         <Space orientation="vertical" size={token.margin} style={{ width: '100%' }}>
           <Typography.Paragraph style={{ margin: 0 }}>
             Submittals are organized per project. Choose which project should receive this cut sheet; we
-            open <Typography.Text strong>Submittal manager</Typography.Text> so you can review or add more
+            open <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Submittal manager</Typography.Text> so you can review or add more
             PDFs.
           </Typography.Paragraph>
           <div>

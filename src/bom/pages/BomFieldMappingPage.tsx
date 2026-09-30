@@ -193,7 +193,6 @@ export function BomFieldMappingPage() {
         topStrip={
           <Flex align="center" gap={token.marginSM} wrap="wrap">
             <Typography.Text
-              strong
               style={{ ...hydraTextStyleToReactCss(hydraBaseStrong), color: token.colorTextSecondary }}
             >
               REQUIRED: {requiredHeaderLabels}

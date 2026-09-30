@@ -11,7 +11,7 @@ import {
 import type { ComponentType } from 'react';
 
 import {
-  hydraBaseNormal,
+  hydraBaseStrong,
   hydraSmallNormal,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
@@ -88,9 +88,8 @@ export function GlobalSearchResultRow({ result, selected, onSelect, onHover }: P
         <Flex vertical gap={token.marginXXS} style={{ minWidth: 0, flex: 1 }}>
           <Flex align="center" gap={token.marginXS} wrap="wrap">
             <Typography.Text
-              strong
               ellipsis
-              style={{ maxWidth: '100%', ...hydraTextStyleToReactCss(hydraBaseNormal) }}
+              style={{ maxWidth: '100%', ...hydraTextStyleToReactCss(hydraBaseStrong) }}
             >
               {result.title}
             </Typography.Text>

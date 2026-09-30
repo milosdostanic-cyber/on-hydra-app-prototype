@@ -1,6 +1,6 @@
 # Hydra DS Tokenization Parity Audit
 
-Date: 2026-04-07  
+Date: 2026-04-07 · Revised 2026-09-16 (RSFC brand pass — see section 6)  
 Figma source: `Hydra Ant Design - DS` (`3ghYBXR6XVUEaeBo3D5E4q`)  
 Node context requested: `204:47936` (file-level token audit executed via Figma MCP Console)
 
@@ -41,7 +41,7 @@ Node context requested: `204:47936` (file-level token audit executed via Figma M
 - **Primitive parity: MATCH**
   - Figma `Colors/Primary/primary-1..10` Light/Dark values match `bluePrimaryPrimitiveLight` and `bluePrimaryPrimitiveDark`.
   - Example:
-    - `Primary/primary-6`: Figma Light `#0073A5`, Dark `#03658F` == repo arrays.
+    - `Primary/primary-6`: Figma Light `#2576BB`, Dark `#2267A2` == repo arrays (reseeded 2026-09-16, see section 6).
   - Figma `Colors/Daybreak Blue/blue-1..10` Light/Dark match `daybreakBluePrimitiveLight` / `daybreakBluePrimitiveDark` (**Info only**).
   - Example:
     - `Daybreak Blue/blue-6`: Figma Light `#1677FF`, Dark `#1668DC` == repo arrays.
@@ -49,20 +49,22 @@ Node context requested: `204:47936` (file-level token audit executed via Figma M
   - Figma `Customize Theme/Color/Primary/*` aliases → `Primary/primary-*` (same steps as `bluePrimarySemantics` in `hydraAntdTheme.token` — top bar / links / ghost primary).
   - Verified mappings:
     - `colorPrimaryBG -> Primary/primary-1`
-    - `colorPrimaryHover -> Primary/primary-4` (Figma; repo `colorPrimaryHover` uses step 5 for antd hover slot)
+    - `colorPrimaryHover -> Primary/primary-5` (repo also step 5 — the earlier step 4 / step 5 drift is closed)
     - `colorPrimary -> Primary/primary-6`
     - `colorPrimaryActive -> Primary/primary-7`
-    - `colorPrimaryTextHover -> Primary/primary-4`
-    - `colorLinkHover -> Primary/primary-4`
-    - `colorLinkActive -> Primary/primary-7`
+    - `colorPrimaryTextHover -> Primary/primary-7`
+    - `colorLinkHover -> Primary/primary-7`
+    - `colorLinkActive -> Primary/primary-8`
+    - `colorPrimaryTextActive -> Primary/primary-8`
     - `colorPrimaryBgSubtle -> Primary/primary-bg-subtle`
     - `colorPrimaryBorderSubtle -> Primary/primary-1`
 
 ## A2. Info / Alert (Daybreak via `colorInfo*` in code)
 
-- **Figma Customize Theme:** `Color/Info/*` aliases remain on **`Primary/primary-*`** (original tokenization).
+- **Figma Customize Theme:** `Color/Info/*` aliases **`Daybreak Blue/blue-*`** — rebound 2026-09-17, see §7. Previously `Primary/primary-*`.
 - **Figma Alert component (info variants):** fill / border / icon bind directly to **`Daybreak Blue/blue-*`** primitives (`blue-1`, `blue-3`, `blue-6`).
 - **Repo:** `blueInfoSemantics` maps **`colorInfo*`** → `daybreakBluePrimitive*` in `antdTheme` (Alert `type="info"` only).
+- **Semantic parity: MATCH** (verified in Light and Dark, 2026-09-17).
 - Verified repo mappings:
   - `colorInfoBg -> Daybreak Blue/blue-1`
   - `colorInfoBorder -> Daybreak Blue/blue-3`
@@ -163,3 +165,90 @@ To reach strict 1:1 parity (design tokens + implementation behavior), complete a
 3. Implement runtime typography mode switching path (`Default`/`Compact`) end-to-end in app settings/state and pass mode to `createHydraAntdTheme(...)`.
 4. Decide if sidebar dark chrome RGBA values become Figma variables; if not, keep them as documented approved exception.
 5. Restore or consolidate missing Hydra parity docs so this audit is linked from canonical documentation entry points.
+
+## 6) RSFC brand pass — 2026-09-16
+
+Applied to Figma (`3ghYBXR6XVUEaeBo3D5E4q`, Desktop Bridge) and the repo mirrors in the same pass.
+
+### Legacy mode
+
+The `Colors` collection gained a third mode, **`Legacy (pre-RSFC)`** (`1384:0`), holding a snapshot of all 153 variables as they were in `Light` before this pass. Switch the collection to that mode to see the pre-rebrand system. Every variable changed here carries a `description` recording its old and new hex.
+
+### Primary ramp reseeded
+
+Steps 1–6 come from `generate('#2576BB')` (brand Light Blue). Steps 7–10 are pinned to the brand Navy end so all `Color/Sidebar/*` aliases keep resolving to Navy — plain reseeding would have moved Navy off step 7.
+
+| Step | Light before | Light after | Dark before | Dark after |
+|---|---|---|---|---|
+| `primary-1` | `#B8EAFF` | `#EBF5FA` | `#111A1E` | `#131A22` |
+| `primary-2` | `#8BCCD9` | `#C7E1ED` | `#0F242F` | `#152434` |
+| `primary-3` | `#62B7CC` | `#99C6E0` | `#0E3140` | `#193146` |
+| `primary-4` | `#00B9F0` | `#6EABD4` | `#0B3F55` | `#1C405F` |
+| `primary-5` | `#1D8BB3` | `#4890C7` | `#075272` | `#1F5481` |
+| `primary-6` | `#0073A5` | `#2576BB` | `#03658F` | `#2267A2` |
+| `primary-7` | `#004173` | unchanged (pinned) | `#1C7FA3` | `#4384B5` |
+| `primary-8` | `#00365F` | unchanged | `#3B9AB6` | `#6AA3CA` |
+| `primary-9` | `#002A4A` | unchanged (see below) | `#60B2C6` | `#95C1DA` |
+| `primary-10` | `#001D35` | unchanged | `#89C8D5` | `#C3DDE9` |
+| `primary-bg-subtle` | `#E6F4F8` | `#F6FAFC` | `#0F242F` | `#152434` |
+
+The dark ramp inverts by antd convention, so Navy is not pinned there.
+
+### Why the text and link tokens moved
+
+`#00B9F0` measured **2.28:1** on white while driving `colorLinkHover` and `colorPrimaryTextHover`, so link hover failed WCAG AA. Fills still lighten on hover (antd convention), but text and links now darken into the Navy end:
+
+- `colorPrimary` / `colorLink` — `#2576BB`, 4.79:1
+- `colorPrimaryTextHover` / `colorLinkHover` — `#004173`, 10.48:1
+- `colorPrimaryTextActive` / `colorLinkActive` — `#00365F`, 12.40:1
+
+### Left unchanged on purpose
+
+- **Volcano ramp and `Color/ButtonPrimary/*`** — `volcano-6` is already the brand Orange `#F05A23`.
+- **Status ramps and `colorError` / `colorWarning` / `colorSuccess`** — the brand sheet scopes `#EB1E23`, `#FFCD05`, `#FA961E` to graphs and illustrations, "never used alone". They are data-viz accents, not UI state colors.
+- **Neutral ramp** — brand Gray `#A7A9AC` has no UI role; it falls between `gray-6` and `gray-7`.
+- **Near-black `#231F20`** — `gray-12` stays `#141414`.
+- **Typography** — Barlow, single family everywhere (Figma `fontFamily` / `fontFamilyCode` variables + `Title/Heading 1-5`, `Large/Strong`, `Subtitle/*` text styles synced 2026-09-16, Console MCP). `Title/Heading 1-2` = SemiBold (600, `fontWeightStrong`); `Title/Heading 3-5` and `Subtitle/*` = Medium (500); every body `Strong` role (`Base`, `Small`, `Large`, `Extra Large`) = Medium (500) as of the 2026-09-17 pass. No condensed, no Extra Bold anywhere. See `hydra-typography.md` for the changelog.
+
+### Open items
+
+- `primary-9` was left at `#002A4A`. The brand guide prints Shade `#002A49` next to RGB 0/65/115, which is Navy, so the guide contradicts itself. One unit of blue; needs client confirmation.
+- ~~`Color/Info/*` still aliases `Primary/primary-*`~~ — **closed 2026-09-17**, see §7.
+- `primary-bg-subtle` is now close to `primary-1`; review for retirement.
+- Brand Gray scope, the Tint 1 / Tint 2 levels (55% / 15%), and a possible `Chart/*` group for the accents are all still undecided.
+
+## 7) Info rebind + Radio binding fix — 2026-09-17
+
+Applied to Figma (`3ghYBXR6XVUEaeBo3D5E4q`, Desktop Bridge / Console MCP). **No repo color change** — the repo already resolved these values; this pass moved Figma onto them.
+
+### Why it mattered
+
+In stock Ant Design `colorInfo` **equals** `colorPrimary` (`#1677FF`), so the kit's `Color/Info/*` → `Primary/primary-*` alias was invisible and harmless. Reseeding Primary to brand `#2576BB` separated the two hues and exposed every kit binding that had used Info as a stand-in for primary — while the app kept rendering Daybreak from `blueInfoSemantics`.
+
+### Rebind (Customize Theme, mode `11:1`)
+
+All ten variables keep their **step index**; only the ramp changes. Each variable's `description` records the old and new hex.
+
+| Token | Was (`Primary/*`) | Now (`Daybreak Blue/*`) |
+|---|---|---|
+| `colorInfoBG` | `primary-1` `#EBF5FA` | `blue-1` `#E6F4FF` |
+| `colorInfoBGHover` | `primary-2` `#C7E1ED` | `blue-2` `#BAE0FF` |
+| `colorInfoBorder` | `primary-3` `#99C6E0` | `blue-3` `#91CAFF` |
+| `colorInfoBorderHover` | `primary-4` `#6EABD4` | `blue-4` `#69B1FF` |
+| `colorInfoHover` / `colorInfoTextHover` | `primary-5` `#4890C7` | `blue-5` `#4096FF` |
+| `colorInfo` / `colorInfoText` | `primary-6` `#2576BB` | `blue-6` `#1677FF` |
+| `colorInfoActive` / `ColorInfoTextActive` | `primary-7` `#004173` | `blue-7` `#0958D9` |
+
+Dark mode resolves through the same aliases to `daybreakBluePrimitiveDark` (`#111A2C` … `#3C89E8`) and matches the repo.
+
+### Consumer audit (full-file scan, 418 nodes)
+
+**Correct info semantics — now match the app:** `Tag__Status` `processing` (342 nodes on the Table page), `Result` `status="info"` (16), `Tag` (6), `Notification` info icon (4), `Badge` `status="processing"` dot (2), `Message` info / loading icon (2), `Modal.info` icon (1), `Alert` on the QR Code usage frame (1).
+
+**One mis-binding — fixed:** `Radio` (42 nodes, plus 2 inside the kit's own Theme Editor) bound the `Radio.Button` label to `colorInfoText`. Ant Design uses `colorPrimary` there — `radio/style/index.js` sets `color: colorPrimary` for both unchecked `&:hover` (line 289) and `&-checked` (line 300); `colorPrimaryHover` / `colorPrimaryActive` apply only to **checked + hover** and **checked + active**, which the kit has no variants for. Rebound 27 `.radioButton__item` variant labels (`state=hover`, `state=active`) to `Color/Primary/colorPrimary`; the 15 `Radio Group__Buttons` `items=N` instances inherit it. Verified: zero info consumers remain on the Radio page and all 42 labels resolve `#2576BB`.
+
+`state=active` in this kit means **checked**, not the CSS press state — its stroke binds `Color/Primary/colorPrimary`. Read the stroke binding before mapping a `state=*` variant to a hover/active token.
+
+### Guardrail
+
+`Color/Info/*` must stay on Daybreak. If a Figma surface needs brand blue, bind `Color/Primary/*` directly — never Info.

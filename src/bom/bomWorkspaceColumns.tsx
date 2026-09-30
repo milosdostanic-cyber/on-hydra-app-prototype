@@ -10,7 +10,7 @@ import { markItemViewed } from '../context/actionTrailStore';
 import { partKeyFromCatalogRowId } from '../search/actionTrailPartKey';
 import { bomWorkspaceTableColumnWidths } from './data/bomWorkspaceSeed';
 import type { BomItem } from './data/types';
-import { hydraBaseNormal, hydraTextStyleToReactCss } from '../theme/hydraTypography';
+import { hydraBaseNormal, hydraBaseStrong, hydraTextStyleToReactCss } from '../theme/hydraTypography';
 import { Button, InputNumber, Space, Typography } from '../ui/antd';
 import type { TableColumnsType } from '../ui/antd';
 
@@ -59,7 +59,7 @@ export function buildBomWorkspaceColumns(actions: BomWorkspaceRowActions): Table
       ellipsis: true,
       render: (_, row) => (
         <Space orientation="vertical" size={0}>
-          <Typography.Text strong>{workspaceSkuDisplayLabel(row)}</Typography.Text>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{workspaceSkuDisplayLabel(row)}</Typography.Text>
           <Typography.Text type="secondary" ellipsis style={hydraTextStyleToReactCss(hydraBaseNormal)}>
             {row.parsedDescription || row.variantLabel || '—'}
           </Typography.Text>

@@ -1,50 +1,95 @@
 import { Flex, Typography, theme } from '../ui/antd';
 
-import { ascWordmarkSvgUrl } from '../assets/brand/ascLogoUrls';
-import { shellLayout } from '../theme/hydraAlias';
-import { brandFontFamily, hydraTextStyleToReactCss, hydraTitleHeading4 } from '../theme/hydraTypography';
+import { rsfcLogoSvgUrl } from '../assets/brand/rsfcLogoUrls';
+import {
+  hydraSidebarRsfcLogoHeightPx,
+  hydraSidebarRsfcLogoMark,
+  hydraSidebarRsfcLogoWidthPx,
+  hydraSidebarRsfcLogoWordmark,
+} from '../theme/hydraMenuMetrics';
+import { brandFontFamily, hydraTextStyleToReactCss, hydraTitleHeading5 } from '../theme/hydraTypography';
 
 type Props = { collapsed: boolean };
 
-/**
- * Sidebar header above the menu: **`On_Dark.svg`** wordmark + **ConnectED** (Figma `Title/Heading 4` metrics).
- */
-export function ConnectedSidebarBrand({ collapsed }: Props) {
-  const { token } = theme.useToken();
-  const innerH = shellLayout.headerHeight - token.paddingSM * 2;
-
-  const logo = (
+function RsfcMark({ alt }: { alt: string }) {
+  return (
     <img
-      src={ascWordmarkSvgUrl.onDark}
-      alt="ASC Engineered Solutions"
+      src={rsfcLogoSvgUrl.mark}
+      alt={alt}
       style={{
-        height: innerH,
-        width: 'auto',
-        maxWidth: '100%',
-        objectFit: 'contain',
+        position: 'absolute',
+        left: hydraSidebarRsfcLogoMark.left,
+        top: hydraSidebarRsfcLogoMark.top,
+        width: hydraSidebarRsfcLogoMark.width,
+        height: hydraSidebarRsfcLogoMark.height,
         display: 'block',
       }}
     />
   );
+}
+
+function RsfcLockup() {
+  return (
+    <div
+      role="img"
+      aria-label="Reliable Safety & Flow Corporation"
+      style={{
+        position: 'relative',
+        width: hydraSidebarRsfcLogoWidthPx,
+        height: hydraSidebarRsfcLogoHeightPx,
+        overflow: 'hidden',
+        flexShrink: 0,
+      }}
+    >
+      <RsfcMark alt="" />
+      <img
+        src={rsfcLogoSvgUrl.wordmark}
+        alt=""
+        style={{
+          position: 'absolute',
+          left: hydraSidebarRsfcLogoWordmark.left,
+          top: hydraSidebarRsfcLogoWordmark.top,
+          width: hydraSidebarRsfcLogoWordmark.width,
+          height: hydraSidebarRsfcLogoWordmark.height,
+          display: 'block',
+        }}
+      />
+    </div>
+  );
+}
+
+/**
+ * Sidebar header above the menu: Figma `RSFC_logo` (120×29) + **ConnectED**
+ * (`Title/Heading 5` / Barlow Medium).
+ */
+export function ConnectedSidebarBrand({ collapsed }: Props) {
+  const { token } = theme.useToken();
 
   if (collapsed) {
     return (
       <Flex align="center" justify="center" style={{ width: '100%', minHeight: 0 }} aria-label="ConnectED">
-        {logo}
+        <div
+          style={{
+            position: 'relative',
+            width: hydraSidebarRsfcLogoMark.width,
+            height: hydraSidebarRsfcLogoMark.height,
+            flexShrink: 0,
+          }}
+        >
+          <RsfcMark alt="Reliable Safety & Flow Corporation" />
+        </div>
       </Flex>
     );
   }
 
   return (
-    <Flex align="center" gap={token.paddingMD} style={{ width: '100%', minWidth: 0 }} aria-label="ConnectED">
-      <Flex flex="1" style={{ minWidth: 0, minHeight: 0 }} align="center">
-        {logo}
-      </Flex>
+    <Flex align="center" justify="space-between" style={{ width: '100%', minWidth: 0 }} aria-label="ConnectED">
+      <RsfcLockup />
       <Typography.Text
         style={{
           color: token.colorTextLightSolid,
           fontFamily: brandFontFamily,
-          ...hydraTextStyleToReactCss(hydraTitleHeading4),
+          ...hydraTextStyleToReactCss(hydraTitleHeading5),
           margin: 0,
           whiteSpace: 'nowrap',
           flexShrink: 0,

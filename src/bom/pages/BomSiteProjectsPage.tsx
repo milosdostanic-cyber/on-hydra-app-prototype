@@ -24,6 +24,7 @@ import type { BomProject } from '../data/types';
 import { shellLayout } from '../../theme/hydraAlias';
 import {
   hydraBaseNormal,
+  hydraBaseStrong,
   hydraTextStyleToReactCss,
   hydraTitleHeading4,
 } from '../../theme/hydraTypography';
@@ -355,7 +356,7 @@ export function BomSiteProjectsPage() {
       background: token.colorBgContainer,
       borderRadius: token.borderRadiusLG,
       border: `${token.lineWidth * 2}px ${token.lineType} ${isHovered ? token.colorPrimaryBorderHover : token.colorPrimaryBorder}`,
-      boxShadow: isHovered ? token.boxShadow : token.boxShadowTertiary,
+      boxShadow: token.boxShadowTertiary,
       transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
       cursor: 'pointer',
       transition: `border-color ${token.motionDurationMid}, box-shadow ${token.motionDurationMid}, transform ${token.motionDurationMid}`,
@@ -365,6 +366,7 @@ export function BomSiteProjectsPage() {
   const tableShellStyle = {
     background: token.colorBgContainer,
     borderRadius: token.borderRadiusLG,
+    border: 'none' as const,
     boxShadow: token.boxShadowTertiary,
     overflow: 'hidden' as const,
   };
@@ -461,7 +463,7 @@ export function BomSiteProjectsPage() {
         <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
           <BomPageHeader title="Your BOM Projects" />
 
-          <Card styles={{ body: { padding: 0 } }} style={tableShellStyle}>
+          <Card variant="borderless" styles={{ body: { padding: 0 } }} style={tableShellStyle}>
             {hasNoProjects ? (
               /* ── Empty state: no BOMs in this project ── */
               <Flex
@@ -473,7 +475,7 @@ export function BomSiteProjectsPage() {
                 <Empty
                   description={
                     <Space orientation="vertical" size={token.marginXS}>
-                      <Typography.Text strong>No projects yet</Typography.Text>
+                      <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No projects yet</Typography.Text>
                       <Typography.Text type="secondary">
                         Upload a file, search parts, or start from scratch to create your first BOM.
                       </Typography.Text>
@@ -500,7 +502,7 @@ export function BomSiteProjectsPage() {
                 <Empty
                   description={
                     <Space orientation="vertical" size={token.marginXS}>
-                      <Typography.Text strong>No projects match your filters</Typography.Text>
+                      <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No projects match your filters</Typography.Text>
                       <Typography.Text type="secondary">
                         Try adjusting the search term or status filter.
                       </Typography.Text>
@@ -593,7 +595,7 @@ export function BomSiteProjectsPage() {
                     preserveSelectedRowKeys: false,
                   }}
                   styles={{
-                    header: { cell: { background: token.colorFillAlter, borderBottomColor: token.colorBorderSecondary, fontWeight: token.fontWeightStrong } },
+                    header: { cell: { background: token.colorFillAlter, borderBottomColor: token.colorBorderSecondary, ...hydraTextStyleToReactCss(hydraBaseStrong) } },
                     body: { cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM } },
                   }}
                 />

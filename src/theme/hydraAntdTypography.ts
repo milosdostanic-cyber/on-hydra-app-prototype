@@ -10,7 +10,7 @@
 import type { ThemeConfig } from 'antd';
 import type { AliasToken } from 'antd/es/theme/interface';
 
-import { brandFontFamily, hydraAntdFontMapFromDesign } from './hydraTypography';
+import { brandFontFamily, hydraAntdFontMapFromDesign, hydraBaseStrong } from './hydraTypography';
 
 export type HydraTypographyMode = 'default' | 'compact';
 
@@ -35,7 +35,8 @@ const hydraCompactFontMap = {
   fontHeight: 20,
   fontHeightSM: 18,
   fontHeightLG: 22,
-  fontWeightStrong: 600,
+  // Weight is identical in both Figma modes (Default/Compact) — mirror `Base/Strong`, not a literal.
+  fontWeightStrong: hydraBaseStrong.fontWeight,
 } as const;
 
 /**

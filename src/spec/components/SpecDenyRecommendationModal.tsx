@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { Button, Flex, Input, Modal, Typography, theme } from '../../ui/antd';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 export function SpecDenyRecommendationModal({
   open,
@@ -46,7 +47,7 @@ export function SpecDenyRecommendationModal({
     >
       <Flex vertical gap={token.marginLG}>
         <Flex vertical gap={token.marginXS}>
-          <Typography.Text type="secondary" strong>
+          <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseStrong)}>
             REVIEW DECISION
           </Typography.Text>
           <Typography.Text type="secondary">
@@ -54,7 +55,7 @@ export function SpecDenyRecommendationModal({
           </Typography.Text>
         </Flex>
         <Flex vertical gap={token.marginXS}>
-          <Typography.Text strong>Reason (optional)</Typography.Text>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Reason (optional)</Typography.Text>
           <Input.TextArea
             autoFocus
             rows={4}

@@ -17,6 +17,7 @@ import {
   Typography,
   theme,
 } from '../../ui/antd';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 const ROLE_OPTIONS: SpecAccessLevel[] = ['owner', 'editor', 'comment-only', 'view-only', 'revoked'];
 
@@ -52,7 +53,7 @@ export function SpecDemoControls() {
           />
 
           <div>
-            <Typography.Text strong>Scenario</Typography.Text>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Scenario</Typography.Text>
             <Select
               style={{ width: '100%', marginTop: token.marginXS }}
               value={demo.scenarioId}
@@ -72,7 +73,7 @@ export function SpecDemoControls() {
           </div>
 
           <div>
-            <Typography.Text strong>Simulated role</Typography.Text>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Simulated role</Typography.Text>
             <Select
               style={{ width: '100%', marginTop: token.marginXS }}
               value={demo.role}
@@ -82,7 +83,7 @@ export function SpecDemoControls() {
           </div>
 
           <Flex align="center" justify="space-between" gap={token.marginSM}>
-            <Typography.Text strong>Artificial delay</Typography.Text>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Artificial delay</Typography.Text>
             <Switch
               checked={demo.delayMs > 0}
               onChange={(on) => demo.setDelayMs(on ? 400 : 0)}

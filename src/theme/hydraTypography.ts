@@ -6,6 +6,12 @@
 import type { CSSProperties } from 'react';
 
 const W_REG = 400;
+/**
+ * `Title/Heading 3-5`, `Subtitle` roles, and (since 2026-09-17) every body `Strong` role
+ * (`Base`, `Small`, `Large`, `Extra Large`) — mirrors `Typography/Font Weight/fontWeightMedium`.
+ */
+const W_MEDIUM = 500;
+/** `Title/Heading 1-2` (since 2026-09-17) — mirrors `Typography/Font Weight/fontWeightStrong`. */
 const W_SEMI = 600;
 
 export type HydraTextStyle = Readonly<{
@@ -18,7 +24,7 @@ export type HydraTextStyle = Readonly<{
   textDecoration?: 'none' | 'underline' | 'line-through';
 }>;
 
-export const hydraFontFamilyName = 'Cairo' as const;
+export const hydraFontFamilyName = 'Barlow' as const;
 export const hydraFontFamilyFallback = 'sans-serif' as const;
 export const brandFontFamily = `'${hydraFontFamilyName}', ${hydraFontFamilyFallback}`;
 
@@ -44,21 +50,21 @@ export const hydraTitleHeading3 = {
   designPath: 'Title/Heading 3',
   fontSize: 24,
   lineHeight: 32,
-  fontWeight: W_SEMI,
+  fontWeight: W_MEDIUM,
 } as const satisfies HydraTextStyle;
 
 export const hydraTitleHeading4 = {
   designPath: 'Title/Heading 4',
   fontSize: 20,
   lineHeight: 28,
-  fontWeight: W_SEMI,
+  fontWeight: W_MEDIUM,
 } as const satisfies HydraTextStyle;
 
 export const hydraTitleHeading5 = {
   designPath: 'Title/Heading 5',
   fontSize: 16,
   lineHeight: 24,
-  fontWeight: W_SEMI,
+  fontWeight: W_MEDIUM,
 } as const satisfies HydraTextStyle;
 
 export const hydraBaseNormal = {
@@ -72,7 +78,7 @@ export const hydraBaseStrong = {
   designPath: 'Base/Strong',
   fontSize: 14,
   lineHeight: 22,
-  fontWeight: W_SEMI,
+  fontWeight: W_MEDIUM,
 } as const satisfies HydraTextStyle;
 
 export const hydraBaseUnderline = {
@@ -110,7 +116,7 @@ export const hydraSmallStrong = {
   designPath: 'Small/Strong',
   fontSize: 12,
   lineHeight: 20,
-  fontWeight: W_SEMI,
+  fontWeight: W_MEDIUM,
 } as const satisfies HydraTextStyle;
 
 export const hydraSmallUnderline = {
@@ -144,11 +150,15 @@ export const hydraLargeNormal = {
   fontWeight: W_REG,
 } as const satisfies HydraTextStyle;
 
+/**
+ * Medium (500) since 2026-09-17 — bound to `fontWeightMedium` again, so it now resolves the same
+ * as {@link hydraSubtitleLarge}. Design `Large/Strong` is what `Alert` titles use.
+ */
 export const hydraLargeStrong = {
   designPath: 'Large/Strong',
   fontSize: 16,
   lineHeight: 24,
-  fontWeight: W_SEMI,
+  fontWeight: W_MEDIUM,
 } as const satisfies HydraTextStyle;
 
 export const hydraLargeUnderline = {
@@ -186,7 +196,7 @@ export const hydraExtraLargeStrong = {
   designPath: 'Extra Large/Strong',
   fontSize: 20,
   lineHeight: 28,
-  fontWeight: W_SEMI,
+  fontWeight: W_MEDIUM,
 } as const satisfies HydraTextStyle;
 
 export const hydraExtraLargeUnderline = {
@@ -211,6 +221,14 @@ export const hydraExtraLargeItalic = {
   lineHeight: 28,
   fontWeight: W_REG,
   fontStyle: 'italic',
+} as const satisfies HydraTextStyle;
+
+/** The Medium (500) tier at Large metrics — emphasized 16px titles (modal and panel headings). */
+export const hydraSubtitleLarge = {
+  designPath: 'Subtitle/Large',
+  fontSize: 16,
+  lineHeight: 24,
+  fontWeight: W_MEDIUM,
 } as const satisfies HydraTextStyle;
 
 export const hydraTextBaseNormal = hydraBaseNormal;

@@ -24,6 +24,7 @@ import {
 import { HydraTag } from '../ui/HydraTag';
 import { Button, Typography } from '../ui/antd';
 import type { TableColumnsType } from '../ui/antd';
+import { hydraBaseDelete, hydraBaseNormal, hydraBaseStrong, hydraTextStyleToReactCss } from '../theme/hydraTypography';
 
 /** Fields persisted when saving a parsing review row from the edit modal. */
 export function parsingReviewEditableRowPatch(
@@ -108,10 +109,17 @@ function readOnlyAttentionText(
   return (
     <Typography.Text
       type={hasUpcIssue ? 'danger' : isEmptyAttention ? 'warning' : undefined}
-      strong={isEmptyAttention || hasUpcIssue}
-      delete={hasUpcIssue && hasValue}
       ellipsis={{ tooltip }}
-      style={{ display: 'block' }}
+      style={{
+        display: 'block',
+        ...hydraTextStyleToReactCss(
+          hasUpcIssue && hasValue
+            ? hydraBaseDelete
+            : isEmptyAttention || hasUpcIssue
+              ? hydraBaseStrong
+              : hydraBaseNormal,
+        ),
+      }}
       aria-label={tooltip}
     >
       {display}
@@ -125,8 +133,8 @@ function readOnlyQty(value: number, row: BomItem, profile: BomParsingReviewColum
   return (
     <Typography.Text
       type={missing ? 'warning' : undefined}
-      strong={missing}
       aria-label={missing ? 'Missing — we could not read this' : undefined}
+      style={hydraTextStyleToReactCss(missing ? hydraBaseStrong : hydraBaseNormal)}
     >
       {missing ? '?' : value}
     </Typography.Text>

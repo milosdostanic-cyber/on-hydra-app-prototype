@@ -8,6 +8,7 @@ import type { SpecCitation, SpecRequirement } from '../data/types';
 import { SpecCitationLink } from './SpecCitationLink';
 import { Button, Card, Flex, Typography, theme } from '../../ui/antd';
 import { HydraTag } from '../../ui/HydraTag';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 export function SpecRequirementCard({
   requirement,
@@ -28,7 +29,7 @@ export function SpecRequirementCard({
         <Flex justify="space-between" gap={token.marginSM} wrap="wrap" align="flex-start">
           <Flex vertical gap={token.marginXXS} style={{ minWidth: 0, flex: 1 }}>
             <HydraTag>{requirementCategoryLabel[requirement.category]}</HydraTag>
-            <Typography.Text strong>{requirement.value}</Typography.Text>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{requirement.value}</Typography.Text>
             {requirement.qualifier ? (
               <Typography.Text type="secondary">{requirement.qualifier}</Typography.Text>
             ) : null}

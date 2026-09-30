@@ -25,7 +25,7 @@ import {
   theme,
 } from '../../ui/antd';
 import type { TableColumnsType, TabsProps } from '../../ui/antd';
-import { hydraLargeNormal, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
+import { hydraLargeNormal, hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type AscProduct = AscBrowserProductRow;
 type BrowserTab = AscProduct['browserCategory'];
@@ -316,7 +316,8 @@ export function BomAscProductsPage() {
       )}
 
       <Card
-        style={{ borderRadius: token.borderRadiusLG, boxShadow: token.boxShadowTertiary }}
+        variant="borderless"
+        style={{ borderRadius: token.borderRadiusLG, border: 'none', boxShadow: token.boxShadowTertiary }}
         styles={{ body: { padding: 0 } }}
       >
         <div
@@ -364,7 +365,7 @@ export function BomAscProductsPage() {
             position: ['bottomRight'],
           }}
           styles={{
-            header: { cell: { background: token.colorFillAlter, borderBottomColor: token.colorBorderSecondary, fontWeight: token.fontWeightStrong } },
+            header: { cell: { background: token.colorFillAlter, borderBottomColor: token.colorBorderSecondary, ...hydraTextStyleToReactCss(hydraBaseStrong) } },
             body: { cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM } },
           }}
         />

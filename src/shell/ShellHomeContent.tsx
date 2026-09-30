@@ -22,7 +22,7 @@ import type { TableColumnsType, TabsProps } from '../ui/antd';
 
 import { shellLayout } from '../theme/hydraAlias';
 import { BomPageHeader } from '../bom/layout/BomPageHeader';
-import { hydraBaseStrong } from '../theme/hydraTypography';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../theme/hydraTypography';
 import { PROJECT_SEED_ROWS, type ProjectRow } from './projectSeed';
 import { ProjectDetailDrawer } from './ProjectDetailDrawer';
 
@@ -107,7 +107,7 @@ export function ShellHomeContent() {
       title: 'Project Name',
       dataIndex: 'name',
       key: 'name',
-      render: (name: string) => <Typography.Text strong>{name}</Typography.Text>,
+      render: (name: string) => <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{name}</Typography.Text>,
     },
     {
       title: 'Address',
@@ -141,6 +141,7 @@ export function ShellHomeContent() {
   const listPanelStyle = {
     background: token.colorBgContainer,
     borderRadius: token.borderRadiusLG,
+    border: 'none' as const,
     boxShadow: token.boxShadowTertiary,
     overflow: 'hidden' as const,
   };
@@ -162,7 +163,7 @@ export function ShellHomeContent() {
         }
       />
 
-      <Card styles={{ body: { padding: 0 } }} style={listPanelStyle}>
+      <Card variant="borderless" styles={{ body: { padding: 0 } }} style={listPanelStyle}>
         <div style={{ padding: token.paddingLG, paddingBottom: token.paddingMD }}>
           <AppSearchInput
             allowClear
@@ -180,7 +181,7 @@ export function ShellHomeContent() {
           <Empty
             description={
               <Space orientation="vertical" size={token.marginXS}>
-                <Typography.Text strong>No projects found</Typography.Text>
+                <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No projects found</Typography.Text>
                 <Typography.Text type="secondary">Create your first project to get started.</Typography.Text>
               </Space>
             }
@@ -195,7 +196,7 @@ export function ShellHomeContent() {
           <Empty
             description={
               <Space orientation="vertical" size={token.marginXS}>
-                <Typography.Text strong>
+                <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>
                   {starredEmpty ? 'No starred projects yet' : 'No projects match your filter'}
                 </Typography.Text>
                 <Typography.Text type="secondary">

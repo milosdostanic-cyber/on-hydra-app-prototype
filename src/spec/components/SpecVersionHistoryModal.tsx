@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import type { SpecDocument, SpecDocumentVersionRecord } from '../data/types';
 import { reviewStateLabel } from '../constants/specStatusVocabulary';
 import { Button, Card, Flex, Modal, Tag, Tooltip, Typography, theme } from '../../ui/antd';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type VersionCardData = {
   key: string;
@@ -75,7 +76,7 @@ export function SpecVersionHistoryModal({ open, document, onCancel, onUploadNewV
     >
       <Flex vertical gap={token.marginMD}>
         <Flex vertical gap={token.marginXXS}>
-          <Typography.Text strong>{document?.title}</Typography.Text>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{document?.title}</Typography.Text>
           <Typography.Text type="secondary">
             Every analysis and export remains tied to the exact customer and Master SPEC versions used at the
             time.
@@ -88,7 +89,7 @@ export function SpecVersionHistoryModal({ open, document, onCancel, onUploadNewV
               <Flex justify="space-between" align="flex-start" gap={token.marginSM} wrap="wrap">
                 <Flex vertical gap={token.marginXXS}>
                   <Flex align="center" gap={token.marginXS}>
-                    <Typography.Text strong>{card.versionLabel}</Typography.Text>
+                    <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{card.versionLabel}</Typography.Text>
                     {card.current ? <Tag color="processing">Current</Tag> : null}
                   </Flex>
                   <Typography.Text type="secondary">

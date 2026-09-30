@@ -184,7 +184,6 @@ export function BomAscCatalogPartDetailPage() {
             minHeight: token.controlHeight * 10,
             borderRadius: token.borderRadiusLG,
             background: token.colorBgContainer,
-            border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
             boxShadow: token.boxShadowTertiary,
             overflow: 'hidden',
           }}

@@ -25,11 +25,8 @@ function featuredCardBorderStyle(
   isHighlighted: boolean,
   onLightSurface = false,
 ): CSSProperties['border'] {
-  const color = isHighlighted
-    ? token.colorPrimary
-    : onLightSurface
-      ? token.colorBorderSecondary
-      : 'transparent';
+  const color = isHighlighted ? token.colorPrimary : 'transparent';
+  void onLightSurface;
   return `${token.lineWidth}px ${token.lineType} ${color}`;
 }
 
@@ -145,7 +142,7 @@ export function FeaturedPartCard({
 
   return (
     <Card
-      bordered={false}
+      variant="borderless"
       size="small"
       hoverable={false}
       role="link"
@@ -179,7 +176,7 @@ export function FeaturedPartCard({
         cursor: 'pointer',
         borderRadius: token.borderRadiusLG,
         background: token.colorBgContainer,
-        boxShadow: isHighlighted ? token.boxShadowSecondary : token.boxShadowTertiary,
+        boxShadow: token.boxShadowTertiary,
         border: featuredCardBorderStyle(token, isHighlighted, onLightSurface),
         transition: layout.cardChromeTransition,
       }}

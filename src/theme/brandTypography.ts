@@ -26,6 +26,7 @@ export {
   hydraSmallNormal,
   hydraSmallStrong,
   hydraSmallUnderline,
+  hydraSubtitleLarge,
   hydraTextBaseNormal,
   hydraTextStyleToReactCss,
   hydraTitleHeading1,
