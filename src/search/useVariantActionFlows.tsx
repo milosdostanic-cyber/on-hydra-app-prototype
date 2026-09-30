@@ -10,30 +10,15 @@ import {
   type ProjectResolution,
 } from '../shell/ProjectRequiredModal';
 import { App } from '../ui/antd';
-import type { AddToBomVariationOption } from '../bom/components/AddToBomModal';
 import type { PartVariationRow } from './partDetailDemoData';
 import { useRevitDownloadQueue } from './revitDownloadQueue';
-import { DrawingFileTypesModal } from './components/DrawingFileTypesModal';
-import { buildCatalogBomItem, isSkuInBomRows } from './catalogBomAdd';
+import { appendCatalogBomItems, partFromVariation } from './catalogBomAdd';
 
 /** Add `'spec'` when Add to Spec ships. */
 export type VariantActionId = 'bom' | 'drawing';
 
-const VARIANT_ACTION_OPTIONS: { key: VariantActionId; label: string; gateDescription: string }[] = [
-  {
-    key: 'bom',
-    label: 'BOM',
-    gateDescription: 'Pick a project and BOM to add this variant — both in the project picker.',
-  },
-  {
-    key: 'drawing',
-    label: 'Download Drawing Files',
-    gateDescription: 'Drawing downloads are scoped to a project. Pick a project, then choose file types.',
-  },
-];
-
 const GATE_LABELS: Record<VariantActionId, string> = {
-  bom: 'BOM',
+  bom: 'Add to BOM',
   drawing: 'Download Drawing Files',
 };
 
@@ -43,157 +28,143 @@ function isBomResolution(
   return 'bomProjectId' in result && 'bomProjectName' in result;
 }
 
-function toVariationOptions(variations: PartVariationRow[]): AddToBomVariationOption[] {
-  return variations.map((variation) => ({
-    key: variation.key,
-    sku: variation.sku,
-    name: variation.name,
-    description: variation.description,
-  }));
-}
-
 /** Variant-level BOM + drawing queue orchestration (no Submittal at variant level). */
-export function useVariantActionFlows(
-  partKey: string,
-  variation: PartVariationRow | null,
-  allVariations: PartVariationRow[] = [],
-) {
+export function useVariantActionFlows(partKey: string, allVariations: PartVariationRow[] = []) {
   const { message } = App.useApp();
   const { projectId, projects, setProjectId } = useActiveProject();
   const { rowsByProjectId, setWorkspaceRows } = useBomWorkspace();
   const { registerEntry } = useActionTrail();
-  const { addDrawingFilesToQueue } = useRevitDownloadQueue();
+  const { addDrawingFilesForVariations } = useRevitDownloadQueue();
 
   const [pending, setPending] = useState<VariantActionId | null>(null);
   const [pendingFileType, setPendingFileType] = useState<string | null>(null);
+  const [pendingVariations, setPendingVariations] = useState<PartVariationRow[]>([]);
   const [gateOpen, setGateOpen] = useState(false);
   const [addBomProjectId, setAddBomProjectId] = useState<string | null>(null);
-  const [drawingModalOpen, setDrawingModalOpen] = useState(false);
-  const [drawingProjectId, setDrawingProjectId] = useState<string | null>(null);
-
-  const variationOptions = useMemo(() => toVariationOptions(allVariations), [allVariations]);
-
-  const partPayload = useMemo(
-    () =>
-      variation
-        ? {
-            partKey: variation.key,
-            sku: variation.sku,
-            displayName: `${variation.sku} — ${variation.name}`,
-          }
-        : null,
-    [variation],
-  );
+  const [bomParts, setBomParts] = useState<ReturnType<typeof partFromVariation>[]>([]);
 
   const finishBomAdd = (
     bomProjectId: string,
     bomProjectName: string,
-    addedPart: { partKey: string; sku: string; displayName: string },
+    parts: ReturnType<typeof partFromVariation>[],
   ) => {
+    if (parts.length === 0) return;
+
     const existingRows =
       rowsByProjectId[bomProjectId] ?? initialWorkspaceRowsForBomProject(bomProjectId);
-    if (isSkuInBomRows(existingRows, addedPart.sku)) {
-      message.info(`Already in BOM — “${bomProjectName}”.`);
-      return;
+    const { added, skippedSkus } = appendCatalogBomItems(existingRows, parts);
+
+    if (added.length > 0) {
+      setWorkspaceRows(bomProjectId, () => [...existingRows, ...added]);
+      registerEntry({
+        module: 'bom',
+        subProjectId: bomProjectId,
+        subProjectLabel: bomProjectName,
+        partKey,
+        variantKey: added.length === 1 ? added[0].sku : undefined,
+        itemIds: added.map((row) => row.id),
+        partCount: added.length,
+      });
     }
 
-    const newRow = buildCatalogBomItem(
-      {
-        partKey: addedPart.partKey,
-        sku: addedPart.sku,
-        displayName: addedPart.displayName,
-      },
-      existingRows.length,
-    );
-    setWorkspaceRows(bomProjectId, (prev) => [...prev, newRow]);
-
-    registerEntry({
-      module: 'bom',
-      subProjectId: bomProjectId,
-      subProjectLabel: bomProjectName,
-      partKey: addedPart.partKey,
-      variantKey: addedPart.partKey,
-      itemIds: [newRow.id],
-    });
-
-    message.success(`${addedPart.sku} added to “${bomProjectName}”.`);
+    if (added.length > 0 && skippedSkus.length === 0) {
+      message.success(
+        added.length === 1
+          ? `${added[0].sku} added to “${bomProjectName}”.`
+          : `${added.length} variants added to “${bomProjectName}”.`,
+      );
+    } else if (added.length > 0 && skippedSkus.length > 0) {
+      message.success(
+        `${added.length} added to “${bomProjectName}”. ${skippedSkus.length} already in BOM skipped.`,
+      );
+    } else if (skippedSkus.length > 0) {
+      message.info(
+        skippedSkus.length === 1
+          ? `Already in BOM — “${bomProjectName}”.`
+          : `All ${skippedSkus.length} selected SKUs are already in “${bomProjectName}”.`,
+      );
+    }
   };
 
-  const openDrawingPicker = (pid: string) => {
-    setDrawingProjectId(pid);
-    setDrawingModalOpen(true);
-  };
+  const queueDrawingForVariations = (pid: string, fileType: string, variations: PartVariationRow[]) => {
+    const eligible = variations.filter((variation) => variation.drawingFileTypes.includes(fileType));
+    if (eligible.length === 0) return;
 
-  const queueDrawingFiles = (pid: string, fileTypes: string[]) => {
-    if (!variation || fileTypes.length === 0) return;
-    const itemIds = addDrawingFilesToQueue({
+    const itemIds = addDrawingFilesForVariations({
       projectId: pid,
       partKey,
-      variationKey: variation.key,
-      sku: variation.sku,
-      fileTypes,
-      displayName: `${variation.sku} — ${variation.name}`,
       figureNumber: partKey,
-      thumbnailUrl: variation.thumbnailUrl,
+      fileType,
+      variations: eligible.map((variation) => ({
+        variationKey: variation.key,
+        sku: variation.sku,
+        displayName: `${variation.sku} — ${variation.name}`,
+        thumbnailUrl: variation.thumbnailUrl,
+      })),
     });
+
     const projectName = projects.find((p) => p.key === pid)?.name ?? 'project';
     registerEntry({
       module: 'content',
       subProjectId: pid,
       subProjectLabel: projectName,
       partKey,
-      variantKey: variation.key,
       itemIds,
       partCount: itemIds.length,
     });
     message.success(
-      `${fileTypes.length} drawing file${fileTypes.length === 1 ? '' : 's'} added to download queue · ${projectName}.`,
+      itemIds.length === 1
+        ? `1 ${fileType} file added to download queue · ${projectName}.`
+        : `${itemIds.length} ${fileType} files added to download queue · ${projectName}.`,
     );
-    setDrawingModalOpen(false);
-    setDrawingProjectId(null);
   };
 
-  const queueSingleFileType = (fileType: string) => {
-    if (!variation) return;
+  const queueFileTypeForVariations = (fileType: string, variations: PartVariationRow[]) => {
+    const eligible = variations.filter((variation) => variation.drawingFileTypes.includes(fileType));
+    if (eligible.length === 0) return;
+
     const pid = projectId;
     if (!pid) {
       setPendingFileType(fileType);
+      setPendingVariations(eligible);
+      setPending('drawing');
       setGateOpen(true);
       return;
     }
-    queueDrawingFiles(pid, [fileType]);
+    queueDrawingForVariations(pid, fileType, eligible);
   };
 
-  const execute = (id: VariantActionId, pid: string) => {
-    if (!variation) return;
-    switch (id) {
-      case 'bom':
-        setAddBomProjectId(pid);
-        break;
-      case 'drawing':
-        openDrawingPicker(pid);
-        break;
-    }
-  };
-
-  const handleAddedToBom = ({
-    bomProjectId,
-    bomProjectName,
-    part: addedPart,
-  }: {
-    bomProjectId: string;
-    bomProjectName: string;
-    part: { partKey: string; sku: string; displayName: string };
-  }) => {
-    setAddBomProjectId(null);
-    finishBomAdd(bomProjectId, bomProjectName, addedPart);
-  };
-
-  const requestAction = (id: VariantActionId) => {
-    if (!variation) return;
+  const requestBomAdd = (variations: PartVariationRow[]) => {
+    if (variations.length === 0) return;
+    const parts = variations.map(partFromVariation);
     if (projectId) {
-      execute(id, projectId);
+      setBomParts(parts);
+      setAddBomProjectId(projectId);
+      return;
+    }
+    setPendingVariations(variations);
+    setPending('bom');
+    setGateOpen(true);
+  };
+
+  /** Legacy single-variant helper used by orphan VariantFileActions. */
+  const queueSingleFileType = (fileType: string, variation: PartVariationRow) => {
+    queueFileTypeForVariations(fileType, [variation]);
+  };
+
+  /** Legacy single-variant helper used by orphan VariantFileActions. */
+  const requestAction = (id: VariantActionId, variation: PartVariationRow) => {
+    if (id === 'bom') {
+      requestBomAdd([variation]);
+      return;
+    }
+    // drawing: open project gate then queue is not used from ActionsPanel anymore
+    if (projectId) {
+      setPendingVariations([variation]);
+      setPending('drawing');
+      // no file type yet — VariantFileActions used DrawingFileTypesModal path historically
     } else {
+      setPendingVariations([variation]);
       setPending(id);
       setGateOpen(true);
     }
@@ -205,38 +176,55 @@ export function useVariantActionFlows(
 
     if (pendingFileType) {
       const fileType = pendingFileType;
+      const variations = pendingVariations;
       setPendingFileType(null);
-      queueDrawingFiles(result.projectId, [fileType]);
+      setPending(null);
+      setPendingVariations([]);
+      queueDrawingForVariations(result.projectId, fileType, variations);
       return;
     }
 
     const resume = pending;
+    const variations = pendingVariations;
     setPending(null);
+    setPendingVariations([]);
     if (!resume) return;
 
-    if (resume === 'bom' && isBomResolution(result) && partPayload) {
-      finishBomAdd(result.bomProjectId, result.bomProjectName, partPayload);
+    if (resume === 'bom') {
+      const parts = variations.map(partFromVariation);
+      if (isBomResolution(result)) {
+        finishBomAdd(result.bomProjectId, result.bomProjectName, parts);
+        return;
+      }
+      setBomParts(parts);
+      setAddBomProjectId(result.projectId);
       return;
     }
-
-    if (resume === 'drawing') {
-      openDrawingPicker(result.projectId);
-      return;
-    }
-
-    execute(resume, result.projectId);
   };
 
-  const handleDrawingConfirm = (fileTypes: string[]) => {
-    const pid = drawingProjectId ?? projectId;
-    if (!pid) return;
-    queueDrawingFiles(pid, fileTypes);
+  const handleAddedToBom = ({
+    bomProjectId,
+    bomProjectName,
+    parts,
+  }: {
+    bomProjectId: string;
+    bomProjectName: string;
+    parts: ReturnType<typeof partFromVariation>[];
+  }) => {
+    setAddBomProjectId(null);
+    setBomParts([]);
+    finishBomAdd(bomProjectId, bomProjectName, parts);
   };
 
-  const pendingDef = pending ? VARIANT_ACTION_OPTIONS.find((o) => o.key === pending) : undefined;
+  const pendingGateDescription =
+    pending === 'bom'
+      ? 'Pick a project and BOM to add the selected variants — both in the project picker.'
+      : pendingFileType
+        ? 'Drawing downloads are scoped to a project. Pick a project to queue these files.'
+        : undefined;
 
   const gateActionLabel = pendingFileType
-    ? `Add ${pendingFileType} to Downloads`
+    ? `Download ${pendingFileType} files`
     : pending
       ? GATE_LABELS[pending]
       : 'Continue';
@@ -246,55 +234,49 @@ export function useVariantActionFlows(
       <ProjectRequiredModal
         open={gateOpen}
         actionLabel={gateActionLabel}
-        actionDescription={
-          pendingFileType
-            ? 'Drawing downloads are scoped to a project. Pick a project to queue this file.'
-            : pendingDef?.gateDescription
-        }
+        actionDescription={pendingGateDescription}
         destinationRequirement={pending === 'bom' ? 'bom' : undefined}
         onResolved={handleResolved}
         onCancel={() => {
           setGateOpen(false);
           setPending(null);
           setPendingFileType(null);
+          setPendingVariations([]);
         }}
       />
 
       <AddToBomModal
         open={addBomProjectId !== null}
         projectId={addBomProjectId ?? ''}
-        part={addBomProjectId && partPayload ? partPayload : null}
-        variations={variationOptions}
-        initialVariantKey={variation?.key ?? null}
-        onAdded={handleAddedToBom}
-        onCancel={() => setAddBomProjectId(null)}
-      />
-
-      <DrawingFileTypesModal
-        open={drawingModalOpen}
-        variation={drawingModalOpen ? variation : null}
-        onConfirm={handleDrawingConfirm}
+        part={bomParts[0] ?? null}
+        parts={bomParts.length > 0 ? bomParts : undefined}
+        onBatchAdded={handleAddedToBom}
+        onAdded={({ bomProjectId, bomProjectName, part }) =>
+          handleAddedToBom({ bomProjectId, bomProjectName, parts: [part] })
+        }
         onCancel={() => {
-          setDrawingModalOpen(false);
-          setDrawingProjectId(null);
+          setAddBomProjectId(null);
+          setBomParts([]);
         }}
       />
     </>
   );
 
   const pillActions = useMemo(
-    () =>
-      VARIANT_ACTION_OPTIONS.map(({ key, label }) => ({
-        id: key,
-        label: key === 'bom' ? `Add to ${label}` : label,
-      })),
+    () => [
+      { id: 'bom' as const, label: 'Add to BOM' },
+      { id: 'drawing' as const, label: 'Download Drawing Files' },
+    ],
     [],
   );
 
   return {
-    requestAction,
+    requestBomAdd,
+    queueFileTypeForVariations,
     queueSingleFileType,
+    requestAction,
     modals,
     pillActions,
+    allVariations,
   };
 }

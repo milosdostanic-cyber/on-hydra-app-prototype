@@ -1,7 +1,7 @@
 import { ExportOutlined, LinkOutlined } from '@ant-design/icons';
 import type { CSSProperties, ReactNode } from 'react';
-import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useParams, useSearchParams } from 'react-router-dom';
+import { useMemo } from 'react';
+import { useLocation, useParams } from 'react-router-dom';
 
 import {
   hydraBaseNormal,
@@ -12,6 +12,12 @@ import {
   hydraTitleHeading4,
 } from '../theme/hydraTypography';
 import { readCatalogPartReturnState } from '../catalog/catalogPartNavigation';
+import { featuredPartContentListingTarget } from '../catalog/featuredPartContentListing';
+import {
+  catalogCategoryById,
+  catalogProductLine,
+  catalogSubcategory,
+} from '../catalog/productCatalogHierarchy.demo';
 import { PageBackButton } from '../shell/PageBackButton';
 import {
   Button,
@@ -28,7 +34,8 @@ import {
 
 import { VariantSelectSection } from './components/VariantSelectSection';
 import { ActionsPanel } from './components/ActionsPanel';
-import { partDetailContentFor, variationByKey } from './partDetailDemoData';
+import type { VariantFigureContext } from './components/variantSelectionShared';
+import { partDetailContentFor } from './partDetailDemoData';
 import { unifiedPartByKey } from './unifiedSearchData';
 
 function InnerPanel({ children }: { children: ReactNode }) {
@@ -47,6 +54,36 @@ function InnerPanel({ children }: { children: ReactNode }) {
       {children}
     </div>
   );
+}
+
+function figureContextForPart(
+  partKey: string,
+  figureNumber: string,
+  productName: string,
+  imageUrl: string | undefined,
+  specifications: { key: string; label: string; value: string }[],
+): VariantFigureContext {
+  const target = featuredPartContentListingTarget(partKey);
+  const category = target ? catalogCategoryById(target.categoryId) : undefined;
+  const subcategory = target
+    ? catalogSubcategory(target.categoryId, target.subcategoryId)
+    : undefined;
+  const line = target
+    ? catalogProductLine(target.categoryId, target.subcategoryId, target.productLineId)
+    : undefined;
+  const breadcrumb = [category?.title, subcategory?.label, line?.name].filter(
+    (label): label is string => Boolean(label),
+  );
+  const brand = specifications.find((spec) => spec.key === 'manufacturer')?.value;
+
+  return {
+    figureNumber,
+    productName,
+    imageUrl,
+    brand,
+    breadcrumb: breadcrumb.length > 0 ? breadcrumb : undefined,
+    figureSpecs: specifications,
+  };
 }
 
 function SpecField({ label, value }: { label: string; value: string }) {
@@ -79,8 +116,6 @@ export function UnifiedPartDetailPage() {
   const { token } = theme.useToken();
   const { partId } = useParams<{ partId: string }>();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
-  const deepLinkVariant = searchParams.get('variant');
   const partReturn = readCatalogPartReturnState(location.state);
 
   const part = partId ? unifiedPartByKey(partId) : undefined;
@@ -88,19 +123,6 @@ export function UnifiedPartDetailPage() {
   const figureNumber = part?.sku ?? partId ?? '—';
   const productImageFrameSize = token.sizeUnit * 60;
   const productImageSize = token.sizeUnit * 47;
-
-  const [selectedVariantKey, setSelectedVariantKey] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (deepLinkVariant && detail?.variations.some((v) => v.key === deepLinkVariant)) {
-      setSelectedVariantKey(deepLinkVariant);
-    }
-  }, [deepLinkVariant, detail]);
-
-  const selectedVariation = useMemo(
-    () => variationByKey(detail, selectedVariantKey),
-    [detail, selectedVariantKey],
-  );
 
   const surfaceCardStyle: CSSProperties = {
     background: token.colorBgContainer,
@@ -137,16 +159,19 @@ export function UnifiedPartDetailPage() {
   const variationRail = detail && actionPayload && part && (
     <VariantSelectSection
       detail={detail}
-      selectedVariantKey={selectedVariantKey}
-      onChange={setSelectedVariantKey}
-      ctaFullWidth
       actions={
         <ActionsPanel
           layout="stack"
           partKey={part.key}
           payload={actionPayload}
           variations={detail.variations}
-          selectedVariation={selectedVariation ?? null}
+          figure={figureContextForPart(
+            part.key,
+            figureNumber,
+            detail.hero.productName,
+            part.featuredImageUrl,
+            detail.specifications,
+          )}
         />
       }
     />

@@ -22,9 +22,17 @@ type Props = {
   open: boolean;
   projectId: string;
   part: AddToBomPart | null;
+  /** When set (batch path), skips the in-modal variation Select and adds all parts. */
+  parts?: AddToBomPart[];
   variations?: AddToBomVariationOption[];
   initialVariantKey?: string | null;
   onAdded: (info: { bomProjectId: string; bomProjectName: string; part: AddToBomPart }) => void;
+  /** Preferred for multi-variant adds; falls back to repeated `onAdded` when omitted. */
+  onBatchAdded?: (info: {
+    bomProjectId: string;
+    bomProjectName: string;
+    parts: AddToBomPart[];
+  }) => void;
   onCancel: () => void;
 };
 
@@ -43,14 +51,17 @@ function partFromVariation(variation: AddToBomVariationOption): AddToBomPart {
 
 /**
  * Pick a variation (when applicable) and target BOM, then confirm add.
+ * Batch path: pass `parts` to skip the variation dropdown.
  */
 export function AddToBomModal({
   open,
   projectId,
   part,
+  parts,
   variations,
   initialVariantKey,
   onAdded,
+  onBatchAdded,
   onCancel,
 }: Props) {
   const { token } = theme.useToken();
@@ -58,7 +69,8 @@ export function AddToBomModal({
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedVariantKey, setSelectedVariantKey] = useState<string | null>(null);
 
-  const showVariationSelect = Boolean(variations && variations.length > 0);
+  const batchParts = parts && parts.length > 0 ? parts : null;
+  const showVariationSelect = !batchParts && Boolean(variations && variations.length > 0);
 
   useEffect(() => {
     if (!open) return;
@@ -72,20 +84,30 @@ export function AddToBomModal({
   );
 
   const resolvedPart = useMemo(() => {
+    if (batchParts) return batchParts[0] ?? null;
     if (selectedVariation) return partFromVariation(selectedVariation);
     return part;
-  }, [part, selectedVariation]);
+  }, [batchParts, part, selectedVariation]);
+
+  const resolvedParts = useMemo(() => {
+    if (batchParts) return batchParts;
+    return resolvedPart ? [resolvedPart] : [];
+  }, [batchParts, resolvedPart]);
 
   const canSubmit =
     Boolean(fields.selectedId) &&
-    Boolean(resolvedPart) &&
+    resolvedParts.length > 0 &&
     (!showVariationSelect || Boolean(selectedVariantKey));
 
   const handleOk = () => {
-    if (!resolvedPart) return;
+    if (resolvedParts.length === 0) return;
     const dest = fields.resolve();
     if (!dest) return;
-    onAdded({ ...dest, part: resolvedPart });
+    if (onBatchAdded) {
+      onBatchAdded({ ...dest, parts: resolvedParts });
+      return;
+    }
+    resolvedParts.forEach((entry) => onAdded({ ...dest, part: entry }));
   };
 
   const handleCreatedBom = (name: string) => {
@@ -98,19 +120,38 @@ export function AddToBomModal({
     label: bom.name,
   }));
 
+  const okText =
+    resolvedParts.length > 1 ? `Add ${resolvedParts.length} to BOM` : 'Add to BOM';
+
   return (
     <>
       <Modal
         open={open}
         title="Add to BOM"
         width={token.screenSM}
-        okText="Add to BOM"
+        okText={okText}
         okButtonProps={{ disabled: !canSubmit }}
         onOk={handleOk}
         onCancel={onCancel}
         destroyOnClose
       >
         <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+          {batchParts ? (
+            <Flex vertical gap={token.marginXXS}>
+              <Typography.Text>
+                {batchParts.length} variation{batchParts.length === 1 ? '' : 's'} will be added to the
+                selected BOM.
+              </Typography.Text>
+              <Typography.Text type="secondary">
+                {batchParts
+                  .slice(0, 5)
+                  .map((entry) => entry.sku)
+                  .join(', ')}
+                {batchParts.length > 5 ? ` +${batchParts.length - 5} more` : ''}
+              </Typography.Text>
+            </Flex>
+          ) : null}
+
           {showVariationSelect ? (
             <Flex vertical gap={token.marginXS}>
               <Typography.Text>Select a size or variation to add to this BOM.</Typography.Text>

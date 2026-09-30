@@ -250,6 +250,70 @@ export function useRevitDownloadQueue() {
     [],
   );
 
+  /** Collision-safe batch: one requested file type per selected variant. */
+  const addDrawingFilesForVariations = useCallback(
+    (input: {
+      projectId: string;
+      partKey: string;
+      figureNumber?: string;
+      fileType: string;
+      variations: Array<{
+        variationKey: string;
+        sku: string;
+        displayName?: string;
+        thumbnailUrl?: string;
+      }>;
+    }): string[] => {
+      if (input.variations.length === 0) return [];
+      const stamp = Date.now();
+      const queueItems: DownloadQueueItem[] = input.variations.map((variation, index) => ({
+        id: `draw-${stamp}-${index}-${variation.variationKey}`,
+        kind: 'drawing' as const,
+        projectId: input.projectId,
+        partKey: input.partKey,
+        variationKey: variation.variationKey,
+        sku: variation.sku,
+        fileType: input.fileType,
+        fileName: drawingFileName(variation.sku, input.fileType),
+        displayName: variation.displayName,
+        figureNumber: input.figureNumber,
+        thumbnailUrl: variation.thumbnailUrl,
+      }));
+      setQueue((prev) => [...prev, ...queueItems]);
+      appendHistory(
+        queueItems.map(
+          ({
+            id,
+            kind,
+            projectId,
+            partKey,
+            sku,
+            fileName,
+            fileType,
+            variationKey,
+            displayName,
+            figureNumber,
+            thumbnailUrl,
+          }) => ({
+            id,
+            kind,
+            projectId,
+            partKey,
+            sku,
+            fileName,
+            fileType,
+            variationKey,
+            displayName,
+            figureNumber,
+            thumbnailUrl,
+          }),
+        ),
+      );
+      return queueItems.map((item) => item.id);
+    },
+    [],
+  );
+
   const clearQueue = useCallback(() => {
     setQueue(() => []);
   }, []);
@@ -258,7 +322,15 @@ export function useRevitDownloadQueue() {
     setQueue((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
-  return { items, queueCount, addToQueue, addDrawingFilesToQueue, clearQueue, removeItem };
+  return {
+    items,
+    queueCount,
+    addToQueue,
+    addDrawingFilesToQueue,
+    addDrawingFilesForVariations,
+    clearQueue,
+    removeItem,
+  };
 }
 
 export function useDownloadHistory() {

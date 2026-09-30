@@ -11,3 +11,9 @@ Documents/Bom/*.pdf
 Documents/Bom/*.zip
 .claude/
 .vercel
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
