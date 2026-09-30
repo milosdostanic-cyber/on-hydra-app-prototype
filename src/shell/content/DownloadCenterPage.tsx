@@ -6,7 +6,7 @@ import { CatalogThumbnailPlaceholder } from '../../catalog/CatalogThumbnailPlace
 import { useActionTrail, useActionTrailModuleLifecycle } from '../../context/ActionTrailContext';
 import { actionTrailTableRowProps } from '../../search/actionTrailStyles';
 import { useDownloadHistory } from '../../search/revitDownloadQueue';
-import { HydraTag } from '../../ui/HydraTag';
+import { HydraColorfulTag, HydraTag, type HydraColorfulPreset } from '../../ui/HydraTag';
 import {
   App,
   Avatar,
@@ -35,11 +35,12 @@ import {
 } from './downloadHistorySelection';
 import { historyEntriesForProject } from './downloadHistorySeed';
 import { ActionTrailNewTag } from '../../search/components/ActionTrailNewTag';
-import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
+import { hydraBaseNormal, hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 /** Ties variant rows visually to their parent figure — antd nesting alone reads as sibling rows once expanded. */
 const HISTORY_VARIANT_ROW_CLASS = 'download-history-variant-row';
 const HISTORY_TABLE_CLASS = 'download-history-table';
+const HISTORY_INDENT = (token: ReturnType<typeof theme.useToken>['token']) => token.marginLG;
 
 const COPY = {
   title: 'Content Downloads',
@@ -69,6 +70,7 @@ const COPY = {
   colBy: 'By',
   skuPrefix: (value: string) => `SKU ${value}`,
   variantsOnly: 'Variants only',
+  roleVariation: 'Variation',
   empty: '—',
 };
 
@@ -76,6 +78,28 @@ function formatDownloadedDate(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+/** Figma `Tag / Colorful` presets; status hues (red, green, gold) stay reserved for state. */
+const FORMAT_PRESETS: Record<string, HydraColorfulPreset> = {
+  RFA: 'geekblue',
+  PDF: 'magenta',
+  DWG: 'cyan',
+  STEP: 'purple',
+};
+
+/** Preset step 3 is the border that belongs to the same ramp as the chip fill. */
+function formatChipBorder(preset: HydraColorfulPreset): string {
+  return `var(--ant-${preset}-3)`;
+}
+
+/** Part actions panel order; unknown codes follow in their original order. */
+const FORMAT_ORDER = ['RFA', 'PDF', 'DWG', 'STEP'];
+
+function sortFormats(formats: string[]): string[] {
+  const known = FORMAT_ORDER.filter((code) => formats.includes(code));
+  const unknown = formats.filter((code) => !FORMAT_ORDER.includes(code));
+  return [...known, ...unknown];
 }
 
 function initials(name: string): string {
@@ -142,7 +166,23 @@ function HistoryPartCell({
   /** Figure rows carry their code in the Figure Number column; variants are identified by SKU. */
   const code = isFigure ? '' : COPY.skuPrefix(row.sku);
 
-  /** Fixed-size thumbnail slot keeps figure and variant names on the same left edge. */
+  /**
+   * The figure name starts after its thumbnail. The variation indent is smaller than that slot, so the
+   * variation block needs the remainder to start on the same left edge.
+   */
+  const nameAlignInset = isFigure
+    ? 0
+    : Math.max(0, token.controlHeight + token.marginSM - HISTORY_INDENT(token));
+  /**
+   * antd renders the row indent and expand icon inline before this cell; without a bounded width the
+   * content wraps below the icon. Icon box = `controlInteractiveSize + lineWidth`, trailing gap = `paddingXS`.
+   */
+  const reservedInline =
+    (isFigure ? 0 : HISTORY_INDENT(token) + nameAlignInset) +
+    token.controlInteractiveSize +
+    token.lineWidth +
+    token.paddingXS;
+
   const thumbSlotStyle = {
     display: 'inline-flex' as const,
     alignItems: 'center' as const,
@@ -154,10 +194,18 @@ function HistoryPartCell({
   };
 
   return (
-    <Flex align="center" gap={token.marginSM} style={{ minWidth: 0 }}>
-      <span style={thumbSlotStyle} aria-hidden={!isFigure}>
-        {isFigure ? (
-          row.thumbnailUrl ? (
+    <Flex
+      align="center"
+      gap={token.marginSM}
+      style={{
+        minWidth: 0,
+        width: `calc(100% - ${reservedInline}px)`,
+        marginInlineStart: nameAlignInset,
+      }}
+    >
+      {isFigure ? (
+        <span style={thumbSlotStyle}>
+          {row.thumbnailUrl ? (
             <Avatar
               shape="square"
               size={token.controlHeight}
@@ -167,13 +215,21 @@ function HistoryPartCell({
             />
           ) : (
             <CatalogThumbnailPlaceholder />
-          )
-        ) : null}
-      </span>
+          )}
+        </span>
+      ) : null}
       <Flex align="center" gap={token.marginXS} wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
-        <Typography.Text ellipsis={{ tooltip: row.name }} style={{ minWidth: 0 }}>
+        <Typography.Text
+          type={isFigure ? undefined : 'secondary'}
+          ellipsis={{ tooltip: row.name }}
+          style={{ minWidth: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
+        >
           {row.name}
         </Typography.Text>
+        {isFigure ? null : (
+          <HydraTag bordered={false}>{COPY.roleVariation}</HydraTag>
+        )}
+        {isFigure && row.figureLevelDownloaded ? <HydraTag>Figure-level file</HydraTag> : null}
         {code ? (
           <Typography.Text type="secondary" style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>
             · {code}
@@ -255,17 +311,27 @@ export function DownloadCenterPage() {
   const variationCount = rows.reduce((sum, row) => sum + (row.children?.length ?? 0), 0);
 
   /**
-   * Subtle tint + left accent on variant rows — same scoped-`<style>` technique as HomeHubPage's expanded rows.
+   * While a figure is open, one primary line runs down the left of that figure and its variations.
+   * The mark overlaps each row border by `lineWidth`, so the row separators do not cut it.
+   * The fill on variation rows steps aside for hover and selection.
    * The expand icon rules drop antd's float + single-line `marginTop`, which centres the icon on the first text
    * line rather than the cell. Same `float:none` / `inline-flex` pairing antd uses for its own expand-icon cell.
    */
+  const groupMark =
+    `content:"";position:absolute;inset-inline-start:0;top:0;bottom:-${token.lineWidth}px;` +
+    `width:${token.lineWidthBold}px;background:${token.colorPrimary};z-index:1;pointer-events:none`;
   const downloadHistoryTableStyles = useMemo(
     () =>
-      `.${HISTORY_TABLE_CLASS} .${HISTORY_VARIANT_ROW_CLASS} > td{background:${token.colorFillAlter}!important}` +
-      `.${HISTORY_TABLE_CLASS} .${HISTORY_VARIANT_ROW_CLASS} > td:first-child{box-shadow:inset ${token.lineWidthFocus}px 0 0 0 ${token.colorBorderSecondary}!important}` +
+      `.${HISTORY_TABLE_CLASS} tr:has(.ant-table-row-expand-icon-expanded) > td:first-child,` +
+      `.${HISTORY_TABLE_CLASS} .${HISTORY_VARIANT_ROW_CLASS} > td:first-child{position:relative;overflow:visible}` +
+      `.${HISTORY_TABLE_CLASS} tr:has(.ant-table-row-expand-icon-expanded) > td:first-child::after,` +
+      `.${HISTORY_TABLE_CLASS} .${HISTORY_VARIANT_ROW_CLASS} > td:first-child::after{${groupMark}}` +
+      `.${HISTORY_TABLE_CLASS} tr:has(.ant-table-row-expand-icon-expanded):not(.ant-table-row-selected):not(:hover) > td{background:color-mix(in srgb, ${token.colorPrimaryBg} 45%, ${token.colorBgContainer})}` +
+      `.${HISTORY_TABLE_CLASS} .${HISTORY_VARIANT_ROW_CLASS}:not(.ant-table-row-selected):not(:hover) > td{background:${token.colorFillAlter}}` +
       `.${HISTORY_TABLE_CLASS} .ant-table-row-indent + .ant-table-row-expand-icon{float:none;display:inline-flex;vertical-align:middle;margin-top:0}` +
+      `.${HISTORY_TABLE_CLASS} td.ant-table-cell-with-append{white-space:nowrap}` +
       `.${HISTORY_TABLE_CLASS} td.ant-table-cell-with-append > .ant-flex{display:inline-flex;vertical-align:middle}`,
-    [token.colorFillAlter, token.colorBorderSecondary, token.lineWidthFocus],
+    [groupMark, token.colorFillAlter, token.colorPrimaryBg, token.colorBgContainer],
   );
 
 
@@ -323,7 +389,7 @@ export function DownloadCenterPage() {
     selection: token.controlHeight,
     partMin: token.controlHeightLG * 8,
     figureNumber: token.controlHeight * 4,
-    formats: token.controlHeightLG * 4,
+    formats: token.controlHeightLG * 5,
     downloaded: token.controlHeightLG * 4,
     by: token.controlHeightLG * 6,
   };
@@ -367,11 +433,21 @@ export function DownloadCenterPage() {
         }
         return (
           <Flex gap={token.marginXXS} wrap="wrap">
-            {row.formats.map((format) => (
-              <HydraTag key={format} tone="processing">
-                {format}
-              </HydraTag>
-            ))}
+            {sortFormats(row.formats).map((format) => {
+              const preset = FORMAT_PRESETS[format];
+              return preset ? (
+                <HydraColorfulTag
+                  key={format}
+                  preset={preset}
+                  bordered
+                  style={{ borderColor: formatChipBorder(preset) }}
+                >
+                  {format}
+                </HydraColorfulTag>
+              ) : (
+                <HydraTag key={format}>{format}</HydraTag>
+              );
+            })}
           </Flex>
         );
       },
@@ -455,7 +531,7 @@ export function DownloadCenterPage() {
         {createActions}
       </Flex>
 
-      <Card style={shellTableCardStyle(token)} styles={{ body: { padding: 0 } }}>
+      <Card variant="borderless" style={shellTableCardStyle(token)} styles={{ body: { padding: 0 } }}>
         {figureCount === 0 ? (
           emptyState
         ) : (
@@ -468,7 +544,7 @@ export function DownloadCenterPage() {
               pagination={false}
               columns={columns}
               dataSource={rows}
-              indentSize={0}
+              indentSize={HISTORY_INDENT(token)}
               expandable={{ defaultExpandAllRows: true, childrenColumnName: 'children' }}
               rowSelection={{
                 selectedRowKeys,

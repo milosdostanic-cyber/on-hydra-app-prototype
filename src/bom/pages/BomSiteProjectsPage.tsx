@@ -356,7 +356,7 @@ export function BomSiteProjectsPage() {
       background: token.colorBgContainer,
       borderRadius: token.borderRadiusLG,
       border: `${token.lineWidth * 2}px ${token.lineType} ${isHovered ? token.colorPrimaryBorderHover : token.colorPrimaryBorder}`,
-      boxShadow: isHovered ? token.boxShadow : token.boxShadowTertiary,
+      boxShadow: token.boxShadowTertiary,
       transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
       cursor: 'pointer',
       transition: `border-color ${token.motionDurationMid}, box-shadow ${token.motionDurationMid}, transform ${token.motionDurationMid}`,
@@ -366,6 +366,7 @@ export function BomSiteProjectsPage() {
   const tableShellStyle = {
     background: token.colorBgContainer,
     borderRadius: token.borderRadiusLG,
+    border: 'none' as const,
     boxShadow: token.boxShadowTertiary,
     overflow: 'hidden' as const,
   };
@@ -462,7 +463,7 @@ export function BomSiteProjectsPage() {
         <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
           <BomPageHeader title="Your BOM Projects" />
 
-          <Card styles={{ body: { padding: 0 } }} style={tableShellStyle}>
+          <Card variant="borderless" styles={{ body: { padding: 0 } }} style={tableShellStyle}>
             {hasNoProjects ? (
               /* ── Empty state: no BOMs in this project ── */
               <Flex

@@ -195,6 +195,7 @@ function SkuMatchCard({
       onClick={onSelect}
       style={{
         ...matchingReviewSelectableCardStyle(token, selected),
+        ...(selected ? {} : { border: 'none' }),
         width: '100%',
         minWidth: 0,
         boxSizing: 'border-box',

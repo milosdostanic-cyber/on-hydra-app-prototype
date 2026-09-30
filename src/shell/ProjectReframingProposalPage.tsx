@@ -1075,6 +1075,7 @@ export function ProjectReframingProposalPage() {
           <Space orientation="vertical" size={token.margin} style={{ width: '100%' }}>
             {phases.map((phase) => (
               <Card
+                variant="borderless"
                 key={phase.id}
                 style={{
                   background: phaseSurface,

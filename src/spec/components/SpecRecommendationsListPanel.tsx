@@ -63,12 +63,10 @@ export function SpecRecommendationsListPanel({
   const [actionFilter, setActionFilter] = useState<RecommendationActionFilter>(
     initialActionFilter ?? 'all',
   );
-  const panelBorder = `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`;
   const panelChrome = {
     background: token.colorBgContainer,
     borderRadius: token.borderRadiusLG,
     boxShadow: token.boxShadowTertiary,
-    border: panelBorder,
   } as const;
 
   const actionCounts = useMemo(() => {

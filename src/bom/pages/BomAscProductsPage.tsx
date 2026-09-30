@@ -316,7 +316,8 @@ export function BomAscProductsPage() {
       )}
 
       <Card
-        style={{ borderRadius: token.borderRadiusLG, boxShadow: token.boxShadowTertiary }}
+        variant="borderless"
+        style={{ borderRadius: token.borderRadiusLG, border: 'none', boxShadow: token.boxShadowTertiary }}
         styles={{ body: { padding: 0 } }}
       >
         <div

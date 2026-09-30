@@ -72,7 +72,7 @@ function ChoosePartCard({
       style={{
         borderColor: selected ? token.colorPrimary : token.colorBorderSecondary,
         background: selected ? token.colorPrimaryBgSubtle : token.colorBgContainer,
-        boxShadow: selected ? token.boxShadowSecondary : token.boxShadowTertiary,
+        boxShadow: token.boxShadowTertiary,
         cursor: 'pointer',
       }}
     >

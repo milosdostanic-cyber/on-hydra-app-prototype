@@ -99,7 +99,6 @@ type ModuleRollupCardProps = {
 /** Dense clickable module card — rest state matches BOM matching-review SKU cards. */
 function ModuleRollupCard({ title, countLabel, icon, onNavigate }: ModuleRollupCardProps) {
   const { token } = theme.useToken();
-  const [hovered, setHovered] = useState(false);
   const label = `Open ${title} module`;
   const thumbnailSize = token.controlHeightLG + token.paddingLG;
 
@@ -111,8 +110,6 @@ function ModuleRollupCard({ title, countLabel, icon, onNavigate }: ModuleRollupC
         e.stopPropagation();
         onNavigate();
       }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       style={{
         ...matchingReviewSelectableCardStyle(token, false),
         width: '100%',
@@ -124,8 +121,7 @@ function ModuleRollupCard({ title, countLabel, icon, onNavigate }: ModuleRollupC
         alignItems: 'flex-start',
         gap: token.paddingMD,
         boxShadow: token.boxShadowTertiary,
-        borderColor: hovered ? token.colorPrimaryBorderHover : token.colorBorderSecondary,
-        transition: `border-color ${token.motionDurationMid}`,
+        border: 'none',
       }}
     >
       <Flex
@@ -506,6 +502,7 @@ export function HomeHubPage() {
       />
 
       <Card
+        variant="borderless"
         styles={{ body: { padding: token.paddingMD } }}
         style={{
           background: token.colorBgContainer,
@@ -553,7 +550,7 @@ export function HomeHubPage() {
 
       <BomPageHeader title="Projects" />
 
-      <Card styles={{ body: { padding: 0 } }} style={listPanelStyle}>
+      <Card variant="borderless" styles={{ body: { padding: 0 } }} style={listPanelStyle}>
         <Flex
           align="center"
           justify="space-between"

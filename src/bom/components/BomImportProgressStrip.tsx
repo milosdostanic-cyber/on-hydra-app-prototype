@@ -67,7 +67,7 @@ export function BomImportProgressStrip({
         paddingBlock: token.paddingSM,
         background: nested ? 'transparent' : token.colorWarningBg,
         borderRadius: nested || isShellFlush ? 0 : token.borderRadiusLG,
-        boxShadow: nested ? undefined : isShellFlush ? token.boxShadowTertiary : token.boxShadowSecondary,
+        boxShadow: nested ? undefined : token.boxShadowTertiary,
       }}
     >
       <Flex vertical gap={0} style={{ flex: '0 1 auto', minWidth: 0, maxWidth: '100%' }}>

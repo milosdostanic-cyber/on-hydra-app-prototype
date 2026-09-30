@@ -185,6 +185,7 @@ export function SeisBraceLandingPage() {
   const cardShellStyle = {
     background: token.colorBgContainer,
     borderRadius: token.borderRadiusLG,
+    border: 'none' as const,
     boxShadow: token.boxShadowTertiary,
     overflow: 'hidden' as const,
   };
@@ -249,7 +250,7 @@ export function SeisBraceLandingPage() {
           </Flex>
         ) : null}
 
-        <Card styles={{ body: { padding: 0 } }} style={cardShellStyle}>
+        <Card variant="borderless" styles={{ body: { padding: 0 } }} style={cardShellStyle}>
           {!hasDesigns ? (
             <Flex vertical align="center" justify="center" style={{ padding: `${token.paddingLG * 2}px ${token.paddingLG}px` }}>
               <Empty

@@ -113,7 +113,6 @@ export function SpecSectionNavigator({
     background: token.colorBgContainer,
     borderRadius: token.borderRadiusLG,
     boxShadow: token.boxShadowTertiary,
-    border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
   } as const;
 
   return (

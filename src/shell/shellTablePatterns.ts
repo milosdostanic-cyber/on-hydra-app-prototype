@@ -10,6 +10,7 @@ export function shellTableCardStyle(token: GlobalToken) {
   return {
     background: token.colorBgContainer,
     borderRadius: token.borderRadiusLG,
+    border: 'none',
     boxShadow: token.boxShadowTertiary,
     overflow: 'hidden' as const,
   };

@@ -141,6 +141,7 @@ export function ShellHomeContent() {
   const listPanelStyle = {
     background: token.colorBgContainer,
     borderRadius: token.borderRadiusLG,
+    border: 'none' as const,
     boxShadow: token.boxShadowTertiary,
     overflow: 'hidden' as const,
   };
@@ -162,7 +163,7 @@ export function ShellHomeContent() {
         }
       />
 
-      <Card styles={{ body: { padding: 0 } }} style={listPanelStyle}>
+      <Card variant="borderless" styles={{ body: { padding: 0 } }} style={listPanelStyle}>
         <div style={{ padding: token.paddingLG, paddingBottom: token.paddingMD }}>
           <AppSearchInput
             allowClear

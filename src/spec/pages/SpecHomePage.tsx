@@ -262,6 +262,7 @@ export function SpecHomePage() {
   const tableShellStyle = {
     background: token.colorBgContainer,
     borderRadius: token.borderRadiusLG,
+    border: 'none' as const,
     boxShadow: token.boxShadowTertiary,
     overflow: 'hidden' as const,
   };
@@ -429,7 +430,7 @@ export function SpecHomePage() {
             </Empty>
           </Card>
         ) : (
-          <Card styles={{ body: { padding: 0 } }} style={tableShellStyle}>
+          <Card variant="borderless" styles={{ body: { padding: 0 } }} style={tableShellStyle}>
             <Flex
               align="center"
               justify="space-between"

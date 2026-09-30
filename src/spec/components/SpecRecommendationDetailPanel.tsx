@@ -168,12 +168,10 @@ export function SpecRecommendationDetailPanel({
       ...hydraTextStyleToReactCss(hydraLargeNormal),
       color: token.colorTextDescription,
     };
-    const panelBorder = `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`;
     const panelChrome = {
       background: token.colorBgContainer,
       borderRadius: token.borderRadiusLG,
       boxShadow: token.boxShadowTertiary,
-      border: panelBorder,
     } as const;
 
     return (

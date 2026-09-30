@@ -243,6 +243,9 @@ export function AppTopBar() {
           paddingInline: token.paddingLG,
           paddingBlock: token.padding,
           background: token.colorPrimary,
+          position: 'relative',
+          zIndex: 1,
+          boxShadow: token.boxShadowTertiary,
         }}
       >
         <Flex

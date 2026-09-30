@@ -296,7 +296,7 @@ function ResultsList({
   const { token } = theme.useToken();
   const tableShellStyle = shellTableCardStyle(token);
   return (
-    <Card styles={{ body: { padding: 0 } }} style={tableShellStyle}>
+    <Card variant="borderless" styles={{ body: { padding: 0 } }} style={tableShellStyle}>
       <List<UnifiedResultRow>
         dataSource={rows}
         renderItem={(row) => (
@@ -414,7 +414,7 @@ export function UnifiedSearchResultsPage() {
 
       <BomPageHeader title={title} description={headerDescription} />
 
-      <Card styles={{ body: { padding: 0 } }} style={resultsPanelStyle}>
+      <Card variant="borderless" styles={{ body: { padding: 0 } }} style={resultsPanelStyle}>
         <div
           style={{
             padding: token.paddingMD,
