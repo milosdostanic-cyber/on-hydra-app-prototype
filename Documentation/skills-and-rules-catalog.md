@@ -251,6 +251,22 @@ Plan only, no code.
 
 ---
 
+## hydra-ux-pattern
+
+**Location:** `.cursor/skills/hydra-ux-pattern/SKILL.md`
+
+Registry of **approved** UX pattern rules for Hydra/RSFC (currently **UX-001**: 20px horizontal gap between independent form controls, via DS spacing token; **UX-002**: table links use `colorLink`, not `colorLinkActive`; **UX-003**: module entry page title = `Title/Heading 2` + `Large/Normal` description, `colorText` / `colorTextDescription`, `paddingXXS` gap; **UX-004**: table Actions column is last, header and cell actions right-aligned, never centered; **UX-005**: page search = `Input` (search icon) + primary `Button` "Search", same size, `paddingXS` gap, never `Input__Search`; **UX-006**: screen frames min height 970). Audits the 7 RSFC Figma files read-only and reports Already correct / Fixed / Needs review. Fixes only on explicit request; never edits the Design System.
+
+**How to run:**
+```
+@hydra-ux-pattern
+
+Audit UX-001 in BOM - RSFC
+```
+Apply fixes only with: `Fix approved UX-001 <scope>`
+
+---
+
 ## hydra-ux-audit
 
 **Location:** `.cursor/skills/hydra-ux-audit/SKILL.md`
@@ -342,6 +358,34 @@ The original is overwritten; backup is saved as `<file>.original.md`.
 
 ---
 
+# AGENTS
+
+---
+
+## hydra-molecule-builder
+
+**Location:** `.claude/agents/hydra-molecule-builder.md`
+
+Finds and builds **content molecules** for the Hydra design system in Figma, such as empty states, option cards or summary blocks. It works in three steps. **Audit** looks through the linked flows of all module files (BOM, SPEC, Content, Part Search, Admin, Release Notes) and lists every reusable candidate. **Plan** takes one candidate, finds every place it appears and proposes the component. Neither step changes anything in Figma; both write an **HTML report** with screenshots and links, so you can review visually.
+
+After you reply "Plan approved", **Build** creates the component on its own page in the Molecules section, using existing Hydra tokens and atoms, and adds a **"Replace in modules"** section: for each place, a ready-made instance and a link to it, so you can copy and replace. It never edits the module files or the tokens.
+
+**How to run:** "Use the hydra-molecule-builder agent to audit the modules", then "…to plan <molecule>", then reply "Plan approved".
+
+---
+
+## hydra-ds-compliance
+
+**Location:** `.claude/agents/hydra-ds-compliance.md`
+
+Checks that the 7 RSFC module files (Admin, Content, Release Notes, Part Search, Unified Search, BOM, SPEC) use the **Hydra DS** correctly: real, up-to-date component instances, colours and spacing bound to tokens, the right text style for each kind of text (title, label, description, …) and the right colour token for each role. **Audit** changes nothing and writes an **HTML report** with numbered findings, screenshots and links.
+
+After you reply "Fix approved" with the finding numbers, **Fix** applies only those in the module files. It snaps to existing tokens and components; anything that would visibly change the design is left for you to decide. **Patterns** writes `Documentation/hydra-ux-patterns.md`: which spacing is used where, common layouts and interactions, and where modules differ. It never edits the Hydra DS file.
+
+**How to run:** "Use the hydra-ds-compliance agent to audit the modules", then reply "Fix approved: BOM-001, BOM-004, …". For patterns: "Use the hydra-ds-compliance agent to document UX patterns".
+
+---
+
 # RELATED DOCUMENTS (not skills/rules, but agents use them)
 
 ---
@@ -415,8 +459,9 @@ Audit and fix P0/P1.
 | Folder | Contents |
 |--------|----------|
 | `.cursor/rules/` | All rules (`.mdc`) |
-| `.cursor/skills/` | Project skills (`figma-console-mcp`, `hydra-ux-audit`, `prd-ux-implementation-planner`, `hydra-module-builder`) |
+| `.cursor/skills/` | Project skills (`figma-console-mcp`, `hydra-ux-audit`, `hydra-ux-pattern`, `prd-ux-implementation-planner`, `hydra-module-builder`) |
 | `.agents/skills/` | External skills (`caveman`, `caveman-compress`) |
+| `.claude/agents/` | Claude Code subagents (`hydra-molecule-builder`, `hydra-ds-compliance`) |
 | `Documentation/hydra-ai-pack/` | Portable checklist and skill copy |
 | `Documents/plans/` | Plans from `@plan-orchestrator` |
 | `Documents/Bom/` | BOM plans and userflow docs |

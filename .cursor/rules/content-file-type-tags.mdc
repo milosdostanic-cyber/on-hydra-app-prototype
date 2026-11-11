@@ -1,0 +1,54 @@
+---
+description: Content file-type tag colors and the drawings-column +X overflow
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Content file type tags
+
+**Language:** English.
+
+Use this when a screen shows downloadable content file types as tags (Drawings column, file pickers, tooltips).
+
+**Figma:** Part Search – RSFC, frame **Content file type tags** (`11341:6250`). Component is DS `Tag__Colorful` with **border on**. Source list: [Content File Types](https://ooden.atlassian.net/wiki/spaces/Hydra/pages/1751580673/Content+File+Types).
+
+## Color by file type
+
+Map the label to an existing `HydraColorfulTag` preset. Do not invent hex colors. `Tag__Colorful` has no `red` variant, so DWG uses `orange`.
+
+| File type | Preset | Role |
+| --- | --- | --- |
+| RFA | `blue` | Revit family. Primary BIM file. |
+| STEP | `geekblue` | Neutral 3D solid. |
+| PDF | `cyan` | Dimensioned reference drawing. |
+| DWG | `orange` | AutoCAD drawing. |
+| IGES | `magenta` | Neutral geometry exchange. |
+| SAT | `purple` | ACIS solid exchange. |
+| IEZ | `green` | Fabrication CAD MEP package. |
+| TXT | `gold` | Revit support file. Bundled with RFA, not a standalone download. |
+| PNG | `lime` | Preview image. Not a modeling file. |
+
+Code: `CONTENT_FILE_TYPE_TAG_PRESET` in `src/search/contentFileTypeTags.ts`. An unknown type uses the default `HydraTag`, not a new color.
+
+**One color per type, everywhere.** This table is the only mapping, in every screen of the repo and every frame in Figma. Never give a file type a different color on another screen (for example a purple PDF or a volcano DWG). In code, always render file-type tags through `ContentFileTypeTags` or `contentFileTypeTagPreset`, never with a hand-picked `preset`. In Figma, the `Tag__Colorful` `color` variant must follow this table, and the layer name must match the title (`Tag__Colorful / PDF`).
+
+Keep the same preset everywhere that type appears as a tag.
+
+## Drawings column
+
+- Spec columns (pipe size, coating, material, and the rest) are **plain text**. Do not color those cells with tags.
+- Show at most **three** file-type tags (`CONTENT_FILE_TYPE_TAG_VISIBLE_COUNT`).
+- When a variant has more than three types, add a neutral `+X` tag (DS `Tag`, `type=default, border=true`). `X` is the hidden count.
+- Hovering `+X` (hover only, no click) opens an antd **Tooltip** with a light background that shows the hidden types as the same colored tags. Code: `<Tooltip color={token.colorBgElevated} placement="top" title={tags}>` with the tags in a `Flex gap={token.marginXS}`. Antd Tooltip `title` accepts any content.
+- Figma: DS `Tooltip` `placement=top`, `show arrow` on, `show title` off, `show content` on, with `Tag__Colorful` instances in the `content` slot. Override the tooltip and arrow fill with `Color/Neutral/Background/colorBgElevated` (this matches antd `color`).
+- Do not use `Popover` for this, and do not list the hidden types as plain text.
+- In Figma the DS `Table / Table cell` holds one tag only. The Drawings cell is a local auto-layout frame named `Drawings cell` that copies the cell's padding, gap, fill, and bottom border variables. It contains `Tag__Colorful` and `Tag` instances. Do not detach the table cell.
+- Keep the Drawings column wide enough for three tags plus `+X` on one line (`token.sizeUnit * 64` in the variant selection modal).
+- The expanded row panel repeats the same tags after a `Documents:` label (Base/Normal, `colorTextDescription`). Same preset colors, same three-plus-`+X` limit. In Figma this is a local frame named `Documents` inside the panel's `Meta` row.
+- Order follows the variant’s `drawingFileTypes` list. Do not regroup 3D exchange types.
+
+## Do not
+
+- Do not add tag colors, tokens, or a new Tag component for this.
+- Do not use one color for every file type.
+- Do not show TXT as its own download choice. It stays bundled with RFA.

@@ -1,18 +1,19 @@
 import type { StorybookConfig } from '@storybook/react-vite';
 
-/**
- * Storybook for Hydra components — source for the s2f (Storybook → Figma) capture tool.
- * Plan: Documents/plans/2026-10-15-storybook-to-figma-plugin-plan.md
- */
 const config: StorybookConfig = {
-  stories: ['../src/stories/**/*.stories.@(ts|tsx)'],
-  framework: {
-    name: '@storybook/react-vite',
-    options: {},
-  },
-  core: {
-    disableTelemetry: true,
-  },
+  "stories": [
+    "../src/**/*.mdx",
+    "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"
+  ],
+  "addons": [
+    "@chromatic-com/storybook",
+    "@storybook/addon-vitest",
+    "@storybook/addon-a11y",
+    "@storybook/addon-docs",
+    "@storybook/addon-mcp"
+  ],
+  "framework": "@storybook/react-vite",
+  // Publishes /s2f.config.json (Storybook → Figma settings for the s2f plugin).
+  "staticDirs": ["./s2f"]
 };
-
 export default config;

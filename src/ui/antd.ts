@@ -45,6 +45,7 @@ export {
   Rate,
   Result,
   Row,
+  Segmented,
   Select,
   Skeleton,
   Space,
@@ -75,3 +76,14 @@ export type {
 
 export { AppSearchInput, INLINE_SEARCH_CONTROL_SIZE } from './AppSearchInput';
 export type { AppSearchInputProps } from './AppSearchInput';
+
+export { StatTile } from './StatTile';
+export type { StatTileProps, StatTileTone } from './StatTile';
+export { OptionCard } from './OptionCard';
+export type { OptionCardLayout, OptionCardProps, OptionCardState, OptionCardType } from './OptionCard';
+export { FeatureCard } from './FeatureCard';
+export type { FeatureCardProps, FeatureCardState } from './FeatureCard';
+export { RecommendationCard } from './RecommendationCard';
+export type { RecommendationCardProps, RecommendationCardState } from './RecommendationCard';
+export { EmptyStateBlock } from './EmptyStateBlock';
+export type { EmptyStateBlockAction, EmptyStateBlockProps } from './EmptyStateBlock';

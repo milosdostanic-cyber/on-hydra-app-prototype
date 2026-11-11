@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #141414;
+        --ink-2: #595959;
+        --ink-3: #8c8c8c;
+        --line: #f0f0f0;
+        --line-strong: #d9d9d9;
+        --surface: #ffffff;
+        --surface-alt: #fafafa;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 32px 36px 40px;
+        width: 1320px;
+        font-family: 'Barlow', sans-serif;
+        color: var(--ink);
+        background: var(--surface);
+        -webkit-font-smoothing: antialiased;
+      }
+      h1 { font-size: 28px; line-height: 36px; font-weight: 600; margin: 0 0 4px; }
+      .sub { font-size: 15px; line-height: 22px; color: var(--ink-2); margin: 0 0 24px; }
+      .sub code { background: var(--surface-alt); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; font-size: 13px; }
+
+      table { width: 100%; border-collapse: collapse; }
+      thead th {
+        text-align: left;
+        font-size: 12px;
+        line-height: 18px;
+        font-weight: 500;
+        color: var(--ink-2);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        padding: 8px 10px;
+        border-bottom: 2px solid var(--line-strong);
+        background: var(--surface-alt);
+      }
+      tbody td {
+        padding: 10px 10px;
+        border-bottom: 1px solid var(--line);
+        font-size: 13px;
+        line-height: 19px;
+        vertical-align: top;
+      }
+      tbody tr:nth-child(even) td { background: #fcfdfe; }
+
+      .step-cell { display: flex; align-items: center; gap: 8px; width: 40px; }
+      .step-num { font-weight: 600; font-size: 14px; color: var(--ink); }
+      .swatch {
+        width: 34px; height: 34px; border-radius: 5px; flex-shrink: 0;
+        border: 1px solid rgba(0,0,0,0.1);
+      }
+      .hex { font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+
+      .token-main { font-weight: 600; font-size: 13px; }
+      .token-sub { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+
+      .brand-row td { background: #eef6fb !important; }
+      .brand-row .token-main { color: #2576bb; }
+
+      .empty-row td { color: var(--ink-3); font-style: italic; }
+
+      .comp {
+        display: inline-block;
+        font-size: 11px;
+        line-height: 16px;
+        padding: 1px 7px;
+        margin: 1px 2px 1px 0;
+        border-radius: 10px;
+        background: var(--surface-alt);
+        border: 1px solid var(--line-strong);
+        color: var(--ink-2);
+      }
+      .comp.strong { background: #e6f4ff; border-color: #91caff; color: #0958d9; }
+
+      .note {
+        margin-top: 20px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .note .box {
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 12px 14px;
+        font-size: 12.5px;
+        line-height: 19px;
+        color: var(--ink-2);
+      }
+      .note .box b { color: var(--ink); }
+
+      footer {
+        margin-top: 20px;
+        padding-top: 12px;
+        border-top: 1px solid var(--line);
+        font-size: 11.5px;
+        line-height: 17px;
+        color: var(--ink-3);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>RSFC blue ramp — semantic tokens &amp; where each one is used</h1>
+    <p class="sub">
+      Verified against <code>node_modules/antd/es/*/style/*.js</code> — one antd semantic token per
+      shade, defined in <code>primaryPrimitiveBlue.ts</code> → <code>semanticsFromRamp()</code>.
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Shade</th>
+          <th>Semantic token</th>
+          <th>Used in (antd components)</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+
+    <div class="note">
+      <div class="box">
+        <b>Highest-traffic shade is #1, not #6.</b> Through antd's derived <code>controlItemBgActive</code>,
+        shade 1 paints every selected table row, selected option, and selected calendar day. If a rebrand
+        "doesn't look applied" after changing the main color, shade 1 is usually the one still stale.
+      </div>
+      <div class="box">
+        <b>Info alerts are a separate scale on purpose.</b> <code>colorInfo*</code> binds to antd Daybreak
+        Blue (<code>#1677FF</code>), not this ramp — surfaces in <code>Alert</code>, <code>Badge</code>,
+        <code>message</code>, <code>Modal</code>, <code>notification</code>, <code>Progress</code>,
+        <code>Result</code>. An info message should not read as a brand statement.
+      </div>
+    </div>
+
+    <footer>
+      Repo usage of each token in <code>src/</code> (direct <code>token.*</code> references):
+      colorPrimary 68 · colorPrimaryBg 24 · colorPrimaryBorder 12 · colorPrimaryBgSubtle 8 ·
+      colorPrimaryBorderHover 6 · colorPrimaryText 6 · colorLink 4. <code>colorPrimaryHover</code> and
+      <code>colorPrimaryBgHover</code> are never referenced directly — they only reach the UI through
+      antd's own component styles. <code>colorPrimaryText*</code> has zero antd consumers; it exists for
+      application code only.
+    </footer>
+
+    <script>
+      const rows = [
+        {
+          hex: '#EBF5FA', main: 'colorPrimaryBg', sub: '→ derives controlItemBgActive, controlOutline',
+          comps: [
+            ['Selected row', true], ['Selected option', true], ['Selected day', true],
+            ['Selected menu item', true], ['Focus ring', false], 'Table', 'Select', 'Dropdown',
+            'Cascader', 'Tree', 'Transfer', 'DatePicker', 'Calendar', 'Menu (light)', 'Steps',
+            'Splitter', 'Input', 'Radio', 'Pagination', 'Button', 'Form',
+          ],
+        },
+        { hex: '#C7E1ED', main: 'colorPrimaryBgHover', sub: '→ controlItemBgActiveHover', comps: ['Hover on selected item', 'Steps'] },
+        { hex: '#99C6E0', main: 'colorPrimaryBorder', sub: '', comps: ['Button (ghost/dashed) border', 'DatePicker', 'Slider track', 'Upload drag area'] },
+        { hex: '#6EABD4', main: 'colorPrimaryBorderHover', sub: '', comps: ['Hover on those same borders'] },
+        { hex: '#4890C7', main: 'colorPrimaryHover', sub: '', comps: ['Input', 'Select', 'Checkbox', 'Radio', 'Switch', 'Tabs', 'Tag', 'Pagination', 'Upload', 'ColorPicker', 'Steps', 'Button*'] },
+        {
+          hex: '#2576BB', main: 'colorPrimary, colorLink, colorPrimaryText', sub: 'THE BRAND SLOT', brand: true,
+          comps: [
+            'Checkbox/Radio/Switch (checked)', 'Tabs (active)', 'Steps (active)', 'Pagination (active)',
+            'Slider handle', 'Spin', 'Badge (processing)', 'Anchor (active)', 'Input (focus border)',
+            'Table (active sort/filter)', 'Card', 'List', 'Tag', 'Timeline', 'Tree', 'Tour', 'Drawer',
+            'Notification', 'Form', ['Every <a> link (global reset)', true], ['Button type="link"', true],
+          ],
+        },
+        { hex: '#004173', main: 'colorPrimaryActive, colorLinkHover, colorPrimaryTextHover, colorSidebar', sub: '', comps: [['Sidebar background', true], ['Link hover', true], 'Pressed state (primary controls)'] },
+        { hex: '#00365F', main: 'colorLinkActive, colorPrimaryTextActive, colorSidebarItemSelectedText', sub: '', comps: [['Selected sidebar item text', true], 'Link pressed'] },
+        { hex: '#002A4A', main: '—', sub: 'no consumer today', comps: [], empty: true },
+        { hex: '#001D35', main: 'colorSidebarSubmenuBg', sub: '', comps: [['Expanded submenu background', true]] },
+      ];
+
+      const tbody = document.getElementById('rows');
+      rows.forEach((r, i) => {
+        const tr = document.createElement('tr');
+        if (r.brand) tr.className = 'brand-row';
+        if (r.empty) tr.className = 'empty-row';
+
+        const tdStep = document.createElement('td');
+        const stepWrap = document.createElement('div');
+        stepWrap.className = 'step-cell';
+        const num = document.createElement('div');
+        num.className = 'step-num';
+        num.textContent = i + 1;
+        const sw = document.createElement('div');
+        sw.className = 'swatch';
+        sw.style.background = r.hex;
+        stepWrap.appendChild(num);
+        stepWrap.appendChild(sw);
+        tdStep.appendChild(stepWrap);
+        const hexEl = document.createElement('div');
+        hexEl.className = 'hex';
+        hexEl.textContent = r.hex;
+        tdStep.appendChild(hexEl);
+        tr.appendChild(tdStep);
+
+        const tdToken = document.createElement('td');
+        const mainEl = document.createElement('div');
+        mainEl.className = 'token-main';
+        mainEl.textContent = r.main;
+        tdToken.appendChild(mainEl);
+        if (r.sub) {
+          const subEl = document.createElement('div');
+          subEl.className = 'token-sub';
+          subEl.textContent = r.sub;
+          tdToken.appendChild(subEl);
+        }
+        tr.appendChild(tdToken);
+
+        const tdComp = document.createElement('td');
+        r.comps.forEach((c) => {
+          const [label, strong] = Array.isArray(c) ? c : [c, false];
+          const span = document.createElement('span');
+          span.className = 'comp' + (strong ? ' strong' : '');
+          span.textContent = label;
+          tdComp.appendChild(span);
+        });
+        if (r.comps.length === 0) {
+          tdComp.textContent = 'kept so the 10-step scale stays complete and Figma-aligned';
+        }
+        tr.appendChild(tdComp);
+
+        tbody.appendChild(tr);
+      });
+    </script>
+  </body>
+</html>

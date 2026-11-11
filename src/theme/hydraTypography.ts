@@ -1,17 +1,17 @@
 /**
  * Typography mirrored from design local text styles (`Title/*`, `Base/*`,
- * `Small/*`, `Large/*`, `Extra Large/*`). No ad-hoc sizes outside this module.
+ * `Small/*`, `Large/*`, `Extra Large/*`, `Subtitle/*`). No ad-hoc sizes outside this module.
  */
 
 import type { CSSProperties } from 'react';
 
 const W_REG = 400;
 /**
- * `Title/Heading 3-5`, `Subtitle` roles, and (since 2026-09-17) every body `Strong` role
+ * `Title/Heading 3-5`, `Subtitle/*`, and every body `Medium` role
  * (`Base`, `Small`, `Large`, `Extra Large`) — mirrors `Typography/Font Weight/fontWeightMedium`.
  */
 const W_MEDIUM = 500;
-/** `Title/Heading 1-2` (since 2026-09-17) — mirrors `Typography/Font Weight/fontWeightStrong`. */
+/** `Title/Heading 1-2` and `Base/Semibold` — mirrors `Typography/Font Weight/fontWeightStrong`. */
 const W_SEMI = 600;
 
 export type HydraTextStyle = Readonly<{
@@ -74,11 +74,21 @@ export const hydraBaseNormal = {
   fontWeight: W_REG,
 } as const satisfies HydraTextStyle;
 
-export const hydraBaseStrong = {
-  designPath: 'Base/Strong',
+export const hydraBaseMedium = {
+  designPath: 'Base/Medium',
   fontSize: 14,
   lineHeight: 22,
   fontWeight: W_MEDIUM,
+} as const satisfies HydraTextStyle;
+
+/** @deprecated Use `hydraBaseMedium` — Figma renamed `Base/Strong` → `Base/Medium`. */
+export const hydraBaseStrong = hydraBaseMedium;
+
+export const hydraBaseSemibold = {
+  designPath: 'Base/Semibold',
+  fontSize: 14,
+  lineHeight: 22,
+  fontWeight: W_SEMI,
 } as const satisfies HydraTextStyle;
 
 export const hydraBaseUnderline = {
@@ -112,12 +122,15 @@ export const hydraSmallNormal = {
   fontWeight: W_REG,
 } as const satisfies HydraTextStyle;
 
-export const hydraSmallStrong = {
-  designPath: 'Small/Strong',
+export const hydraSmallMedium = {
+  designPath: 'Small/Medium',
   fontSize: 12,
   lineHeight: 20,
   fontWeight: W_MEDIUM,
 } as const satisfies HydraTextStyle;
+
+/** @deprecated Use `hydraSmallMedium` — Figma renamed `Small/Strong` → `Small/Medium`. */
+export const hydraSmallStrong = hydraSmallMedium;
 
 export const hydraSmallUnderline = {
   designPath: 'Small/Underline',
@@ -150,16 +163,16 @@ export const hydraLargeNormal = {
   fontWeight: W_REG,
 } as const satisfies HydraTextStyle;
 
-/**
- * Medium (500) since 2026-09-17 — bound to `fontWeightMedium` again, so it now resolves the same
- * as {@link hydraSubtitleLarge}. Design `Large/Strong` is what `Alert` titles use.
- */
-export const hydraLargeStrong = {
-  designPath: 'Large/Strong',
+/** Resolves the same as {@link hydraSubtitleLarge}. Design `Large/Medium` is what `Alert` titles use. */
+export const hydraLargeMedium = {
+  designPath: 'Large/Medium',
   fontSize: 16,
   lineHeight: 24,
   fontWeight: W_MEDIUM,
 } as const satisfies HydraTextStyle;
+
+/** @deprecated Use `hydraLargeMedium` — Figma renamed `Large/Strong` → `Large/Medium`. */
+export const hydraLargeStrong = hydraLargeMedium;
 
 export const hydraLargeUnderline = {
   designPath: 'Large/Underline',
@@ -192,12 +205,15 @@ export const hydraExtraLargeNormal = {
   fontWeight: W_REG,
 } as const satisfies HydraTextStyle;
 
-export const hydraExtraLargeStrong = {
-  designPath: 'Extra Large/Strong',
+export const hydraExtraLargeMedium = {
+  designPath: 'Extra Large/Medium',
   fontSize: 20,
   lineHeight: 28,
   fontWeight: W_MEDIUM,
 } as const satisfies HydraTextStyle;
+
+/** @deprecated Use `hydraExtraLargeMedium` — Figma renamed `Extra Large/Strong` → `Extra Large/Medium`. */
+export const hydraExtraLargeStrong = hydraExtraLargeMedium;
 
 export const hydraExtraLargeUnderline = {
   designPath: 'Extra Large/Underline',
@@ -231,6 +247,13 @@ export const hydraSubtitleLarge = {
   fontWeight: W_MEDIUM,
 } as const satisfies HydraTextStyle;
 
+export const hydraSubtitleExtraLarge = {
+  designPath: 'Subtitle/Extra Large',
+  fontSize: 20,
+  lineHeight: 28,
+  fontWeight: W_MEDIUM,
+} as const satisfies HydraTextStyle;
+
 export const hydraTextBaseNormal = hydraBaseNormal;
 
 export const hydraAntdFontMapFromDesign = {
@@ -254,7 +277,8 @@ export const hydraAntdFontMapFromDesign = {
   fontHeight: hydraBaseNormal.lineHeight,
   fontHeightSM: hydraSmallNormal.lineHeight,
   fontHeightLG: hydraLargeNormal.lineHeight,
-  fontWeightStrong: hydraBaseStrong.fontWeight,
+  /** Intentionally `Base/Medium` (500), not the Figma `fontWeightStrong` variable (600) — audit T-05. */
+  fontWeightStrong: hydraBaseMedium.fontWeight,
 } as const;
 
 export function hydraTextStyleToReactCss(

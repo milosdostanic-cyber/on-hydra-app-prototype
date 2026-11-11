@@ -1,0 +1,2031 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ASC → RSFC — Design Rebranding Audit</title>
+<style>
+  :root{
+    --ink:#14181f; --ink-2:#3d4655; --ink-3:#6b7585; --ink-4:#98a1b0;
+    --line:#e3e7ee; --line-2:#eef1f6; --bg:#ffffff; --bg-2:#f7f9fc; --bg-3:#eff3f9;
+    --keep:#0f7b4f; --keep-bg:#e7f6ee; --keep-line:#b6e2cb;
+    --change:#9a5b00; --change-bg:#fdf3e2; --change-line:#f0d6a8;
+    --add:#1257a6; --add-bg:#e8f1fc; --add-line:#bcd7f4;
+    --remove:#a31d24; --remove-bg:#fdecec; --remove-line:#f3c4c4;
+    --verify:#6b2f9e; --verify-bg:#f3ebfc; --verify-line:#ddc7f2;
+    --block:#8a4b00; --crit:#a31d24;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--bg);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{display:grid;grid-template-columns:274px minmax(0,1fr);gap:0;max-width:1680px;margin:0 auto}
+
+  /* ---------- nav ---------- */
+  nav{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;border-right:1px solid var(--line);padding:26px 18px 60px;background:var(--bg-2)}
+  nav .brandline{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-4);font-weight:700;margin-bottom:6px}
+  nav .navtitle{font-size:15px;font-weight:750;line-height:1.35;margin-bottom:20px;color:var(--ink)}
+  nav ol{list-style:none;margin:0;padding:0;counter-reset:s}
+  nav ol li{counter-increment:s;margin-bottom:1px}
+  nav ol li>a{display:block;padding:6px 9px 6px 30px;border-radius:6px;color:var(--ink-2);text-decoration:none;font-size:13.2px;position:relative;line-height:1.4}
+  nav ol li>a::before{content:counter(s);position:absolute;left:9px;top:6px;color:var(--ink-4);font-family:var(--mono);font-size:11px;font-weight:600}
+  nav ol li>a:hover{background:var(--bg-3);color:var(--ink)}
+  nav ol li>a.hi{color:var(--crit);font-weight:650}
+  nav .sub{list-style:none;margin:0 0 2px;padding:0 0 0 30px}
+  nav .sub li a{display:block;padding:3px 8px;border-radius:5px;color:var(--ink-3);text-decoration:none;font-size:12.3px}
+  nav .sub li a:hover{background:var(--bg-3);color:var(--ink)}
+
+  /* ---------- main ---------- */
+  main{padding:40px 46px 120px;min-width:0}
+  header.doc{border-bottom:2px solid var(--ink);padding-bottom:22px;margin-bottom:34px}
+  header.doc .kicker{font-size:11.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+  header.doc h1{font-size:33px;line-height:1.18;margin:9px 0 10px;letter-spacing:-.02em;font-weight:780}
+  header.doc .lede{color:var(--ink-2);max-width:82ch;font-size:15.5px;margin:0}
+
+  section{margin:0 0 52px;scroll-margin-top:22px}
+  h2{font-size:22px;letter-spacing:-.01em;margin:0 0 6px;padding-bottom:9px;border-bottom:1px solid var(--line);font-weight:740}
+  h2 .n{font-family:var(--mono);font-size:13px;color:var(--ink-4);margin-right:9px;font-weight:600}
+  h3{font-size:16.5px;margin:30px 0 9px;font-weight:700}
+  h4{font-size:14px;margin:22px 0 7px;font-weight:700;color:var(--ink-2);text-transform:uppercase;letter-spacing:.05em}
+  p{margin:0 0 12px;max-width:96ch}
+  .note{color:var(--ink-3);font-size:13.6px;max-width:96ch}
+  ul,ol.body{margin:0 0 13px;padding-left:22px;max-width:96ch}
+  li{margin-bottom:5px}
+  code{font-family:var(--mono);font-size:.875em;background:var(--bg-3);padding:1.5px 5px;border-radius:4px;color:var(--ink);white-space:nowrap}
+  a{color:var(--add)}
+
+  /* ---------- tables ---------- */
+  .tw{overflow-x:auto;border:1px solid var(--line);border-radius:9px;margin:14px 0 18px;background:var(--bg)}
+  table{border-collapse:collapse;width:100%;font-size:13.4px;min-width:760px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line-2);vertical-align:top}
+  thead th{background:var(--bg-2);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);font-weight:750;border-bottom:1px solid var(--line);position:sticky;top:0;white-space:nowrap}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:#fbfcfe}
+  td.l{font-weight:650;white-space:nowrap}
+  table.fixed{min-width:1020px}
+
+  /* ---------- badges ---------- */
+  .b{display:inline-block;font-size:10.5px;font-weight:750;letter-spacing:.05em;text-transform:uppercase;padding:2.5px 7px;border-radius:4px;border:1px solid;white-space:nowrap;line-height:1.5}
+  .keep{color:var(--keep);background:var(--keep-bg);border-color:var(--keep-line)}
+  .change{color:var(--change);background:var(--change-bg);border-color:var(--change-line)}
+  .add{color:var(--add);background:var(--add-bg);border-color:var(--add-line)}
+  .remove{color:var(--remove);background:var(--remove-bg);border-color:var(--remove-line)}
+  .verify{color:var(--verify);background:var(--verify-bg);border-color:var(--verify-line)}
+  .pill{display:inline-block;font-size:10.5px;font-weight:700;padding:2.5px 7px;border-radius:999px;background:var(--bg-3);color:var(--ink-2);border:1px solid var(--line);white-space:nowrap}
+  .pill.blocked{background:#fff4e6;color:var(--block);border-color:#f3d9b0}
+  .pill.ok{background:var(--keep-bg);color:var(--keep);border-color:var(--keep-line)}
+  .src{display:inline-block;font-family:var(--mono);font-size:10.5px;padding:1.5px 5px;border-radius:3px;background:var(--bg-3);color:var(--ink-3);border:1px solid var(--line)}
+
+  /* ---------- swatches ---------- */
+  .sw{display:inline-block;width:13px;height:13px;border-radius:3px;border:1px solid rgba(0,0,0,.18);vertical-align:-2px;margin-right:6px}
+  .hex{font-family:var(--mono);font-size:12.3px;white-space:nowrap}
+  .ramp{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 18px}
+  .ramp .st{border:1px solid var(--line);border-radius:7px;overflow:hidden;width:106px;background:var(--bg)}
+  .ramp .st .chip{height:42px}
+  .ramp .st .meta{padding:5px 7px;font-family:var(--mono);font-size:10.3px;color:var(--ink-2);line-height:1.5}
+  .ramp .st .meta b{display:block;font-size:10px;color:var(--ink-3);font-weight:600}
+  .ramp .st.mk{border-color:#111;border-width:2px}
+  .ramp .st .tag{font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:0 7px 5px}
+
+  /* ---------- callouts ---------- */
+  .call{border:1px solid var(--line);border-left:4px solid var(--ink-3);border-radius:8px;padding:14px 16px;margin:16px 0;background:var(--bg-2)}
+  .call.crit{border-left-color:var(--crit);background:#fdf6f6;border-color:#f3dede}
+  .call.warn{border-left-color:#c98a1a;background:#fffbf3;border-color:#f2e3c4}
+  .call.good{border-left-color:var(--keep);background:#f4fbf7;border-color:#d3ecdf}
+  .call.info{border-left-color:var(--add);background:#f5f9fe;border-color:#d7e6f7}
+  .call .ct{font-weight:750;font-size:14px;margin:0 0 6px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .call p:last-child,.call ul:last-child{margin-bottom:0}
+  .call ul{padding-left:20px}
+
+  /* ---------- summary cards ---------- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:11px;margin:18px 0 22px}
+  .card{border:1px solid var(--line);border-radius:9px;padding:13px 14px;background:var(--bg)}
+  .card .num{font-size:27px;font-weight:780;line-height:1.1;letter-spacing:-.02em}
+  .card .lab{font-size:11.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-top:3px}
+  .card .sub{font-size:12.3px;color:var(--ink-3);margin-top:5px;line-height:1.45}
+  .card.k .num{color:var(--keep)} .card.c .num{color:var(--change)}
+  .card.a .num{color:var(--add)} .card.v .num{color:var(--verify)} .card.r .num{color:var(--remove)}
+
+  /* ---------- status bar ---------- */
+  .bar{display:flex;height:26px;border-radius:6px;overflow:hidden;border:1px solid var(--line);margin:10px 0 8px}
+  .bar div{display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:750;color:#fff}
+  .lg{display:flex;flex-wrap:wrap;gap:14px;font-size:12.3px;color:var(--ink-2);margin-bottom:20px}
+  .lg span{display:flex;align-items:center;gap:6px}
+  .lg i{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+  /* ---------- checklist ---------- */
+  .chk{list-style:none;padding:0;margin:12px 0 18px;max-width:none}
+  .chk li{border:1px solid var(--line);border-radius:8px;padding:11px 13px;margin-bottom:8px;display:grid;grid-template-columns:24px minmax(0,1fr);gap:11px;background:var(--bg)}
+  .chk li .bx{width:15px;height:15px;border:1.5px solid var(--ink-4);border-radius:3.5px;margin-top:3px}
+  .chk li .ct2{font-weight:650;margin-bottom:3px;font-size:14px}
+  .chk li .cm{font-size:12.8px;color:var(--ink-3)}
+  .chk li .cm b{color:var(--ink-2)}
+  .ph{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--ink-2);padding:2px 7px;border-radius:4px;margin-right:8px;vertical-align:1px}
+  .ph.p0{background:#a31d24}.ph.p1{background:#9a5b00}.ph.p2{background:#1257a6}.ph.p3{background:#0f7b4f}.ph.p4{background:#6b2f9e}
+
+  figure{margin:16px 0;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--bg-2);max-width:560px}
+  figure img{display:block;width:100%;height:auto}
+  figcaption{font-size:12.3px;color:var(--ink-3);padding:9px 12px;border-top:1px solid var(--line)}
+
+  .split{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin:14px 0}
+  .box{border:1px solid var(--line);border-radius:9px;padding:14px 15px;background:var(--bg)}
+  .box h5{margin:0 0 9px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:750}
+  .box ul{padding-left:19px;margin:0;font-size:13.4px}
+  .kv{font-size:13.4px;margin:0}
+  .kv div{display:flex;gap:9px;padding:4px 0;border-bottom:1px solid var(--line-2)}
+  .kv div:last-child{border-bottom:none}
+  .kv dt{min-width:132px;color:var(--ink-3);font-weight:650;flex-shrink:0}
+  .kv dd{margin:0}
+
+  @media (max-width:1080px){
+    .wrap{grid-template-columns:1fr}
+    nav{position:static;height:auto;border-right:none;border-bottom:1px solid var(--line)}
+    main{padding:28px 20px 80px}
+  }
+  @media print{
+    nav{display:none} .wrap{grid-template-columns:1fr} main{padding:0}
+    section{page-break-inside:avoid} .tw{overflow:visible} thead th{position:static}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav>
+  <div class="brandline">Design audit</div>
+  <div class="navtitle">ASC → RSFC<br>Rebranding Audit</div>
+  <ol>
+    <li><a href="#s1">Executive summary</a></li>
+    <li><a href="#s2">Method &amp; verification basis</a></li>
+    <li><a href="#s3">Overall migration status</a></li>
+    <li><a href="#s4" class="hi">Critical findings</a></li>
+    <li><a href="#s5">ASC vs RSFC at a glance</a></li>
+    <li><a href="#s6">Logo &amp; brand marks</a></li>
+    <li><a href="#s7">Brand naming</a></li>
+    <li><a href="#s8">Colors</a>
+      <ul class="sub">
+        <li><a href="#s8a">8.1 Primitive colors</a></li>
+        <li><a href="#s8b">8.2 Semantic tokens</a></li>
+        <li><a href="#s8c">8.3 Component tokens</a></li>
+        <li><a href="#s8d">8.4 Unplaced RSFC colors</a></li>
+      </ul>
+    </li>
+    <li><a href="#s9">Typography</a>
+      <ul class="sub">
+        <li><a href="#s9a">9.1 Font families</a></li>
+        <li><a href="#s9b">9.2 Font weights</a></li>
+        <li><a href="#s9c">9.3 Sizes &amp; text styles</a></li>
+        <li><a href="#s9d">9.4 Font delivery</a></li>
+      </ul>
+    </li>
+    <li><a href="#s10">Icons</a></li>
+    <li><a href="#s11">Illustrations, imagery, backgrounds</a></li>
+    <li><a href="#s12">Borders, radii, shadows, layout</a></li>
+    <li><a href="#s13">States</a></li>
+    <li><a href="#s14">Components</a></li>
+    <li><a href="#s15">Metadata &amp; brand-adjacent assets</a></li>
+    <li><a href="#s16">Design-system (Figma) impact</a></li>
+    <li><a href="#s17">Repository impact</a></li>
+    <li><a href="#s18">Required Figma changes</a></li>
+    <li><a href="#s19">Required code changes</a></li>
+    <li><a href="#s20">No action required</a></li>
+    <li><a href="#s21" class="hi">Risks &amp; contradictions</a></li>
+    <li><a href="#s22">Needs-verification register</a></li>
+    <li><a href="#s23">Final migration checklist</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<header class="doc">
+  <div class="kicker">Design-focused rebranding audit · Hydra / ConnectED</div>
+  <h1>ASC → Reliable Safety &amp; Flow Corporation (RSFC)</h1>
+  <p class="lede">A comparison of the <b>approved RSFC brand sources</b> — the <i>At-A-Glance Style Guide</i> (August 2026) and the
+  <i>Final Logos</i> delivery — against the RSFC migration inventory, the <b>Hydra Ant Design — DS</b> Figma file, and the
+  <code>on-hydra-app-prototype</code> repository. Every item is classified <b>Keep</b>, <b>Change</b>, <b>Add</b>, <b>Remove</b>, or
+  <b>Needs verification</b>. Primitive, semantic, and component-token changes are kept in separate categories throughout.
+  <b>Nothing in Figma or the repository was modified.</b></p>
+
+  <div class="call good">
+    <p class="ct">✓ Revision 2 — now based on the approved brand sources, not a summary of them</p>
+    <p>The first pass of this audit derived every RSFC requirement from the migration inventory's <i>paraphrase</i> of the brand guide.
+    The guide and the logo package have since been supplied and read directly. That closed the largest verification gap (<b>V5</b>) and
+    changed several conclusions outright. In particular: the approved palette is <b>more than twice the size</b> the inventory described,
+    the logo delivery <b>resolves the mark-only blocker</b> that was recorded as client-blocked, and the delivered artwork <b>does not
+    fully agree with the hex values printed in the guide</b>. Findings that changed are marked <span class="pill ok">Rev 2</span>.</p>
+  </div>
+</header>
+
+<!-- ============================================================ 1 -->
+<section id="s1">
+  <h2><span class="n">01</span>Executive summary</h2>
+
+  <p>The RSFC rebrand is <b>much smaller on the color primitive layer than expected, considerably larger on the typography
+  layer than the migration document implies, and larger again on the brand-asset layer now that the approved sources have been read</b>.
+  Two of the nine approved brand colors are already live and correct in both Figma and code. Typography, by contrast, cannot be
+  delivered by editing values — it needs new structure in both systems. And the logo is not one asset swap but a
+  <b>three-lockup, four-variant matrix</b> against a component set built for two.</p>
+
+  <div class="cards">
+    <div class="card k"><div class="num">2 / 9</div><div class="lab">Brand colors already correct</div><div class="sub">Orange <span class="hex">#F05A23</span> and Navy <span class="hex">#004173</span> verified in Figma <i>and</i> repo, in the right semantic roles. The guide defines <b>9</b> colors plus 2 tint levels — not the 4 the inventory listed.</div></div>
+    <div class="card c"><div class="num">1</div><div class="lab">Font family variable</div><div class="sub">Figma has a single <code>fontFamily</code> variable = <code>Cairo</code>. RSFC needs <b>Barlow</b> and <b>Barlow Condensed</b>.</div></div>
+    <div class="card a"><div class="num">2</div><div class="lab">Missing font weights</div><div class="sub">Only 400 and 600 exist. Confirmed from the guide: headers need <b>ExtraBold 800</b>, subheaders <b>Bold 700</b>.</div></div>
+    <div class="card a"><div class="num">12</div><div class="lab">Approved logo files to place</div><div class="sub">3 lockups × 4 variants in RGB SVG. Figma's <code>Logo</code> set has <b>2</b> variants and one lockup.</div></div>
+    <div class="card v"><div class="num">4</div><div class="lab">Guide-vs-artwork conflicts</div><div class="sub">The delivered SVGs contain colors that are <b>not</b> the guide's printed hex values. New in Rev 2 — see <a href="#f7">Finding 7</a>.</div></div>
+    <div class="card"><div class="num">340</div><div class="lab">ASC string hits in <code>src/</code></div><div class="sub">Across 74 files. Roughly 120–150 are genuine user-facing copy; the rest are SKUs, code identifiers, or false positives.</div></div>
+  </div>
+
+  <h4>What the audit concluded</h4>
+  <ul>
+    <li><b>The color primitives are in far better shape than the document assumes.</b> RSFC Orange is exactly <code>Volcano/volcano-6</code>
+    (<span class="hex">#F05A23</span>) and RSFC Navy is exactly <code>Primary/primary-7</code> (<span class="hex">#004173</span>) — verified byte-for-byte in Figma
+    and in <code>src/theme/</code>. The whole Volcano ramp and the entire Ant Design standard palette need <b>no change at all</b>.</li>
+
+    <li><b>The one genuinely hard color problem is structural, and the document does not describe it.</b> The document asks to keep
+    <span class="hex">#004173</span> while remapping <span class="hex">#0073A5</span> and <span class="hex">#00B9F0</span>. All three are steps of the <i>same</i>
+    <code>Primary/primary-*</code> ramp (7, 6 and 4). They cannot be treated as independent decisions. See <a href="#f1">Finding 1</a>.</li>
+
+    <li><b>Typography is the largest and most underestimated workstream.</b> Cairo → Barlow is a value swap, but
+    "Barlow Condensed ExtraBold headings" and "Barlow Condensed Bold subheadings" require a <i>second font-family variable</i>,
+    <i>two new weight values</i>, a <i>new subheading semantic role that exists in neither system</i>, and a workaround for the fact
+    that Ant Design has no heading-font token. See <a href="#f2">Finding 2</a>.</li>
+
+    <li><b>The logo is not tokenized.</b> The Figma <code>Logo</code> component set returns no variable bindings, and the repo SVGs carry
+    hardcoded ASC fills. Replacing brand colors in tokens will not change the logo — the artwork must be swapped as an asset in both places.</li>
+
+    <li><span class="pill ok">Rev 2</span> <b>The mark geometry survives the rebrand — only its colors and wordmark change.</b> The approved RSFC
+    artwork keeps the <i>same interlocking cube</i> as ASC, recolored from cyan/blue to Light Blue, Navy and Gray, with the wordmark replaced.
+    This is the single most reassuring finding in the audit: silhouette, favicon shape, and collapsed-rail recognition all carry over.
+    See <a href="#s6">§6</a>.</li>
+
+    <li><span class="pill ok">Rev 2</span> <b>The mark-only blocker is resolved — an approved Logomark exists.</b> The migration inventory recorded
+    this as client-blocked with no approved asset. The delivery contains a dedicated <code>LogomarkTM</code> lockup at an effectively square
+    <b>0.98 : 1</b>, which is exactly what the collapsed navigation rail and a favicon need. <b>That P0 no longer needs a client request.</b></li>
+
+    <li><span class="pill ok">Rev 2</span> <b>The horizontal logo is 76&nbsp;% wider than the asset it replaces, and that is a layout problem.</b>
+    ASC is <b>2.45 : 1</b>; RSFC Horizontal is <b>4.31 : 1</b>. Dropped into the existing sidebar header band at the same height it will need
+    far more horizontal room than the 256&nbsp;px expanded sidebar provides. See <a href="#f6">Finding 6</a>.</li>
+
+    <li><span class="pill ok">Rev 2</span> <b>The delivered artwork disagrees with the guide it ships with.</b> The guide prints Gray as
+    <span class="hex">#A7A9AC</span>; every delivered SVG uses <span class="hex">#A8A9AC</span>. The near-black appears as three different values
+    across files, and the Reverse variant introduces two blues that appear nowhere in the palette. <b>Do not seed tokens from the SVGs.</b>
+    See <a href="#f7">Finding 7</a>.</li>
+
+    <li><span class="pill ok">Rev 2</span> <b>Two brand elements exist in the guide that exist in neither Figma nor the repository.</b> The
+    <b>Angle Graphic</b> (fixed 30°, capped at 20&nbsp;% of the space) and the <b>Accent Bar</b> (thin orange or navy rule, vertical or horizontal)
+    are named, specified, recurring brand devices. They are net-new design-system work that the migration inventory never mentions.
+    See <a href="#s12b">§12b</a>.</li>
+
+    <li><b>One document instruction does not apply to this repository.</b> The inventory asks to "change token values before renaming
+    internal <code>ASC</code> token identifiers." This repo has <b>zero</b> ASC-named tokens, CSS variables, or theme exports — everything is
+    <code>hydra*</code> / <code>--hydra-*</code>. That cleanup task is already satisfied here. See <a href="#f4">Finding 4</a>.</li>
+
+    <li><b>Icons, spacing, radii, shadows, and all interaction-state machinery are brand-neutral</b> and require no rebrand work.
+    They are Ant Design derived and carry no ASC identity.</li>
+  </ul>
+
+  <div class="call warn">
+    <p class="ct">⚠ The biggest blocker is not design work — it is a missing decision</p>
+    <p>RSFC Light Blue <span class="hex">#2576BB</span> is <b>confirmed by the guide as a co-equal primary anchor</b> — one of four colors that
+    "take visual dominance over all other colors" — yet it exists in no ramp in either system and <b>neither the guide nor the inventory assigns
+    it a UI semantic role</b>. Because the legacy interactive blues being retired (<span class="hex">#0073A5</span>,
+    <span class="hex">#00B9F0</span>) are the current <code>colorPrimary</code> and <code>colorLinkHover</code>, <b>no primitive or semantic color
+    work can safely start until that role is defined.</b> This is the single highest-leverage unblock available.</p>
+    <p><span class="pill ok">Rev 2</span> Reading the guide <i>raised</i> the stakes on this decision rather than settling it. Light Blue
+    <span class="hex">#2576BB</span> is the dominant color of the logo mark itself, which makes leaving it outside the token system harder to
+    justify than when it looked like a fourth-place collateral color.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 2 -->
+<section id="s2">
+  <h2><span class="n">02</span>Method &amp; verification basis</h2>
+
+  <p><span class="pill ok">Rev 2</span> <b>Five</b> sources were compared. The <b>At-A-Glance Style Guide</b> and the <b>Final Logos</b> package are
+  now treated as the authoritative source of truth for RSFC <i>requirements</i>; the migration inventory is treated as the source of truth for
+  migration <i>intent and sequencing</i>; Figma and the repository were inspected directly for <i>current state</i>.</p>
+
+  <div class="call info">
+    <p class="ct">ⓘ Why the source hierarchy matters</p>
+    <p>Where the guide and the inventory disagree, <b>the guide wins</b> — it is the approved client artefact and predates the inventory
+    (August 2026 vs 2026-09-14). Where the guide and the <i>delivered artwork</i> disagree, <b>neither is automatically authoritative</b>: those
+    conflicts are recorded as open items in <a href="#f7">Finding 7</a> rather than silently resolved, because picking one would bake an
+    unapproved value into the foundations.</p>
+  </div>
+
+  <div class="tw"><table>
+    <thead><tr><th style="width:150px">Source</th><th>Identity</th><th style="width:210px">Access</th><th style="width:160px">Confidence</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="l"><b>Brand guide</b><br><span class="note">authoritative</span></td>
+        <td>RSFC At-A-Glance Style Guide<br><span class="note"><code>RSFC_AAG_Guideline_Final.pdf</code> · dated <b>AUGUST 2026</b> · 2 pages</span></td>
+        <td>Read in full — verbal identity, typography, logo usage, brand colors, graphic elements</td>
+        <td><span class="pill ok">Fully read</span></td>
+      </tr>
+      <tr>
+        <td class="l"><b>Logo package</b><br><span class="note">authoritative</span></td>
+        <td>Final Logos<br><span class="note"><code>Final Logos.zip</code> · 179 files · assets dated 2026-09-10</span></td>
+        <td>Extracted and inspected — every RGB SVG parsed for <code>viewBox</code> and fill values; rasters measured; artwork rendered and viewed</td>
+        <td><span class="pill ok">Fully read</span></td>
+      </tr>
+      <tr>
+        <td class="l">Migration inventory</td>
+        <td><a href="https://ooden.atlassian.net/wiki/spaces/Hydra/pages/2269249539/MASTER+ASC+to+RSFC+Migration+Inventory">MASTER — ASC to RSFC Migration Inventory</a><br><span class="note">Page <code>2269249539</code>, version 3, 2026-09-14</span></td>
+        <td>Read in full via Confluence</td>
+        <td><span class="pill ok">Fully read</span></td>
+      </tr>
+      <tr>
+        <td class="l">Figma design system</td>
+        <td>Hydra Ant Design — DS<br><span class="note">fileKey <code>3ghYBXR6XVUEaeBo3D5E4q</code></span></td>
+        <td>Official Figma MCP — <code>get_metadata</code>, <code>get_variable_defs</code>, <code>get_design_context</code>, <code>get_screenshot</code></td>
+        <td><span class="pill">Partial — see below</span></td>
+      </tr>
+      <tr>
+        <td class="l">Application repository</td>
+        <td><code>on-hydra-app-prototype</code><br><span class="note">React 19 · antd 6.3.5 · Vite</span></td>
+        <td>Full read of <code>src/theme/</code>, brand assets, and an exhaustive <code>ASC</code> sweep across <code>src/</code></td>
+        <td><span class="pill ok">Fully read</span></td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <h4><span class="pill ok">Rev 2</span> What was verified from the approved brand sources</h4>
+  <ul>
+    <li><b>Typography, fully specified.</b> Brand font <b>Barlow</b> ("Barlow Superfamily", available on Google Fonts and Adobe Fonts);
+    headers <b>Barlow Condensed ExtraBold</b>; subheaders <b>Barlow Condensed Bold</b>; body copy <b>Barlow</b>; the master signature set in
+    <b>Barlow Regular</b>. Office-safe substitute <b>Calibri</b>, scoped to surfaces "where we DON'T control the users execution" —
+    PowerPoint, Word, Excel, email body copy and email signatures. Brand fonts apply "everywhere we control the rendering/production:
+    website, print collateral, video, social graphics, branded PDFs."</li>
+    <li><b>Eleven brand colors in four tiers</b>, with RGB, CMYK and — for the primaries — Pantone references. Plus two tint levels
+    (<b>55&nbsp;%</b>, <b>15&nbsp;%</b>) and a dark <b>Shade</b>. Full table in <a href="#s8">§8</a>.</li>
+    <li><b>Logo usage rules.</b> Full-color on solid white or very light backgrounds ("10&nbsp;% black tint or lighter"); reversed or white on
+    solid darker backgrounds; the note "<i>can be placed over the darkest blue at a large scale only</i>".</li>
+    <li><b>Two named graphic devices</b> — the Angle Graphic and the Accent Bar — with usage constraints. See <a href="#s12b">§12b</a>.</li>
+    <li><b>Verbal identity</b> — master signature, tagline, elevator pitch, voice and tone, an explicit do/don't list, and one
+    <b>explicitly retired</b> tagline. See <a href="#s7">§7</a>.</li>
+    <li><b>Every RGB SVG in the logo package</b> — 10 files across 3 lockups — parsed for geometry and fill values, and the Primary,
+    Reverse and Logomark artwork rendered and visually inspected.</li>
+  </ul>
+
+  <h4>What was verified live in Figma during this audit</h4>
+  <ul>
+    <li><code>Typography/Font Family/fontFamily</code> = <b><code>Cairo</code></b> — read from bound nodes in both light and dark documentation frames.</li>
+    <li><code>Typography/Font Weight/fontWeightNormal</code> = <code>400</code>, <code>fontWeightStrong</code> = <code>600</code>. <b>No other weight variables were returned.</b></li>
+    <li><code>Typography/Font Size/*</code> and <code>Line Height/*</code> for <code>fontSize</code> 14/22, <code>fontSizeSM</code> 12/20, <code>fontSizeHeading4</code> 20/28.</li>
+    <li>Text styles <code>Title/Heading 4</code>, <code>Base/Normal</code>, <code>Base/Strong</code>, <code>Small/Normal</code>, <code>Small/Strong</code> — each binds its family to the single <code>fontFamily</code> variable, with style <code>Regular</code> or <code>SemiBold</code>.</li>
+    <li>Complete <code>Volcano/volcano-1…10</code> ramp, Light <b>and</b> Dark.</li>
+    <li>Complete <code>Daybreak Blue/blue-1…10</code>, <code>Sunset Orange</code>, <code>Gold</code>, <code>Yellow</code>, <code>Lime</code>, <code>Green</code>, <code>Cyan</code>, <code>Geek Blue</code>, <code>Purple</code>, <code>Magenta</code>, <code>Dust Red</code> ramps, Light and Dark.</li>
+    <li>Neutral ramp <code>gray-1…gray-13</code> (<span class="hex">#ffffff</span> → <span class="hex">#000000</span>).</li>
+    <li><code>Color/Neutral/Text/*</code> semantic values for light and dark.</li>
+    <li>The <code>Logo</code> page (<code>767:62211</code>), the <code>Logo</code> component set (<code>742:78271</code>), its two variants, its rendered artwork, and its variable bindings.</li>
+  </ul>
+
+  <div class="call info">
+    <p class="ct">ⓘ Verification limit — stated explicitly rather than hidden</p>
+    <p>Figma MCP enumerated only two top-level pages (<code>🖼 Cover</code>, <code>Logo</code>); the <code>🌈 Colors</code> canvas was reachable directly.
+    No node on the reachable pages binds the <code>Primary/primary-*</code> ramp or the <code>Customize Theme</code> collection, so those values
+    <b>could not be re-read live in this session</b>.</p>
+    <p>For those specific items this audit relies on <code>Documentation/hydra-tokenization-parity-audit.md</code> (dated <b>2026-04-07</b>), which
+    records a full variable-level extraction of that file. Every claim resting on that document alone is labelled
+    <span class="b verify">Needs verification</span> and listed in <a href="#s22">§22</a>. Treat those as <i>documented, not freshly confirmed</i>.</p>
+  </div>
+
+  <h4>Out of scope by instruction</h4>
+  <p class="note">No redesign, no implementation, no edits to Figma or the repository. Non-design ASC surfaces named in the inventory —
+  email domains, Revit add-in identity, Azure B2C, analytics cohorts, auth provisioning, legal and privacy URLs — are acknowledged where they
+  touch design decisions but are not audited here.</p>
+</section>
+
+<!-- ============================================================ 3 -->
+<section id="s3">
+  <h2><span class="n">03</span>Overall migration status</h2>
+
+  <p>Counted by <b>design-system item</b> (primitive ramp, semantic group, token, text-style family, asset class) rather than by file,
+  so that one propagating source is not counted many times.</p>
+
+  <div class="bar">
+    <div style="width:44%;background:#0f7b4f">Keep 44%</div>
+    <div style="width:20%;background:#b8791f">Change 20%</div>
+    <div style="width:15%;background:#1257a6">Add 15%</div>
+    <div style="width:6%;background:#a31d24">Remove 6%</div>
+    <div style="width:15%;background:#7c42b0">Verify 15%</div>
+  </div>
+  <div class="lg">
+    <span><i style="background:#0f7b4f"></i> Already correct or brand-neutral</span>
+    <span><i style="background:#b8791f"></i> Existing item needs a new value or binding</span>
+    <span><i style="background:#1257a6"></i> Does not exist yet</span>
+    <span><i style="background:#a31d24"></i> Retire</span>
+    <span><i style="background:#7c42b0"></i> Blocked or unconfirmed</span>
+  </div>
+
+  <div class="tw"><table class="fixed">
+    <thead><tr>
+      <th style="width:186px">Category</th><th style="width:118px">Status</th>
+      <th style="width:128px">Figma</th><th style="width:128px">Repo</th><th>Headline</th>
+    </tr></thead>
+    <tbody>
+      <tr><td class="l">Logo &amp; brand marks</td><td><span class="b change">Change</span> <span class="b add">Add</span></td>
+        <td><span class="pill">ASC artwork</span></td><td><span class="pill">ASC artwork</span></td>
+        <td>Both sides still ASC. Variant API is reusable as-is. Mark-only asset for collapsed nav does not exist anywhere.</td></tr>
+
+      <tr><td class="l">Brand naming (copy)</td><td><span class="b change">Change</span></td>
+        <td><span class="pill">Not audited here</span></td><td><span class="pill">340 hits / 74 files</span></td>
+        <td>Largest volume item. Needs the full-name vs abbreviation rule before any sweep.</td></tr>
+
+      <tr><td class="l">Primitive colors</td><td><span class="b keep">Keep</span> <span class="b verify">Verify</span></td>
+        <td><span class="pill ok">Verified live</span></td><td><span class="pill ok">Verified</span></td>
+        <td>Volcano and all Ant Design standard ramps: no change. Only the blue Primary ramp is in question.</td></tr>
+
+      <tr><td class="l">Semantic color tokens</td><td><span class="b change">Change</span> <span class="b verify">Verify</span></td>
+        <td><span class="pill blocked">Role undefined</span></td><td><span class="pill blocked">Role undefined</span></td>
+        <td>This is where the real rebrand happens. Blocked on the Light Blue role decision.</td></tr>
+
+      <tr><td class="l">Component color tokens</td><td><span class="b keep">Keep</span> <span class="b change">Change</span></td>
+        <td><span class="pill ok">Aligned</span></td><td><span class="pill ok">Aligned</span></td>
+        <td>Button is already RSFC Orange. Menu, Layout and Sidebar inherit the blue ramp and follow whatever it becomes.</td></tr>
+
+      <tr><td class="l">Font families</td><td><span class="b change">Change</span> <span class="b add">Add</span></td>
+        <td><span class="pill">Cairo, single var</span></td><td><span class="pill">Cairo, single const</span></td>
+        <td>Swap body family, then add a second condensed family. Neither system can express two families today.</td></tr>
+
+      <tr><td class="l">Font weights</td><td><span class="b add">Add</span></td>
+        <td><span class="pill">400 / 600 only</span></td><td><span class="pill">400 / 600 only</span></td>
+        <td>700 and 800 must be introduced. The shared 600 constant must be split first.</td></tr>
+
+      <tr><td class="l">Font sizes &amp; text styles</td><td><span class="b keep">Keep</span></td>
+        <td><span class="pill ok">Verified live</span></td><td><span class="pill ok">Verified</span></td>
+        <td>Scale is Ant Design derived and brand-neutral. Rebind families and weights; do not touch metrics.</td></tr>
+
+      <tr><td class="l">Icons</td><td><span class="b keep">Keep</span></td>
+        <td><span class="pill ok">Ant Design set</span></td><td><span class="pill ok"><code>@ant-design/icons</code></span></td>
+        <td>Single brand-neutral source. No ASC iconography exists.</td></tr>
+
+      <tr><td class="l">Illustrations &amp; imagery</td><td><span class="b verify">Verify</span></td>
+        <td><span class="pill">Not audited here</span></td><td><span class="pill">18 raster assets</span></td>
+        <td>Product photography is brand-neutral in principle; not pixel-inspected. One hero gradient bypasses tokens.</td></tr>
+
+      <tr><td class="l">Backgrounds &amp; surfaces</td><td><span class="b keep">Keep</span></td>
+        <td><span class="pill ok">Neutral</span></td><td><span class="pill ok">Neutral</span></td>
+        <td>Layout surfaces resolve from the neutral gray ramp, not brand color.</td></tr>
+
+      <tr><td class="l">Borders, radii, spacing</td><td><span class="b keep">Keep</span></td>
+        <td><span class="pill ok">Ant Design</span></td><td><span class="pill ok">Derived tokens</span></td>
+        <td>Generated by the Ant Design algorithm. Zero brand identity.</td></tr>
+
+      <tr><td class="l">Shadows &amp; elevation</td><td><span class="b keep">Keep</span></td>
+        <td><span class="pill ok">Neutral + orange</span></td><td><span class="pill ok">Neutral + orange</span></td>
+        <td>Global shadows are black-alpha. The one tinted shadow is already RSFC Orange.</td></tr>
+
+      <tr><td class="l">Interaction states</td><td><span class="b change">Change</span></td>
+        <td><span class="pill">Inherits primary</span></td><td><span class="pill">Inherits primary</span></td>
+        <td>No state machinery changes. States shift only because they consume the primary ramp; contrast must be re-validated.</td></tr>
+
+      <tr><td class="l">Components</td><td><span class="b keep">Keep</span></td>
+        <td><span class="pill ok">Unmodified</span></td><td><span class="pill ok">Unmodified</span></td>
+        <td>No component structure or variant API changes anywhere in the rebrand.</td></tr>
+
+      <tr><td class="l">App metadata &amp; favicon</td><td><span class="b add">Add</span> <span class="b verify">Verify</span></td>
+        <td><span class="pill blocked">No asset set</span></td><td><span class="pill">None exists</span></td>
+        <td>There is no favicon or manifest to rebrand. Title is <code>BOM</code>. Blocked on the client icon set.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============================================================ 4 -->
+<section id="s4">
+  <h2><span class="n">04</span>Critical findings</h2>
+  <p>Five findings change how the migration should be sequenced. Each is a conclusion drawn from comparing the three sources, not a
+  restatement of the inventory.</p>
+
+  <div class="call crit" id="f1">
+    <p class="ct">Finding 1 · The three blues are one ramp, not three decisions <span class="b change">Change</span> <span class="b verify">Needs verification</span></p>
+    <p>The inventory contains two instructions that are individually reasonable and jointly unsatisfiable as written:</p>
+    <ul>
+      <li>"Keep existing values that already match RSFC … Verified examples: sidebar Navy <code>#004173</code>"</li>
+      <li>"Remap legacy interactive blues such as <code>#0073A5</code> and <code>#00B9F0</code> through the shared token system"</li>
+    </ul>
+    <p>All three hexes are adjacent steps of a single generated ramp:</p>
+    <div class="ramp">
+      <div class="st"><div class="chip" style="background:#B8EAFF"></div><div class="meta"><b>primary-1</b>#B8EAFF</div></div>
+      <div class="st"><div class="chip" style="background:#8BCCD9"></div><div class="meta"><b>primary-2</b>#8BCCD9</div></div>
+      <div class="st"><div class="chip" style="background:#62B7CC"></div><div class="meta"><b>primary-3</b>#62B7CC</div></div>
+      <div class="st mk"><div class="chip" style="background:#00B9F0"></div><div class="meta"><b>primary-4</b>#00B9F0</div><div class="tag" style="color:#a31d24">Remap</div></div>
+      <div class="st"><div class="chip" style="background:#1D8BB3"></div><div class="meta"><b>primary-5</b>#1D8BB3</div></div>
+      <div class="st mk"><div class="chip" style="background:#0073A5"></div><div class="meta"><b>primary-6</b>#0073A5</div><div class="tag" style="color:#a31d24">Remap</div></div>
+      <div class="st mk"><div class="chip" style="background:#004173"></div><div class="meta"><b>primary-7</b>#004173</div><div class="tag" style="color:#0f7b4f">Keep</div></div>
+      <div class="st"><div class="chip" style="background:#00365F"></div><div class="meta"><b>primary-8</b>#00365F</div></div>
+      <div class="st"><div class="chip" style="background:#002A4A"></div><div class="meta"><b>primary-9</b>#002A4A</div><div class="tag" style="color:#6b2f9e">≈ Navy shade</div></div>
+      <div class="st"><div class="chip" style="background:#001D35"></div><div class="meta"><b>primary-10</b>#001D35</div></div>
+    </div>
+    <p>Step 6 is the seed. If the ramp is reseeded on a new RSFC blue, <b>step 7 will no longer be <span class="hex">#004173</span></b> and the
+    "keep the sidebar navy" instruction breaks silently. Conversely, if the ramp is frozen to protect step 7, steps 4 and 6 cannot be remapped
+    inside it. Three mutually exclusive strategies exist, and the choice is a design-system decision that must be made before any token edit:</p>
+    <ul>
+      <li><b>Reseed the ramp</b> on the new RSFC blue and accept that Navy becomes an explicitly pinned value or moves to a different step.</li>
+      <li><b>Freeze the ramp</b> as a legacy primitive and repoint only the <i>semantic aliases</i> (<code>Color/Primary/*</code>) at different steps or at a new ramp.</li>
+      <li><b>Split the ramp</b> into a navy ramp and an interactive-blue ramp, which is the cleanest but is net-new primitive structure.</li>
+    </ul>
+    <p><b>Where:</b> Figma <code>Colors → Primary/primary-*</code> and <code>Customize Theme → Color/Primary/*</code>; repo
+    <code>src/theme/primaryPrimitiveBlue.ts</code>. <b>Risk:</b> a blind hex replacement silently changes the sidebar, all links, the top bar,
+    selected table rows, and every ghost primary button at once.</p>
+  </div>
+
+  <div class="call crit" id="f2">
+    <p class="ct">Finding 2 · RSFC typography needs new structure, not new values <span class="b add">Add</span></p>
+    <p>The inventory frames typography as three checklist lines. Verified against both systems it is the largest structural change in the rebrand.
+    Figma today exposes exactly <b>one</b> font-family variable and <b>two</b> weight variables:</p>
+    <div class="tw"><table>
+      <thead><tr><th style="width:250px">Current variable (verified live)</th><th style="width:130px">Value</th><th>RSFC consequence</th></tr></thead>
+      <tbody>
+        <tr><td><code>Typography/Font Family/fontFamily</code></td><td><code>Cairo</code></td><td><span class="b change">Change</span> to Barlow — and it is the <i>only</i> family slot, so headings cannot differ from body</td></tr>
+        <tr><td><code>Typography/Font Weight/fontWeightNormal</code></td><td><code>400</code></td><td><span class="b keep">Keep</span></td></tr>
+        <tr><td><code>Typography/Font Weight/fontWeightStrong</code></td><td><code>600</code></td><td><span class="b keep">Keep</span> for body strong — but it is also what every heading uses today</td></tr>
+        <tr><td colspan="2"><i>No condensed family variable exists</i></td><td><span class="b add">Add</span> a second family variable for Barlow Condensed</td></tr>
+        <tr><td colspan="2"><i>No weight 700 exists</i></td><td><span class="b add">Add</span> — required for RSFC subheadings (Bold)</td></tr>
+        <tr><td colspan="2"><i>No weight 800 exists</i></td><td><span class="b add">Add</span> — required for RSFC headings (ExtraBold)</td></tr>
+        <tr><td colspan="2"><i>No subheading semantic role exists</i></td><td><span class="b add">Add</span> — the role is absent from Figma <i>and</i> the repo</td></tr>
+      </tbody>
+    </table></div>
+    <p>Two consequences that are easy to miss:</p>
+    <ul>
+      <li><b>The weight constant must be split before headings can move.</b> In <code>src/theme/hydraTypography.ts</code> a single
+      <code>W_SEMI = 600</code> is shared by <code>Title/Heading 1–5</code> <i>and</i> by <code>Base/Strong</code>, <code>Small/Strong</code>,
+      <code>Large/Strong</code>, <code>Extra Large/Strong</code>. Setting headings to 800 without splitting it would also bold every inline
+      strong text in the product.</li>
+      <li><b>Ant Design has no heading-font token.</b> <code>theme.token</code> exposes <code>fontFamily</code> and <code>fontFamilyCode</code>,
+      and nothing else. A different heading family therefore cannot be delivered through the token pipeline at all — it needs either CSS on the
+      typography elements or per-component overrides. This is an architectural decision, not a token edit, and it is the item most likely to
+      produce inconsistent results across surfaces.</li>
+    </ul>
+    <p><b>Where:</b> Figma <code>Typography</code> collection and all <code>Title/*</code> text styles; repo
+    <code>src/theme/hydraTypography.ts</code>, <code>src/theme/hydraAntdTypography.ts</code>, <code>index.html</code>, <code>src/index.css</code>.</p>
+  </div>
+
+  <div class="call crit" id="f3">
+    <p class="ct">Finding 3 · The logo is not connected to the token system <span class="b remove">Remove</span> <span class="b add">Add</span></p>
+    <p><code>get_variable_defs</code> on the Figma <code>Logo</code> instance returns an <b>empty set</b> — the artwork carries raw fills with no
+    variable bindings. The repo SVGs mirror this with hardcoded ASC hexes:</p>
+    <div class="tw"><table>
+      <thead><tr><th style="width:230px">Asset</th><th style="width:120px">Size</th><th>Embedded fills</th><th style="width:110px">Token-bound?</th></tr></thead>
+      <tbody>
+        <tr><td><code>Mode=On_White</code> <span class="src">742:78272</span></td><td>185.897 × 75.85</td><td>Flattened vector — no bindings</td><td><span class="b remove">No</span></td></tr>
+        <tr><td><code>Mode=On_Dark</code> <span class="src">742:78280</span></td><td>185.897 × 75.85</td><td>Flattened vector — no bindings</td><td><span class="b remove">No</span></td></tr>
+        <tr><td><code>public/assets/brand/asc-logo/On_White.svg</code></td><td>186 × 76</td><td><span class="sw" style="background:#000"></span><span class="hex">black</span> · <span class="sw" style="background:#00B9F0"></span><span class="hex">#00B9F0</span> · <span class="sw" style="background:#0073A5"></span><span class="hex">#0073A5</span> · <span class="sw" style="background:#AAAAAA"></span><span class="hex">#AAAAAA</span></td><td><span class="b remove">No</span></td></tr>
+        <tr><td><code>public/assets/brand/asc-logo/On_Dark.svg</code></td><td>186 × 76</td><td><span class="sw" style="background:#fff"></span><span class="hex">white</span> · <span class="sw" style="background:#00B9F0"></span><span class="hex">#00B9F0</span> · <span class="sw" style="background:#0073A5"></span><span class="hex">#0073A5</span> · <span class="sw" style="background:#949594"></span><span class="hex">#949594</span></td><td><span class="b remove">No</span></td></tr>
+      </tbody>
+    </table></div>
+    <p>Two implications. First, <b>token work will not move the logo</b> — remapping <span class="hex">#0073A5</span> and
+    <span class="hex">#00B9F0</span> in the theme leaves both logos visually unchanged, so they must be treated as an asset replacement
+    workstream in their own right. Second, the logo is a <b>fifth and sixth independent instance</b> of the retired ASC blues, outside the
+    ramp and outside the theme, and a reverse audit that only greps the theme layer will miss them.</p>
+    <p><b>Also confirmed:</b> the repo defines <code>onLight</code> in <code>src/assets/brand/ascLogoUrls.ts</code> but never renders it —
+    only <code>onDark</code> is consumed. The light variant is dead code today.</p>
+  </div>
+
+  <div class="call warn" id="f4">
+    <p class="ct">Finding 4 · One inventory instruction does not apply to this repository <span class="b keep">Keep</span></p>
+    <p>The inventory asks Engineering to "change token values before renaming internal <code>ASC</code> token identifiers … so broken
+    CSS-variable references do not get mixed with visual changes."</p>
+    <p>Verified across the whole repo: <b>there are no ASC-named tokens, no <code>--asc-*</code> CSS variables, and no ASC-named theme
+    exports.</b> Every token, module, and CSS variable is <code>hydra*</code> / <code>--hydra-*</code>. The risk that instruction guards against
+    <b>does not exist here</b>, and sequencing work around it would be wasted effort in this codebase.</p>
+    <p>What <i>does</i> carry ASC in its name is a separate and lower-risk class: <b>10 filenames</b> (<code>ascBrowserProducts.ts</code>,
+    <code>BomAscProductsPage.tsx</code>, <code>AscProductsDrawer.tsx</code>, <code>specAscSubstitutionSeed.ts</code>,
+    <code>ascSkuVariants.ts</code>, <code>BomAscFigureLink.tsx</code>, <code>bomAscCatalogPartDetail.ts</code>,
+    <code>BomAscCatalogPartDetailPage.tsx</code>, <code>BomAliasConfigurator.tsx</code>, <code>ascLogoUrls.ts</code>), a set of exported symbols
+    (<code>ASC_DEST_FIELDS</code>, <code>AscCatalogPart</code>, <code>SpecAscMaster</code>, <code>mockAscParts</code>, …), and route segments
+    (<code>/bom/projects/:id/asc-products</code>, <code>?mode=asc</code>). <b>None of these are visual branding</b>, none are user-visible, and
+    the inventory's own "intentionally preserved" list supports deferring them. Recommend a deliberate, separate refactor — not part of the
+    brand cutover.</p>
+    <p class="note">Note that the instruction remains valid for the wider ConnectED estate; it simply has no target in this repository.</p>
+  </div>
+
+  <div class="call warn" id="f5">
+    <p class="ct">Finding 5 · A pre-existing Figma ↔ repo divergence becomes a rebrand risk <span class="b verify">Needs verification</span></p>
+    <p>Informational color is already wired differently in the two systems, per the recorded parity audit:</p>
+    <ul>
+      <li><b>Figma:</b> <code>Customize Theme → Color/Info/*</code> aliases still point at <code>Primary/primary-*</code>.</li>
+      <li><b>Repo:</b> <code>blueInfoSemantics</code> maps <code>colorInfo*</code> to <code>Daybreak Blue/blue-*</code> (Ant Design blue), so
+      <code>Alert type="info"</code> is <span class="hex">#1677FF</span>-based.</li>
+    </ul>
+    <p>This divergence is harmless today because both happen to be blue. <b>It stops being harmless the moment the Primary ramp is reseeded.</b>
+    Figma's informational states would drift to RSFC navy while the running application keeps Ant Design blue, and the two systems would disagree
+    on every info Alert, notification, and informational badge — a difference that visual QA would attribute to implementation error rather than
+    to token wiring.</p>
+    <p><b>Resolved 2026-09-17.</b> <span class="b keep">Closed</span> Figma <code>Color/Info/*</code> was rebound to <code>Daybreak Blue/blue-*</code>,
+    matching the repo in both Light and Dark. The predicted drift had already appeared: a full-file scan found 418 nodes consuming <code>Color/Info/*</code>,
+    of which <code>Radio</code> (42) had used <code>colorInfoText</code> for its <code>Radio.Button</code> label, where Ant Design uses <code>colorPrimary</code>.
+    Those were rebound to <code>Color/Primary/colorPrimary</code>. See <code>Documentation/hydra-tokenization-parity-audit.md</code> §7.</p>
+    <p><b>Action:</b> decide the intended informational color <i>before</i> touching the primary ramp, and reconcile both sides in the same pass.
+    The inventory does not mention informational color at all; this is an audit-surfaced gap.</p>
+  </div>
+
+  <div class="call crit" id="f6">
+    <p class="ct">Finding 6 · The new horizontal logo does not fit where the old one sits <span class="b change">Change</span> <span class="pill ok">Rev 2</span></p>
+    <p>The approved RSFC horizontal lockup is a <b>substantially wider shape</b> than the ASC asset it replaces. Measured from the delivered
+    <code>viewBox</code> values:</p>
+    <div class="tw"><table>
+      <thead><tr><th style="width:230px">Asset</th><th style="width:130px">Geometry</th><th style="width:110px">Aspect</th><th>Consequence</th></tr></thead>
+      <tbody>
+        <tr><td class="l">ASC — current, in use</td><td><code>186 × 76</code></td><td><b>2.45 : 1</b></td><td>Fits the sidebar header band today.</td></tr>
+        <tr><td class="l">RSFC Horizontal</td><td><code>303.54 × 70.44</code></td><td><b>4.31 : 1</b></td><td><b>~76&nbsp;% wider at equal height.</b> Will not drop in.</td></tr>
+        <tr><td class="l">RSFC Wordmark</td><td><code>232.45 × 60</code></td><td>3.87 : 1</td><td>Monochrome only — no full-color RGB variant shipped.</td></tr>
+        <tr><td class="l">RSFC Logomark</td><td><code>66.8 × 68.2</code></td><td><b>0.98 : 1</b></td><td>Effectively square. <b>Ideal for the collapsed rail and favicon.</b></td></tr>
+      </tbody>
+    </table></div>
+    <p>The expanded sidebar is <b>256&nbsp;px</b> wide and the header band already carries padding plus the <i>ConnectED</i> product label. At the
+    current rendered logo height the RSFC horizontal lockup needs roughly <b>76&nbsp;% more horizontal space</b> than is presently allocated.
+    The realistic options are to reduce the logo height, re-lay-out the header band, or adopt the Wordmark lockup there instead — all of which
+    are design decisions, not implementation details.</p>
+    <p><b>Why this is critical rather than cosmetic:</b> the sidebar brand is the most visible single element in the application, and it renders on
+    every screen. It is also the one place where a "simple asset swap" assumption breaks hardest — the file replaces cleanly and the layout
+    silently degrades.</p>
+    <p><b>Action:</b> treat the sidebar brand as a <b>design task</b>, not an asset replacement. Decide the expanded-state lockup (Horizontal vs
+    Wordmark), and adopt the <b>Logomark</b> for the collapsed rail — which also fixes the pre-existing defect where the full ASC wordmark is
+    rendered into the 72&nbsp;px collapsed rail today.</p>
+  </div>
+
+  <div class="call crit" id="f7">
+    <p class="ct">Finding 7 · The delivered artwork contradicts the brand guide it ships with <span class="b verify">Needs verification</span> <span class="pill ok">Rev 2</span></p>
+    <p>The guide prints an exact hex for each brand color. The delivered SVGs do not consistently use those values. This was found by parsing
+    every RGB SVG in the package rather than by trusting the guide:</p>
+    <div class="tw"><table>
+      <thead><tr><th style="width:150px">Color</th><th style="width:120px">Guide prints</th><th style="width:150px">Artwork contains</th><th>Assessment</th></tr></thead>
+      <tbody>
+        <tr><td class="l">Gray</td><td><span class="hex">#A7A9AC</span></td><td><span class="hex">#A8A9AC</span></td><td><b>Mismatch in the red channel</b> (<code>A7</code> vs <code>A8</code>). Present in <i>every</i> full-color SVG, so the artwork is internally consistent and the <i>guide</i> is the outlier — or vice versa.</td></tr>
+        <tr><td class="l">Near-black</td><td><span class="hex">#231F20</span></td><td><span class="hex">#231F20</span>, <span class="hex">#221E1F</span>, <span class="hex">#221F1F</span></td><td><b>Three different values across files.</b> Primary/Logomark use the guide value; Black Horizontal mixes two; Black Wordmark uses a third.</td></tr>
+        <tr><td class="l">Reverse blues</td><td>—</td><td><span class="hex">#2777BB</span>, <span class="hex">#13547F</span></td><td><b>Two blues that appear nowhere in the palette.</b> The Reverse variant is not built from the documented colors.</td></tr>
+        <tr><td class="l">Orange</td><td><span class="hex">#F05A23</span></td><td><i>absent</i></td><td>See below — the guide's own provenance claim does not hold.</td></tr>
+      </tbody>
+    </table></div>
+    <p><b>The guide states the primary colors are "drawn directly from the logo." For Orange, that is not true.</b> RSFC Orange
+    <span class="hex">#F05A23</span> does not appear in any delivered logo file. The logo is built from Navy, Light Blue, Gray and near-black
+    only. Orange is a brand color, but it is not a logo color — worth knowing before anyone tries to derive the palette from the artwork.</p>
+    <p><b>The guide also contradicts itself on the dark Shade.</b> It prints <code>HEX #002A49</code> alongside <code>RGB 0/65/115</code> — but
+    <code>RGB 0/65/115</code> is <span class="hex">#004173</span>, the Navy. One of the two is wrong. The inventory flagged this item as
+    inconsistent without identifying the mechanism; <b>this audit confirms it is a hex-vs-RGB contradiction inside the approved guide.</b></p>
+    <p><b>Action:</b> <b>do not seed design tokens from the SVG fills, and do not assume the guide is clean either.</b> Get one authoritative value
+    per color confirmed in writing, then treat the guide as canonical and have the artwork corrected to match. Seeding from artwork would put
+    <span class="hex">#A8A9AC</span> and two undocumented blues into the design system permanently.</p>
+  </div>
+
+  <div class="call warn" id="f8">
+    <p class="ct">Finding 8 · The logo variant matrix is six times larger than the component set built for it <span class="b add">Add</span> <span class="pill ok">Rev 2</span></p>
+    <p>Figma's <code>Logo</code> component set exposes a single <code>Mode</code> property with two values — <code>On_White</code> and
+    <code>On_Dark</code>. The approved delivery is a <b>3 × 4 matrix</b>: three lockups (Horizontal, Wordmark, Logomark) × four color variants
+    (Primary, Reverse, White, Black), shipped in RGB, CMYK and PMS.</p>
+    <p>The earlier revision of this audit concluded that the two-variant API could be kept and only the artwork swapped. <b>That conclusion no
+    longer holds.</b> The existing <code>Mode</code> property cannot express the distinction between <i>Reverse</i> (mark keeps color, wordmark goes
+    white) and <i>White</i> (everything goes white) — and the guide treats those as different assets for different backgrounds, not interchangeable
+    ones.</p>
+    <p><b>Action:</b> extend the component set to a two-property API — <code>Lockup</code> × <code>Variant</code> — rather than replacing artwork
+    inside the existing two variants. Scope the RGB SVG subset for product use; CMYK and PMS are print deliverables and do not belong in the
+    design system. Note that only <b>10 of the 12</b> RGB SVG combinations were shipped: the Wordmark lockup has Black and White but
+    <b>no Primary or Reverse</b>.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 5 -->
+<section id="s5">
+  <h2><span class="n">05</span>ASC vs RSFC at a glance</h2>
+
+  <div class="split">
+    <div class="box">
+      <h5>Current — ASC</h5>
+      <dl class="kv">
+        <div><dt>Corporate name</dt><dd>ASC Engineered Solutions</dd></div>
+        <div><dt>Product name</dt><dd>ConnectED <span class="note">(unchanged)</span></dd></div>
+        <div><dt>Logo</dt><dd>ASC cube mark + wordmark, 2 modes</dd></div>
+        <div><dt>Body font</dt><dd>Cairo</dd></div>
+        <div><dt>Heading font</dt><dd>Cairo SemiBold 600</dd></div>
+        <div><dt>Subheading font</dt><dd><i>no distinct role</i></dd></div>
+        <div><dt>Primary action</dt><dd><span class="sw" style="background:#0073A5"></span><span class="hex">#0073A5</span></dd></div>
+        <div><dt>Accent / link hover</dt><dd><span class="sw" style="background:#00B9F0"></span><span class="hex">#00B9F0</span></dd></div>
+        <div><dt>Sidebar</dt><dd><span class="sw" style="background:#004173"></span><span class="hex">#004173</span></dd></div>
+        <div><dt>Solid button</dt><dd><span class="sw" style="background:#F05A23"></span><span class="hex">#F05A23</span></dd></div>
+      </dl>
+    </div>
+    <div class="box">
+      <h5>Target — RSFC</h5>
+      <dl class="kv">
+        <div><dt>Corporate name</dt><dd>Reliable Safety &amp; Flow Corporation</dd></div>
+        <div><dt>Abbreviation</dt><dd>RSFC <span class="note">(usage rule undefined)</span></dd></div>
+        <div><dt>Logo</dt><dd>Primary horizontal + white/reversed horizontal</dd></div>
+        <div><dt>Body font</dt><dd>Barlow <span class="note">(weight undefined)</span></dd></div>
+        <div><dt>Heading font</dt><dd>Barlow Condensed ExtraBold</dd></div>
+        <div><dt>Subheading font</dt><dd>Barlow Condensed Bold</dd></div>
+        <div><dt>Orange</dt><dd><span class="sw" style="background:#F05A23"></span><span class="hex">#F05A23</span> <span class="b keep">already live</span></dd></div>
+        <div><dt>Navy</dt><dd><span class="sw" style="background:#004173"></span><span class="hex">#004173</span> <span class="b keep">already live</span></dd></div>
+        <div><dt>Light Blue</dt><dd><span class="sw" style="background:#2576BB"></span><span class="hex">#2576BB</span> <span class="b add">no role yet</span></dd></div>
+        <div><dt>Gray</dt><dd><span class="sw" style="background:#A7A9AC"></span><span class="hex">#A7A9AC</span> <span class="b add">no role yet</span></dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <h4>Launch palette — presence check across all three sources</h4>
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:150px">RSFC color</th><th style="width:96px">Hex</th><th style="width:210px">Figma</th><th style="width:210px">Repo</th><th style="width:118px">Status</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="l"><span class="sw" style="background:#F05A23"></span>Orange</td><td class="hex">#F05A23</td>
+        <td><code>Volcano/volcano-6</code> <span class="pill ok">exact</span></td>
+        <td><code>volcanoPrimitiveLight[5]</code> <span class="pill ok">exact</span></td>
+        <td><span class="b keep">Keep</span></td>
+        <td>Already the solid-primary Button color in the right semantic role. Verified live in Figma.</td>
+      </tr>
+      <tr>
+        <td class="l"><span class="sw" style="background:#004173"></span>Navy</td><td class="hex">#004173</td>
+        <td><code>Primary/primary-7</code> <span class="pill ok">exact</span></td>
+        <td><code>bluePrimaryPrimitiveLight[6]</code> <span class="pill ok">exact</span></td>
+        <td><span class="b keep">Keep</span></td>
+        <td>Already the sidebar surface. Correct role — but coupled to the ramp, see <a href="#f1">Finding 1</a>.</td>
+      </tr>
+      <tr>
+        <td class="l"><span class="sw" style="background:#2576BB"></span>Light Blue</td><td class="hex">#2576BB</td>
+        <td><span class="pill blocked">Absent</span></td>
+        <td><span class="pill blocked">Absent</span></td>
+        <td><span class="b add">Add</span> <span class="b verify">Verify</span></td>
+        <td>In no ramp on either side. Nearest step is <code>primary-5</code> <span class="hex">#1D8BB3</span> — not a match. Role undefined.</td>
+      </tr>
+      <tr>
+        <td class="l"><span class="sw" style="background:#A7A9AC"></span>Gray</td><td class="hex">#A7A9AC</td>
+        <td><span class="pill blocked">Absent</span></td>
+        <td><span class="pill blocked">Absent</span></td>
+        <td><span class="b add">Add</span> <span class="b verify">Verify</span></td>
+        <td>Neutral ramp is Ant Design standard; nearest are <code>gray-6</code> <span class="hex">#bfbfbf</span> and <code>gray-7</code> <span class="hex">#8c8c8c</span>. Neither matches.</td>
+      </tr>
+      <tr>
+        <td class="l"><span class="sw" style="background:#002A49"></span>Dark Navy Shade</td><td class="hex">#002A49</td>
+        <td><code>primary-9</code> is <span class="hex">#002A4A</span></td>
+        <td><code>bluePrimaryPrimitiveLight[8]</code> = <span class="hex">#002A4A</span></td>
+        <td><span class="b verify">Needs verification</span></td>
+        <td><b>Off by one unit in the blue channel.</b> Very likely the same intended color. The inventory separately flags this value as internally inconsistent in the At-a-Glance guide.</td>
+      </tr>
+      <tr>
+        <td class="l"><span class="sw" style="background:#FA961E"></span>Accent Orange</td><td class="hex">#FA961E</td>
+        <td><code>Sunset Orange/orange-6</code> is <span class="hex">#fa8c16</span></td>
+        <td><span class="pill blocked">Absent</span></td>
+        <td><span class="b add">Add</span> <span class="pill ok">Rev 2</span></td>
+        <td><b>Confirmed real and in scope.</b> The guide lists it as an accent with a stated role. Close to the Ant Design standard orange but not equal — that ramp is an Ant Design primitive, so <b>overwriting it would break Ant Design parity</b>.</td>
+      </tr>
+      <tr>
+        <td class="l"><span class="sw" style="background:#FFCD05"></span>Yellow</td><td class="hex">#FFCD05</td>
+        <td><code>Gold/gold-6</code> is <span class="hex">#faad14</span>; <code>Yellow/yellow-6</code> is <span class="hex">#fadb14</span></td>
+        <td><span class="pill blocked">Absent</span></td>
+        <td><span class="b add">Add</span> <span class="pill ok">Rev 2</span></td>
+        <td><b>Not in the inventory at all.</b> Falls between the two Ant Design yellow ramps and matches neither.</td>
+      </tr>
+      <tr>
+        <td class="l"><span class="sw" style="background:#231F20"></span>Near-black</td><td class="hex">#231F20</td>
+        <td><code>Neutral/gray-12</code> is <span class="hex">#141414</span>; <code>gray-13</code> is <span class="hex">#000000</span></td>
+        <td><span class="pill blocked">Absent</span></td>
+        <td><span class="b add">Add</span> <span class="pill ok">Rev 2</span></td>
+        <td><b>Not in the inventory.</b> Carries a Pantone (419 C), so it is a considered brand color rather than incidental ink. Appears in the logo artwork — <b>and in three different values across files</b>, see <a href="#f7">Finding 7</a>.</td>
+      </tr>
+      <tr>
+        <td class="l"><span class="sw" style="background:#EB1E23"></span>Red</td><td class="hex">#EB1E23</td>
+        <td><code>Dust Red/red-6</code> is <span class="hex">#f5222d</span></td>
+        <td><span class="pill blocked">Absent</span></td>
+        <td><span class="b add">Add</span> <span class="b verify">Verify</span> <span class="pill ok">Rev 2</span></td>
+        <td><b>Not in the inventory.</b> Visually near the Ant Design error red but not equal. <b>Do not route this into <code>colorError</code></b> without a decision — the guide scopes accents to "graphs and complex illustrations", not semantic state.</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <h4><span class="pill ok">Rev 2</span> What the brand guide adds beyond the inventory</h4>
+  <p>The migration inventory described a four-color "starting launch palette". The approved guide defines a <b>four-tier system of nine colors
+  plus two tint levels</b>, each tier with an explicit usage rule. The five colors above that are new to this revision were found by reading the
+  guide directly.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th style="width:130px">Tier</th><th style="width:230px">Members</th><th>Usage rule, verbatim from the guide</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="l">Primary</td>
+        <td>Orange, Navy, Light Blue, Gray</td>
+        <td>"The main brand anchors, drawn directly from the logo, that take visual dominance over all other colors." <span class="note">Note: the provenance claim does not hold for Orange — see <a href="#f7">Finding 7</a>.</span></td>
+      </tr>
+      <tr>
+        <td class="l">Shade</td>
+        <td><span class="hex">#002A49</span></td>
+        <td>"Reserved for instances where stronger contrast is needed, particularly against orange text or design elements, while ensuring the primary colors remain visually dominant."</td>
+      </tr>
+      <tr>
+        <td class="l">Tints</td>
+        <td><b>Tint 1 = 55 %</b>, <b>Tint 2 = 15 %</b></td>
+        <td>"Use tints sparingly as softer, more neutral supporting colors." <b>Two fixed levels, not a free ramp</b> — this is materially different from a 10-step Ant Design ramp and needs a modelling decision.</td>
+      </tr>
+      <tr>
+        <td class="l">Secondary</td>
+        <td>One of <span class="hex">#FFCD05</span> / <span class="hex">#231F20</span> <span class="b verify">Verify</span></td>
+        <td>"A color that supports the primary colors, used to highlight key elements (like a word in a title, or accent bars) without overpowering the primary colors."</td>
+      </tr>
+      <tr>
+        <td class="l">Accent</td>
+        <td>The remaining three of <span class="hex">#FFCD05</span> <span class="hex">#231F20</span> <span class="hex">#EB1E23</span> <span class="hex">#FA961E</span> <span class="b verify">Verify</span></td>
+        <td>"Used sparingly in graphs and complex illustrations that need additional variety. Always paired with the primary and secondary colors, <b>never used alone, and never visually dominant</b> over them."</td>
+      </tr>
+      <tr>
+        <td class="l">Gradients</td>
+        <td>Built from the primaries</td>
+        <td>"Gradients add depth and improve text readability when used as subtle overlays or backgrounds." <b>Now an approved brand device</b> — relevant to the hardcoded gradient in <a href="#s11">§11</a>.</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="call warn">
+    <p class="ct">⚠ One ambiguity this audit could not resolve from the source <span class="b verify">Needs verification</span></p>
+    <p>The guide's colour page is a two-column layout in which the <b>Secondary</b> and <b>Accent</b> descriptions sit adjacent to a shared block
+    of four swatches. Text extraction cannot reliably attribute which of <span class="hex">#FFCD05</span>, <span class="hex">#231F20</span>,
+    <span class="hex">#EB1E23</span> and <span class="hex">#FA961E</span> is the single <i>Secondary</i> and which three are <i>Accents</i>.</p>
+    <p>The strongest available signal is Pantone coverage: <span class="hex">#231F20</span> carries <b>PMS 419 C</b> while the other three have
+    CMYK only, and every confirmed Primary also carries a Pantone. On that basis <span class="hex">#231F20</span> is the likely Secondary — but
+    the guide's own description of the Secondary ("highlight key elements, like a word in a title") reads more naturally as the yellow.
+    <b>This is a one-question confirmation, not an investigation.</b> It is recorded as V17 rather than guessed.</p>
+  </div>
+
+  <div class="call good">
+    <p class="ct">✓ The most useful single result in this audit</p>
+    <p>Both of the RSFC colors that carry real UI weight are <b>already implemented, in both systems, in the correct semantic role</b>. Orange and
+    Navy need <b>no primitive work whatsoever</b>. The color workstream is therefore not a palette migration — it is a narrower set of questions
+    about what the <i>new</i> colors are for, what happens to the two legacy blues, and how a two-level tint rule is modelled in a
+    ten-step-ramp system.</p>
+    <p><span class="pill ok">Rev 2</span> The guide's tier rules are unusually helpful here: <b>accents are explicitly barred from being used alone
+    or dominantly</b>, and are scoped to charts and illustrations. That is a strong argument for keeping the four new non-primary colors
+    <b>out of the semantic token layer entirely</b> and exposing them only as a data-visualisation palette — which protects the Ant Design
+    semantic ramps from being overwritten.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 6 -->
+<section id="s6">
+  <h2><span class="n">06</span>Logo &amp; brand marks</h2>
+
+  <div class="split">
+    <figure>
+      <img src="assets/rsfc-audit-figma-logo-current.png" alt="Current ASC logo in the Figma design system: cyan and blue cube mark beside the ASC wordmark with the words Engineered Solutions, shown in both on-white and on-dark variants." />
+      <figcaption><b>Current — ASC.</b> Live capture of the Figma <code>Logo</code> page (<code>767:62211</code>). Both variants carry the full
+      ASC identity: cube mark plus <i>ASC Engineered Solutions</i> wordmark. <code>186 × 76</code>, <b>2.45 : 1</b>.</figcaption>
+    </figure>
+    <figure>
+      <img src="assets/rsfc-audit-logo-horizontal-primary.png" alt="Approved RSFC horizontal logo: the same interlocking cube mark recolored in light blue, navy and gray, beside the wordmark Reliable in heavy type with Safety and Flow Corporation set beneath it." />
+      <figcaption><b>Approved — RSFC Horizontal, Primary.</b> From <code>Final Logos.zip</code>. <b>The cube geometry is unchanged</b> — recolored
+      and rewordmarked. <code>303.54 × 70.44</code>, <b>4.31 : 1</b>.</figcaption>
+    </figure>
+  </div>
+
+  <div class="split">
+    <figure style="max-width:230px">
+      <img src="assets/rsfc-audit-logo-logomark-primary.png" alt="Approved RSFC Logomark: the interlocking cube mark alone in light blue, navy and gray with a trademark symbol, with no wordmark." />
+      <figcaption><b>Logomark.</b> The mark alone, <b>0.98 : 1</b>. This is the asset the migration inventory recorded as missing and
+      client-blocked. <b>It exists.</b></figcaption>
+    </figure>
+    <figure style="background:#004173">
+      <img src="assets/rsfc-audit-logo-horizontal-reverse.png" alt="Approved RSFC reverse logo shown on navy: the cube mark in light blue and gray with the Reliable Safety and Flow Corporation wordmark reversed to white." />
+      <figcaption style="color:#ffffff;border-top-color:rgba(255,255,255,.28)"><b>Reverse.</b> Shown here on Navy
+      <span class="hex" style="background:transparent;color:#fff">#004173</span>. The mark keeps its color while the wordmark reverses — which is
+      why this cannot share a variant slot with <i>White</i>.</figcaption>
+    </figure>
+  </div>
+
+  <div class="call good">
+    <p class="ct">✓ The mark survives the rebrand <span class="pill ok">Rev 2</span></p>
+    <p>Placing the two side by side makes the most important logo finding obvious: <b>RSFC keeps ASC's interlocking cube.</b> The geometry is
+    the same shape; what changed is the color treatment (cyan/blue → Light Blue, Navy, Gray) and the wordmark
+    (<i>ASC Engineered Solutions</i> → <i>Reliable Safety &amp; Flow Corporation</i>).</p>
+    <p>This matters practically, not just sentimentally. Silhouette-dependent surfaces — favicon, app icon, collapsed navigation rail, loading
+    states, watermarks — keep working at the same sizes and in the same proportions. <b>Only the horizontal lockup's aspect ratio is a problem</b>
+    (<a href="#f6">Finding 6</a>), and that is confined to the expanded sidebar header.</p>
+  </div>
+
+  <h4><span class="pill ok">Rev 2</span> Delivered asset matrix — what actually shipped</h4>
+  <p>Parsed from <code>Final Logos.zip</code>. Product work should use the <b>RGB</b> column; CMYK and PMS are print deliverables.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th style="width:130px">Lockup</th><th style="width:120px">Geometry</th><th style="width:78px">Aspect</th><th>Variants shipped (RGB SVG)</th><th style="width:210px">Recommended product use</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="l">Horizontal</td><td><code>303.54 × 70.44</code></td><td>4.31 : 1</td>
+        <td>Primary, Reverse, White, Black <span class="pill ok">all 4</span></td>
+        <td>Expanded sidebar brand — <b>only after the header band is re-laid-out.</b> See <a href="#f6">Finding 6</a>.</td>
+      </tr>
+      <tr>
+        <td class="l">Logomark</td><td><code>66.8 × 68.2</code></td><td>0.98 : 1</td>
+        <td>Primary, Reverse, White, Black <span class="pill ok">all 4</span></td>
+        <td><b>Collapsed rail, favicon, app icon.</b> Cleanest files in the package — <code>viewBox</code> only, no malformed intrinsic size.</td>
+      </tr>
+      <tr>
+        <td class="l">Wordmark</td><td><code>232.45 × 60</code></td><td>3.87 : 1</td>
+        <td>Black, White only <span class="pill blocked">no Primary / Reverse</span></td>
+        <td>Monochrome contexts. <b>Cannot be used where full color is required</b> — those variants were not shipped.</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="call warn">
+    <p class="ct">⚠ Three asset-hygiene defects that will bite automation <span class="pill ok">Rev 2</span></p>
+    <ul>
+      <li><b>Malformed intrinsic dimensions.</b> Eight of the ten RGB SVGs declare <code>width="11.51" height="9.38"</code> against a
+      <code>viewBox</code> of <code>0 0 303.54 70.44</code>. Those attributes describe a <b>1.23 : 1</b> box for <b>4.31 : 1</b> artwork — they are
+      leftover artboard units. A browser honours <code>width</code>/<code>height</code> when present, so these files will render at the wrong
+      intrinsic size unless CSS overrides both. <b>Strip the attributes and keep the <code>viewBox</code></b> during intake. The four Logomark
+      SVGs are already correct.</li>
+      <li><b>Naming typos in the delivery.</b> All three <code>CYMK</code> folders should read <code>CMYK</code> — and inconsistently, some
+      <i>files</i> inside them are spelled correctly. Also <code>RSFC_WhiteLogoWormark_RGB.svg</code> ("Wormark") and
+      <code>RFSC_concurSiteLogo_55x200.png</code> ("RFSC"). Any build step, sync script, or asset pipeline that matches on these paths will need
+      the typos preserved or the files renamed on intake. <b>Rename on intake</b> — do not encode the typos.</li>
+      <li><b>Logomark rasters are unusable.</b> The PNG and JPG exports are <code>67 × 69</code> pixels — roughly 1× — so they cannot serve retina
+      displays or a favicon set. <b>The SVG is the only viable Logomark source</b>; all raster sizes must be re-exported from it.</li>
+    </ul>
+  </div>
+
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:168px">Item</th><th>Current ASC</th><th>RSFC requirement</th><th style="width:118px">Status</th><th style="width:200px">Where</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="l">Component API</td>
+        <td><code>Logo</code> component set <span class="src">742:78271</span> with property <code>Mode</code> = <code>On_White</code> | <code>On_Dark</code></td>
+        <td><b>Two properties</b> — <code>Lockup</code> (Horizontal | Wordmark | Logomark) × <code>Variant</code> (Primary | Reverse | White | Black)</td>
+        <td><span class="b add">Add</span> <span class="pill ok">Rev 2</span></td>
+        <td>Figma — <b>revised in Rev 2.</b> The 2-value <code>Mode</code> property cannot express Reverse vs White. See <a href="#f8">Finding 8</a>.</td>
+      </tr>
+      <tr>
+        <td class="l">Artwork (Figma)</td>
+        <td>ASC cube + wordmark, flattened vector, 185.897 × 75.85</td>
+        <td>Place the delivered RGB SVGs across the new variant matrix — 10 shipped combinations</td>
+        <td><span class="b change">Change</span></td>
+        <td>Figma <code>742:78272</code>, <code>742:78280</code></td>
+      </tr>
+      <tr>
+        <td class="l">Artwork (repo)</td>
+        <td>Two SVGs, 186 × 76, <code>viewBox 0 0 186 76</code>, hardcoded ASC fills <span class="hex">#0073A5</span> <span class="hex">#00B9F0</span> <span class="hex">#949594</span> / <span class="hex">#AAAAAA</span></td>
+        <td>RSFC SVGs — <b>aspect ratio changes 2.45 : 1 → 4.31 : 1</b>; strip malformed <code>width</code>/<code>height</code> on intake</td>
+        <td><span class="b change">Change</span></td>
+        <td><code>public/assets/brand/asc-logo/</code> — directory name is itself ASC-branded</td>
+      </tr>
+      <tr>
+        <td class="l">Mark-only asset</td>
+        <td><span class="pill blocked">None</span> — collapsed rail renders the full wordmark, an existing defect</td>
+        <td><b>Logomark</b>, <code>66.8 × 68.2</code>, four variants — <b>delivered</b></td>
+        <td><span class="b add">Add</span> <span class="pill ok">Rev 2</span></td>
+        <td>Both. <b>No longer client-blocked</b> — the inventory recorded this as missing.</td>
+      </tr>
+      <tr>
+        <td class="l">Background-tint rule</td>
+        <td>Informal — two variants, no documented threshold</td>
+        <td>Full-color on white or <b>≤ 10 % black tint</b>; reversed or white on darker; full-color over darkest blue <b>at large scale only</b></td>
+        <td><span class="b add">Add</span> <span class="pill ok">Rev 2</span></td>
+        <td>Both — now a documented, testable rule rather than a convention</td>
+      </tr>
+      <tr>
+        <td class="l">Asset path indirection</td>
+        <td><code>ascWordmarkSvgUrl = { onDark, onLight }</code></td>
+        <td>Same shape, RSFC paths</td>
+        <td><span class="b change">Change</span></td>
+        <td><code>src/assets/brand/ascLogoUrls.ts</code></td>
+      </tr>
+      <tr>
+        <td class="l">Accessible name</td>
+        <td><code>alt="ASC Engineered Solutions"</code></td>
+        <td>Approved RSFC name string</td>
+        <td><span class="b change">Change</span></td>
+        <td><code>src/shell/ConnectedSidebarBrand.tsx:19</code> — blocked on the naming rule</td>
+      </tr>
+      <tr>
+        <td class="l">Unused light variant</td>
+        <td><code>onLight</code> is defined but never rendered</td>
+        <td>Decide whether RSFC needs it at all</td>
+        <td><span class="b verify">Needs verification</span></td>
+        <td>Repo only. Either wire it up or drop it during the swap.</td>
+      </tr>
+      <tr>
+        <td class="l">Mark-only / collapsed nav</td>
+        <td><b>Does not exist.</b> The collapsed sidebar renders the <i>same full horizontal wordmark</i>, scaled into a 72&nbsp;px rail</td>
+        <td>No approved RSFC mark-only asset or rule exists</td>
+        <td><span class="b add">Add</span> <span class="b verify">Blocked</span></td>
+        <td>Figma + repo <code>ConnectedSidebarBrand.tsx:30–35</code></td>
+      </tr>
+      <tr>
+        <td class="l">Minimum size &amp; clear space</td>
+        <td>Not documented in either system</td>
+        <td>Not yet supplied by the client</td>
+        <td><span class="b verify">Blocked</span></td>
+        <td>Client / Branding Team</td>
+      </tr>
+      <tr>
+        <td class="l">Product wordmark</td>
+        <td>Text <code>ConnectED</code> at <code>Title/Heading 4</code> metrics beside the logo</td>
+        <td>Product name is not changing</td>
+        <td><span class="b keep">Keep</span></td>
+        <td>Will inherit the new heading font automatically — verify it still fits the header band</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="call warn">
+    <p class="ct">⚠ The collapsed-navigation gap is already a live defect, not just a future one</p>
+    <p>The inventory correctly flags the mark-only logo as a client gap. The repo inspection shows the consequence is <b>already shipping</b>:
+    <code>ConnectedSidebarBrand</code> renders the identical full-width horizontal wordmark in the collapsed state, squeezed into a rail of
+    <code>sizeUnit × 18</code> = 72&nbsp;px against a 256&nbsp;px expanded sidebar. Whatever RSFC artwork arrives will inherit the same problem
+    unless a mark-only asset is supplied. Worth raising with the client as a concrete, demonstrable need rather than an abstract brand question.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 7 -->
+<section id="s7">
+  <h2><span class="n">07</span>Brand naming</h2>
+
+  <p>Naming is the highest-volume item and the one most exposed to over-correction. The inventory is explicit that not every <code>ASC</code>
+  occurrence is a branding defect, and the repo sweep confirms that most are not.</p>
+
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:230px">Class</th><th style="width:96px">Volume</th><th style="width:118px">Status</th><th>Assessment</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="l">User-facing presentation copy</td><td>~120–150 strings</td><td><span class="b change">Change</span></td>
+        <td>Genuine branding. Concentrated in <code>src/bom</code> and <code>src/spec</code>, plus the shell and global search. Blocked on the full-name vs abbreviation rule.</td>
+      </tr>
+      <tr>
+        <td class="l">Product / SKU identifiers</td><td>~80+ tokens</td><td><span class="b keep">Keep</span></td>
+        <td>Codes like <code>ASC-SR-155-TH</code>, <code>ASC-GV-600-FL</code>. Product identifiers, not branding. The inventory classifies these as a verified false-positive class.</td>
+      </tr>
+      <tr>
+        <td class="l">Code identifiers</td><td>~100+ hits</td><td><span class="b keep">Keep</span> <span class="b verify">Defer</span></td>
+        <td>10 filenames, many exported symbols, and two route segments. Not user-visible. Recommend a separate refactor — see <a href="#f4">Finding 4</a>.</td>
+      </tr>
+      <tr>
+        <td class="l">Lexical false positives</td><td>~15 hits</td><td><span class="b keep">Keep</span></td>
+        <td><code>ASCE 7-16</code> / <code>ASCE 7-22</code> engineering standards in SeisBrace, <code>sortOrder: 'asc'</code>, CSS <code>align="baseline"</code>, and the BACnet <code>B-ASC</code> profile name. <b>Must not be touched.</b></td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <h4>Inventory-named strings — verified presence in this repository</h4>
+  <p class="note">The inventory lists specific strings to replace. Several do not exist verbatim; the actual wording differs, which matters for
+  any automated sweep or residual-brand check.</p>
+
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:250px">String named in the inventory</th><th style="width:130px">Found verbatim?</th><th>Actual string in this repo</th></tr></thead>
+    <tbody>
+      <tr><td><code>ASC FIELD</code></td><td><span class="pill ok">Yes</span></td><td>Column header in <code>BomAliasConfigurator.tsx:140</code></td></tr>
+      <tr><td><code>ASC Parts</code></td><td><span class="pill ok">Yes</span></td><td>Global search scope label, <code>globalSearchModel.ts:28,46</code></td></tr>
+      <tr><td><code>ASC catalog</code></td><td><span class="pill ok">Yes</span></td><td>Many occurrences across BOM and SPEC</td></tr>
+      <tr><td><code>ASC Engineered Solutions</code></td><td><span class="pill ok">Yes</span></td><td>Logo <code>alt</code>; manufacturer field in <code>partDetailDemoData.ts:205,209,217</code></td></tr>
+      <tr><td><code>Download ASC Master SPEC</code></td><td><span class="pill ok">Yes</span></td><td><code>SpecHomePage.tsx:391,422</code>; <code>SpecDownloadMasterModal.tsx:57</code></td></tr>
+      <tr><td><code>Search ASC Parts</code></td><td><span class="pill">No</span></td><td>Actual: <code>Search ASC catalog parts</code> — <code>BomSearchPage.tsx:48</code></td></tr>
+      <tr><td><code>ASC Equivalents</code></td><td><span class="pill">No</span></td><td>Actual: <code>Suggested ASC equivalents</code>, <code>ASC equals</code></td></tr>
+      <tr><td><code>ASC master specifications</code></td><td><span class="pill">No</span></td><td>Actual: <code>ASC's master specs</code>, <code>ASC Master SPEC</code></td></tr>
+      <tr><td><code>selected ASC master</code></td><td><span class="pill">No</span></td><td>Data key <code>ascMaster</code>; UI renders e.g. <code>ASC Plumbing Master · Version 2026.2</code></td></tr>
+      <tr><td><code>accepted ASC recommendations</code></td><td><span class="pill">No</span></td><td>Actual: <code>approved ASC product recommendations</code> — <code>SpecExportPage.tsx:523</code></td></tr>
+      <tr><td><code>ASC baseline</code></td><td><span class="pill">No</span></td><td>Not present as a brand string; <code>baseline</code> appears only as a generic term and a CSS value</td></tr>
+      <tr><td><code>ASC ConnectED</code></td><td><span class="pill">Partial</span></td><td><code>ASC Connected</code> in <code>AppTopBar.tsx:101</code>; <code>ASC ConnectED</code> in <code>ProjectReframingProposalPage.tsx:1060</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="call info">
+    <p class="ct">ⓘ Consequence for the inventory's automated residual-brand check</p>
+    <p>Six of the twelve named strings do not exist verbatim. A check built from the inventory's literal list would report false clean on those
+    six while the real strings remain in the product. The allowlist and the search patterns should be rebuilt from the actual strings above,
+    and the SKU pattern <code>ASC-[A-Z]</code> plus <code>ASCE</code> should be explicitly excluded.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 8 -->
+<section id="s8">
+  <h2><span class="n">08</span>Colors</h2>
+  <p>Kept in three strictly separate layers, as required: <b>primitives</b> (raw ramps), <b>semantic tokens</b> (role aliases), and
+  <b>component tokens</b> (per-component overrides). A change at one layer does not imply a change at another, and the audit's central
+  conclusion is that most of the real work sits in the middle layer.</p>
+
+  <!-- 8a -->
+  <h3 id="s8a">8.1 Primitive colors</h3>
+  <p>Primitives are raw ramps with no assigned meaning. Both systems mirror them: Figma collection <code>Colors</code> (modes <code>Light</code>
+  / <code>Dark</code>), repo modules <code>primaryPrimitiveBlue.ts</code> and <code>primaryPrimitiveOrange.ts</code>.</p>
+
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:196px">Primitive ramp</th><th style="width:176px">Figma status</th><th style="width:176px">Repo status</th><th style="width:118px">Status</th><th>Required action</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="l"><code>Volcano/volcano-1…10</code></td>
+        <td><span class="pill ok">Verified live, Light + Dark</span></td>
+        <td><span class="pill ok">Exact match</span></td>
+        <td><span class="b keep">Keep</span></td>
+        <td><b>None.</b> Step 6 <i>is</i> RSFC Orange <span class="hex">#F05A23</span>. All 10 steps identical across both systems in both modes.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>Primary/primary-1…10</code></td>
+        <td><span class="pill">Recorded, not live-verified</span></td>
+        <td><span class="pill ok">Verified</span></td>
+        <td><span class="b verify">Needs verification</span></td>
+        <td><b>Decision first, not edit first.</b> Contains RSFC Navy (step 7) and both retiring blues (steps 4 and 6). Strategy per <a href="#f1">Finding 1</a>.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>Daybreak Blue/blue-1…10</code></td>
+        <td><span class="pill ok">Verified live, Light + Dark</span></td>
+        <td><span class="pill ok">Exact match</span></td>
+        <td><span class="b keep">Keep</span></td>
+        <td><b>None as a primitive.</b> Ant Design standard blue. Its <i>semantic use</i> is contested — see <a href="#f5">Finding 5</a>.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>Neutral/gray-1…13</code></td>
+        <td><span class="pill ok">Verified live</span></td>
+        <td><span class="pill ok">Consumed via Ant Design</span></td>
+        <td><span class="b keep">Keep</span></td>
+        <td><b>None.</b> Ant Design standard, <span class="hex">#ffffff</span> → <span class="hex">#000000</span>. Does <i>not</i> contain RSFC Gray.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>Sunset Orange/orange-1…10</code></td>
+        <td><span class="pill ok">Verified live</span></td>
+        <td><span class="pill">Not mirrored</span></td>
+        <td><span class="b keep">Keep</span> <span class="b verify">Verify</span></td>
+        <td><b>Do not overwrite.</b> Step 6 <span class="hex">#fa8c16</span> is close to RSFC Accent Orange <span class="hex">#FA961E</span> but not equal; this is an Ant Design primitive.</td>
+      </tr>
+      <tr>
+        <td class="l">Gold, Yellow, Lime, Green, Cyan, Geek&nbsp;Blue, Purple, Magenta, Dust&nbsp;Red</td>
+        <td><span class="pill ok">Verified live, Light + Dark</span></td>
+        <td><span class="pill ok">Via Ant Design</span></td>
+        <td><span class="b keep">Keep</span></td>
+        <td><b>None.</b> Ant Design standard ramps carrying no brand identity. Nine ramps × 10 steps × 2 modes require zero rebrand work.</td>
+      </tr>
+      <tr>
+        <td class="l">Repo-local literals</td>
+        <td><span class="pill">Partly absent</span></td>
+        <td><code>hydraSemanticColors.ts</code></td>
+        <td><span class="b keep">Keep</span></td>
+        <td><b>None for the rebrand.</b> <code>gray-3</code> <span class="hex">#F0F2F8</span>, <code>gray-12</code> <span class="hex">#141414</span>, featured-panel <span class="hex">#E5F0FF</span>, and two white-alpha menu values. Neutral, not brand.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>bluePrimaryBgSubtleLight</code></td>
+        <td><code>Primary/primary-bg-subtle</code></td>
+        <td><span class="hex">#E6F4F8</span></td>
+        <td><span class="b change">Change</span></td>
+        <td>Derived from <span class="hex">#0073A5</span> at ~6% on white. Must be re-derived from whatever replaces the primary seed.</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="call good">
+    <p class="ct">✓ Primitive-layer conclusion</p>
+    <p>Of twelve primitive ramps, <b>eleven need no change at all</b>. Only the blue <code>Primary/*</code> ramp is genuinely in question, and even
+    there the question is strategic rather than a matter of wrong values. <b>Do not treat the RSFC rebrand as a primitive migration.</b></p>
+  </div>
+
+  <h4>Verified Volcano parity — Figma against repository</h4>
+  <div class="ramp">
+    <div class="st"><div class="chip" style="background:#FFF6F0"></div><div class="meta"><b>volcano-1</b>#FFF6F0</div></div>
+    <div class="st"><div class="chip" style="background:#FFDFC9"></div><div class="meta"><b>volcano-2</b>#FFDFC9</div></div>
+    <div class="st"><div class="chip" style="background:#FFC3A1"></div><div class="meta"><b>volcano-3</b>#FFC3A1</div></div>
+    <div class="st"><div class="chip" style="background:#FFA578"></div><div class="meta"><b>volcano-4</b>#FFA578</div></div>
+    <div class="st"><div class="chip" style="background:#FC834E"></div><div class="meta"><b>volcano-5</b>#FC834E</div></div>
+    <div class="st mk"><div class="chip" style="background:#F05A23"></div><div class="meta"><b>volcano-6</b>#F05A23</div><div class="tag" style="color:#0f7b4f">RSFC Orange</div></div>
+    <div class="st"><div class="chip" style="background:#D64A1C"></div><div class="meta"><b>volcano-7</b>#D64A1C</div></div>
+    <div class="st"><div class="chip" style="background:#C93E14"></div><div class="meta"><b>volcano-8</b>#C93E14</div></div>
+    <div class="st"><div class="chip" style="background:#9E3010"></div><div class="meta"><b>volcano-9</b>#9E3010</div></div>
+    <div class="st"><div class="chip" style="background:#6B200B"></div><div class="meta"><b>volcano-10</b>#6B200B</div></div>
+  </div>
+  <p class="note">Read live from Figma and compared to <code>volcanoPrimitiveLight</code>. All ten steps match exactly; the Dark ramp also matches
+  <code>volcanoPrimitiveDark</code> step for step. This is the strongest parity result in the audit.</p>
+
+  <!-- 8b -->
+  <h3 id="s8b">8.2 Semantic color tokens</h3>
+  <p>Semantic tokens assign meaning to primitives. <b>This layer, not the primitive layer, is where the RSFC rebrand actually lands.</b>
+  The inventory's own instruction — "define the RSFC semantic UI color mapping before changing the shared primary token" — is exactly right,
+  and the audit confirms nothing here can proceed without the missing role decisions.</p>
+
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:205px">Semantic group</th><th style="width:186px">Current binding</th><th style="width:196px">RSFC requirement</th><th style="width:118px">Status</th><th>Note / risk</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="l"><code>Color/Primary/*</code><br><span class="note">repo <code>bluePrimarySemantics</code></span></td>
+        <td>15 tokens aliasing <code>Primary/primary-*</code>. <code>colorPrimary</code> → step 6 <span class="hex">#0073A5</span></td>
+        <td>RSFC semantic mapping, not a blind hex swap</td>
+        <td><span class="b change">Change</span></td>
+        <td><b>Highest-impact group.</b> Drives links, top bar, ghost primary, selected rows, focus. Blocked on the Light Blue role.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>colorLink</code>, <code>colorLinkHover</code>, <code>colorLinkActive</code></td>
+        <td>Steps 6 / 4 / 7 — so <code>colorLinkHover</code> is the retiring <span class="hex">#00B9F0</span></td>
+        <td>Validate link states before finalizing</td>
+        <td><span class="b change">Change</span></td>
+        <td>The inventory explicitly calls for link-state validation. <span class="hex">#00B9F0</span> on white is already a weak-contrast candidate.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>Color/Sidebar/*</code></td>
+        <td><code>colorSidebar</code> → <code>primary-7</code> <span class="hex">#004173</span>; header → <code>gray-12</code>; selected bg → <code>primary-1</code>; selected text → <code>primary-8</code>; submenu → <code>primary-10</code></td>
+        <td>Keep where the role remains correct</td>
+        <td><span class="b keep">Keep</span> <span class="b verify">Verify</span></td>
+        <td><b>The surface color is already RSFC Navy.</b> But four of the five aliases point at <i>other</i> steps of the same ramp, so they move if the ramp is reseeded.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>Color/Info/*</code> / <code>colorInfo*</code></td>
+        <td>Figma aliases <code>Primary/primary-*</code>; repo maps to <code>Daybreak Blue/blue-*</code></td>
+        <td>Not mentioned in the inventory</td>
+        <td><span class="b verify">Needs verification</span></td>
+        <td><b>Pre-existing divergence that becomes a defect on reseed</b> — see <a href="#f5">Finding 5</a>.</td>
+      </tr>
+      <tr>
+        <td class="l">Success / Warning / Error</td>
+        <td>Ant Design green, gold, red</td>
+        <td>Not mentioned in the inventory</td>
+        <td><span class="b keep">Keep</span></td>
+        <td>Functional status colors, not brand. RSFC Orange and Ant Design warning gold coexist — worth a visual check that primary Buttons are not read as warnings.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>Color/Neutral/Text/*</code></td>
+        <td>Verified live: <span class="hex">#000000e0</span>, <span class="hex">#00000073</span>, <span class="hex">#000000a6</span>, <span class="hex">#ffffff</span> (dark inverts)</td>
+        <td>Not mentioned in the inventory</td>
+        <td><span class="b keep">Keep</span></td>
+        <td>Black-alpha and white-alpha. Brand-neutral. <b>Re-validate contrast</b> once sidebar and primary surfaces settle.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>colorBgLayout</code></td>
+        <td><code>gray-3</code> <span class="hex">#F0F2F8</span> light, <span class="hex">#1F1F1F</span> dark</td>
+        <td>Not mentioned in the inventory</td>
+        <td><span class="b keep">Keep</span></td>
+        <td>Neutral page chrome, no brand tint.</td>
+      </tr>
+      <tr>
+        <td class="l">Ghost primary CSS variables</td>
+        <td><code>--hydra-brand-primary</code> / <code>-hover</code> / <code>-active</code> from steps 6 / 5 / 7</td>
+        <td>Follows the primary decision</td>
+        <td><span class="b change">Change</span></td>
+        <td>Derived, so it updates automatically — but it is a <i>second</i> consumption path alongside <code>theme.token</code>. Verify both.</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="call info">
+    <p class="ct">ⓘ Primitive change vs semantic remap — stated separately, as required</p>
+    <p><b>If the primitive stays and only semantics move:</b> reseed nothing, and repoint <code>Color/Primary/*</code> aliases at different steps
+    or at a new ramp. Lower blast radius, fully reversible, and preserves every Ant Design derived value. The cost is that the ramp name no longer
+    describes its contents, and <code>primary-4</code> / <code>primary-6</code> survive as orphaned legacy ASC values inside a ramp named Primary.</p>
+    <p><b>If the primitive itself changes:</b> every semantic alias, every component token, the ghost-primary CSS variables, the sidebar, and both
+    light and dark modes shift in one step. Cleaner end state, but it is a single large visual change that must be QA'd across all eight
+    applications at once — and it invalidates the "keep <span class="hex">#004173</span>" instruction unless Navy is explicitly pinned.</p>
+    <p>The audit does not recommend one over the other; that is the frozen-foundation decision the inventory assigns to Design with Product support.
+    It does recommend that <b>the choice be made explicitly and recorded</b>, because both systems currently assume the primitive is authoritative.</p>
+  </div>
+
+  <!-- 8c -->
+  <h3 id="s8c">8.3 Component color tokens</h3>
+  <p>Per-component overrides in <code>Customize Theme</code> and <code>antdTheme.ts → components</code>. Most inherit from the layers above and
+  need no direct edit.</p>
+
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:150px">Component</th><th style="width:230px">Current tokens</th><th style="width:118px">Status</th><th>Required action</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="l"><code>Button</code></td>
+        <td><code>Color/ButtonPrimary/*</code> → <code>Volcano/*</code>. Repo <code>buttonPrimaryPalette</code>: rest v6, hover v5, active v8, bg v1, bgHover v2, border v3, borderHover v4</td>
+        <td><span class="b keep">Keep</span></td>
+        <td><b>None.</b> Solid primary is already RSFC Orange <span class="hex">#F05A23</span> with a complete, correctly mapped state set. Verified in both systems.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>Button</code> ghost / default</td>
+        <td>Inherits <code>Color/Primary/*</code></td>
+        <td><span class="b change">Change</span></td>
+        <td>No component-token edit — it follows §8.2. Note the <b>deliberate two-brand split</b>: solid buttons are orange, ghost buttons are blue. Confirm RSFC keeps that split.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>Menu</code> (dark)</td>
+        <td><code>darkItemBg</code>, <code>darkSubMenuItemBg</code>, <code>darkItemSelectedBg</code>, <code>darkItemSelectedColor</code>, <code>darkPopupBg</code> ← sidebar semantics</td>
+        <td><span class="b change">Change</span></td>
+        <td>No edit needed; inherits. <b>But</b> selected background is <code>primary-1</code> <span class="hex">#B8EAFF</span> on a navy surface — re-check contrast after any ramp change.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>Layout</code></td>
+        <td><code>siderBg</code> ← <code>primary-7</code>; <code>triggerBg</code> ← <code>primary-10</code>; <code>headerBg</code>, <code>bodyBg</code> ← neutral alias</td>
+        <td><span class="b keep">Keep</span> <span class="b verify">Verify</span></td>
+        <td><code>siderBg</code> is already RSFC Navy. <code>triggerBg</code> is a different step of the same ramp and moves with it.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>Table</code></td>
+        <td><code>headerBg</code>, <code>headerColor</code>, <code>headerSplitColor</code>, <code>borderColor</code> ← neutral alias; <code>rowHoverBg</code> ← <code>controlItemBgHover</code></td>
+        <td><span class="b keep">Keep</span></td>
+        <td><b>None.</b> All neutral. The inventory asks to validate table states — worth noting <code>rowHoverBg</code> is Ant Design derived from primary, so it shifts indirectly.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>Tag</code></td>
+        <td><code>defaultBg</code> ← <code>colorFillQuaternary</code>; <code>defaultColor</code> ← <code>colorText</code>; typography via CSS variables</td>
+        <td><span class="b keep">Keep</span></td>
+        <td><b>None for color.</b> Font-size CSS variables inherit the typography change.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>Typography</code></td>
+        <td><code>titleMarginTop: 1.2em</code>, <code>titleMarginBottom: 0.5em</code></td>
+        <td><span class="b keep">Keep</span></td>
+        <td>Em-relative, so it rescales automatically. <b>Likely the injection point for the condensed heading family</b> — see <a href="#f2">Finding 2</a>.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>Alert</code> (info)</td>
+        <td>Figma binds <code>Daybreak Blue/blue-1,3,6</code> directly</td>
+        <td><span class="b verify">Needs verification</span></td>
+        <td>Direct primitive binding bypasses the semantic layer, which is why <a href="#f5">Finding 5</a> is invisible until reseed.</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <!-- 8d -->
+  <h3 id="s8d">8.4 The two unplaced RSFC colors</h3>
+  <p>Half the launch palette has no home in either system. Because these are the only genuinely new colors, they are the critical path for
+  the entire color workstream.</p>
+
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:150px">Color</th><th style="width:220px">Nearest existing value</th><th style="width:118px">Status</th><th>Open questions that must be answered before any token work</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="l"><span class="sw" style="background:#2576BB"></span>Light Blue<br><span class="hex">#2576BB</span></td>
+        <td><code>primary-5</code> <span class="hex">#1D8BB3</span><br><span class="note">not a match — noticeably more teal</span></td>
+        <td><span class="b add">Add</span> <span class="b verify">Verify</span></td>
+        <td>Does it become the new <code>colorPrimary</code> seed, replacing <span class="hex">#0073A5</span>? Or a secondary accent alongside Navy? Or the new link color? <b>The answer determines whether the Primary ramp is reseeded at all</b>, and therefore whether Navy survives at step 7.</td>
+      </tr>
+      <tr>
+        <td class="l"><span class="sw" style="background:#A7A9AC"></span>Gray<br><span class="hex">#A7A9AC</span></td>
+        <td><code>gray-6</code> <span class="hex">#bfbfbf</span> / <code>gray-7</code> <span class="hex">#8c8c8c</span><br><span class="note">neither matches</span></td>
+        <td><span class="b add">Add</span> <span class="b verify">Verify</span></td>
+        <td>Is this a UI neutral or a brand-collateral gray? If it is a UI neutral it conflicts with the Ant Design neutral ramp, which every border, disabled state, and secondary text depends on. <b>Recommend treating it as brand-collateral only unless the client states otherwise</b> — replacing the neutral ramp is the single most destabilising change available and the inventory does not ask for it.</td>
+      </tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============================================================ 9 -->
+<section id="s9">
+  <h2><span class="n">09</span>Typography</h2>
+  <p>The inventory's four typography lines expand into the largest structural change in the rebrand. Metrics are brand-neutral and stay;
+  families, weights, and roles all need work.</p>
+
+  <!-- 9a -->
+  <h3 id="s9a">9.1 Font families</h3>
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:150px">Role</th><th style="width:150px">Current ASC</th><th style="width:186px">RSFC requirement</th><th style="width:118px">Status</th><th>Where the change happens</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="l">Body</td>
+        <td>Cairo <span class="pill ok">verified live in Figma</span></td>
+        <td>Barlow</td>
+        <td><span class="b change">Change</span></td>
+        <td>Figma <code>Typography/Font Family/fontFamily</code>; repo <code>hydraFontFamilyName</code> in <code>hydraTypography.ts:21</code>. <b>Shared</b> — both sides.</td>
+      </tr>
+      <tr>
+        <td class="l">Headings</td>
+        <td>Cairo — <b>no separate family slot exists</b></td>
+        <td>Barlow Condensed ExtraBold</td>
+        <td><span class="b add">Add</span></td>
+        <td>New Figma variable + rebind all <code>Title/*</code> styles. In code, no Ant Design token exists — needs CSS or component override.</td>
+      </tr>
+      <tr>
+        <td class="l">Subheadings</td>
+        <td><b>Role does not exist</b> in either system</td>
+        <td>Barlow Condensed Bold</td>
+        <td><span class="b add">Add</span></td>
+        <td>New semantic role. Must first be defined: which existing styles become subheadings?</td>
+      </tr>
+      <tr>
+        <td class="l">Monospace / code</td>
+        <td><code>fontFamilyCode</code> = same as body</td>
+        <td>Not specified</td>
+        <td><span class="b verify">Needs verification</span></td>
+        <td>Repo aliases code font to the brand font, so it silently becomes Barlow. Barlow is not monospaced — flag for a deliberate decision.</td>
+      </tr>
+      <tr>
+        <td class="l">Fallback stack</td>
+        <td><code>'Cairo', sans-serif</code></td>
+        <td>Not specified — inventory lists the web fallback stack as a client gap</td>
+        <td><span class="b verify">Blocked</span></td>
+        <td><code>hydraFontFamilyFallback</code> in <code>hydraTypography.ts:22</code>. Condensed fonts degrade badly to generic <code>sans-serif</code>.</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="call crit">
+    <p class="ct">⚠ Ant Design cannot express a separate heading font through tokens</p>
+    <p><code>theme.token</code> exposes <code>fontFamily</code> and <code>fontFamilyCode</code> — and nothing for headings. The repo sets both from
+    one <code>brandFontFamily</code> constant in <code>hydraAntdTypography.ts:47-48</code>. RSFC's condensed-heading requirement therefore
+    <b>cannot be delivered by the token pipeline</b> and needs an explicit architectural decision: CSS rules on typography elements, a
+    <code>components.Typography</code> override, or a wrapper. Whichever is chosen, <b>surfaces that bypass it will silently keep the body font</b> —
+    which is precisely the failure mode the inventory's own QA line about non-inheriting surfaces warns about.</p>
+  </div>
+
+  <!-- 9b -->
+  <h3 id="s9b">9.2 Font weights</h3>
+  <div class="tw"><table>
+    <thead><tr><th style="width:130px">Weight</th><th style="width:186px">Figma</th><th style="width:186px">Repo</th><th style="width:118px">Status</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td class="l">400 Regular</td><td><code>fontWeightNormal</code> <span class="pill ok">verified</span></td><td><code>W_REG = 400</code></td><td><span class="b keep">Keep</span></td><td>Body default. Unaffected.</td></tr>
+      <tr><td class="l">600 SemiBold</td><td><code>fontWeightStrong</code> <span class="pill ok">verified</span></td><td><code>W_SEMI = 600</code></td><td><span class="b keep">Keep</span> <span class="b change">Split</span></td><td><b>Shared by headings and body-strong.</b> Must be split before headings can move to 800.</td></tr>
+      <tr><td class="l">700 Bold</td><td><span class="pill blocked">Absent</span></td><td><span class="pill blocked">Absent</span></td><td><span class="b add">Add</span></td><td>Required for RSFC subheadings.</td></tr>
+      <tr><td class="l">800 ExtraBold</td><td><span class="pill blocked">Absent</span></td><td><span class="pill blocked">Absent</span></td><td><span class="b add">Add</span></td><td>Required for RSFC headings.</td></tr>
+      <tr><td class="l">Default body weight</td><td>—</td><td>—</td><td><span class="b verify">Blocked</span></td><td>Inventory lists "default Barlow body weight" as an open client decision. Assume 400 only provisionally.</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="call warn">
+    <p class="ct">⚠ The shared 600 constant is a concrete trap</p>
+    <p>In <code>src/theme/hydraTypography.ts</code>, <code>W_SEMI = 600</code> is consumed by <b>nine</b> styles: <code>Title/Heading 1</code>
+    through <code>Title/Heading 5</code>, and <code>Base/Strong</code>, <code>Small/Strong</code>, <code>Large/Strong</code>,
+    <code>Extra Large/Strong</code>. It also feeds Ant Design's <code>fontWeightStrong</code> alias, which many components read.
+    Changing it to 800 to satisfy the heading requirement would bold every inline strong text in the product and shift component internals.
+    <b>Split the constant first, then move only the heading styles.</b></p>
+  </div>
+
+  <!-- 9c -->
+  <h3 id="s9c">9.3 Font sizes &amp; text styles</h3>
+  <p>The type scale is Ant Design derived and carries no brand identity. <b>Metrics should not change.</b> What changes is which family and
+  weight each style binds to.</p>
+
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:170px">Style family</th><th style="width:96px">Count</th><th style="width:230px">Metrics (px, verified)</th><th style="width:118px">Metrics</th><th>Family / weight rebinding required</th></tr></thead>
+    <tbody>
+      <tr><td class="l"><code>Title/Heading 1–5</code></td><td>5</td><td>38/46, 30/38, 24/32, 20/28, 16/24 — all weight 600</td><td><span class="b keep">Keep</span></td><td><span class="b change">Change</span> → Barlow Condensed, weight 800</td></tr>
+      <tr><td class="l"><code>Base/*</code></td><td>5</td><td>14/22 · Normal, Strong, Underline, Delete, Italic</td><td><span class="b keep">Keep</span></td><td><span class="b change">Change</span> family only, Cairo → Barlow</td></tr>
+      <tr><td class="l"><code>Small/*</code></td><td>5</td><td>12/20 · same five variants</td><td><span class="b keep">Keep</span></td><td><span class="b change">Change</span> family only</td></tr>
+      <tr><td class="l"><code>Large/*</code></td><td>5</td><td>16/24 · same five variants</td><td><span class="b keep">Keep</span></td><td><span class="b change">Change</span> family only — <b>candidate subheading host</b></td></tr>
+      <tr><td class="l"><code>Extra Large/*</code></td><td>5</td><td>20/28 · same five variants</td><td><span class="b keep">Keep</span></td><td><span class="b change">Change</span> family only — <b>candidate subheading host</b></td></tr>
+      <tr><td class="l">Subheading role</td><td>0</td><td><span class="pill blocked">Does not exist</span></td><td><span class="b add">Add</span></td><td><span class="b add">Add</span> — must be defined in Figma and mirrored in code</td></tr>
+      <tr><td class="l">Compact mode</td><td>25</td><td>Figma <code>Typography → Compact</code>; repo <code>hydraCompactFontMap</code></td><td><span class="b keep">Keep</span></td><td><span class="b change">Change</span> — a <b>second</b> full set that needs the same family and weight rebinding. Easy to forget.</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note"><b>25 text styles per mode × 2 modes = 50 bindings to review.</b> Metrics are correct in all of them; only family and weight
+  change. The recorded parity audit also notes compact mode is not switchable at runtime today, so the compact set is defined but unexercised —
+  which makes it the most likely place for a missed rebinding to hide.</p>
+
+  <!-- 9d -->
+  <h3 id="s9d">9.4 Font delivery</h3>
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:170px">Item</th><th style="width:250px">Current</th><th style="width:118px">Status</th><th>Required action</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="l">Webfont link</td>
+        <td><code>index.html</code> loads <code>family=Cairo:wght@200..1000</code> from Google Fonts</td>
+        <td><span class="b change">Change</span></td>
+        <td>Load <b>two</b> families. Cairo is a variable font, so one range covers all weights; <b>Barlow and Barlow Condensed are static-weight families</b>, so the request must enumerate each weight explicitly. The URL changes shape, not just the family name.</td>
+      </tr>
+      <tr>
+        <td class="l">Weights to request</td>
+        <td>One continuous range</td>
+        <td><span class="b add">Add</span></td>
+        <td>Barlow 400 (+ any confirmed body weight) and Barlow Condensed 700 and 800. Requesting the whole 100–900 range for both families would be a significant payload regression.</td>
+      </tr>
+      <tr>
+        <td class="l">CSS consumption</td>
+        <td><code>--hydra-font-family</code> set by <code>applyHydraBrandCssVars</code>, consumed in <code>index.css</code></td>
+        <td><span class="b change">Change</span> <span class="b add">Add</span></td>
+        <td>Single variable today. A second variable is needed for the condensed family, since the token system cannot carry it.</td>
+      </tr>
+      <tr>
+        <td class="l">Non-inheriting surfaces</td>
+        <td>Generated PDFs, transactional email, manually styled Figma text</td>
+        <td><span class="b verify">Needs verification</span></td>
+        <td>Correctly flagged by the inventory. Email clients have poor webfont support and condensed fonts fall back badly — the fallback stack decision matters most here.</td>
+      </tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============================================================ 10 -->
+<section id="s10">
+  <h2><span class="n">10</span>Icons</h2>
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:186px">Item</th><th style="width:230px">Current</th><th style="width:118px">Status</th><th>Assessment</th></tr></thead>
+    <tbody>
+      <tr><td class="l">Icon library</td><td><code>@ant-design/icons</code> ^6.1.1 — the <b>only</b> icon source in the repo</td><td><span class="b keep">Keep</span></td><td>Brand-neutral. No competing library, no custom SVG icon system, no one-off assets. Verified against <code>package.json</code> and every icon import in <code>src/</code>.</td></tr>
+      <tr><td class="l">ASC-branded icons</td><td>None exist</td><td><span class="b keep">Keep</span></td><td>No ASC iconography anywhere. Nothing to migrate.</td></tr>
+      <tr><td class="l">Icon color</td><td>Inherits <code>currentColor</code> / theme tokens</td><td><span class="b change">Change</span></td><td>No icon work needed — icons follow the primary and neutral tokens automatically.</td></tr>
+      <tr><td class="l">RSFC icon guidance</td><td>Not supplied</td><td><span class="b verify">Blocked</span></td><td>Inventory lists iconography guidance beyond the At-a-Glance as a client gap. <b>Recommend stating explicitly that Ant Design icons continue</b>, so the gap does not stall delivery.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="call good">
+    <p class="ct">✓ No action required</p>
+    <p>Iconography is the cleanest category in the audit. A single brand-neutral source, consistently used, with no ASC-specific assets.
+    It needs a confirmation, not a migration.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 11 -->
+<section id="s11">
+  <h2><span class="n">11</span>Illustrations, imagery &amp; backgrounds</h2>
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:250px">Asset</th><th style="width:196px">Used in</th><th style="width:118px">Status</th><th>Assessment</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="l"><code>public/assets/brand/asc-logo/*.svg</code></td>
+        <td><code>ConnectedSidebarBrand.tsx</code></td>
+        <td><span class="b change">Change</span></td>
+        <td>The only unambiguously ASC-branded assets in the repo. Covered in <a href="#s6">§6</a>.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>public/content-catalog-hero-bg.png</code></td>
+        <td><code>ProductCatalogContent.tsx</code></td>
+        <td><span class="b verify">Needs verification</span></td>
+        <td>Photographic hero. <b>Not pixel-inspected</b> — cannot confirm whether ASC branding or ASC-brand colors appear in the image.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>assets/catalog/featured-tiles/*.png</code> (7)</td>
+        <td><code>catalogDemoData.ts</code>, <code>bomWorkspaceDashboard.ts</code></td>
+        <td><span class="b verify">Needs verification</span></td>
+        <td>Product photography. Brand-neutral in principle; not visually inspected.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>assets/catalog/figma-featured-parts/*.png</code> (10)</td>
+        <td><code>bomWorkspaceDashboard.ts</code></td>
+        <td><span class="b verify">Needs verification</span></td>
+        <td>Same. Placeholder-style naming suggests demo data rather than shipped brand assets.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>productCatalogHeroFigmaCover.tsx</code></td>
+        <td>Catalog hero gradient overlay</td>
+        <td><span class="b change">Change</span></td>
+        <td><b>The only token bypass in application code.</b> 15 hardcoded <code>rgba()</code> gradient stops, lines 57–71, in a legacy blue-teal ramp approximating <span class="hex">#083B52</span> → <span class="hex">#0C6D96</span>. Close to the retiring ASC blues but matching no token, so it will <b>not</b> follow a token remap.</td>
+      </tr>
+      <tr>
+        <td class="l">Remote catalog image</td>
+        <td><code>catalogDemoData.ts:23</code></td>
+        <td><span class="b verify">Needs verification</span></td>
+        <td>Fallback tile served from <code>s3.us-east-1.amazonaws.com/ue1.asc-es.com/…</code>. An <b>ASC-domain CDN dependency</b> — a hosting and ownership question, not a visual one. The inventory flags externally hosted brand assets as having no assigned owner.</td>
+      </tr>
+      <tr>
+        <td class="l">RSFC illustration guidance</td>
+        <td>—</td>
+        <td><span class="b verify">Blocked</span></td>
+        <td>Inventory lists photography and illustration guidance beyond the At-a-Glance as a client gap.</td>
+      </tr>
+      <tr>
+        <td class="l">"Trusted ASC Data" visual language</td>
+        <td>Content module (not in this repo)</td>
+        <td><span class="b change">Change</span></td>
+        <td>The inventory asks for migration to the RSFC visual system rather than recoloring. <b>Not found in this repository</b> — likely lives in the Content application.</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="call warn">
+    <p class="ct">⚠ One asset class cannot be cleared by static analysis</p>
+    <p>Eighteen raster assets were identified by path and usage but <b>not visually inspected</b>. Any of them could contain an ASC logo, an ASC
+    watermark, or ASC-brand colors baked into pixels — and no amount of token or string auditing will surface that. This needs a human visual pass,
+    and it belongs in the reverse audit rather than in foundation work.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 12 -->
+<section id="s12">
+  <h2><span class="n">12</span>Borders, radii, shadows &amp; layout styling</h2>
+  <p>All four categories are Ant Design derived and carry no brand identity. This is a large surface area with effectively zero rebrand work,
+  and stating that clearly prevents unnecessary churn.</p>
+
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:170px">Category</th><th style="width:250px">Source</th><th style="width:118px">Status</th><th>Assessment</th></tr></thead>
+    <tbody>
+      <tr><td class="l">Borders</td><td><code>colorBorder</code>, <code>colorBorderSecondary</code>, <code>colorSplit</code>, <code>lineWidth</code> via <code>theme.getDesignToken()</code></td><td><span class="b keep">Keep</span></td><td>Neutral-ramp derived. The At-a-Glance specifies no border rules.</td></tr>
+      <tr><td class="l">Border radii</td><td>Ant Design <code>borderRadius*</code> scale; <code>hydraMenuMetrics</code> pins menu radius to <code>0</code></td><td><span class="b keep">Keep</span></td><td>Geometry, not brand. Menu radius <code>0</code> is an existing intentional Hydra decision unrelated to ASC.</td></tr>
+      <tr><td class="l">Global shadows</td><td><code>hydraBoxShadow</code>, <code>Secondary</code>, <code>Tertiary</code> in <code>hydraSemanticColors.ts</code></td><td><span class="b keep">Keep</span></td><td>Black-alpha stacks matching Ant Design elevation. No brand hue.</td></tr>
+      <tr><td class="l">Button primary shadow</td><td><code>0 2px 0 rgba(240,90,35,0.10)</code>; dark <code>rgba(207,80,33,0.16)</code></td><td><span class="b keep">Keep</span></td><td><b>Already RSFC Orange.</b> <code>rgba(240,90,35)</code> <i>is</i> <span class="hex">#F05A23</span>, and the dark variant is <code>volcano-6</code> dark. Correct as-is.</td></tr>
+      <tr><td class="l">Focus outline</td><td><code>buttonPrimaryControlOutline</code> = <code>rgba(240,90,35,0.12)</code></td><td><span class="b keep">Keep</span></td><td>Also already RSFC Orange. Noted in the recorded parity audit as a code-only token with no Figma variable — a pre-existing gap, not a rebrand item.</td></tr>
+      <tr><td class="l">Spacing &amp; sizing</td><td><code>sizeUnit</code>, <code>sizeStep</code>, <code>padding*</code>, <code>margin*</code> from the Ant Design algorithm</td><td><span class="b keep">Keep</span></td><td>No brand identity.</td></tr>
+      <tr><td class="l">Shell layout metrics</td><td><code>shellLayout</code>: sider 256&nbsp;px, collapsed 72&nbsp;px, content rail 1136–1440&nbsp;px, header height</td><td><span class="b keep">Keep</span> <span class="b verify">Verify</span></td><td>Geometry stays. <b>But</b> the header band must be re-checked against the new logo aspect ratio and the condensed <code>ConnectED</code> wordmark.</td></tr>
+      <tr><td class="l">Dark menu chrome</td><td><code>rgba(255,255,255,0.88)</code> text, <code>rgba(255,255,255,0.08)</code> hover</td><td><span class="b keep">Keep</span> <span class="b verify">Verify</span></td><td>White-alpha, brand-neutral. <b>Sits on the navy sidebar</b>, so contrast must be re-validated if that surface changes.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============================================================ 12b -->
+<section id="s12b">
+  <h2><span class="n">12b</span>Brand graphic devices <span class="pill ok">Rev 2</span></h2>
+
+  <p>The approved guide specifies <b>two named graphic devices and one gradient rule</b> that the migration inventory never mentions and
+  that exist in neither Figma nor the repository. They are not decoration — each carries explicit usage constraints, which makes them
+  design-system components rather than one-off illustrations.</p>
+
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:132px">Device</th><th>Rule, from the guide</th><th style="width:108px">Figma</th><th style="width:108px">Repo</th><th style="width:100px">Status</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="l">Angle Graphic</td>
+        <td>"Inspired by the logo, the angle graphic conveys forward and upward motion throughout our communications. The graphic can be
+        used as a solid, gradient or at a reduced opacity. <b>Always use it at a 30-degree angle. Angles should take up no more than
+        20 % of the space.</b>"</td>
+        <td><span class="pill blocked">Absent</span></td>
+        <td><span class="pill blocked">Absent</span></td>
+        <td><span class="b add">Add</span></td>
+      </tr>
+      <tr>
+        <td class="l">Accent Bar</td>
+        <td>"A thin, single-color rule used to add visual structure and brand presence without competing with content. It appears
+        vertically along the edge of layouts (as a sidebar accent) or horizontally as a divider between sections, <b>typically in the
+        brand's primary orange or navy.</b>"</td>
+        <td><span class="pill blocked">Absent</span></td>
+        <td>Divider exists, but as an Ant Design neutral rule — not a brand device</td>
+        <td><span class="b add">Add</span></td>
+      </tr>
+      <tr>
+        <td class="l">Gradients</td>
+        <td>"Gradients add depth and improve text readability when used as subtle overlays or backgrounds." Built from the primary
+        colors.</td>
+        <td><span class="pill blocked">Absent</span></td>
+        <td>One hardcoded gradient exists — 15 stops, in legacy ASC colors</td>
+        <td><span class="b add">Add</span> <span class="b change">Change</span></td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="call info">
+    <p class="ct">ⓘ Why this matters more than "two new components"</p>
+    <p>The Angle Graphic is the only element in the guide that is <b>derived from the logo geometry</b> — the cube's angled faces — which
+    makes it the brand's main mechanism for carrying identity into surfaces where the logo itself does not appear: empty states, hero
+    areas, section headers, loading screens. A rebrand that ships tokens and a logo but not this device will read as
+    <i>recolored ASC</i> rather than as RSFC.</p>
+    <p>The gradient rule also changes the disposition of an existing item. The hardcoded gradient in
+    <code>productCatalogHeroFigmaCover.tsx</code> was classified in <a href="#s11">§11</a> as a token bypass to be removed. It can now
+    instead be <b>rebuilt as a legitimate brand gradient</b> — but in RSFC primaries and, ideally, sourced from a real token or
+    documented brand definition rather than 15 inline stops.</p>
+  </div>
+
+  <div class="call warn">
+    <p class="ct">⚠ Treat these as a scope addition, not absorbed work</p>
+    <p>Both devices are genuine brand requirements with testable constraints — a fixed 30° angle and a 20&nbsp;% area cap are unusually
+    specific, and specific enough to review against. But neither appears in the migration inventory, which means they are
+    <b>not in anyone's estimate</b>. They should be raised explicitly rather than quietly built during the foundations phase.</p>
+    <p><b>Recommendation:</b> before building the Accent Bar as a new component, check whether the existing divider pattern can carry it
+    with orientation and color variants. Reusing it is both cheaper and more consistent than introducing a parallel concept for what is,
+    structurally, a rule with a brand color.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 13 -->
+<section id="s13">
+  <h2><span class="n">13</span>States</h2>
+  <p>The inventory asks for validation of default, hover, selected, disabled, error, warning, link, and navigation states in both light and dark.
+  Verified position: <b>no state machinery changes anywhere.</b> States shift only because they consume the primary ramp.</p>
+
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:150px">State</th><th style="width:250px">Current binding</th><th style="width:118px">Status</th><th>Risk on remap</th></tr></thead>
+    <tbody>
+      <tr><td class="l">Default</td><td>Neutral alias tokens</td><td><span class="b keep">Keep</span></td><td>None.</td></tr>
+      <tr><td class="l">Hover</td><td><code>colorPrimaryHover</code> → <code>primary-5</code>; Button → <code>volcano-5</code></td><td><span class="b change">Change</span></td><td>Button hover is already RSFC-correct. Ghost and link hover follow the blue ramp. <b>Note the existing mapping asymmetry:</b> Figma's <code>colorPrimaryHover</code> aliases step 4 while the repo uses step 5. Pre-existing, documented, and it must not be conflated with rebrand drift.</td></tr>
+      <tr><td class="l">Active / pressed</td><td><code>primary-7</code>; Button → <code>volcano-8</code></td><td><span class="b change">Change</span></td><td>Primary active is <span class="hex">#004173</span> — RSFC Navy doing double duty as sidebar surface <i>and</i> pressed state. Worth a deliberate check.</td></tr>
+      <tr><td class="l">Selected</td><td>Sidebar selected bg <code>primary-1</code>, text <code>primary-8</code>; table <code>controlItemBgHover</code></td><td><span class="b change">Change</span></td><td><span class="hex">#B8EAFF</span> on navy. Re-validate contrast — one of the more likely accessibility regressions.</td></tr>
+      <tr><td class="l">Focus</td><td><code>controlOutline</code> orange; Ant Design <code>colorPrimaryBorder</code> elsewhere</td><td><span class="b keep">Keep</span> <span class="b change">Change</span></td><td>Button focus is already RSFC Orange; other focus rings follow the blue ramp.</td></tr>
+      <tr><td class="l">Disabled</td><td>Neutral ramp</td><td><span class="b keep">Keep</span></td><td>None — brand-independent.</td></tr>
+      <tr><td class="l">Error / danger</td><td>Ant Design Dust Red + <code>buttonDangerPalette</code></td><td><span class="b keep">Keep</span></td><td>None. Functional, not brand.</td></tr>
+      <tr><td class="l">Warning</td><td>Ant Design Gold</td><td><span class="b keep">Keep</span></td><td>None — but confirm orange primary Buttons are not misread as warnings, since RSFC Orange is now a brand action color.</td></tr>
+      <tr><td class="l">Info</td><td>Repo: Daybreak Blue · Figma: Primary</td><td><span class="b verify">Needs verification</span></td><td><b>Divergent today</b> — see <a href="#f5">Finding 5</a>.</td></tr>
+      <tr><td class="l">Link</td><td><code>colorLink</code> step 6, hover step 4, active step 7</td><td><span class="b change">Change</span></td><td>Hover is the retiring <span class="hex">#00B9F0</span>. Explicitly called out by the inventory.</td></tr>
+      <tr><td class="l">Loading / empty / no-results</td><td>Ant Design components with neutral tokens</td><td><span class="b keep">Keep</span></td><td>None structurally; copy may contain ASC references — a naming item, not a state item.</td></tr>
+      <tr><td class="l">Dark mode</td><td>Full parallel set: <code>bluePrimarySemanticsDark</code>, <code>buttonPrimaryPaletteDark</code>, dark sidebar semantics</td><td><span class="b change">Change</span></td><td><b>Every primary decision must be made twice.</b> The dark ramp is generated from the seed via the Ant Design dark algorithm, so reseeding regenerates it — easy to overlook in QA.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============================================================ 14 -->
+<section id="s14">
+  <h2><span class="n">14</span>Components</h2>
+  <div class="call good">
+    <p class="ct">✓ No component work is required by the rebrand</p>
+    <p>No component structure, variant API, prop, or state definition needs to change in either system. Every component consumes the token layers
+    audited above. The one component-shaped item is the Figma <code>Logo</code> component set, and even there the <b>API is reusable as-is</b> —
+    only its artwork changes.</p>
+  </div>
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:196px">Component area</th><th style="width:118px">Status</th><th>Assessment</th></tr></thead>
+    <tbody>
+      <tr><td class="l">Ant Design components</td><td><span class="b keep">Keep</span></td><td>antd 6.3.5, unmodified. All visuals flow from <code>ConfigProvider</code> theme tokens.</td></tr>
+      <tr><td class="l">Figma <code>Logo</code> component set</td><td><span class="b keep">Keep</span> API · <span class="b change">Change</span> artwork</td><td><code>Mode=On_White</code> / <code>Mode=On_Dark</code> maps cleanly onto the RSFC primary and reversed variants. Preserving it means instances inherit automatically.</td></tr>
+      <tr><td class="l">Shared shell components</td><td><span class="b keep">Keep</span></td><td><code>ConnectedSidebarBrand</code> and <code>AppTopBar</code> need <b>content</b> changes (asset path, <code>alt</code>, fallback string) — not structural ones.</td></tr>
+      <tr><td class="l">Component token overrides</td><td><span class="b keep">Keep</span></td><td>Seven overrides in <code>antdTheme.ts</code>. All reference tokens, none hardcode brand values. See <a href="#s8c">§8.3</a>.</td></tr>
+      <tr><td class="l">Propagation model</td><td><span class="b keep">Keep</span></td><td>Sound on both sides: Figma via library publish, code via a single theme layer. <b>This is why the inventory's foundations-first sequencing is correct</b> — the plumbing to fan changes out already exists.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============================================================ 15 -->
+<section id="s15">
+  <h2><span class="n">15</span>Metadata &amp; brand-adjacent assets</h2>
+  <p>Design-owned or design-dependent metadata only. Domain, email, auth, and analytics dependencies are Engineering items and are out of scope.</p>
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:170px">Item</th><th style="width:230px">Current</th><th style="width:118px">Status</th><th>Assessment</th></tr></thead>
+    <tbody>
+      <tr><td class="l">Favicon</td><td><b>None.</b> No <code>favicon.ico</code>, no <code>&lt;link rel="icon"&gt;</code></td><td><span class="b add">Add</span> <span class="b verify">Blocked</span></td><td>There is <b>no ASC favicon to remove</b> — this is net-new. Blocked on the client favicon and touch-icon set, which the inventory lists as a gap.</td></tr>
+      <tr><td class="l">Web manifest</td><td><b>None</b></td><td><span class="b add">Add</span> <span class="b verify">Blocked</span></td><td>Same. Nothing to migrate; depends on the same asset set.</td></tr>
+      <tr><td class="l">Document title</td><td><code>&lt;title&gt;BOM&lt;/title&gt;</code></td><td><span class="b change">Change</span></td><td>Not ASC-branded — a leftover placeholder. Should become a proper RSFC or ConnectED title, but is <b>not a rebrand defect</b>.</td></tr>
+      <tr><td class="l">Meta branding</td><td>Only charset, viewport, font preconnect</td><td><span class="b add">Add</span></td><td>No <code>application-name</code>, no Open Graph tags. Net-new if required.</td></tr>
+      <tr><td class="l">Top-bar fallback</td><td><code>subtitle: 'ASC Connected'</code></td><td><span class="b change">Change</span></td><td><code>AppTopBar.tsx:101</code>. User-visible branding.</td></tr>
+      <tr><td class="l">Logo accessible name</td><td><code>alt="ASC Engineered Solutions"</code></td><td><span class="b change">Change</span></td><td>Accessibility-relevant branding — the inventory's metadata line explicitly includes alt text.</td></tr>
+      <tr><td class="l">ASC-domain CDN</td><td><code>ue1.asc-es.com</code> S3 image host</td><td><span class="b verify">Needs verification</span></td><td>Not visual branding, but an ASC-domain dependency for a displayed asset. Ownership unassigned per the inventory.</td></tr>
+      <tr><td class="l">Asset directory name</td><td><code>public/assets/brand/asc-logo/</code></td><td><span class="b change">Change</span></td><td>Not user-visible. Rename alongside the asset swap, not as a separate task.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============================================================ 16 -->
+<section id="s16">
+  <h2><span class="n">16</span>Design-system (Figma) impact</h2>
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:196px">Collection / page</th><th style="width:176px">Contents</th><th style="width:118px">Status</th><th>Impact</th></tr></thead>
+    <tbody>
+      <tr><td class="l"><code>Colors</code><br><span class="note">modes Light / Dark</span></td><td>All primitive ramps and neutrals</td><td><span class="b keep">Keep</span> mostly</td><td>11 of 12 ramps unaffected. Only <code>Primary/primary-*</code> is in question, in both modes.</td></tr>
+      <tr><td class="l"><code>Customize Theme</code><br><span class="note">single mode</span></td><td><code>Color/Primary/*</code>, <code>ButtonPrimary/*</code>, <code>Sidebar/*</code>, <code>Info/*</code>, <code>Neutral/*</code></td><td><span class="b change">Change</span></td><td><b>The primary work site.</b> <code>ButtonPrimary/*</code> and <code>Neutral/*</code> stay; <code>Primary/*</code> is remapped; <code>Info/*</code> must be reconciled.</td></tr>
+      <tr><td class="l"><code>Typography</code><br><span class="note">modes Default / Compact</span></td><td>1 family, 2 weights, sizes, line heights</td><td><span class="b change">Change</span> <span class="b add">Add</span></td><td><b>Largest structural change.</b> +1 family variable, +2 weight variables, rebind all <code>Title/*</code> styles, add a subheading role — in both modes.</td></tr>
+      <tr><td class="l"><code>Logo</code> page <span class="src">767:62211</span></td><td>Component set + 2 variants</td><td><span class="b change">Change</span></td><td>Artwork replacement. No variable bindings exist, so this is purely an asset swap. Variant API preserved.</td></tr>
+      <tr><td class="l">Text styles</td><td>25 per mode</td><td><span class="b keep">Keep</span> metrics</td><td>50 bindings to review for family and weight. No metric changes.</td></tr>
+      <tr><td class="l">Product files</td><td>BOM-SPEC, SPEC, SeisBrace, Content, Submittal, Admin</td><td><span class="b change">Change</span></td><td>Out of this audit's scope, but all six inherit from this library. <b>Foundations first; do not hand-edit instances that inherit correctly.</b></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============================================================ 17 -->
+<section id="s17">
+  <h2><span class="n">17</span>Repository impact</h2>
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:280px">File</th><th style="width:118px">Status</th><th>What changes</th></tr></thead>
+    <tbody>
+      <tr><td class="l"><code>src/theme/hydraTypography.ts</code></td><td><span class="b change">Change</span> <span class="b add">Add</span></td><td>Family name and fallback; split <code>W_SEMI</code>; add 700 and 800; rebind 5 heading styles; add a subheading role. <b>Highest-impact file in the rebrand.</b></td></tr>
+      <tr><td class="l"><code>src/theme/hydraAntdTypography.ts</code></td><td><span class="b change">Change</span></td><td><code>fontFamily</code> / <code>fontFamilyCode</code> wiring; same rebinding for the compact map. Decide whether code font follows the brand font.</td></tr>
+      <tr><td class="l"><code>index.html</code></td><td><span class="b change">Change</span></td><td>Two font families with explicit static weights; add a favicon link when the asset set arrives.</td></tr>
+      <tr><td class="l"><code>src/theme/primaryPrimitiveBlue.ts</code></td><td><span class="b verify">Verify</span> then <span class="b change">Change</span></td><td>Blue ramp and its 15 semantic mappings, plus <code>bluePrimaryBgSubtleLight</code>. <b>Blocked on the Light Blue role decision.</b></td></tr>
+      <tr><td class="l"><code>src/theme/primaryPrimitiveOrange.ts</code></td><td><span class="b keep">Keep</span></td><td><b>Nothing.</b> Already exactly the RSFC Volcano ramp, light and dark.</td></tr>
+      <tr><td class="l"><code>src/theme/buttonPrimaryPalette.ts</code></td><td><span class="b keep">Keep</span></td><td><b>Nothing.</b> Already RSFC Orange with correct state mapping and correctly tinted shadows and outline.</td></tr>
+      <tr><td class="l"><code>src/theme/sidebarSemantics.ts</code></td><td><span class="b keep">Keep</span> <span class="b verify">Verify</span></td><td>Surface is already RSFC Navy; four other aliases track the ramp.</td></tr>
+      <tr><td class="l"><code>src/theme/brandColors.ts</code></td><td><span class="b change">Change</span></td><td>Derived, so it follows automatically — but it is a second consumption path via CSS variables. Verify alongside <code>theme.token</code>.</td></tr>
+      <tr><td class="l"><code>src/theme/hydraSemanticColors.ts</code></td><td><span class="b keep">Keep</span></td><td><b>Nothing.</b> Neutral literals and black-alpha shadows.</td></tr>
+      <tr><td class="l"><code>src/theme/antdTheme.ts</code></td><td><span class="b keep">Keep</span></td><td><b>No direct edits.</b> Pure wiring — it inherits from the modules above. A good sign the theme layer is correctly factored.</td></tr>
+      <tr><td class="l"><code>src/theme/hydraAlias.ts</code></td><td><span class="b keep">Keep</span> <span class="b verify">Verify</span></td><td>Structure stays. Re-check the header band against the new logo and condensed wordmark.</td></tr>
+      <tr><td class="l"><code>src/assets/brand/ascLogoUrls.ts</code></td><td><span class="b change">Change</span></td><td>Asset paths; decide the fate of the unused <code>onLight</code>.</td></tr>
+      <tr><td class="l"><code>public/assets/brand/asc-logo/*.svg</code></td><td><span class="b change">Change</span></td><td>Replace both SVGs and rename the directory.</td></tr>
+      <tr><td class="l"><code>src/shell/ConnectedSidebarBrand.tsx</code></td><td><span class="b change">Change</span></td><td><code>alt</code> text and asset import. <b>Also the collapsed mark-only gap.</b></td></tr>
+      <tr><td class="l"><code>src/shell/AppTopBar.tsx</code></td><td><span class="b change">Change</span></td><td>Fallback subtitle <code>'ASC Connected'</code>.</td></tr>
+      <tr><td class="l"><code>src/shell/content/productCatalogHeroFigmaCover.tsx</code></td><td><span class="b change">Change</span></td><td>15 hardcoded gradient stops. <b>The only token bypass in app code</b> — it will not follow a token remap.</td></tr>
+      <tr><td class="l"><code>src/bom/**</code>, <code>src/spec/**</code>, <code>src/search/**</code></td><td><span class="b change">Change</span></td><td>User-facing copy only. Blocked on the naming rule. <b>Do not touch SKU codes or <code>ASCE</code> references.</b></td></tr>
+      <tr><td class="l"><code>src/seisbrace/**</code></td><td><span class="b keep">Keep</span></td><td><b>Nothing.</b> Every hit is <code>ASCE 7-16</code> / <code>ASCE 7-22</code> — engineering standards, not branding.</td></tr>
+      <tr><td class="l"><code>src/submittal/**</code></td><td><span class="b keep">Keep</span></td><td><b>Nothing.</b> Zero ASC occurrences.</td></tr>
+      <tr><td class="l"><code>src/catalog/catalogDemoData.ts</code></td><td><span class="b verify">Verify</span></td><td>ASC-domain CDN image URL.</td></tr>
+      <tr><td class="l">10 <code>Asc*</code> filenames, symbols, routes</td><td><span class="b keep">Keep</span> <span class="b verify">Defer</span></td><td>Not user-visible. Separate refactor — see <a href="#f4">Finding 4</a>.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============================================================ 18 -->
+<section id="s18">
+  <h2><span class="n">18</span>Required Figma changes</h2>
+  <ol class="body">
+    <li><b>Replace the <code>Logo</code> component-set artwork</b> in both variants. Preserve the <code>Mode</code> property so instances inherit. <span class="b change">Change</span></li>
+    <li><b>Add a mark-only logo asset or rule</b> for collapsed navigation. <span class="b add">Add</span> <span class="pill blocked">Client-blocked</span></li>
+    <li><b>Change <code>Typography/Font Family/fontFamily</code></b> from <code>Cairo</code> to Barlow. <span class="b change">Change</span></li>
+    <li><b>Add a second font-family variable</b> for Barlow Condensed — the collection has only one family slot today. <span class="b add">Add</span></li>
+    <li><b>Add font-weight variables 700 and 800.</b> Only 400 and 600 exist. <span class="b add">Add</span></li>
+    <li><b>Rebind <code>Title/Heading 1–5</code></b> to the condensed family at weight 800, in both Typography modes. Keep all metrics. <span class="b change">Change</span></li>
+    <li><b>Define and add the subheading role</b> at condensed Bold 700. It exists in neither system. <span class="b add">Add</span></li>
+    <li><b>Rebind the remaining 20 text styles</b> to Barlow — family only, metrics unchanged — in both modes. <span class="b change">Change</span></li>
+    <li><b>Decide the <code>Primary/primary-*</code> strategy</b> (reseed / freeze / split) and apply it in Light and Dark. <span class="b verify">Decision first</span></li>
+    <li><b>Remap <code>Color/Primary/*</code> semantic aliases</b> per the agreed RSFC role mapping. <span class="b change">Change</span></li>
+    <li><b>Assign a semantic role to Light Blue <span class="hex">#2576BB</span></b> before any primitive edit. <span class="b add">Add</span> <span class="pill blocked">Decision-blocked</span></li>
+    <li><b>Decide whether Gray <span class="hex">#A7A9AC</span> is a UI neutral or brand-collateral only.</b> <span class="b verify">Needs verification</span></li>
+    <li><b>Reconcile <code>Color/Info/*</code></b> with the repo's Daybreak mapping — before the primary ramp moves. <span class="b verify">Needs verification</span></li>
+    <li><b>Confirm <code>Sunset Orange</code> stays untouched</b> and that RSFC Accent Orange, if needed, does not overwrite an Ant Design primitive. <span class="b keep">Keep</span></li>
+    <li><b>Resolve the Dark Navy Shade discrepancy</b> — <span class="hex">#002A49</span> in the guide vs <span class="hex">#002A4A</span> at <code>primary-9</code>. <span class="b verify">Needs verification</span></li>
+    <li><b>Re-validate contrast</b> for sidebar selected states, link hover, and text-on-navy after remapping. <span class="b verify">Verify</span></li>
+    <li><b>Publish the library and verify propagation</b> before editing any product file. <span class="b change">Change</span></li>
+    <li><b>Run the reverse audit</b> in Figma for <code>ASC</code>, <code>ASC-ES</code>, <code>ASC ConnectED</code>, <code>Cairo</code>, legacy blues, and old logo artwork. <span class="b verify">Verify</span></li>
+  </ol>
+</section>
+
+<!-- ============================================================ 19 -->
+<section id="s19">
+  <h2><span class="n">19</span>Required code changes</h2>
+  <ol class="body">
+    <li><b>Replace both logo SVGs</b> and rename the <code>asc-logo</code> directory; update <code>ascLogoUrls.ts</code>. <span class="b change">Change</span></li>
+    <li><b>Update the logo <code>alt</code> text</b> in <code>ConnectedSidebarBrand.tsx:19</code>. <span class="b change">Change</span> <span class="pill blocked">Naming-rule-blocked</span></li>
+    <li><b>Resolve the collapsed-sidebar logo</b>, which currently squeezes the full wordmark into a 72&nbsp;px rail. <span class="b add">Add</span></li>
+    <li><b>Change the font family</b> in <code>hydraTypography.ts:21-22</code> and decide the fallback stack. <span class="b change">Change</span></li>
+    <li><b>Split <code>W_SEMI</code></b> so headings can move to 800 without bolding all body-strong text. <span class="b change">Change</span></li>
+    <li><b>Add weight constants 700 and 800</b> and a subheading text style. <span class="b add">Add</span></li>
+    <li><b>Decide how the condensed heading family is applied</b>, since Ant Design has no heading-font token. <span class="b add">Add</span></li>
+    <li><b>Update the webfont link</b> in <code>index.html</code> for two static-weight families with explicit weights. <span class="b change">Change</span></li>
+    <li><b>Add a second CSS variable</b> for the condensed family alongside <code>--hydra-font-family</code>. <span class="b add">Add</span></li>
+    <li><b>Mirror the compact typography map</b> — a second full set of 25 styles that must not be missed. <span class="b change">Change</span></li>
+    <li><b>Decide whether <code>fontFamilyCode</code> follows the brand font</b>; Barlow is not monospaced. <span class="b verify">Needs verification</span></li>
+    <li><b>Apply the agreed blue-ramp strategy</b> in <code>primaryPrimitiveBlue.ts</code>, light and dark, and re-derive <code>bluePrimaryBgSubtleLight</code>. <span class="b change">Change</span> <span class="pill blocked">Decision-blocked</span></li>
+    <li><b>Verify the ghost-primary CSS variable path</b> in <code>brandColors.ts</code> alongside <code>theme.token</code>. <span class="b change">Change</span></li>
+    <li><b>Retokenize the 15 hardcoded gradient stops</b> in <code>productCatalogHeroFigmaCover.tsx:57-71</code> — the only token bypass in app code. <span class="b change">Change</span></li>
+    <li><b>Replace user-facing ASC copy</b> across BOM, SPEC, search, and shell. Use the <i>actual</i> strings from <a href="#s7">§7</a>, not the inventory's paraphrases. <span class="b change">Change</span> <span class="pill blocked">Naming-rule-blocked</span></li>
+    <li><b>Update the top-bar fallback subtitle</b> in <code>AppTopBar.tsx:101</code>. <span class="b change">Change</span></li>
+    <li><b>Add a favicon, manifest, and app title.</b> None exist today. <span class="b add">Add</span> <span class="pill blocked">Client-blocked</span></li>
+    <li><b>Resolve the ASC-domain CDN reference</b> in <code>catalogDemoData.ts:23</code>. <span class="b verify">Needs verification</span></li>
+    <li><b>Visually inspect the 18 raster assets</b> for baked-in ASC branding. <span class="b verify">Needs verification</span></li>
+    <li><b>Build the residual-brand check</b> from the verified string list, excluding <code>ASC-[A-Z]</code> SKUs, <code>ASCE</code>, <code>sortOrder: 'asc'</code>, and <code>B-ASC</code>. <span class="b add">Add</span></li>
+    <li><b>Defer the <code>Asc*</code> identifier refactor</b> to a separate, deliberate change. <span class="b verify">Defer</span></li>
+  </ol>
+</section>
+
+<!-- ============================================================ 20 -->
+<section id="s20">
+  <h2><span class="n">20</span>Things requiring no action</h2>
+  <p>Explicitly confirmed as already-correct or brand-neutral, so they are not reopened during the migration. <b>This list is as important as the
+  change lists</b> — it is what prevents unnecessary churn in a shared design system.</p>
+
+  <div class="split">
+    <div class="box">
+      <h5>Already matches RSFC</h5>
+      <ul>
+        <li><code>Volcano/volcano-1…10</code>, Light and Dark — step 6 <i>is</i> RSFC Orange <span class="hex">#F05A23</span></li>
+        <li><code>Primary/primary-7</code> <span class="hex">#004173</span> — RSFC Navy, already the sidebar surface</li>
+        <li><code>Color/ButtonPrimary/*</code> and <code>buttonPrimaryPalette</code> — complete, correct state mapping</li>
+        <li><code>Layout.siderBg</code> — already RSFC Navy</li>
+        <li><code>buttonPrimaryShadow</code> and <code>buttonPrimaryControlOutline</code> — already RSFC Orange tints</li>
+        <li><code>src/theme/primaryPrimitiveOrange.ts</code> and <code>buttonPrimaryPalette.ts</code> — zero changes</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h5>Brand-neutral — no ASC identity</h5>
+      <ul>
+        <li>Nine Ant Design standard ramps: Gold, Yellow, Lime, Green, Cyan, Geek Blue, Purple, Magenta, Dust Red</li>
+        <li><code>Neutral/gray-1…13</code> and all neutral surfaces</li>
+        <li><code>Sunset Orange</code> — do not overwrite</li>
+        <li>All borders, radii, spacing, and sizing tokens</li>
+        <li>Global <code>boxShadow</code> stacks — black-alpha</li>
+        <li>Success, warning, and error semantics</li>
+        <li><code>Color/Neutral/Text/*</code> — black-alpha and white-alpha</li>
+        <li><code>@ant-design/icons</code> — the only icon source</li>
+        <li>Type scale metrics — all 25 styles, both modes</li>
+        <li>Disabled, loading, empty, and no-results state styling</li>
+        <li>All component structures and variant APIs</li>
+        <li><code>hydraSemanticColors.ts</code> and <code>antdTheme.ts</code> — no direct edits</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h5>Must be preserved — not branding</h5>
+      <ul>
+        <li><code>ASCE 7-16</code> / <code>ASCE 7-22</code> engineering standards throughout SeisBrace</li>
+        <li>Product and SKU codes such as <code>ASC-SR-155-TH</code>, <code>ASC-GV-600-FL</code></li>
+        <li><code>sortOrder: 'asc'</code> and <code>'ascend'</code> sort directions</li>
+        <li>CSS <code>align="baseline"</code></li>
+        <li>BACnet <code>B-ASC</code> profile name</li>
+        <li>Stored manufacturer keys, API routes, analytics event names</li>
+        <li>The product name <b>ConnectED</b> — unchanged by this rebrand</li>
+        <li><code>src/submittal/**</code> — zero ASC occurrences</li>
+        <li>The SeisBrace manufacturer disclaimer, until the client supplies approved wording</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 21 -->
+<section id="s21">
+  <h2><span class="n">21</span>Risks, contradictions &amp; missing information</h2>
+
+  <h3>Contradictions between the three sources</h3>
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:56px">#</th><th style="width:230px">Contradiction</th><th style="width:96px">Severity</th><th>Detail and recommendation</th></tr></thead>
+    <tbody>
+      <tr><td class="l">C1</td><td>Keep <span class="hex">#004173</span> while remapping <span class="hex">#0073A5</span> and <span class="hex">#00B9F0</span></td><td><span class="b remove">Critical</span></td><td>All three are steps of one ramp. Not independently satisfiable as written. Choose a strategy before any edit — <a href="#f1">Finding 1</a>.</td></tr>
+      <tr><td class="l">C2</td><td>"Change token values before renaming <code>ASC</code> token identifiers"</td><td><span class="b change">Medium</span></td><td>This repo has <b>no</b> ASC-named tokens or CSS variables. The instruction has no target here — <a href="#f4">Finding 4</a>. Still valid elsewhere in ConnectED.</td></tr>
+      <tr><td class="l">C3</td><td>Figma <code>Color/Info/*</code> → Primary, but repo <code>colorInfo*</code> → Daybreak</td><td><span class="b change">Medium</span></td><td>Harmless today, a defect after reseed — <a href="#f5">Finding 5</a>. Not mentioned in the inventory.</td></tr>
+      <tr><td class="l">C4</td><td>Six of twelve inventory-named strings do not exist verbatim</td><td><span class="b change">Medium</span></td><td>An automated check built from the literal list would report false clean. Rebuild from the verified strings in <a href="#s7">§7</a>.</td></tr>
+      <tr><td class="l">C5</td><td>Dark Navy Shade <span class="hex">#002A49</span> vs <code>primary-9</code> <span class="hex">#002A4A</span></td><td><span class="b verify">Low</span></td><td>One unit apart in the blue channel. Almost certainly the same intended color; the inventory already flags this value as internally inconsistent.</td></tr>
+      <tr><td class="l">C6</td><td>Accent Orange <span class="hex">#FA961E</span> vs <code>Sunset Orange/orange-6</code> <span class="hex">#fa8c16</span></td><td><span class="b verify">Low</span></td><td>Close but not equal, and that ramp is an Ant Design primitive. <b>Do not overwrite it</b> to accommodate a brand color.</td></tr>
+      <tr><td class="l">C7</td><td>Intake and PRD still say "Reliable Safety and Fire Corporation"</td><td><span class="b change">Medium</span></td><td>The inventory supersedes them but they are not yet corrected. Risk of implementation from the stale name — the inventory assigns this reconciliation to Product.</td></tr>
+      <tr><td class="l">C8</td><td>Figma <code>colorPrimaryHover</code> → step 4, repo → step 5</td><td><span class="b verify">Low</span></td><td><b>Pre-existing and documented.</b> Flagged so it is not misread as rebrand drift during QA.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Risks</h3>
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:56px">#</th><th style="width:230px">Risk</th><th style="width:96px">Severity</th><th>Mitigation</th></tr></thead>
+    <tbody>
+      <tr><td class="l">R1</td><td>Blind hex replacement in the primary ramp</td><td><span class="b remove">Critical</span></td><td>Simultaneously changes sidebar, links, top bar, selected rows, focus rings, and ghost buttons in both modes. The inventory's own "do not perform a blind hex replacement" is the correct guard.</td></tr>
+      <tr><td class="l">R2</td><td>Condensed heading font applied inconsistently</td><td><span class="b remove">Critical</span></td><td>Ant Design has no heading-font token, so any surface bypassing the chosen mechanism silently keeps the body font. Pick one mechanism and QA specifically for it.</td></tr>
+      <tr><td class="l">R3</td><td>Changing the shared 600 weight constant</td><td><span class="b change">High</span></td><td>Would bold nine text styles plus Ant Design internals. Split before moving headings.</td></tr>
+      <tr><td class="l">R4</td><td>Token work assumed to cover the logo</td><td><span class="b change">High</span></td><td>Logo fills are untokenized in both systems. Treat as a separate asset workstream.</td></tr>
+      <tr><td class="l">R5</td><td>Contrast regressions after remapping</td><td><span class="b change">High</span></td><td>Sidebar selected <span class="hex">#B8EAFF</span> on navy, link hover <span class="hex">#00B9F0</span> on white, and white-alpha menu text are all sensitive. The inventory's accessibility line covers this; schedule it as a gate, not a follow-up.</td></tr>
+      <tr><td class="l">R6</td><td>Dark mode drifting from light</td><td><span class="b change">High</span></td><td>Every primary decision must be made twice. The dark ramp is algorithmically generated from the seed, so reseeding regenerates it silently.</td></tr>
+      <tr><td class="l">R7</td><td>Compact typography mode forgotten</td><td><span class="b change">Medium</span></td><td>A second full set of 25 styles that is not runtime-switchable today, so a missed rebinding would not surface in normal QA.</td></tr>
+      <tr><td class="l">R8</td><td>Over-correcting ASC references</td><td><span class="b change">Medium</span></td><td>Renaming SKUs, <code>ASCE</code> standards, or route identifiers would break product data and engineering references. Keep the preserved list in <a href="#s20">§20</a> visible to whoever runs the sweep.</td></tr>
+      <tr><td class="l">R9</td><td>Hardcoded hero gradient missed</td><td><span class="b change">Medium</span></td><td>The only token bypass in app code; it will not follow a remap and will visibly diverge from rebranded chrome.</td></tr>
+      <tr><td class="l">R10</td><td>Baked-in branding inside raster assets</td><td><span class="b verify">Medium</span></td><td>18 assets not visually inspected. Needs a human pass in the reverse audit.</td></tr>
+      <tr><td class="l">R11</td><td>Condensed fonts falling back badly</td><td><span class="b change">Medium</span></td><td>Generic <code>sans-serif</code> is a poor substitute for a condensed face. Matters most in email and PDF, where the inventory already flags non-inheriting surfaces.</td></tr>
+      <tr><td class="l">R12</td><td>Orange primary read as a warning</td><td><span class="b verify">Low</span></td><td>RSFC Orange as a brand action color sits close to Ant Design's warning gold. Worth one deliberate check during state QA.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Missing information blocking design decisions</h3>
+  <ul>
+    <li><b>The semantic role of Light Blue <span class="hex">#2576BB</span></b> — the single highest-leverage unblock. All primitive and semantic color work waits on it.</li>
+    <li><b>Whether Gray <span class="hex">#A7A9AC</span> is a UI neutral or brand-collateral only</b> — determines whether the Ant Design neutral ramp is touched at all.</li>
+    <li><b>Default Barlow body weight and the web fallback stack</b> — listed as a client gap; blocks font delivery.</li>
+    <li><b>An approved mark-only logo asset or rule</b> — blocks collapsed navigation, favicon, and app icons.</li>
+    <li><b>The favicon and touch-icon asset set</b> — blocks net-new metadata.</li>
+    <li><b>Minimum logo size and clear space</b> — blocks header-band sizing confirmation.</li>
+    <li><b>The full-name vs <code>RSFC</code> usage rule</b> — blocks every user-facing copy change, the largest-volume workstream.</li>
+    <li><b>Photography, iconography, and illustration guidance</b> — blocks imagery decisions. Recommend explicitly confirming Ant Design icons continue.</li>
+    <li><b>Approved legal, manufacturer, and copyright strings</b> — blocks PDF and email branding.</li>
+    <li><b>The resolution of both At-a-Glance internal inconsistencies</b> — Dark Navy Shade and Accent Orange.</li>
+  </ul>
+</section>
+
+<!-- ============================================================ 22 -->
+<section id="s22">
+  <h2><span class="n">22</span>Needs-verification register</h2>
+  <p>Everything that could not be confirmed from the three sources, kept separate so uncertainty is not hidden inside the change lists.</p>
+  <div class="tw"><table class="fixed">
+    <thead><tr><th style="width:56px">#</th><th style="width:250px">Item</th><th style="width:150px">Why unverified</th><th>How to close it</th></tr></thead>
+    <tbody>
+      <tr><td class="l">V1</td><td><code>Colors/Primary/primary-1…10</code> current Figma values</td><td>No reachable node binds this ramp; MCP enumerated only the Cover and Logo pages</td><td>Open the variables panel on <code>Colors</code>, or re-run extraction with a node bound to the ramp. Repo values are verified; Figma values rest on the 2026-04-07 parity audit.</td></tr>
+      <tr><td class="l">V2</td><td><code>Customize Theme</code> alias mappings — <code>Color/Primary/*</code>, <code>Sidebar/*</code>, <code>Info/*</code>, <code>ButtonPrimary/*</code></td><td>Same</td><td>Same. All four groups are documented in the recorded parity audit but were not re-read live.</td></tr>
+      <tr><td class="l">V3</td><td>Complete Figma text-style inventory</td><td>Only 5 of 25 styles appeared on reachable nodes</td><td>Confirm that <code>Large/*</code> and <code>Extra Large/*</code> exist in Figma as they do in the repo, and check the Compact mode set.</td></tr>
+      <tr><td class="l">V4</td><td>Whether Figma has weight variables beyond 400 and 600</td><td>Only two were returned by reachable nodes</td><td>Inspect the <code>Typography</code> collection directly. The audit assumes 700 and 800 are absent.</td></tr>
+      <tr><td class="l">V5</td><td>RSFC At-a-Glance source document</td><td><code>ReliableSFC_AAG_Brand_Guidelines.pdf</code> not accessible in this session</td><td>All RSFC requirements here are taken from the inventory's summary of it. <b>Confirm against the PDF before freezing foundations.</b></td></tr>
+      <tr><td class="l">V6</td><td>Semantic role of Light Blue <span class="hex">#2576BB</span></td><td>Not stated in the inventory</td><td>Design and Product decision. <b>Blocks the whole color workstream.</b></td></tr>
+      <tr><td class="l">V7</td><td>Whether Gray <span class="hex">#A7A9AC</span> is a UI neutral</td><td>Not stated</td><td>Design decision. Recommend brand-collateral only.</td></tr>
+      <tr><td class="l">V8</td><td>Intended informational color after rebrand</td><td>Not mentioned in the inventory</td><td>Resolve the Figma/repo divergence before the primary ramp moves.</td></tr>
+      <tr><td class="l">V9</td><td>Dark Navy Shade <span class="hex">#002A49</span> vs <span class="hex">#002A4A</span></td><td>Inventory flags the guide as internally inconsistent</td><td>Client confirmation. Low impact but trivially closable.</td></tr>
+      <tr><td class="l">V10</td><td>Accent Orange <span class="hex">#FA961E</span> — needed at all?</td><td>Listed as inconsistent; no semantic role given</td><td>Client confirmation. <b>Do not overwrite <code>Sunset Orange</code>.</b></td></tr>
+      <tr><td class="l">V11</td><td>Whether 18 raster assets contain ASC branding</td><td>Not pixel-inspected</td><td>Human visual pass.</td></tr>
+      <tr><td class="l">V12</td><td>Whether <code>fontFamilyCode</code> should follow the brand font</td><td>Not specified; repo currently aliases them</td><td>Design decision. Barlow is not monospaced.</td></tr>
+      <tr><td class="l">V13</td><td>Fate of the unused <code>onLight</code> logo variant</td><td>Defined but never rendered</td><td>Wire it up or drop it during the asset swap.</td></tr>
+      <tr><td class="l">V14</td><td>Ownership of the <code>ue1.asc-es.com</code> CDN asset</td><td>Inventory notes external brand-asset ownership is unassigned</td><td>Engineering and client decision.</td></tr>
+      <tr><td class="l">V15</td><td>Whether the header band fits the new logo and condensed wordmark</td><td>RSFC artwork not yet available</td><td>Visual check once artwork lands; depends on minimum-size guidance.</td></tr>
+      <tr><td class="l">V16</td><td>Figma product files (BOM, SPEC, SeisBrace, Content, Submittal, Admin)</td><td>Out of scope for this audit</td><td>Audit after foundations propagate, per the inventory's sequencing.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============================================================ 23 -->
+<section id="s23">
+  <h2><span class="n">23</span>Final migration checklist</h2>
+  <p>Sequenced so decisions precede edits and foundations precede surfaces. Phase 0 items are genuine blockers — starting later phases first is
+  what produces rework.</p>
+
+  <h4>Phase 0 — Decisions and unblocking</h4>
+  <ul class="chk">
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p0">P0</span>Assign a semantic role to Light Blue <span class="hex">#2576BB</span></div><div class="cm"><b>Blocks:</b> all primitive and semantic color work. The single highest-leverage unblock in the migration.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p0">P0</span>Choose the <code>Primary/primary-*</code> strategy — reseed, freeze, or split</div><div class="cm"><b>Resolves:</b> contradiction C1. Determines whether RSFC Navy survives at step 7. See <a href="#f1">Finding 1</a>.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p0">P0</span>Decide whether Gray <span class="hex">#A7A9AC</span> is a UI neutral or brand-collateral only</div><div class="cm"><b>Blocks:</b> whether the Ant Design neutral ramp is touched. Recommend brand-collateral only.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p0">P0</span>Decide how the condensed heading family is applied</div><div class="cm"><b>Blocks:</b> all heading typography. Ant Design has no heading-font token. See <a href="#f2">Finding 2</a>.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p0">P0</span>Define the subheading semantic role</div><div class="cm"><b>Blocks:</b> the RSFC subheading requirement. The role exists in neither system.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p0">P0</span>Agree the full-name vs <code>RSFC</code> usage rule</div><div class="cm"><b>Blocks:</b> every user-facing copy change — the largest-volume workstream.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p0">P0</span>Confirm the RSFC At-a-Glance PDF against this audit's assumptions</div><div class="cm"><b>Closes:</b> V5. All RSFC requirements here come from the inventory's summary, not the source document.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p0">P0</span>Request the mark-only logo, favicon set, and minimum-size guidance</div><div class="cm"><b>Blocks:</b> collapsed navigation and all app metadata. Client-owned.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p0">P0</span>Confirm the default Barlow body weight and web fallback stack</div><div class="cm"><b>Blocks:</b> font delivery. Client-owned gap.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p0">P0</span>Decide the intended informational color</div><div class="cm"><b>Resolves:</b> C3 before it becomes a defect. See <a href="#f5">Finding 5</a>.</div></div></li>
+  </ul>
+
+  <h4>Phase 1 — Verification, before any edit</h4>
+  <ul class="chk">
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p1">P1</span>Re-read the <code>Primary/primary-*</code> ramp and <code>Customize Theme</code> aliases live in Figma</div><div class="cm"><b>Closes:</b> V1, V2. Currently resting on the 2026-04-07 parity audit rather than fresh confirmation.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p1">P1</span>Confirm the full text-style inventory and weight variables in Figma</div><div class="cm"><b>Closes:</b> V3, V4. The audit assumes weights 700 and 800 are absent.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p1">P1</span>Resolve both At-a-Glance inconsistencies</div><div class="cm"><b>Closes:</b> C5, C6, V9, V10. Low impact, easily closed.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p1">P1</span>Reconcile the Intake and PRD with the current brand source</div><div class="cm"><b>Resolves:</b> C7. The stale "Fire Corporation" name is still in circulation.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p1">P1</span>Visually inspect the 18 raster assets</div><div class="cm"><b>Closes:</b> V11. Static analysis cannot clear these.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p1">P1</span>Freeze the foundation mapping and record it</div><div class="cm">Logo variants, font roles, semantic colors. Per the inventory's release gate.</div></div></li>
+  </ul>
+
+  <h4>Phase 2 — Figma foundations</h4>
+  <ul class="chk">
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p2">P2</span>Replace the <code>Logo</code> artwork in both variants, preserving the <code>Mode</code> property</div><div class="cm">Keeps every downstream instance inheriting automatically.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p2">P2</span>Change <code>fontFamily</code> to Barlow and add the condensed family variable</div><div class="cm">The collection has only one family slot today.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p2">P2</span>Add weight variables 700 and 800</div><div class="cm">Required before any heading style can be rebound.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p2">P2</span>Rebind all 50 text-style bindings across both Typography modes</div><div class="cm">Families and weights only. <b>Metrics stay exactly as they are.</b></div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p2">P2</span>Apply the agreed primary strategy in Light and Dark</div><div class="cm">Then remap <code>Color/Primary/*</code>. <b>Do not overwrite <code>Volcano</code>, <code>Sunset Orange</code>, or <code>Neutral</code>.</b></div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p2">P2</span>Reconcile <code>Color/Info/*</code> with the code mapping</div><div class="cm">Must happen in the same pass as the primary change, not after it.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p2">P2</span>Publish the library and verify propagation before editing product files</div><div class="cm">Per the inventory: do not hand-replace instances that inherit correctly.</div></div></li>
+  </ul>
+
+  <h4>Phase 3 — Repository foundations</h4>
+  <ul class="chk">
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p3">P3</span>Split <code>W_SEMI</code>, then add weights 700 and 800</div><div class="cm"><b>Order matters.</b> Nine styles plus Ant Design internals share the 600 constant today.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p3">P3</span>Change the font family and fallback, and add the subheading style</div><div class="cm"><code>hydraTypography.ts</code> — the highest-impact file in the rebrand.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p3">P3</span>Implement the chosen condensed-heading mechanism</div><div class="cm">Plus a second CSS variable. The token system cannot carry a heading family.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p3">P3</span>Update the webfont link for two static-weight families</div><div class="cm">Enumerate weights explicitly — this is not a one-word family swap.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p3">P3</span>Mirror every change into the compact typography map</div><div class="cm">A second full set of 25 styles. Not runtime-switchable, so omissions hide from QA.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p3">P3</span>Apply the blue-ramp strategy and re-derive <code>bluePrimaryBgSubtleLight</code></div><div class="cm">Light and dark. Verify both <code>theme.token</code> and the ghost-primary CSS variable path.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p3">P3</span>Replace both logo SVGs, rename the directory, update paths and <code>alt</code> text</div><div class="cm">Resolve the collapsed-rail logo and the unused <code>onLight</code> variant.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p3">P3</span>Retokenize the 15 hardcoded gradient stops</div><div class="cm">The only token bypass in app code; it will not follow a remap.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p3">P3</span>Confirm no changes to Volcano, Button palette, neutrals, shadows, or radii</div><div class="cm">Per <a href="#s20">§20</a>. Protects the design system from unnecessary churn.</div></div></li>
+  </ul>
+
+  <h4>Phase 4 — Surfaces, QA and reverse audit</h4>
+  <ul class="chk">
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p4">P4</span>Replace user-facing ASC copy across BOM, SPEC, search and shell</div><div class="cm">Use the verified strings in <a href="#s7">§7</a>, not the inventory's paraphrases. <b>Preserve SKUs and <code>ASCE</code>.</b></div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p4">P4</span>Add the favicon, manifest and app title</div><div class="cm">Net-new — there is no ASC equivalent to replace.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p4">P4</span>Validate every interaction state in light and dark</div><div class="cm">Default, hover, selected, active, focus, disabled, error, warning, link, navigation. Every decision made twice.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p4">P4</span>Validate accessibility contrast after remapping</div><div class="cm">Sidebar selected on navy, link hover on white, white-alpha menu text. Treat as a gate, not a follow-up.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p4">P4</span>QA surfaces that do not inherit shared tokens</div><div class="cm">PDFs, email, manually styled Figma text. Condensed-font fallback is the main risk.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p4">P4</span>Run application-by-application visual QA</div><div class="cm">Umbrella → BOM → Spec → SeisBrace → Content → Submittal → Admin → DataHub, per the inventory.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p4">P4</span>Build the residual-brand check with a reviewed allowlist</div><div class="cm">Exclude <code>ASC-[A-Z]</code>, <code>ASCE</code>, <code>sortOrder: 'asc'</code>, <code>B-ASC</code>. Include the six strings the inventory got wrong.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p4">P4</span>Run the reverse audit in Figma and code</div><div class="cm">Search <code>ASC</code>, <code>ASC-ES</code>, <code>ASC ConnectED</code>, <code>Cairo</code>, <span class="hex">#0073A5</span>, <span class="hex">#00B9F0</span>, old logo artwork. <b>Include the logo SVG internals</b> — the theme layer alone will not surface them.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p4">P4</span>Classify every remaining hit</div><div class="cm">Historical record, product identifier, technical contract, or client-blocked dependency. Anything unexplained is a defect.</div></div></li>
+    <li><div class="bx"></div><div><div class="ct2"><span class="ph p4">P4</span>Decide separately whether to refactor the <code>Asc*</code> identifiers</div><div class="cm">Not a brand-cutover item. See <a href="#f4">Finding 4</a>.</div></div></li>
+  </ul>
+
+  <div class="call info">
+    <p class="ct">ⓘ Closing note on scope</p>
+    <p>This audit covers design and design-system surfaces only. The inventory's engineering-identity workstream — email domains, Revit add-in
+    identity, Azure B2C branding, analytics cohorts, domain-based provisioning, legal and privacy URLs — remains outstanding and is largely
+    client-blocked. <b>The rebrand cannot be declared complete on the basis of Figma and UI work alone</b>, which the inventory itself states.</p>
+  </div>
+</section>
+
+</main>
+</div>
+</body>
+</html>

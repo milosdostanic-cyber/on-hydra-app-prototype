@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #141414;
+        --ink-2: #595959;
+        --ink-3: #8c8c8c;
+        --line: #f0f0f0;
+        --line-strong: #d9d9d9;
+        --surface: #ffffff;
+        --surface-alt: #fafafa;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 32px 36px 40px;
+        width: 1480px;
+        font-family: 'Barlow', sans-serif;
+        color: var(--ink);
+        background: var(--surface);
+        -webkit-font-smoothing: antialiased;
+      }
+      h1 { font-size: 28px; line-height: 36px; font-weight: 600; margin: 0 0 4px; }
+      .sub { font-size: 15px; line-height: 22px; color: var(--ink-2); margin: 0 0 22px; }
+      .sub code { background: var(--surface-alt); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; font-size: 13px; }
+
+      table { width: 100%; border-collapse: collapse; }
+      thead th {
+        text-align: left;
+        font-size: 11.5px;
+        line-height: 16px;
+        font-weight: 600;
+        color: var(--ink-2);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        padding: 8px 9px;
+        border-bottom: 2px solid var(--line-strong);
+        background: var(--surface-alt);
+      }
+      tbody td {
+        padding: 9px 9px;
+        border-bottom: 1px solid var(--line);
+        font-size: 12.5px;
+        line-height: 18px;
+        vertical-align: top;
+      }
+      tbody tr:nth-child(even) td { background: #fcfdfe; }
+
+      .step-num { font-weight: 600; font-size: 14px; color: var(--ink); width: 18px; }
+
+      .pair { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+      .swatch { width: 30px; height: 30px; border-radius: 5px; border: 1px solid rgba(0,0,0,0.1); flex-shrink: 0; }
+      .arrow { color: var(--ink-3); font-size: 13px; }
+      .hexcol { display: flex; flex-direction: column; gap: 1px; }
+      .hex { font-size: 10.5px; color: var(--ink-3); }
+      .hex.new { color: var(--ink); font-weight: 500; }
+
+      .delta {
+        font-size: 11px;
+        line-height: 15px;
+        padding: 2px 7px;
+        border-radius: 10px;
+        display: inline-block;
+        white-space: nowrap;
+      }
+      .delta.hue { background: #fff1f0; border: 1px solid #ffccc7; color: #cf1322; }
+      .delta.navy { background: #e6f4ff; border: 1px solid #91caff; color: #0958d9; }
+      .delta.none { background: var(--surface-alt); border: 1px solid var(--line-strong); color: var(--ink-3); }
+
+      .token-main { font-weight: 600; font-size: 12.5px; }
+      .token-sub { font-size: 10.5px; color: var(--ink-3); margin-top: 2px; }
+
+      .brand-row td { background: #eef6fb !important; }
+      .brand-row .token-main { color: #2576bb; }
+
+      .comp {
+        display: inline-block;
+        font-size: 10.5px;
+        line-height: 15px;
+        padding: 1px 6px;
+        margin: 1px 2px 1px 0;
+        border-radius: 9px;
+        background: var(--surface-alt);
+        border: 1px solid var(--line-strong);
+        color: var(--ink-2);
+      }
+      .comp.strong { background: #e6f4ff; border-color: #91caff; color: #0958d9; }
+
+      .legend { display: flex; gap: 10px; margin: 14px 0 4px; align-items: center; }
+      .legend .delta { margin: 0; }
+      .legend span.lbl { font-size: 12px; color: var(--ink-2); }
+
+      footer {
+        margin-top: 18px;
+        padding-top: 12px;
+        border-top: 1px solid var(--line);
+        font-size: 11.5px;
+        line-height: 17px;
+        color: var(--ink-3);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>RSFC brand ramp — before / after / what stayed, per shade</h1>
+    <p class="sub">
+      Same 10-step scale, same semantic slot per step — only the hex values change. Semantic tokens and
+      component usage verified against <code>node_modules/antd/es/*/style/*.js</code>.
+    </p>
+
+    <div class="legend">
+      <span class="delta hue">hue changed</span><span class="lbl">teal → brand blue</span>
+      <span class="delta navy">pinned to Navy</span><span class="lbl">steps 7–10, kept dark on purpose</span>
+      <span class="delta none">no consumer</span><span class="lbl">step 9, unused on both sides</span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Step</th>
+          <th>Before → After</th>
+          <th>What changed</th>
+          <th>Semantic token (bound in code)</th>
+          <th>Used in (antd + Hydra components)</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+
+    <footer>
+      Production also overrides antd's global preset <code>blue1…blue10</code> tokens with the old teal
+      ramp, so any component reaching for preset blue (not just <code>colorPrimary*</code>) turns teal
+      too. The prototype leaves antd presets alone and only rebinds the semantic tokens listed above —
+      worth an explicit decision when porting (see handoff doc §5.1).
+    </footer>
+
+    <script>
+      const OLD = ['#B8EAFF', '#75D6FF', '#2EC0FF', '#00A4EB', '#0073A5', '#005D85', '#004461', '#002E42', '#00151F', '#000B0F'];
+      const NEW = ['#EBF5FA', '#C7E1ED', '#99C6E0', '#6EABD4', '#4890C7', '#2576BB', '#004173', '#00365F', '#002A4A', '#001D35'];
+
+      const rows = [
+        {
+          main: 'colorPrimaryBg', sub: '→ derives controlItemBgActive, controlOutline', delta: 'hue',
+          comps: ['Selected row', 'Selected option', 'Selected day', 'Selected menu item', 'Focus ring',
+            'Table', 'Select', 'Dropdown', 'Cascader', 'Tree', 'Transfer', 'DatePicker', 'Calendar',
+            'Menu (light)', 'Steps', 'Splitter', 'Input', 'Radio', 'Pagination', 'Button', 'Form'],
+        },
+        { main: 'colorPrimaryBgHover', sub: '→ controlItemBgActiveHover', delta: 'hue', comps: ['Hover on selected item', 'Steps'] },
+        { main: 'colorPrimaryBorder', sub: '', delta: 'hue', comps: ['Button (ghost/dashed) border', 'DatePicker', 'Slider track', 'Upload drag area'] },
+        { main: 'colorPrimaryBorderHover', sub: '', delta: 'hue', comps: ['Hover on those same borders'] },
+        { main: 'colorPrimaryHover', sub: '', delta: 'hue', comps: ['Input', 'Select', 'Checkbox', 'Radio', 'Switch', 'Tabs', 'Tag', 'Pagination', 'Upload', 'ColorPicker', 'Steps', 'Button*'] },
+        {
+          main: 'colorPrimary, colorLink, colorPrimaryText', sub: 'THE BRAND SLOT', delta: 'hue', brand: true,
+          comps: ['Checkbox/Radio/Switch (checked)', 'Tabs (active)', 'Steps (active)', 'Pagination (active)',
+            'Slider handle', 'Spin', 'Badge (processing)', 'Anchor (active)', 'Input (focus border)',
+            'Table (active sort/filter)', 'Card', 'List', 'Tag', 'Timeline', 'Tree', 'Tour', 'Drawer',
+            'Notification', 'Form', ['Every <a> link (global reset)', true], ['Button type="link"', true]],
+        },
+        { main: 'colorPrimaryActive, colorLinkHover, colorPrimaryTextHover, colorSidebar', sub: '', delta: 'navy', comps: [['Sidebar background', true], ['Link hover', true], 'Pressed state (primary controls)'] },
+        { main: 'colorLinkActive, colorPrimaryTextActive, colorSidebarItemSelectedText', sub: '', delta: 'navy', comps: [['Selected sidebar item text', true], 'Link pressed'] },
+        { main: '—', sub: 'no consumer today, on either side', delta: 'none', comps: [] },
+        { main: 'colorSidebarSubmenuBg', sub: '', delta: 'navy', comps: [['Expanded submenu background', true]] },
+      ];
+
+      const tbody = document.getElementById('rows');
+      rows.forEach((r, i) => {
+        const tr = document.createElement('tr');
+        if (r.brand) tr.className = 'brand-row';
+
+        const tdStep = document.createElement('td');
+        tdStep.className = 'step-num';
+        tdStep.textContent = i + 1;
+        tr.appendChild(tdStep);
+
+        const tdPair = document.createElement('td');
+        const pair = document.createElement('div');
+        pair.className = 'pair';
+        const swOld = document.createElement('div');
+        swOld.className = 'swatch';
+        swOld.style.background = OLD[i];
+        const hexOld = document.createElement('div');
+        hexOld.className = 'hexcol';
+        const hOld = document.createElement('div');
+        hOld.className = 'hex';
+        hOld.textContent = OLD[i];
+        hexOld.appendChild(hOld);
+        const arrow = document.createElement('span');
+        arrow.className = 'arrow';
+        arrow.textContent = '→';
+        const swNew = document.createElement('div');
+        swNew.className = 'swatch';
+        swNew.style.background = NEW[i];
+        const hexNew = document.createElement('div');
+        hexNew.className = 'hexcol';
+        const hNew = document.createElement('div');
+        hNew.className = 'hex new';
+        hNew.textContent = NEW[i];
+        hexNew.appendChild(hNew);
+        pair.appendChild(swOld);
+        pair.appendChild(hexOld);
+        pair.appendChild(arrow);
+        pair.appendChild(swNew);
+        pair.appendChild(hexNew);
+        tdPair.appendChild(pair);
+        tr.appendChild(tdPair);
+
+        const tdDelta = document.createElement('td');
+        const d = document.createElement('span');
+        d.className = 'delta ' + r.delta;
+        d.textContent = r.delta === 'hue' ? 'hue changed' : r.delta === 'navy' ? 'pinned to Navy' : 'no consumer';
+        tdDelta.appendChild(d);
+        tr.appendChild(tdDelta);
+
+        const tdToken = document.createElement('td');
+        const mainEl = document.createElement('div');
+        mainEl.className = 'token-main';
+        mainEl.textContent = r.main;
+        tdToken.appendChild(mainEl);
+        if (r.sub) {
+          const subEl = document.createElement('div');
+          subEl.className = 'token-sub';
+          subEl.textContent = r.sub;
+          tdToken.appendChild(subEl);
+        }
+        tr.appendChild(tdToken);
+
+        const tdComp = document.createElement('td');
+        r.comps.forEach((c) => {
+          const [label, strong] = Array.isArray(c) ? c : [c, false];
+          const span = document.createElement('span');
+          span.className = 'comp' + (strong ? ' strong' : '');
+          span.textContent = label;
+          tdComp.appendChild(span);
+        });
+        if (r.comps.length === 0) {
+          tdComp.textContent = 'kept so the 10-step scale stays complete and Figma-aligned';
+          tdComp.style.color = '#8c8c8c';
+          tdComp.style.fontStyle = 'italic';
+        }
+        tr.appendChild(tdComp);
+
+        tbody.appendChild(tr);
+      });
+    </script>
+  </body>
+</html>

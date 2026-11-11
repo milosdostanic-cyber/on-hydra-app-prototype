@@ -1,13 +1,13 @@
 import type { HydraColorMode } from './hydraColorMode';
 
 /**
- * Hydra orange ramp in Figma **Colors** as **`Volcano/volcano-1` … `volcano-10`** only.
- * **Customize Theme** `Color/ButtonPrimary/*` aliases these primitives (not a separate ButtonOrange group).
+ * Hydra orange ramp in Figma **Colors** as **`Hydra Action Orange/hydra-1` … `hydra-10`** (seed `#F05A23`).
+ * **Customize Theme** `Color/Action/*` aliases these primitives (solid primary Button).
+ * Steps 9–10 hold the antd **dark** palette values (Figma uses them for dark Bg/Border and Light `TextActive`).
  *
- * **Light**: hand-tuned (seed `#F05A23`).
- * **Dark**: `generate('#F05A23', { theme: 'dark', backgroundColor: '#141414' })` (@ant-design/colors).
+ * Figma `Volcano/volcano-*` is the **stock** antd Volcano ramp (`#FA541C`) — not this one.
  */
-export const volcanoPrimitiveLight = [
+export const hydraActionOrangePrimitive = [
   '#FFF6F0',
   '#FFDFC9',
   '#FFC3A1',
@@ -16,11 +16,15 @@ export const volcanoPrimitiveLight = [
   '#F05A23',
   '#D64A1C',
   '#C93E14',
-  '#9E3010',
-  '#6B200B',
+  '#411F14',
+  '#291712',
 ] as const;
 
-export const volcanoPrimitiveDark = [
+/**
+ * **Repo-only** dark ramp: `generate('#F05A23', { theme: 'dark', backgroundColor: '#141414' })`.
+ * Figma has no dark primitives (see `Documentation/hydra-figma-parity-audit.md` D-01).
+ */
+export const hydraActionOrangePrimitiveDark = [
   '#291712',
   '#411F14',
   '#562919',
@@ -33,20 +37,32 @@ export const volcanoPrimitiveDark = [
   '#FADBC5',
 ] as const;
 
-/** @deprecated Use `volcanoPrimitiveLight`. */
-export const volcanoPrimitiveHydra = volcanoPrimitiveLight;
-
-/** @deprecated Use `volcanoPrimitiveDark`. */
-export const volcanoPrimitiveHydraDark = volcanoPrimitiveDark;
-
-export function volcanoPrimitiveFor(mode: HydraColorMode): readonly string[] {
-  return mode === 'light' ? volcanoPrimitiveLight : volcanoPrimitiveDark;
+export function hydraActionOrangePrimitiveFor(mode: HydraColorMode): readonly string[] {
+  return mode === 'light' ? hydraActionOrangePrimitive : hydraActionOrangePrimitiveDark;
 }
 
-/** 1-based step → hex (`Volcano/volcano-${n}` in Figma). */
-export function volcanoStep(
+/** 1-based step → hex (`Hydra Action Orange/hydra-${n}` in Figma). */
+export function hydraActionOrangeStep(
   n: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10,
   mode: HydraColorMode = 'light',
 ): string {
-  return volcanoPrimitiveFor(mode)[n - 1];
+  return hydraActionOrangePrimitiveFor(mode)[n - 1];
 }
+
+/** @deprecated Use `hydraActionOrangePrimitive` — Figma `Volcano/*` is now the stock antd ramp. */
+export const volcanoPrimitiveLight = hydraActionOrangePrimitive;
+
+/** @deprecated Use `hydraActionOrangePrimitiveDark`. */
+export const volcanoPrimitiveDark = hydraActionOrangePrimitiveDark;
+
+/** @deprecated Use `hydraActionOrangePrimitive`. */
+export const volcanoPrimitiveHydra = hydraActionOrangePrimitive;
+
+/** @deprecated Use `hydraActionOrangePrimitiveDark`. */
+export const volcanoPrimitiveHydraDark = hydraActionOrangePrimitiveDark;
+
+/** @deprecated Use `hydraActionOrangePrimitiveFor`. */
+export const volcanoPrimitiveFor = hydraActionOrangePrimitiveFor;
+
+/** @deprecated Use `hydraActionOrangeStep`. */
+export const volcanoStep = hydraActionOrangeStep;

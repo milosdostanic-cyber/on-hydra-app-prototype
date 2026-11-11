@@ -1,0 +1,361 @@
+{
+ "date": "2026-10-28",
+ "mode": "PLAN (read-only)",
+ "figma_writes": 0,
+ "families": [
+  {
+   "slug": "file-upload-dropzone",
+   "name": "File Upload Dropzone",
+   "decision": "new",
+   "priority": "High",
+   "verified": 8,
+   "estimated": 12,
+   "mods": [
+    "spec",
+    "adm"
+   ]
+  },
+  {
+   "slug": "selection-summary",
+   "name": "Selection Summary",
+   "decision": "new",
+   "priority": "High",
+   "verified": 4,
+   "estimated": 8,
+   "mods": [
+    "ct",
+    "ps",
+    "bom"
+   ]
+  },
+  {
+   "slug": "recommendation-card",
+   "name": "Recommendation Card",
+   "decision": "extend",
+   "priority": "High",
+   "verified": 3,
+   "estimated": 5,
+   "mods": [
+    "spec",
+    "rn"
+   ]
+  },
+  {
+   "slug": "choice-list-row",
+   "name": "Choice List Row",
+   "decision": "new",
+   "priority": "Medium",
+   "verified": 3,
+   "estimated": 4,
+   "mods": [
+    "ct",
+    "ps",
+    "spec"
+   ]
+  },
+  {
+   "slug": "outcome-summary",
+   "name": "Outcome Summary",
+   "decision": "new",
+   "priority": "Medium",
+   "verified": 3,
+   "estimated": 5,
+   "mods": [
+    "bom",
+    "spec"
+   ]
+  },
+  {
+   "slug": "attribute-list",
+   "name": "Attribute List",
+   "decision": "new",
+   "priority": "Medium",
+   "verified": 3,
+   "estimated": 4,
+   "mods": [
+    "bom",
+    "ps"
+   ]
+  },
+  {
+   "slug": "progress-summary",
+   "name": "Progress Summary",
+   "decision": "new",
+   "priority": "Low",
+   "verified": 2,
+   "estimated": 3,
+   "mods": [
+    "bom",
+    "spec"
+   ]
+  }
+ ],
+ "occurrences": {
+  "file-upload-dropzone": [
+   {
+    "module": "spec",
+    "screen": "02 \u2014 Upload SPEC \u00b7 Choose file",
+    "node": "8028:37307",
+    "verified": true
+   },
+   {
+    "module": "spec",
+    "screen": "02 \u2014 Upload SPEC \u00b7 Uploading (modal)",
+    "node": "8454:9193",
+    "verified": true
+   },
+   {
+    "module": "spec",
+    "screen": "02 \u2014 Upload SPEC \u00b7 File cannot be processed",
+    "node": "8028:41317",
+    "verified": true
+   },
+   {
+    "module": "spec",
+    "screen": "02 \u2014 Upload SPEC \u00b7 File selected",
+    "node": "8305:89097",
+    "verified": false
+   },
+   {
+    "module": "spec",
+    "screen": "02 \u2014 Upload SPEC \u00b7 Uploading State",
+    "node": "8491:32544",
+    "verified": false
+   },
+   {
+    "module": "spec",
+    "screen": "03 \u2014 Upload new version \u00b7 Choose file (NOT FOR RELEASE 1)",
+    "node": "8038:41748",
+    "verified": false
+   },
+   {
+    "module": "adm",
+    "screen": "Admin \u00b7 Knowledge Center \u00b7 02.05 Upload & Send File \u00b7 Step 2",
+    "node": "2881:5362",
+    "verified": true
+   },
+   {
+    "module": "adm",
+    "screen": "Admin \u00b7 Knowledge Center \u00b7 02.06 Replace File",
+    "node": "2881:5629",
+    "verified": false
+   },
+   {
+    "module": "adm",
+    "screen": "Admin \u00b7 CFM \u00b7 Lead Time Import \u00b7 2 Import Lead Time File",
+    "node": "2504:22727",
+    "verified": true
+   },
+   {
+    "module": "adm",
+    "screen": "Admin \u00b7 RN Admin \u00b7 Bulk upload 1",
+    "node": "2218:11520",
+    "verified": true
+   },
+   {
+    "module": "adm",
+    "screen": "Admin \u00b7 RN Admin \u00b7 Loading",
+    "node": "2218:11540",
+    "verified": true
+   },
+   {
+    "module": "adm",
+    "screen": "Admin \u00b7 RN Admin \u00b7 confirm",
+    "node": "2218:11567",
+    "verified": true
+   }
+  ],
+  "selection-summary": [
+   {
+    "module": "ct",
+    "screen": "Content \u00b7 Create Submittal Package",
+    "node": "9030:7076",
+    "verified": true
+   },
+   {
+    "module": "ct",
+    "screen": "Content \u00b7 Create BOM",
+    "node": "9030:8465",
+    "verified": false
+   },
+   {
+    "module": "ct",
+    "screen": "Content \u00b7 New package / Package name dialogs \u00d73",
+    "node": "9030:7980",
+    "verified": false
+   },
+   {
+    "module": "ps",
+    "screen": "Part listing \u00b7 Add to Submittal Package",
+    "node": "11059:22758",
+    "verified": true
+   },
+   {
+    "module": "ps",
+    "screen": "Part listing \u00b7 loose Modal (outside the section)",
+    "node": "11059:14186",
+    "verified": false
+   },
+   {
+    "module": "bom",
+    "screen": "BOM-356 \u00b7 03 Add information \u00b7 Default",
+    "node": "6593:27719",
+    "verified": true
+   },
+   {
+    "module": "bom",
+    "screen": "Local Components \u00b7 BOM / Parsed Line Editor (used in 2.6 / 2.8 drawers)",
+    "node": "5570:201374",
+    "verified": true
+   },
+   {
+    "module": "bom",
+    "screen": "Local Components \u00b7 BOM / Replace Match Picker",
+    "node": "5573:294537",
+    "verified": false
+   }
+  ],
+  "recommendation-card": [
+   {
+    "module": "spec",
+    "screen": "05 \u2014 Analysis dashboard \u00b7 Recommendations \u00d721",
+    "node": "8362:8978",
+    "verified": true
+   },
+   {
+    "module": "spec",
+    "screen": "06 \u2014 Re-analysis \u00b7 In progress \u00b7 sidebar \u00d75",
+    "node": "8076:133925",
+    "verified": true
+   },
+   {
+    "module": "spec",
+    "screen": "05 \u2014 Review and edit \u00b7 Recommendation list",
+    "node": "8066:124202",
+    "verified": false
+   },
+   {
+    "module": "spec",
+    "screen": "TOC frame",
+    "node": "8362:9970",
+    "verified": false
+   },
+   {
+    "module": "rn",
+    "screen": "Release Notes \u00b7 What's New modal \u00d73",
+    "node": "1:5344",
+    "verified": true
+   }
+  ],
+  "choice-list-row": [
+   {
+    "module": "ct",
+    "screen": "Content \u00b7 Create Submittal Package \u00d73 rows",
+    "node": "9030:7076",
+    "verified": true
+   },
+   {
+    "module": "ct",
+    "screen": "Content \u00b7 Create BOM \u00d710 rows (with search)",
+    "node": "9030:8465",
+    "verified": false
+   },
+   {
+    "module": "ps",
+    "screen": "Part listing \u00b7 Add to Submittal Package \u00d73 rows",
+    "node": "11059:22758",
+    "verified": true
+   },
+   {
+    "module": "spec",
+    "screen": "04 \u2014 Download ASC Master SPEC \u00d73 rows + Select all",
+    "node": "8156:110292",
+    "verified": true
+   }
+  ],
+  "outcome-summary": [
+   {
+    "module": "bom",
+    "screen": "2.14 \u2014 Guided matching \u00b7 Complete",
+    "node": "5574:297556",
+    "verified": true
+   },
+   {
+    "module": "spec",
+    "screen": "07 \u2014 Export and create outputs \u00b7 Overall assessment",
+    "node": "8112:21542",
+    "verified": true
+   },
+   {
+    "module": "spec",
+    "screen": "05 \u2014 Analysis dashboard \u00b7 Overall assessment",
+    "node": "8362:8955",
+    "verified": true
+   },
+   {
+    "module": "spec",
+    "screen": "05B \u2014 Submittal Package created \u00b7 Success",
+    "node": "8429:11661",
+    "verified": false
+   },
+   {
+    "module": "spec",
+    "screen": "05C \u2014 Export doc ready",
+    "node": "8230:83425",
+    "verified": false
+   }
+  ],
+  "attribute-list": [
+   {
+    "module": "ps",
+    "screen": "Part listing \u00b7 Information & Technical Specifications",
+    "node": "11024:17036",
+    "verified": true
+   },
+   {
+    "module": "bom",
+    "screen": "2.11 \u2014 Guided matching \u00b7 YOUR PART",
+    "node": "5572:204106",
+    "verified": true
+   },
+   {
+    "module": "bom",
+    "screen": "2.12 / 2.13 \u2014 Guided matching \u00b7 YOUR PART",
+    "node": "5741:48438",
+    "verified": false
+   },
+   {
+    "module": "bom",
+    "screen": "Cheat Sheet 1.4 \u2014 Part Match Details \u00b7 Your Part",
+    "node": "6497:60488",
+    "verified": true
+   }
+  ],
+  "progress-summary": [
+   {
+    "module": "bom",
+    "screen": "2.11 \u2014 Guided matching \u00b7 Review suggestions",
+    "node": "5707:48333",
+    "verified": true
+   },
+   {
+    "module": "bom",
+    "screen": "2.12 \u2014 Guided matching \u00b7 No suggestion",
+    "node": "5741:48431",
+    "verified": false
+   },
+   {
+    "module": "spec",
+    "screen": "06 \u2014 Re-analysis \u00b7 In progress",
+    "node": "8076:134488",
+    "verified": true
+   }
+  ]
+ },
+ "missing_since_20_oct": [
+  "BOM 5546:188176 (local Export Format Card, replaced by OptionCard)",
+  "BOM 5574:297524, 5585:299533, 5913:14446 (Stat Tile rows replaced)",
+  "SPEC 8112:21546, 8230:83441, 8429:11676, 8231:83826 (no longer exist; the screens now use OptionCard and Stat Tile library instances)"
+ ],
+ "notes": "All files done. Screenshots in img/. Regenerate with python3 gen.py."
+}

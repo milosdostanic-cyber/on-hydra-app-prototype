@@ -1,0 +1,949 @@
+[
+  {
+    "name": "home",
+    "path": "/spec",
+    "errors": [
+      "Warning: [antd: Drawer] `width` is deprecated. Please use `size` instead.",
+      "Warning: [antd: Tag] `bordered={false}` is deprecated. Please use `variant=\"filled\"` instead.",
+      "Warning: [antd: List] The `List` component is deprecated. And will be removed in next major version."
+    ],
+    "url": "/spec",
+    "chars": 357,
+    "headings": [
+      "Spec"
+    ],
+    "tabs": [
+      "All1",
+      "Project specs1",
+      "Organization library0"
+    ],
+    "buttons": [
+      {
+        "label": "Collapse sidebar",
+        "disabled": false
+      },
+      {
+        "label": "No project",
+        "disabled": false
+      },
+      {
+        "label": "Help",
+        "disabled": false
+      },
+      {
+        "label": "Notifications",
+        "disabled": false
+      },
+      {
+        "label": "Account menu",
+        "disabled": false
+      },
+      {
+        "label": "Back to home",
+        "disabled": false
+      },
+      {
+        "label": "Get Specified",
+        "disabled": false
+      },
+      {
+        "label": "Add specification",
+        "disabled": false
+      },
+      {
+        "label": "Search",
+        "disabled": false
+      },
+      {
+        "label": "Downtown Convention Center",
+        "disabled": false
+      },
+      {
+        "label": "View all",
+        "disabled": false
+      }
+    ],
+    "alerts": [],
+    "empties": [],
+    "skeletons": 0,
+    "textHead": "Back to home Spec Upload project specifications, review extracted requirements, and correct findings with source citations. Get Specified Add specification Search All 1 Project specs 1 Organization library 0 Division 22 — Plumbing PDF Ready Downtown Convention Center 4.0 MB 4 requirements Alex Rivera Projects with specs Downtown Convention Center View all"
+  },
+  {
+    "name": "add-document",
+    "path": "/spec/new",
+    "errors": [
+      "Warning: [antd: Drawer] `width` is deprecated. Please use `size` instead."
+    ],
+    "url": "/spec/new",
+    "chars": 283,
+    "headings": [
+      "Add specification"
+    ],
+    "tabs": [],
+    "buttons": [
+      {
+        "label": "Collapse sidebar",
+        "disabled": false
+      },
+      {
+        "label": "No project",
+        "disabled": false
+      },
+      {
+        "label": "Help",
+        "disabled": false
+      },
+      {
+        "label": "Notifications",
+        "disabled": false
+      },
+      {
+        "label": "Account menu",
+        "disabled": false
+      },
+      {
+        "label": "Back",
+        "disabled": false
+      },
+      {
+        "label": "Choose file",
+        "disabled": false
+      },
+      {
+        "label": "Cancel",
+        "disabled": false
+      },
+      {
+        "label": "Create",
+        "disabled": false
+      }
+    ],
+    "alerts": [],
+    "empties": [],
+    "skeletons": 0,
+    "textHead": "Back Add specification Choose where this document lives, then upload a PDF, DOC, or DOCX. Choose file Supported formats: PDF, DOC, DOCX. Up to 100 MB. Destination Project Organization library Document role Project specification Title Division hint (optional) (optional) Cancel Create"
+  },
+  {
+    "name": "guide-specs",
+    "path": "/spec/guide-specs",
+    "errors": [
+      "Warning: [antd: Drawer] `width` is deprecated. Please use `size` instead.",
+      "Warning: [antd: List] The `List` component is deprecated. And will be removed in next major version.",
+      "Warning: [antd: Tag] `bordered={false}` is deprecated. Please use `variant=\"filled\"` instead.",
+      "Warning: [antd: Alert] `message` is deprecated. Please use `title` instead."
+    ],
+    "url": "/spec/guide-specs",
+    "chars": 1653,
+    "headings": [
+      "Get Specified",
+      "DOCX",
+      "SpecLink-friendly",
+      "MasterSpec-friendly"
+    ],
+    "tabs": [],
+    "buttons": [
+      {
+        "label": "Collapse sidebar",
+        "disabled": false
+      },
+      {
+        "label": "No project",
+        "disabled": false
+      },
+      {
+        "label": "Help",
+        "disabled": false
+      },
+      {
+        "label": "Notifications",
+        "disabled": false
+      },
+      {
+        "label": "Account menu",
+        "disabled": false
+      },
+      {
+        "label": "Back to Spec",
+        "disabled": false
+      },
+      {
+        "label": "Spec library",
+        "disabled": false
+      },
+      {
+        "label": "Search",
+        "disabled": false
+      },
+      {
+        "label": "Save draft",
+        "disabled": true
+      },
+      {
+        "label": "Preview insert into working copy",
+        "disabled": false
+      },
+      {
+        "label": "Mock export selected format",
+        "disabled": false
+      }
+    ],
+    "alerts": [
+      "Approved — ready to insertPreview the merge into a working copy. Insert creates a pending Edit change; it does not rewrite the source."
+    ],
+    "empties": [],
+    "skeletons": 0,
+    "textHead": "Back to Spec Get Specified Browse approved ASC guide language, preview how it merges into a working copy, then create a pending Edit change. Exports are mocked. Spec library Search All statuses All divisions ASC Domestic Water — Materials (Approved) Approved GS-22.1.4 22 11 16 · Copper & PEX piping ASC Domestic Water — Pressure rating (Approved) Approved GS-22.1.5 22 11 16 · Copper & PEX piping ASC Joining methods (Draft) Draft GS-22.0.9-draft 22 11 16 · Fittings ASC HVAC hydronic — Isolation valves (In review) In review GS-23.2.1-rc 23 21 13 · Valves ASC Domestic Water — Legacy materials (Superseded) Superseded GS-22.0.2 22 11 16 · Copper piping Approved — ready to insert Preview the merge into a working copy. Insert creates a pending Edit change; it does not rewrite the source. ASC Domestic Water — Materials (Approved) Section 22 11 16 — Domestic Water Piping Product family Copper & PE"
+  },
+  {
+    "name": "project-detail",
+    "path": "/spec/projects/1",
+    "errors": [
+      "Warning: [antd: Drawer] `width` is deprecated. Please use `size` instead."
+    ],
+    "url": "/spec/projects/1",
+    "chars": 262,
+    "headings": [
+      "Downtown Convention Center"
+    ],
+    "tabs": [],
+    "buttons": [
+      {
+        "label": "Collapse sidebar",
+        "disabled": false
+      },
+      {
+        "label": "No project",
+        "disabled": false
+      },
+      {
+        "label": "Help",
+        "disabled": false
+      },
+      {
+        "label": "Notifications",
+        "disabled": false
+      },
+      {
+        "label": "Account menu",
+        "disabled": false
+      },
+      {
+        "label": "Back to Spec",
+        "disabled": false
+      },
+      {
+        "label": "New Spec",
+        "disabled": false
+      },
+      {
+        "label": "Division 22 — Plumbing",
+        "disabled": false
+      }
+    ],
+    "alerts": [],
+    "empties": [],
+    "skeletons": 0,
+    "textHead": "Back to Spec Downtown Convention Center Specification documents for this construction project. New Spec Specification Status Review Requirements Flags Size Specification Status Review Requirements Flags Size Division 22 — Plumbing Ready Not reviewed 4 0 4.0 MB 1"
+  },
+  {
+    "name": "project-add",
+    "path": "/spec/projects/1/new",
+    "errors": [
+      "Warning: [antd: Drawer] `width` is deprecated. Please use `size` instead."
+    ],
+    "url": "/spec/projects/1/new",
+    "chars": 366,
+    "headings": [
+      "Add specification"
+    ],
+    "tabs": [],
+    "buttons": [
+      {
+        "label": "Collapse sidebar",
+        "disabled": false
+      },
+      {
+        "label": "No project",
+        "disabled": false
+      },
+      {
+        "label": "Help",
+        "disabled": false
+      },
+      {
+        "label": "Notifications",
+        "disabled": false
+      },
+      {
+        "label": "Account menu",
+        "disabled": false
+      },
+      {
+        "label": "Back",
+        "disabled": false
+      },
+      {
+        "label": "Choose file",
+        "disabled": false
+      },
+      {
+        "label": "Cancel",
+        "disabled": false
+      },
+      {
+        "label": "Create",
+        "disabled": false
+      }
+    ],
+    "alerts": [],
+    "empties": [],
+    "skeletons": 0,
+    "textHead": "Back Add specification Choose where this document lives, then upload a PDF, DOC, or DOCX. Choose file Supported formats: PDF, DOC, DOCX. Up to 100 MB. Destination Project Organization library Project Downtown Convention Center Document role Project specification Title Division hint (optional) (optional) Preselected project: Downtown Convention Center Cancel Create"
+  },
+  {
+    "name": "processing",
+    "path": "/spec/spec-clean-22/processing",
+    "errors": [
+      "Warning: [antd: Drawer] `width` is deprecated. Please use `size` instead.",
+      "Warning: [antd: Steps] `direction` is deprecated. Please use `orientation` instead.",
+      "Warning: [antd: Tag] `bordered={false}` is deprecated. Please use `variant=\"filled\"` instead."
+    ],
+    "url": "/spec/spec-clean-22/analyze?version=v1&section=sec-221116",
+    "chars": 597,
+    "headings": [
+      "Division 22 — Plumbing"
+    ],
+    "tabs": [
+      "Analyze",
+      "Edit",
+      "Review",
+      "Products",
+      "Submittals",
+      "Substitution",
+      "Ask",
+      "Deliver-Back"
+    ],
+    "buttons": [
+      {
+        "label": "Collapse sidebar",
+        "disabled": false
+      },
+      {
+        "label": "No project",
+        "disabled": false
+      },
+      {
+        "label": "Help",
+        "disabled": false
+      },
+      {
+        "label": "Notifications",
+        "disabled": false
+      },
+      {
+        "label": "Account menu",
+        "disabled": false
+      },
+      {
+        "label": "Back to Spec",
+        "disabled": false
+      }
+    ],
+    "alerts": [],
+    "empties": [],
+    "skeletons": 1,
+    "textHead": "Back to Spec Division 22 — Plumbing Downtown Convention Center v1 Ready Not reviewed Updated 8/4/2026, 5:00:16 PM Analyze Edit Review Products Submittals Substitution Ask Deliver-Back 22 · Plumbing 22 11 16 — Domestic Water Piping 4 req Page 12 SECTION 22 11 16 — DOMESTIC WATER PIPING Page 14 · 2.1.A Copper tubing shall be Type L, hard drawn, conforming to ASTM B88. PEX tubing shall conform to ASTM F876. Page 15 · 2.2.A Piping shall be rated for a minimum working pressure of 160 psi at 73°F. Page 16 · 3.1.B Join copper with soldered fittings; join PEX with manufacturer-approved crimp rings."
+  },
+  {
+    "name": "analyze",
+    "path": "/spec/spec-clean-22/analyze",
+    "errors": [
+      "Warning: [antd: Drawer] `width` is deprecated. Please use `size` instead.",
+      "Warning: [antd: Tag] `bordered={false}` is deprecated. Please use `variant=\"filled\"` instead.",
+      "Warning: [antd: Alert] `message` is deprecated. Please use `title` instead."
+    ],
+    "url": "/spec/spec-clean-22/analyze?version=v1&section=sec-221116",
+    "chars": 930,
+    "headings": [
+      "Division 22 — Plumbing"
+    ],
+    "tabs": [
+      "Analyze",
+      "Edit",
+      "Review",
+      "Products",
+      "Submittals",
+      "Substitution",
+      "Ask",
+      "Deliver-Back",
+      "Overview",
+      "Requirements (4)",
+      "Red Flags (0)"
+    ],
+    "buttons": [
+      {
+        "label": "Collapse sidebar",
+        "disabled": false
+      },
+      {
+        "label": "No project",
+        "disabled": false
+      },
+      {
+        "label": "Help",
+        "disabled": false
+      },
+      {
+        "label": "Notifications",
+        "disabled": false
+      },
+      {
+        "label": "Account menu",
+        "disabled": false
+      },
+      {
+        "label": "Back to Spec",
+        "disabled": false
+      }
+    ],
+    "alerts": [
+      "AttentionConfirm joining method compatibility with selected materials."
+    ],
+    "empties": [],
+    "skeletons": 0,
+    "textHead": "Back to Spec Division 22 — Plumbing Downtown Convention Center v1 Ready Not reviewed Updated 8/4/2026, 5:00:18 PM Analyze Edit Review Products Submittals Substitution Ask Deliver-Back 22 · Plumbing 22 11 16 — Domestic Water Piping 4 req Page 12 SECTION 22 11 16 — DOMESTIC WATER PIPING Page 14 · 2.1.A Copper tubing shall be Type L, hard drawn, conforming to ASTM B88. PEX tubing shall conform to ASTM F876. Page 15 · 2.2.A Piping shall be rated for a minimum working pressure of 160 psi at 73°F. Page 16 · 3.1.B Join copper with soldered fittings; join PEX with manufacturer-approved crimp rings. Overview Requirements (4) Red Flags (0) Domestic water piping specifies copper Type L and PEX with soldered and crimped joints. Pressure rating 160 psi at 73°F. Submittals required for pipe, fittings, and valves. Attention Confirm joining method compatibility with selected materials. Extraction comple"
+  },
+  {
+    "name": "edit",
+    "path": "/spec/spec-clean-22/edit",
+    "errors": [
+      "Warning: [antd: Drawer] `width` is deprecated. Please use `size` instead.",
+      "Warning: [antd: Alert] `message` is deprecated. Please use `title` instead."
+    ],
+    "url": "/spec/spec-clean-22/edit",
+    "chars": 1172,
+    "headings": [
+      "Division 22 — Plumbing"
+    ],
+    "tabs": [
+      "Analyze",
+      "Edit",
+      "Review",
+      "Products",
+      "Submittals",
+      "Substitution",
+      "Ask",
+      "Deliver-Back",
+      "Changes (1)",
+      "AI proposals (2)",
+      "Comments (1)",
+      "Pending (1)",
+      "Accepted (1)",
+      "Rejected (0)",
+      "All (2)"
+    ],
+    "buttons": [
+      {
+        "label": "Collapse sidebar",
+        "disabled": false
+      },
+      {
+        "label": "No project",
+        "disabled": false
+      },
+      {
+        "label": "Help",
+        "disabled": false
+      },
+      {
+        "label": "Notifications",
+        "disabled": false
+      },
+      {
+        "label": "Account menu",
+        "disabled": false
+      },
+      {
+        "label": "Back to Spec",
+        "disabled": false
+      },
+      {
+        "label": "Save version",
+        "disabled": false
+      },
+      {
+        "label": "SECTION 22 11 16 — DOMESTIC WATER PIPING",
+        "disabled": false
+      },
+      {
+        "label": "2.1.A · Copper tubing shall be Type L, hard drawn, conforming to ASTM B88. PEX tubing shall conform to ASTM F876.",
+        "disabled": false
+      },
+      {
+        "label": "2.2.A · Piping shall be rated for a minimum working pressure of 160 psi at 73°F.\n1",
+        "disabled": false
+      },
+      {
+        "label": "3.1.B · Join copper with soldered or press-connect fittings; join PEX with manufacturer-approved crimp rings.",
+        "disabled": false
+      },
+      {
+        "label": "Accept",
+        "disabled": false
+      },
+      {
+        "label": "Reject",
+        "disabled": false
+      }
+    ],
+    "alerts": [
+      "Working copyBased on v1. Accept changes to update paragraphs. Save a version when you are ready to share."
+    ],
+    "empties": [
+      "No dataSelect a paragraph on the left to review or edit."
+    ],
+    "skeletons": 0,
+    "textHead": "Back to Spec Division 22 — Plumbing Downtown Convention Center v1 Ready Not reviewed Updated 8/4/2026, 5:00:20 PM Save version Analyze Edit Review Products Submittals Substitution Ask Deliver-Back Paragraphs Select a paragraph to edit or comment. Source analysis is unchanged until you accept. SECTION 22 11 16 — DOMESTIC WATER PIPING 2.1.A · Copper tubing shall be Type L, hard drawn, conforming to ASTM B88. PEX tubing shall conform to ASTM F876. 2.2.A · Piping shall be rated for a minimum working pressure of 160 psi at 73°F. 1 3.1.B · Join copper with soldered or press-connect fittings; join PEX with manufacturer-approved crimp rings. Working copy Based on v1. Accept changes to update paragraphs. Save a version when you are ready to share. Select a paragraph on the left to review or edit. Changes (1) AI proposals (2) Comments (1) Pending (1) Accepted (1) Rejected (0) All (2) Manual edit A"
+  },
+  {
+    "name": "review",
+    "path": "/spec/spec-clean-22/review",
+    "errors": [
+      "Warning: [antd: Drawer] `width` is deprecated. Please use `size` instead."
+    ],
+    "url": "/spec/spec-clean-22/review",
+    "chars": 652,
+    "headings": [
+      "Division 22 — Plumbing"
+    ],
+    "tabs": [
+      "Analyze",
+      "Edit",
+      "Review",
+      "Products",
+      "Submittals",
+      "Substitution",
+      "Ask",
+      "Deliver-Back"
+    ],
+    "buttons": [
+      {
+        "label": "Collapse sidebar",
+        "disabled": false
+      },
+      {
+        "label": "No project",
+        "disabled": false
+      },
+      {
+        "label": "Help",
+        "disabled": false
+      },
+      {
+        "label": "Notifications",
+        "disabled": false
+      },
+      {
+        "label": "Account menu",
+        "disabled": false
+      },
+      {
+        "label": "Back to Spec",
+        "disabled": false
+      },
+      {
+        "label": "Matched\n22 11 16\nDomestic Water Piping — materials",
+        "disabled": false
+      },
+      {
+        "label": "Changed meaning\n22 11 16\nDomestic Water Piping — pressure",
+        "disabled": false
+      },
+      {
+        "label": "Added\n22 11 19\nDomestic Water Piping Specialties",
+        "disabled": false
+      }
+    ],
+    "alerts": [],
+    "empties": [],
+    "skeletons": 0,
+    "textHead": "Back to Spec Division 22 — Plumbing Downtown Convention Center v1 Ready Not reviewed Updated 8/4/2026, 5:00:22 PM Analyze Edit Review Products Submittals Substitution Ask Deliver-Back Compare with Office master — Div 22 (2024) Alignment Matched 22 11 16 Domestic Water Piping — materials Changed meaning 22 11 16 Domestic Water Piping — pressure Added 22 11 19 Domestic Water Piping Specialties Domestic Water Piping — materials Side by side Inline Baseline Copper Type L ASTM B88; PEX ASTM F876 Current Copper Type L ASTM B88; PEX ASTM F876 Selected difference Matched 22 11 16 Wording matches the office master. Matched sections do not need a change."
+  },
+  {
+    "name": "products",
+    "path": "/spec/spec-clean-22/products",
+    "errors": [
+      "Warning: [antd: Drawer] `width` is deprecated. Please use `size` instead.",
+      "Warning: [antd: Alert] `message` is deprecated. Please use `title` instead."
+    ],
+    "url": "/spec/spec-clean-22/products",
+    "chars": 1022,
+    "headings": [
+      "Division 22 — Plumbing",
+      "ASC suggestions (3)"
+    ],
+    "tabs": [
+      "Analyze",
+      "Edit",
+      "Review",
+      "Products",
+      "Submittals",
+      "Substitution",
+      "Ask",
+      "Deliver-Back"
+    ],
+    "buttons": [
+      {
+        "label": "Collapse sidebar",
+        "disabled": false
+      },
+      {
+        "label": "No project",
+        "disabled": false
+      },
+      {
+        "label": "Help",
+        "disabled": false
+      },
+      {
+        "label": "Notifications",
+        "disabled": false
+      },
+      {
+        "label": "Account menu",
+        "disabled": false
+      },
+      {
+        "label": "Back to Spec",
+        "disabled": false
+      },
+      {
+        "label": "Open substitution",
+        "disabled": false
+      },
+      {
+        "label": "Select",
+        "disabled": false
+      },
+      {
+        "label": "Add to substitution",
+        "disabled": false
+      },
+      {
+        "label": "Dismiss",
+        "disabled": false
+      },
+      {
+        "label": "Select",
+        "disabled": false
+      },
+      {
+        "label": "Add to substitution",
+        "disabled": false
+      },
+      {
+        "label": "Dismiss",
+        "disabled": false
+      },
+      {
+        "label": "Select",
+        "disabled": false
+      },
+      {
+        "label": "Add to substitution",
+        "disabled": false
+      },
+      {
+        "label": "Dismiss",
+        "disabled": false
+      }
+    ],
+    "alerts": [
+      "Commercial suggestions are optionalAnalyzer findings stay neutral. ASC product suggestions below are commercial and do not change the source analysis."
+    ],
+    "empties": [],
+    "skeletons": 0,
+    "textHead": "Back to Spec Division 22 — Plumbing Downtown Convention Center v1 Ready Not reviewed Updated 8/4/2026, 5:00:24 PM Open substitution Analyze Edit Review Products Submittals Substitution Ask Deliver-Back Commercial suggestions are optional Analyzer findings stay neutral. ASC product suggestions below are commercial and do not change the source analysis. ASC suggestions (3) ASC suggestion Strong fit Suggested ASC PEX tubing — ASTM F876 ASC-PEX-F876-1 · AquaFlow High · 92% Matches Type L / PEX material requirement and pressure rating. PEX ASTM F876 160 psi Select Add to substitution Dismiss ASC suggestion Strong fit Suggested ASC copper Type L — ASTM B88 ASC-CU-L-B88 · CopperLine High · 90% Copper Type L hard-drawn matches the extracted materials clause. Copper Type L ASTM B88 Select Add to substitution Dismiss ASC suggestion Possible fit Suggested ASC PEX crimp ring kit ASC-CRIMP-RING Mediu"
+  },
+  {
+    "name": "submittals",
+    "path": "/spec/spec-clean-22/submittals",
+    "errors": [
+      "Warning: [antd: Drawer] `width` is deprecated. Please use `size` instead.",
+      "Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.",
+      "Warning: [antd: Alert] `message` is deprecated. Please use `title` instead."
+    ],
+    "url": "/spec/spec-clean-22/submittals",
+    "chars": 925,
+    "headings": [
+      "Division 22 — Plumbing",
+      "Packages (1)"
+    ],
+    "tabs": [
+      "Analyze",
+      "Edit",
+      "Review",
+      "Products",
+      "Submittals",
+      "Substitution",
+      "Ask",
+      "Deliver-Back"
+    ],
+    "buttons": [
+      {
+        "label": "Collapse sidebar",
+        "disabled": false
+      },
+      {
+        "label": "No project",
+        "disabled": false
+      },
+      {
+        "label": "Help",
+        "disabled": false
+      },
+      {
+        "label": "Notifications",
+        "disabled": false
+      },
+      {
+        "label": "Account menu",
+        "disabled": false
+      },
+      {
+        "label": "Back to Spec",
+        "disabled": false
+      },
+      {
+        "label": "New package",
+        "disabled": false
+      },
+      {
+        "label": "Add to package",
+        "disabled": false
+      },
+      {
+        "label": "Add to package",
+        "disabled": false
+      },
+      {
+        "label": "Rename",
+        "disabled": false
+      }
+    ],
+    "alerts": [
+      "Some obligations are missing documentsYou can still build a package. Export stays mocked until documents are attached."
+    ],
+    "empties": [],
+    "skeletons": 0,
+    "textHead": "Back to Spec Division 22 — Plumbing Downtown Convention Center v1 Ready Not reviewed Updated 8/4/2026, 5:00:26 PM New package Analyze Edit Review Products Submittals Substitution Ask Deliver-Back Some obligations are missing documents You can still build a package. Export stays mocked until documents are attached. Obligation Due Status Docs Obligation Due Status Docs Product data — pipe, fittings, and valves Submit manufacturer product data for domestic water piping materials. Before rough-in In package Ready Shop drawings — joining methods Detail soldered and crimped joint procedures for review. With product data Open Missing Add to package Test reports — pressure Provide factory or field test reports confirming 160 psi working pressure. — Open Ready Add to package Packages (1) Div 22 — Domestic water product data Rename • Product data — pipe, fittings, and valves Updated 8/4/2026, 5:00"
+  },
+  {
+    "name": "substitution",
+    "path": "/spec/spec-clean-22/substitution",
+    "errors": [
+      "Warning: [antd: Drawer] `width` is deprecated. Please use `size` instead.",
+      "Warning: [antd: Alert] `message` is deprecated. Please use `title` instead."
+    ],
+    "url": "/spec/spec-clean-22/substitution",
+    "chars": 433,
+    "headings": [
+      "Division 22 — Plumbing"
+    ],
+    "tabs": [
+      "Analyze",
+      "Edit",
+      "Review",
+      "Products",
+      "Submittals",
+      "Substitution",
+      "Ask",
+      "Deliver-Back"
+    ],
+    "buttons": [
+      {
+        "label": "Collapse sidebar",
+        "disabled": false
+      },
+      {
+        "label": "No project",
+        "disabled": false
+      },
+      {
+        "label": "Help",
+        "disabled": false
+      },
+      {
+        "label": "Notifications",
+        "disabled": false
+      },
+      {
+        "label": "Account menu",
+        "disabled": false
+      },
+      {
+        "label": "Back to Spec",
+        "disabled": false
+      },
+      {
+        "label": "Go to Products",
+        "disabled": false
+      },
+      {
+        "label": "Ask an Engineer",
+        "disabled": false
+      }
+    ],
+    "alerts": [
+      "Preview before sharingLines come from Products you added to substitution. Source analysis stays unchanged."
+    ],
+    "empties": [
+      "No dataNo substitution lines yetSelect ASC suggestions on Products, or Ask an Engineer when there is no catalog fit.Go t"
+    ],
+    "skeletons": 0,
+    "textHead": "Back to Spec Division 22 — Plumbing Downtown Convention Center v1 Ready Not reviewed Updated 8/4/2026, 5:00:28 PM Analyze Edit Review Products Submittals Substitution Ask Deliver-Back Preview before sharing Lines come from Products you added to substitution. Source analysis stays unchanged. No substitution lines yet Select ASC suggestions on Products, or Ask an Engineer when there is no catalog fit. Go to Products Ask an Engineer"
+  },
+  {
+    "name": "ask",
+    "path": "/spec/spec-clean-22/ask",
+    "errors": [
+      "Warning: [antd: Drawer] `width` is deprecated. Please use `size` instead.",
+      "Warning: [antd: Alert] `message` is deprecated. Please use `title` instead.",
+      "Warning: [antd: List] The `List` component is deprecated. And will be removed in next major version."
+    ],
+    "url": "/spec/spec-clean-22/ask",
+    "chars": 1595,
+    "headings": [
+      "Division 22 — Plumbing",
+      "Alex RiveraRequester8/2/2026, 5:00:30 PM",
+      "ASC EngineerEngineer8/3/2026, 5:00:30 PM"
+    ],
+    "tabs": [
+      "Analyze",
+      "Edit",
+      "Review",
+      "Products",
+      "Submittals",
+      "Substitution",
+      "Ask",
+      "Deliver-Back"
+    ],
+    "buttons": [
+      {
+        "label": "Collapse sidebar",
+        "disabled": false
+      },
+      {
+        "label": "No project",
+        "disabled": false
+      },
+      {
+        "label": "Help",
+        "disabled": false
+      },
+      {
+        "label": "Notifications",
+        "disabled": false
+      },
+      {
+        "label": "Account menu",
+        "disabled": false
+      },
+      {
+        "label": "Back to Spec",
+        "disabled": false
+      },
+      {
+        "label": "Submit question",
+        "disabled": false
+      },
+      {
+        "label": "Create change from answer",
+        "disabled": false
+      },
+      {
+        "label": "Send message",
+        "disabled": true
+      }
+    ],
+    "alerts": [
+      "Ask with attached contextYour question keeps a locked snapshot of the document, section, finding, and citation. Engineer answers can become pending Edit proposa",
+      "Context snapshot (locked)Attached when this request was created. It does not change if the source document later updates."
+    ],
+    "empties": [],
+    "skeletons": 0,
+    "textHead": "Back to Spec Division 22 — Plumbing Downtown Convention Center v1 Ready Not reviewed Updated 8/4/2026, 5:00:30 PM Analyze Edit Review Products Submittals Substitution Ask Deliver-Back Ask with attached context Your question keeps a locked snapshot of the document, section, finding, and citation. Engineer answers can become pending Edit proposals — they never change the source directly. New request Subject Question Request type Requirement clarification Urgency Normal Context preview: 22 11 16 — Domestic Water Piping · ASC PEX tubing — ASTM F876 Submit question Requests Confirm 160 psi continuous rating language Answered Confirm 160 psi continuous rating language Answered Context snapshot (locked) Attached when this request was created. It does not change if the source document later updates. Document Division 22 — Plumbing Version v1 Section 22 11 16 — Domestic Water Piping Finding Minim"
+  },
+  {
+    "name": "deliver-back",
+    "path": "/spec/spec-clean-22/deliver-back",
+    "errors": [
+      "Warning: [antd: Drawer] `width` is deprecated. Please use `size` instead.",
+      "Warning: [antd: List] The `List` component is deprecated. And will be removed in next major version.",
+      "Warning: [antd: Alert] `message` is deprecated. Please use `title` instead.",
+      "Warning: [antd: Steps] `direction` is deprecated. Please use `orientation` instead.",
+      "Warning: [antd: Timeline] `items.children` is deprecated. Please use `items.content` instead."
+    ],
+    "url": "/spec/spec-clean-22/deliver-back",
+    "chars": 1316,
+    "headings": [
+      "Division 22 — Plumbing",
+      "Jordan Lee · 8/3/2026, 5:00:32 PM",
+      "Deliverable ready for review"
+    ],
+    "tabs": [
+      "Analyze",
+      "Edit",
+      "Review",
+      "Products",
+      "Submittals",
+      "Substitution",
+      "Ask",
+      "Deliver-Back"
+    ],
+    "buttons": [
+      {
+        "label": "Collapse sidebar",
+        "disabled": false
+      },
+      {
+        "label": "No project",
+        "disabled": false
+      },
+      {
+        "label": "Help",
+        "disabled": false
+      },
+      {
+        "label": "Notifications",
+        "disabled": false
+      },
+      {
+        "label": "Account menu",
+        "disabled": false
+      },
+      {
+        "label": "Back to Spec",
+        "disabled": false
+      },
+      {
+        "label": "Approve",
+        "disabled": false
+      },
+      {
+        "label": "Request revision",
+        "disabled": false
+      },
+      {
+        "label": "Add comment",
+        "disabled": true
+      }
+    ],
+    "alerts": [
+      "v2 — Engineering responseASC markups and suggested wording for pressure and joining methods."
+    ],
+    "empties": [],
+    "skeletons": 0,
+    "textHead": "Back to Spec Division 22 — Plumbing Downtown Convention Center v1 Ready Not reviewed Updated 8/4/2026, 5:00:32 PM Analyze Edit Review Products Submittals Substitution Ask Deliver-Back Packages Division 22 — engineering review package Delivered Division 22 — engineering review package Delivered v2 — Engineering response Owner Alex Rivera · Recipient Owner / GC review team Engineering package covering domestic water piping pressure ratings, joining methods, and submittal notes. Source document remains immutable until you accept proposed changes in Edit. v2 — Engineering response ASC markups and suggested wording for pressure and joining methods. Approve Request revision Lifecycle Requested In progress 3 Delivered 4 Accepted Activity Requested Alex Rivera · 7/31/2026, 5:00:32 PM — Deliver-Back opened for Division 22 review. In progress ASC Engineer · 8/1/2026, 5:00:32 PM — Engineering revie"
+  }
+]

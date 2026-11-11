@@ -1,0 +1,404 @@
+ Option Card 
+ Hydra design system · Molecule report · 21 Oct 2026
+ Option Card (OptionCard, was ExportCard) 
+ Plan — coverage re-check 21 Oct Upgrade of ExportCard · built 20 Oct, reworked 21 Oct 
+ A bordered card for starting one of a few actions (export route, entry action) or picking one option (document format, division) with a radio or checkbox. This re-check compares the 11 Replace-in-modules cards with their module screens, proposes the missing configurations and rescans all six module files. Nothing was written to Figma.
+ 4 + 7 Replace cards OK · need a fix (6 width, 1 gap) 
+ 3 new Replace cards proposed 
+ 16 occurrences, 2 modules (BOM, SPEC) 
+ 0 new occurrences in Part Search, Release Notes, Content, Admin 
+ 9 gaps props cannot fix 
+ [#now] Component today [#existing] 11 Replace cards [#new] New cards [#covered] Also covered [#gaps] Gaps [#harmonization] Harmonization [#rejected] Rejected [#questions] Open questions [#coverage] Coverage [#history] Build history 
+ Component today (21 Oct)
+ Component set OptionCard [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=826-1181] 826:1181 → on ❖ Cards [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=826-944] 826:944 → . Replace in modules: [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-110] 2003:110 → . 12 variants: type × layout × state (option is horizontal only).
+ Property Type Default / values Notes 
+ type Variant action (default), option option only with layout horizontal 
+ layout Variant vertical (default), horizontal 
+ state Variant default (default), hover, selected, disabled pressed, focus and loading removed on 21 Oct 
+ show icon Boolean true 
+ ↳ 🎰 icon Instance swap FileExcelOutlined 
+ show tag Boolean false nested Tag__Colorful, exposed 
+ show link Boolean false 
+ ✏️ link Text Tell me when available 
+ show radio Boolean true option cards; local Radio in the 24 px Control slot 
+ show checkbox Boolean false option cards; turn radio off and checkbox on for a checkbox card 
+ ✏️ title Text Export to Excel / CSV 
+ ✏️ description Text Excel or CSV with the columns and quantities you pick. 
+ Replace in modules today
+ 1. The 11 existing Replace cards
+ Each card was compared with the module node it links to: type, layout, state, icon and icon colour token, tag, link, control, text and width. All 11 instances come from the OptionCard set and all 11 links open an existing node.
+ # Card Result Exact change Nodes 
+ 1 BOM 4.1 Export · Excel/CSV (default) OK None needed. Optional: point the link to the selected card 7266:32314 instead of the row. Card is 156 px high vs 164 px in the module (component gap G1). [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-112] 2003:112 [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5604-28134] 5604:28134 
+ 2 BOM 4.2 Export · Package selected OK None. Optional: link to 5603:307883 instead of the whole screen. [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-128] 2003:128 [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5603-307451] 5603:307451 
+ 3 BOM 4.3 Export · Distributor selected OK None. Optional: link to 5603:308363. [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-142] 2003:142 [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5603-308343] 5603:308343 
+ 4 BOM 4.4 Export · Service selected OK None. Optional: link to 5603:307938. [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-156] 2003:156 [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5603-307917] 5603:307917 
+ 5 BOM 1.1 Hub · Get started Fix (width) Set width 480 → 715. Optional: link to 5546:188197. Title 20 → 16 px and 2 px light-blue border → shadow still need sign-off (open question 4). [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-170] 2003:170 [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5289-21301] 5289:21301 
+ 6 BOM 1.6 Hub · Empty state Fix (width) Set width 480 → 715. Optional: link to 5758:50203. [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-186] 2003:186 [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5758-50201] 5758:50201 
+ 7 BOM Cheat Sheet 1.1 BOM entry point Fix (width) Set width 480 → 471. Optional: link to 6497:60211. Tag position and style cannot be matched with properties (gaps G2, G3). [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-200] 2003:200 [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=6497-60208] 6497:60208 
+ 8 BOM Local Components · Shared / Export Format Card Fix (width) Set width 480 → 576. Optional: link to 5546:188173 (State=Rest). [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-213] 2003:213 [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5546-188176] 5546:188176 
+ 9 SPEC 07 Export · Revised document Fix (width) Set width 560 → 856. Optional: link to 8231:83809. [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-227] 2003:227 [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8231-83808] 8231:83808 
+ 10 SPEC 07 Export · Coming-soon teaser Gap Set width 560 → 856. The rest cannot be fixed with properties (gap G4). [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-247] 2003:247 [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8231-83826] 8231:83826 
+ 11 SPEC 02 Upload SPEC · Confirm Master SPEC Fix (width) Set width 360 → 203. Check that the tag fits the 143 px text column; if it clips, use 210 px. Tag order cannot be matched (gap G2). Link stays on the screen: the cards sit inside a modal instance slot. [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-262] 2003:262 [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8028-39064] 8028:39064 
+ Side by side
+ BOM OK #1 
+ 4.1 Export · Excel/CSV (default)
+ Replace card in Hydra
+ Module screen
+ Config: layout vertical · type action · state selected · icon FileExcelOutlined (colorSuccessHover) · no tag, no link · 350 px
+ Check: Type, layout, icon and icon colour, title, description and width match the selected card (7266:32314).
+ Fix: None needed. Optional: point the link to the selected card 7266:32314 instead of the row. Card is 156 px high vs 164 px in the module (component gap G1).
+ [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-112] Replace card 2003:112 → · [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5604-28134] Module node 5604:28134 → 
+ BOM OK #2 
+ 4.2 Export · Package selected
+ Replace card in Hydra
+ Module screen
+ Config: vertical · action · selected · FileTextOutlined (colorPrimary) · 350 px
+ Check: Matches the selected card 5603:307883.
+ Fix: None. Optional: link to 5603:307883 instead of the whole screen.
+ [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-128] Replace card 2003:128 → · [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5603-307451] Module node 5603:307451 → 
+ BOM OK #3 
+ 4.3 Export · Distributor selected
+ Replace card in Hydra
+ Module screen
+ Config: vertical · action · selected · SendOutlined (colorInfo) · 350 px
+ Check: Matches the selected card 5603:308363.
+ Fix: None. Optional: link to 5603:308363.
+ [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-142] Replace card 2003:142 → · [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5603-308343] Module node 5603:308343 → 
+ BOM OK #4 
+ 4.4 Export · Service selected
+ Replace card in Hydra
+ Module screen
+ Config: vertical · action · selected · CustomerServiceOutlined (colorWarning) · 350 px
+ Check: Matches the selected card 5603:307938.
+ Fix: None. Optional: link to 5603:307938.
+ [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-156] Replace card 2003:156 → · [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5603-307917] Module node 5603:307917 → 
+ BOM Fix (width) #5 
+ 1.1 Hub · Get started
+ Replace card in Hydra
+ Module screen
+ Config: horizontal · action · default · UploadOutlined (Lime/lime-7) · 480 px
+ Check: Type, icon, icon colour and text match "Upload a file" (5546:188197). Width differs: module card is 715 px.
+ Fix: Set width 480 → 715. Optional: link to 5546:188197. Title 20 → 16 px and 2 px light-blue border → shadow still need sign-off (open question 4).
+ [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-170] Replace card 2003:170 → · [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5289-21301] Module node 5289:21301 → 
+ BOM Fix (width) #6 
+ 1.6 Hub · Empty state
+ Replace card in Hydra
+ Module screen
+ Config: horizontal · action · default · FileSearchOutlined (colorInfo) · 480 px
+ Check: Matches "Search catalogue parts" (5758:50203), including the copy slip "Excel or CSV with…". Module card is 715 px.
+ Fix: Set width 480 → 715. Optional: link to 5758:50203.
+ [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-186] Replace card 2003:186 → · [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5758-50201] Module node 5758:50201 → 
+ BOM Fix (width) #7 
+ Cheat Sheet 1.1 BOM entry point
+ Replace card in Hydra
+ Module screen
+ Config: horizontal · action · default · show icon off · show tag on ("Internal Feature") · 480 px
+ Check: Title, description and tag text match 6497:60211. Module card is 471 px. In the module the tag replaces the icon (left of the title) and is a solid Tag__Checkable; in the Replace card it is a light Tag__Colorful under the title.
+ Fix: Set width 480 → 471. Optional: link to 6497:60211. Tag position and style cannot be matched with properties (gaps G2, G3).
+ [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-200] Replace card 2003:200 → · [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=6497-60208] Module node 6497:60208 → 
+ BOM Fix (width) #8 
+ Local Components · Shared / Export Format Card
+ Replace card in Hydra
+ Module screen
+ Config: horizontal · action · default · FileExcelOutlined (Lime/lime-7) · 480 px
+ Check: Matches State=Rest (5546:188173). Module variant is 576 px.
+ Fix: Set width 480 → 576. Optional: link to 5546:188173 (State=Rest).
+ [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-213] Replace card 2003:213 → · [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5546-188176] Module node 5546:188176 → 
+ SPEC Fix (width) #9 
+ 07 Export · Revised document
+ Replace card in Hydra
+ Module screen
+ Config: horizontal · option · selected · show radio on · show icon off · 560 px
+ Check: Radio checked, title and description match "Option 3" (8231:83809). Module cards are 856 px. Selected fill is colorFillQuaternary in SPEC vs colorPrimaryBg in OptionCard (harmonized).
+ Fix: Set width 560 → 856. Optional: link to 8231:83809.
+ [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-227] Replace card 2003:227 → · [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8231-83808] Module node 8231:83808 → 
+ SPEC Gap #10 
+ 07 Export · Coming-soon teaser
+ Replace card in Hydra
+ Module screen
+ Config: horizontal · action · disabled · show link on · show icon off · 560 px
+ Check: Text and link copy match. The look does not: the module is a flat grey panel (colorFillQuaternary, no border, no shadow) with a normal dark title and a right-aligned Link atom; the Replace card greys out the title and description, keeps the shadow and shows the link on the left.
+ Fix: Set width 560 → 856. The rest cannot be fixed with properties (gap G4).
+ [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-247] Replace card 2003:247 → · [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8231-83826] Module node 8231:83826 → 
+ SPEC Fix (width) #11 
+ 02 Upload SPEC · Confirm Master SPEC
+ Replace card in Hydra
+ Module screen
+ Config: horizontal · option · selected · show radio off · show checkbox on · show tag on ("Detected from SPEC") · show icon off · 360 px
+ Check: Checkbox checked, title, description and tag text match "Division 21". Module cards are 203 px wide and show the tag after the description; the Replace card shows it between title and description.
+ Fix: Set width 360 → 203. Check that the tag fits the 143 px text column; if it clips, use 210 px. Tag order cannot be matched (gap G2). Link stays on the screen: the cards sit inside a modal instance slot.
+ [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-262] Replace card 2003:262 → · [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8028-39064] Module node 8028:39064 → 
+ 2. Proposed new Replace cards
+ Only configurations that no existing card shows. Card order follows the module order (BOM, then SPEC).
+ Module Screen Node Config Why 
+ BOM 4.1 Export · unselected route [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=7266-59510] 7266:59510 layout vertical · type action · state default · icon FileTextOutlined bound to colorPrimary · ✏️ title "Generate submittal package" · ✏️ description "Create a complete package with datasheets, approvals, and formatted line summaries." · width 350 12 of the 16 live BOM Export instances are unselected. No Replace card shows vertical · action · default. 
+ SPEC 05 Export · unselected format (Clean final document) [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8231-83814] 8231:83814 layout horizontal · type option · state default · show radio on · show checkbox off · show icon off · ✏️ title "Clean final document" · ✏️ description "Accepted edits only. No revision history." · width 856 Two of the three radio cards are unselected. No Replace card shows an unselected radio card. 
+ SPEC 02 Confirm Master SPEC · unselected division (Division 23) [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8028-39064] 8028:39064 layout horizontal · type option · state default · show radio off · show checkbox on · show tag off · show icon off · ✏️ title "Division 23" · ✏️ description "HVAC" · width 203 No Replace card shows an unselected checkbox card, or a checkbox card without a tag. The card sits in a modal slot, so the link goes to the screen. 
+ BOM Verified New card 
+ 4.1 Export · unselected route
+ Config: layout vertical · type action · state default · icon FileTextOutlined bound to colorPrimary · ✏️ title "Generate submittal package" · ✏️ description "Create a complete package with datasheets, approvals, and formatted line summaries." · width 350
+ Why: 12 of the 16 live BOM Export instances are unselected. No Replace card shows vertical · action · default.
+ [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=7266-59510] Open in Figma → 
+ SPEC Verified New card 
+ 05 Export · unselected format (Clean final document)
+ Config: layout horizontal · type option · state default · show radio on · show checkbox off · show icon off · ✏️ title "Clean final document" · ✏️ description "Accepted edits only. No revision history." · width 856
+ Why: Two of the three radio cards are unselected. No Replace card shows an unselected radio card.
+ [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8231-83814] Open in Figma → 
+ SPEC Verified New card 
+ 02 Confirm Master SPEC · unselected division (Division 23)
+ Config: layout horizontal · type option · state default · show radio off · show checkbox on · show tag off · show icon off · ✏️ title "Division 23" · ✏️ description "HVAC" · width 203
+ Why: No Replace card shows an unselected checkbox card, or a checkbox card without a tag. The card sits in a modal slot, so the link goes to the screen.
+ [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8028-39064] Open in Figma → 
+ Not proposed: hover (5546:188177, never placed in a screen); a second Hub card (same config as #6); 4.2–4.4 unselected cards (same config as the new 4.1 card); SPEC Division 22 (same config as #11).
+ 3. Occurrences found since 20 Oct, already covered
+ Same purpose, structure and configuration as an existing card, so no new Replace card is needed. They count toward reach.
+ Module Screen Node Status What it is Covered by 
+ BOM 1.2 Hub · Upload destination modal [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5546-188248] 5546:188248 Verified Same two Hub cards behind the modal overlay. The second card shows "Export to Excel / CSV" with the FileSearchOutlined icon (copy slip, as in 1.3 and 1.4). Covered by #5 and #6 (horizontal · action · default). 
+ BOM 1.3 Hub · Bulk selection [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5546-188220] 5546:188220 Verified Same two Hub cards, same copy slip on the second card. Covered by #5 and #6. 
+ BOM 1.4 Hub · Delete confirmation [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5546-188234] 5546:188234 Inferred Same two Hub cards (seen by structure and text; same instances as 1.3). Covered by #5 and #6. 
+ SPEC 05B Submittal Package created · Success [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8429-11693] 8429:11693 Verified The same three radio cards and the coming-soon teaser as screen 05. Covered by #9, #10 and the new SPEC 05 card. 
+ BOM · 1.2 Hub · Upload destination modal
+ BOM · 1.3 Hub · Bulk selection
+ SPEC · 05B Submittal Package created · Success
+ 4. Gaps that properties cannot reproduce
+ Id Gap 
+ G1 Vertical height jump In vertical layout, default and hover are 164 px high, selected and disabled 156 px (the Text frame is 80 px vs 72 px). In a BOM Export row the selected card will be 8 px shorter than its neighbours. Fix in the component (same Text frame height in all states), not in Replace. 
+ G2 Tag position is fixed The tag sits on its own line between title and description. The 20 Oct plan said "in the title row". Cheat Sheet uses the tag as the leading visual (left of the title); SPEC 02 shows it after the description. No property controls the position. 
+ G3 Tag style The nested tag is Tag__Colorful blue (light). Cheat Sheet uses Tag__Checkable checked (solid primary, white text). SPEC 02 draws its own tag with a raw #e6f4ff fill, which matches Tag__Colorful blue. 
+ G4 Coming-soon teaser look No muted or info look exists. The module teaser is a flat colorFillQuaternary panel without border or shadow, with a normal dark title and a right-aligned Link atom. OptionCard disabled greys the title and description, keeps the shadow, and its link is a plain text line on the left. 
+ G5 Primitive icon colour BOM Hub Upload and the local set use the primitive Lime/lime-7. The Replace cards bind the same primitive; it does not switch in dark mode. No semantic token fits (BOM 4.1 uses colorSuccessHover for the Excel icon). 
+ G6 Disabled icon not dimmed In every disabled variant the icon keeps its full colour (green in the component screenshot), while the text turns to colorTextDisabled. 
+ G7 Selected and border colours differ from the modules BOM pressed = 2 px colorPrimary, no tint. SPEC 05 selected fill = colorFillQuaternary. SPEC unselected border = colorBorder. OptionCard uses 1 px colorPrimary + colorPrimaryBg for selected and colorBorderSecondary at rest. Harmonized on 20 Oct; listed so the module teams know what changes. 
+ G8 Live BOM instances after publish 16 remote instances in BOM 4.1–4.4 still use the old axes (control = none, state = default or pressed). After publishing, swap the 4 pressed ones to selected, and check that the 12 default ones resolve to type = action, state = default. 
+ G9 Link width in horizontal variants The hidden Link text keeps a fixed 185 px width in horizontal variants (the text column is 263–291 px). A longer link wraps earlier than the description. Check before more links are used. 
+ Harmonization (what each module changes to)
+ Element Values seen Chosen Why 
+ Width Replace cards 350 / 480 / 560 / 360 px Use the module width per card (350, 715, 471, 576, 856, 203) A Replace card should look like the screen; 203 px also tests the narrow case. 
+ Title BOM Hub 20 · SPEC 14 · BOM export 16 Medium Title/Heading 5 (16 Medium) Unchanged from 20 Oct. Hub sign-off still open. 
+ Selected BOM 2 px blue, no tint · SPEC 05 blue + colorFillQuaternary · SPEC 02 blue + white 1 px colorPrimary + colorPrimaryBg Unchanged from 20 Oct (G7). 
+ Border at rest (option) SPEC colorBorder colorBorderSecondary Unchanged from 20 Oct. 
+ Tag Cheat Sheet leading, solid · SPEC 02 after description, light Own line under the title, Tag__Colorful blue Works at 203 px. Decide G2 and G3. 
+ Teaser Flat grey panel, dark title, right link state = disabled + show link Closest available; G4. 
+ Rejected candidates
+ Module Candidate Reason Node 
+ Part Search SPEC "ConnectED Actions" cards, Part Search "Actions" panel Full-width buttons; the card itself is not a choice (kept from 20 Oct). [https://www.figma.com/design/fyhH2NtH20puYbGLDChPwn/Part-Search---RSFC?node-id=11024-17010] 11024:17010 
+ Release Notes Release Notes "What's New" items (Feature, Improvement, Fix) Read-only tagged notes, no selection or entry action. Belongs to Tagged Summary Card. [https://www.figma.com/design/a4gviD5oViRhasSCN6cC8Z/Release-Notes?node-id=1-5013] 1:5013 
+ Release Notes Release Notes Home "Modules" tiles (BOM · 9 BOMs · Open module) Navigation tiles behind the modal; the link is the action, not the card. Single module (kept from 20 Oct). [https://www.figma.com/design/a4gviD5oViRhasSCN6cC8Z/Release-Notes?node-id=1-5013] 1:5013 
+ Content Content "Create BOM" radio list, BOM 1.2 "Upload destination" radios Plain radio rows without card chrome: Choice List Row (kept). [https://www.figma.com/design/pGzqSs0fMmuQ2BtjbMNVjP/Content---RSFC?node-id=9030-8465] 9030:8465 
+ Admin Admin CFM "Search catalog" panel Form panel (input + Search button), organizational. [https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2009-5440] 2009:5440 
+ Admin Admin RN "Quick Bulk Upload" dropzone, SPEC Drop Zone / File info File Upload Dropzone / Selection Summary. [https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2218-11484] 2218:11484 
+ SPEC SPEC 04 "Editable Word format", 05C "Document ready" Alert atom. [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8156-110292] 8156:110292 
+ FeatureCard (❖ Cards) Promotional teaser, separate molecule (kept). [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1555-370] 1555:370 
+ BOM BOM local card State=Hover Maps to state = hover, but hover is never placed in a screen; no Replace card needed. [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5546-188177] 5546:188177 
+ SPEC "ConnectED Actions" cards, Part Search "Actions" panel
+ Release Notes "What's New" items (Feature, Improvement, Fix)
+ Content "Create BOM" radio list, BOM 1.2 "Upload destination" radios
+ Admin CFM "Search catalog" panel
+ Admin RN "Quick Bulk Upload" dropzone, SPEC Drop Zone / File info
+ Open questions
+ Match module widths on the Replace cards? Recommended: yes (#5–#11). The Replace section gets wider (SPEC cards 856 px), and SPEC 02 at 203 px checks the narrow case.
+ Tag position (G2): keep it on its own line under the title, or move it into the title row as the 20 Oct plan said? Recommended: keep it under the title. It fits the 203 px division card; a title-row tag would wrap there.
+ Coming-soon teaser (G4): accept the disabled look? Recommended: accept for now and note the difference; add a muted look only if a second module needs one.
+ Hub harmonization sign-off (title 20 → 16 px, 2 px light-blue border → shadow). Still open from 20 Oct. Needed before BOM swaps the local "Shared / Export Format Card" for OptionCard.
+ Retarget links to the exact card nodes? Recommended: yes where the card is a normal frame or instance (#1–#9). #11 stays on the screen because of the modal slot.
+ Fix the vertical height jump (G1) in the component before publishing? Recommended: yes. It affects the BOM Export rows after the pressed → selected swap.
+ Coverage
+ Tools: Figma MCP, read only (create_session, read-only use_figma scripts for structure, text, colour tokens and instance properties, get_screenshot). Archived, draft and hidden frames were skipped. All linked nodes opened; no access problems. Content File Manager was only read.
+ Module Linked node Looked at 
+ BOM BOM · Prototype Flows (673:23362) Whole page scanned by structure (bordered frames with title + description + icon or one control): 38 hits, 33 of them OptionCard or the local Hub card. Screenshots: 4.1–4.4 rows, 1.1, 1.2, 1.3, 1.6, Cheat Sheet, Local Components. 
+ SPEC SPEC - Core user flows (8075:133874) Structure scan of all 7 sections: 16 hits. Screenshots: 05 Export, 05B, 02 Confirm Master SPEC. 
+ Part Search 01 - Part listing (11024:16994) 6 screens. Structure scan: no hits. Screenshots: Choose an action, Select variants for PDF download. 
+ Release Notes Release Notes Flow (1:5012) 4 frames. Structure scan: only the profile menu. Screenshots: What's New modal, View All. 
+ Content 01 — Content download history (5603:308790) 10 frames. Structure scan: only modal shells. Screenshots: Submittal, Create BOM modal. 
+ Admin CFM UATL-367 Content File Manager (2009:5319) 27 screens. Structure scan: search panel, alerts, modals. No Radio or Checkbox anywhere. Screenshot: Figure result. Read only, nothing touched. 
+ Admin RN Admin RN - ADMIN (2218:10669) 11 frames. Structure scan: no hits. Screenshots: Bulk upload, New note. 
+ Build history · 20 Oct 2026 (ExportCard upgrade, 25 variants; superseded by the 21 Oct rework) 
+ Kept as built on 20 Oct. Variant names, the control axis and the pressed, focus and loading states described below no longer exist.
+ Built
+ Only the Hydra file was written; the module files were not touched. The library still needs to be published.
+ What Node Link 
+ Page ❖ Cards 826:944 [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=826-944] Open → 
+ Component set ExportCard (upgraded, 25 variants) 826:1181 [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=826-1181] Open → 
+ Section holding the component set (existing name "Hydra export action") 1479:26245 [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1479-26245] Open → 
+ Section Replace in modules (11 cards) 2003:110 [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-110] Open → 
+ Components (25 variants)
+ layout control states variants 
+ vertical none default, hover, pressed, focus, selected, disabled, loading 7 
+ horizontal none default, hover, pressed, focus, selected, disabled 6 
+ horizontal radio default, hover, pressed, focus, selected, disabled 6 
+ horizontal checkbox default, hover, pressed, focus, selected, disabled 6 
+ Pass 1 check: existing look unchanged
+ Before (left, the six original states) and after (right, the same six states in the upgraded set). Same size, spacing and colours; only the description text is darker (65 % instead of 45 %).
+ Icon colours in Replace in modules
+ Each icon is bound to the same variable the icon uses in the module (read from the module node). Cheat Sheet and the three SPEC cards show no icon. No new variable was created. All seven colours match the module values.
+ Card Icon Token used in module Token bound 
+ BOM · 4.1 Export · Excel/CSV FileExcelOutlined Color/Success/colorSuccessHover Color/Success/colorSuccessHover 
+ BOM · 4.2 Export · Package selected FileTextOutlined Color/Primary/colorPrimary Color/Primary/colorPrimary 
+ BOM · 4.3 Export · Distributor selected SendOutlined Color/Info/colorInfo Color/Info/colorInfo 
+ BOM · 4.4 Export · Service selected CustomerServiceOutlined Color/Warning/colorWarning Color/Warning/colorWarning 
+ BOM · 1.1 Hub · Get started UploadOutlined Lime/lime-7 Lime/lime-7 
+ BOM · 1.6 Hub · Empty state FileSearchOutlined Color/Info/colorInfo Color/Info/colorInfo 
+ BOM · Local Components · Shared / Export Format Card FileExcelOutlined Lime/lime-7 Lime/lime-7 
+ Replace in modules (11 cards)
+ Card Card node Link in the card 
+ BOM · 4.1 Export · Excel/CSV (default) [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-112] 2003:112 → [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5604-28134] 5604:28134 → 
+ BOM · 4.2 Export · Package selected [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-128] 2003:128 → [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5603-307451] 5603:307451 → 
+ BOM · 4.3 Export · Distributor selected [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-142] 2003:142 → [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5603-308343] 5603:308343 → 
+ BOM · 4.4 Export · Service selected [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-156] 2003:156 → [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5603-307917] 5603:307917 → 
+ BOM · 1.1 Hub · Get started [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-170] 2003:170 → [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5289-21301] 5289:21301 → 
+ BOM · 1.6 Hub · Empty state [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-186] 2003:186 → [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5758-50201] 5758:50201 → 
+ BOM · Cheat Sheet 1.1 BOM entry point [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-200] 2003:200 → [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=6497-60208] 6497:60208 → 
+ BOM · Local Components · Shared / Export Format Card [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-213] 2003:213 → [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5546-188176] 5546:188176 → 
+ SPEC · 07 Export · Revised document [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-227] 2003:227 → [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8231-83808] 8231:83808 → 
+ SPEC · 07 Export · Coming-soon teaser [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-247] 2003:247 → [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8231-83826] 8231:83826 → 
+ SPEC · 02 Upload SPEC · Confirm Master SPEC [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2003-262] 2003:262 → [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8028-39064] 8028:39064 → 
+ Checks
+ Check Result Evidence 
+ Structure: 25 variants, properties, bindings Pass All 25 variants have fill, padding, gap and radius bound to variables; 10 properties; tag and control exposed. 
+ Existing instances unchanged (pass 1) Pass The 6 existing instances (Hydra v6 QA, light and dark) keep 233 x 164 and the same look. Only the description colour is darker. 
+ Every instance comes from the set, none detached Pass 11 of 11 Replace instances come from the ExportCard set. 
+ Links point to existing nodes Pass 11 links, all nodes read in the module files before use (node ids with a node-id parameter). 
+ FILL inside a 1000 px container Pass Vertical, checkbox selected, radio default and disabled cards with a long title, long description, tag and link: text wraps, nothing overflows. 
+ Dark mode (Customize Theme = Dark) Pass Same four cards, tokens resolve, text stays readable. Temporary frames removed. 
+ Icon colours match the module Pass 7 of 7 icons bound to the module token; the colour values match the module. 
+ Buttons with icons Not applicable The card contains no button. 
+ Screenshots at normal scale Pass Components and Replace in modules: no clipped text, no overlap. 
+ Temporary frames removed Pass No node named TMP is left on the page. 
+ Dark mode and FILL test (temporary frames, removed)
+ Token verification
+ Every token named in the plan exists in the Hydra file. Nothing was created, nothing was hard-coded.
+ Token or style Variable Result Used for 
+ colorTextSecondary Color/Neutral/Text/colorTextSecondary Found Description text (new default, 65 %) 
+ colorTextDescription Color/Neutral/Text/colorTextDescription Found Replaced by colorTextSecondary for the description; no longer used by the card 
+ colorPrimary Color/Primary/colorPrimary Found Selected and pressed border 
+ colorPrimaryBg Color/Primary/colorPrimaryBg Found Selected fill 
+ colorBorderSecondary Color/Neutral/Borders/colorBorderSecondary Found 1 px border of radio and checkbox cards 
+ borderRadiusLG Style/borderRadiusLG Found Corner radius (unchanged) 
+ padding Size/Padding/padding (16) Found Left and right padding, horizontal layouts 
+ paddingLG Size/Padding/paddingLG (24) Found Padding, vertical layout (unchanged) and top and bottom, horizontal layouts 
+ Title/Heading 5 Text style, 16 Medium Found Title (unchanged) 
+ Base/Normal Text style, 14 Regular Found Description and link (unchanged) 
+ colorBgContainer Color/Neutral/Background/colorBgContainer Found Fill of radio and checkbox cards, and of the Replace cards 
+ colorBgElevated Color/Neutral/Background/colorBgElevated Found Fill of the existing card, kept for control = none 
+ colorPrimaryBorder Color/Primary/colorPrimaryBorder Found Hover border of radio and checkbox cards 
+ colorLink Color/Primary/colorLink Found Link line and Replace card links 
+ marginXS Size/Margin/marginXS Found Gap in the title row 
+ Gaps, not done, and decisions needed
+ Needs the user's decision
+ BOM 1.1, 1.6, Cheat Sheet and the local component set (needs design sign-off). Harmonizing the Hub cards means title 20 px to 16 px and a 2 px blue border to a shadow card. The Replace cards are built; the change should be approved before the BOM file adopts them.
+ Rename ExportCard to Option Card. Not done (undecided). The component set description says so.
+ BOM 4.1 to 4.4. Manual follow-up in the BOM file: switch the selected card from pressed to selected.
+ Gaps and notes
+ Icon colour of the component default. The default icon uses Color/Preset/Lime/colorLimeText (lime-7 in light, lime-6 in dark). It is a preset colour, not a semantic token (BOM 4.1 uses colorSuccessHover for the same icon). Not changed, so existing instances stay as they are; a decision is needed if you want a semantic default.
+ Icon colour bound to a primitive. BOM Hub Upload and the local set use the primitive Lime/lime-7 in the module. The Replace cards bind the same primitive. It matches colorLimeText in light mode but does not switch in dark mode.
+ Loading. In state=loading the show icon and ↳ 🎰 icon properties exist but do not change the spinner.
+ Disabled link. The link line is not dimmed in disabled variants (it keeps the link colour).
+ Tag colour. The nested Tag is Tag__Colorful blue. The BOM Cheat Sheet uses Tag__Checkable; the colour differs slightly.
+ Pre-existing, now fixed. The focus, disabled and loading variants had no text property link for title and description; they are now linked like the others.
+ Colour of existing instances. The description colour moves from colorTextDescription (45 %) to colorTextSecondary (65 %). Known intentional change, approved. The 88 % overrides on BOM 4.1 are no longer needed.
+ Variant matrix. Not built in full (2 x 3 x 7 = 42). Built 25: vertical + none x 7 states; horizontal + none / radio / checkbox x default, hover, pressed, focus, selected, disabled. Not built: loading in horizontal layouts, and radio or checkbox in vertical layout.
+ No new tokens. No variable, style or token was created.
+ Follow-up (20 Oct 2026). Added pressed and focus for horizontal none, radio and checkbox (6 variants: 2004:211, 2004:220, 2004:229, 2004:242, 2004:255, 2004:267). Hover already existed for all three. Pressed and focus use a 2 px colorPrimary border like the vertical ones; radio and checkbox cards keep colorBgContainer and no shadow, the nested control stays in its default state. The Components section grew to 440 x 4012 and Replace in modules moved down to y 4132.
+ Placement (page rule). FeatureCard (component set 1555:370) sits loose on the canvas next to the Components section, not inside a Components section. Reported only, not moved.
+ Publish
+ The Hydra library has to be published before the changes reach the module files.
+ Decision
+ Upgrade ExportCard on ❖ Cards ( [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=826-1181] node 826:1181 ). Every new property defaults to today's behaviour. Related: Choice List Row (long compact lists) and FeatureCard (promotional teaser) stay separate. Cards with a full-width button inside (SPEC "ConnectED Actions") are not Option Cards.
+ Component
+ Property Type Default / values Notes 
+ layout Variant vertical (default), horizontal New. Vertical = icon on top (today). Horizontal = icon or control on the left. 
+ control Variant none (default), radio, checkbox New. Radio and checkbox only with layout horizontal. Exposed nested instance. 
+ state Variant default (default), hover, pressed, focus, selected, disabled, loading selected is new. pressed is kept as is. loading only with control none. 
+ show icon Boolean true New. Hides the icon. No effect in state loading (the spinner shows). 
+ ↳ 🎰 icon Instance swap FileExcelOutlined New. Any Hydra icon. 
+ show tag Boolean false New. Tag in the title row. Exposed nested Tag__Colorful (blue, no border). 
+ show link Boolean false New. Link line under the description. 
+ ✏️ link Text Tell me when available New. 
+ ✏️ title Text Export to Excel / CSV Existing. 
+ ✏️ description Text Excel or CSV with the columns and quantities you pick. Existing. 
+ Nested atoms: Tag__Colorful (exposed), Radio and Checkbox (exposed, with their own title hidden), icon (swap). Text styles: Title/Heading 5 for the title, Base/Normal for description and link.
+ Harmonization
+ Element Values seen Chosen Why 
+ Title BOM Hub 20 px Medium · SPEC 14 px Medium · BOM export 16 px Medium Title/Heading 5 (16 Medium) Canonical sample and the existing card. BOM Hub 20 to 16, SPEC 14 to 16. 
+ Description BOM export 14 px, 45 % (88 % override on some) · BOM Hub 14 px 45 % · SPEC 14 px grey Base/Normal, colorTextSecondary (65 %) Accessibility: 45 % is about 3.4 : 1 and fails AA. Known intentional change for BOM 4.1 (slightly darker). 
+ Border at rest BOM export none + shadow · BOM Hub 2 px light blue · SPEC 1 px grey Shadow, no border; 1 px colorBorderSecondary for radio and checkbox cards Cards you tick are bordered, cards you press are elevated. 
+ Selected BOM export pressed 2 px blue · SPEC blue border + tint selected: 1 px colorPrimary + colorPrimaryBg fill (pressed kept as is) One selected look for SPEC and future BOM. BOM follow-up: pressed to selected. 
+ Radius 8 px in all samples borderRadiusLG No change. 
+ Padding BOM export 24 · BOM Hub 24 · SPEC 16 to 24 24 vertical layout; 24 top/bottom and 16 left/right horizontal Vertical layout keeps today. Horizontal follows the approved plan. 
+ Icon BOM export top · BOM Hub left · SPEC none · Cheat Sheet tag Swap + show icon Presence and position are properties, not separate components. 
+ Where it appears
+ BOM Verified 
+ 4.1 Export · Excel/CSV (default)
+ Replace card configuration: layout vertical, control none, state pressed, title and description as in the screen
+ Four route cards in a row, the first one selected with the pressed state (blue border).
+ Gap: Switch state=pressed to state=selected on the selected card (manual follow-up). Description colour becomes 65 % (was 45 % with two 88 % overrides).
+ [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5604-28134] Open in Figma → 
+ BOM Verified 
+ 4.2 Export · Package selected
+ Replace card configuration: vertical, none, pressed, icon FileTextOutlined
+ Same row, the package card is selected.
+ Gap: Same pressed to selected follow-up. Icon is swapped to FileTextOutlined.
+ [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5603-307451] Open in Figma → 
+ BOM Verified 
+ 4.3 Export · Distributor selected
+ Replace card configuration: vertical, none, pressed, icon SendOutlined
+ Same row, the distributor card is selected.
+ Gap: Same pressed to selected follow-up.
+ [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5603-308343] Open in Figma → 
+ BOM Verified 
+ 4.4 Export · Service selected
+ Replace card configuration: vertical, none, pressed, icon CustomerServiceOutlined
+ Same row, the white glove card is selected.
+ Gap: Same pressed to selected follow-up.
+ [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5603-307917] Open in Figma → 
+ BOM Verified 
+ 1.1 Hub · Get started
+ Replace card configuration: horizontal, none, default, icon UploadOutlined, width 480 px
+ Horizontal entry cards (icon left of the title). Local component "Shared / Export Format Card".
+ Gap: Title 20 px to 16 px and 2 px blue border to a shadow card are visible changes: NEEDS DESIGN SIGN-OFF.
+ [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5289-21301] Open in Figma → 
+ BOM Inferred 
+ 1.6 Hub · Empty state
+ Replace card configuration: horizontal, none, default, icon FileSearchOutlined
+ The same two local cards above the empty state. Both cards show the "Excel or CSV…" description in this screen, which looks like a copy slip in the BOM file.
+ Gap: Same sign-off as 1.1. The Replace card reproduces the copy exactly as drawn.
+ [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5758-50201] Open in Figma → 
+ BOM Verified 
+ Cheat Sheet · 1.1 BOM entry point
+ Replace card configuration: horizontal, none, default, show icon off, show tag on (exposed tag text "Internal Feature")
+ Third card carries an "Internal Feature" tag instead of an icon.
+ Gap: Same sign-off as 1.1. The tag is the Tag__Colorful blue instance (the BOM file uses Tag__Checkable); colour differs slightly.
+ [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=6497-60208] Open in Figma → 
+ BOM Verified 
+ Local Components · Shared / Export Format Card
+ Replace card configuration: horizontal, none, default (Rest). Hover exists as state=hover
+ Local component set with Rest and Hover only. This is the source of the Hub and Cheat Sheet cards.
+ Gap: Becomes redundant once the Hub cards use the Hydra component. Same sign-off as 1.1.
+ [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5546-188176] Open in Figma → 
+ SPEC Verified 
+ 07 Export · Revised document
+ Replace card configuration: horizontal, radio, selected, show icon off
+ Three radio cards, the first selected. No icon.
+ Gap: Title 14 px to 16 px. Selected = blue border and tint (same as today).
+ [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8231-83808] Open in Figma → 
+ SPEC Verified 
+ 07 Export · Coming-soon teaser
+ Replace card configuration: horizontal, none, disabled, show icon off, show link on
+ Grey teaser with a "Tell me when available" link. No control.
+ Gap: The teaser has no border today; it becomes a disabled card with a shadow. The link is plain text in the card (the SPEC file uses a link atom).
+ [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8231-83826] Open in Figma → 
+ SPEC Verified 
+ 02 Upload SPEC · Confirm Master SPEC (Division)
+ Replace card configuration: horizontal, checkbox, selected, show icon off, show tag on (exposed tag text "Detected from SPEC")
+ Three checkbox cards in a modal slot. Selected ones carry a "Detected from SPEC" tag.
+ Gap: Title 14 px to 16 px, tag moves to the title row. The link goes to the screen because the cards sit inside an instance slot.
+ [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8028-39064] Open in Figma → 
+ Rejected candidates
+ SPEC "ConnectED Actions" cards : a full-width button inside the card, different interaction.
+ Choice List Row : compact list rows, a separate molecule.
+ FeatureCard : promotional teaser, a separate molecule.
+ Open questions
+ Rename ExportCard to Option Card? Not done. A rename affects the 6 existing instances' names and the module files.
+ Approve the Hub harmonization (title 16 px, shadow instead of a 2 px blue border)? Needed before the BOM file adopts the component.
+ Hydra design system · Option Card · coverage re-check 21 Oct 2026 
+ 

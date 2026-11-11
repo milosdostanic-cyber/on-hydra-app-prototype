@@ -1,0 +1,309 @@
+<title>Hidra Admin Figma Audit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; summary strip, coverage matrix, then per-module checklists in sidebar order */
+:root {
+  --bg: #f5f7fa; --surface: #ffffff; --ink: #142233; --muted: #5b6878; --line: #dde3ea;
+  --accent: #0d4a7a; --accent-soft: #e6eef6;
+  --done: #1f7a4a; --done-bg: #e5f4ec; --miss: #b4322b; --miss-bg: #fbe9e7;
+  --chg: #8a5a00; --chg-bg: #fdf1d8; --chk: #4b4fa8; --chk-bg: #ebecfa;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1620; --surface: #17212d; --ink: #e4eaf1; --muted: #93a1b1; --line: #2a3644;
+  --accent: #7fb6e6; --accent-soft: #1b2b3c;
+  --done: #6fd39c; --done-bg: #173226; --miss: #f08a80; --miss-bg: #3a1c1a;
+  --chg: #f0c46a; --chg-bg: #362a12; --chk: #a9adf5; --chk-bg: #23254a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f1620; --surface: #17212d; --ink: #e4eaf1; --muted: #93a1b1; --line: #2a3644;
+  --accent: #7fb6e6; --accent-soft: #1b2b3c;
+  --done: #6fd39c; --done-bg: #173226; --miss: #f08a80; --miss-bg: #3a1c1a;
+  --chg: #f0c46a; --chg-bg: #362a12; --chk: #a9adf5; --chk-bg: #23254a; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 40px 80px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 40px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.2 }
+h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.01em }
+h2 { font-size: 1.35rem; font-weight: 600; }
+h3 { font-size: 1.05rem; font-weight: 600; }
+p { margin: 0; max-width: 72ch }
+a { color: var(--accent); text-underline-offset: 2px }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px }
+.eyebrow { font: 500 0.72rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted) }
+header { display: grid; gap: 12px }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 20px; color: var(--muted); font-size: 0.88rem }
+.meta code, td code, li code { font: 0.85em var(--mono); background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; color: var(--ink) }
+section { display: grid; gap: 16px; min-width: 0 }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 4px }
+.stat b { font: 600 1.8rem/1 var(--sans); font-variant-numeric: tabular-nums }
+.stat span { color: var(--muted); font-size: 0.85rem }
+.stat.done b { color: var(--done) } .stat.miss b { color: var(--miss) } .stat.chg b { color: var(--chg) } .stat.chk b { color: var(--chk) }
+.callouts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px }
+.callout { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 8px; min-width: 0 }
+.callout ul { margin: 0; padding-left: 18px; display: grid; gap: 4px }
+.scroll { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px }
+table { border-collapse: collapse; width: 100%; font-size: 0.88rem }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line) }
+th { font: 500 0.72rem/1.2 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); background: var(--accent-soft); position: sticky; top: 0 }
+tr:last-child td { border-bottom: 0 }
+td.screen { font-weight: 500; min-width: 180px }
+td.find, td.act { min-width: 240px }
+td.ref { min-width: 130px; font-size: 0.82rem }
+td.ref a { display: block; white-space: nowrap }
+.route { display: block; font: 0.78rem var(--mono); color: var(--muted); font-weight: 400; margin-top: 2px }
+.pill { display: inline-flex; align-items: center; gap: 6px; font: 500 0.78rem/1 var(--sans); padding: 5px 9px; border-radius: 999px; white-space: nowrap }
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50% }
+.p-done { color: var(--done); background: var(--done-bg) } .p-done::before { background: var(--done) }
+.p-miss { color: var(--miss); background: var(--miss-bg) } .p-miss::before { background: var(--miss) }
+.p-chg { color: var(--chg); background: var(--chg-bg) } .p-chg::before { background: var(--chg) }
+.p-chk { color: var(--chk); background: var(--chk-bg) } .p-chk::before { background: var(--chk) }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.filters button { font: 500 0.85rem var(--sans); border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 6px 12px; border-radius: 999px; cursor: pointer }
+.filters button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface) }
+.module { display: grid; gap: 10px }
+.module-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px }
+.module-head .route { margin: 0 }
+.module-head .tally { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap }
+.org { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px }
+ol.pages { margin: 0; padding-left: 22px; display: grid; gap: 6px; font-size: 0.92rem }
+ol.pages small { color: var(--muted); display: block }
+.prio { margin: 0; padding-left: 22px; display: grid; gap: 10px }
+.prio li { padding-left: 4px }
+.prio b { font-weight: 600 }
+.note { color: var(--muted); font-size: 0.85rem }
+@media (prefers-reduced-motion: no-preference) { .filters button { transition: background .15s, color .15s } }
+</style>
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">Hydra · Admin · Design coverage audit</span>
+  <h1>Hidra Admin Figma Audit</h1>
+  <p>Every screen in the live Admin, checked against the Figma file and the Hydra Design System. Each row says what exists, what is missing, what needs fixing, and what still needs a closer look in the live app.</p>
+  <div class="meta">
+    <span>Audited 28 Oct 2026</span>
+    <span>Live app: <code>admin.hydra-dev.spaceinch.tech</code> (dev environment, Admin | RSFC)</span>
+    <span>Figma: <a href="https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---RSFC?node-id=2803-16056" target="_blank" rel="noopener">Admin - RSFC</a></span>
+    <span>No Figma changes made yet</span>
+  </div>
+</header>
+
+<section aria-labelledby="sum">
+  <h2 id="sum">Summary</h2>
+  <div class="stats" id="stats"></div>
+  <div class="callouts">
+    <div class="callout">
+      <h3>Designed and on the Hydra DS</h3>
+      <p>Knowledge Center, Content File Manager, Lead Time Uploader and Release Notes. Every component instance in them comes from the Hydra library; none are detached.</p>
+    </div>
+    <div class="callout">
+      <h3>No designs at all</h3>
+      <ul>
+        <li>Access Blacklist</li><li>Featured Parts (searched all 7 open files)</li><li>Companies</li><li>Users (List, Invite admins)</li><li>Company Roles</li><li>Admin Roles</li><li>Feature Access Limit</li>
+      </ul>
+    </div>
+    <div class="callout">
+      <h3>Biggest structural problems</h3>
+      <ul>
+        <li>Three different sidebars. Only Knowledge Center uses the current one, and it lacks <b>Feature Access Limit</b>.</li>
+        <li>Release Notes sidebar is a hand-built frame, not the library component.</li>
+        <li>Dashboard, Content File Manager and Lead Time all sit on one page.</li>
+        <li>Lead Time step 3 is stranded on the <code>Draft</code> page.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="cov">
+  <h2 id="cov">Coverage by module</h2>
+  <p class="note">Modules follow the live sidebar order. "Hydra DS" shows whether the existing frames are built from library components and tokens.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>Module</th><th>Live routes</th><th>Figma location today</th><th>Coverage</th><th>Hydra DS</th></tr></thead>
+    <tbody id="cov-body"></tbody>
+  </table></div>
+</section>
+
+<section aria-labelledby="chk">
+  <h2 id="chk">Module checklists</h2>
+  <div class="filters" role="group" aria-label="Filter by status">
+    <span class="note">Show:</span>
+    <button type="button" data-f="all" aria-pressed="true">All</button>
+    <button type="button" data-f="done" aria-pressed="false">✅ Done</button>
+    <button type="button" data-f="miss" aria-pressed="false">❌ Missing</button>
+    <button type="button" data-f="chg" aria-pressed="false">🟡 Needs changes</button>
+    <button type="button" data-f="chk" aria-pressed="false">🔍 Double-check</button>
+  </div>
+  <div id="modules" style="display:grid;gap:32px"></div>
+</section>
+
+<section aria-labelledby="org">
+  <h2 id="org">Figma organization</h2>
+  <div class="org">
+    <div class="callout">
+      <h3>Pages today</h3>
+      <ol class="pages">
+        <li>Cover <small>Also holds the "Backup - UATL-367" section (7 frames) and a stray text layer</small></li>
+        <li><code>--</code> <small>Empty divider</small></li>
+        <li>ADMIN FLOWS <small>Empty</small></li>
+        <li>Knowledge Center <small>Well organized: 01 Current, 02 States, 90 Proposals</small></li>
+        <li>🚧 Content File Manager <small>Mixes Dashboard, Content File Manager, CON-231 and Lead Time, plus 4 loose icon components</small></li>
+        <li>🚧 Release Notes Manager</li>
+        <li>Change Log</li>
+        <li>Draft <small>Near-full copy of Content File Manager, plus Lead Time step 3</small></li>
+      </ol>
+    </div>
+    <div class="callout">
+      <h3>Proposed pages (one per sidebar module)</h3>
+      <ol class="pages">
+        <li>Cover</li>
+        <li>Change Log</li>
+        <li>Dashboard <small>Move the Dashboard frame here from the Content File Manager page</small></li>
+        <li>Release Notes <small>Rename "🚧 Release Notes Manager"</small></li>
+        <li>Access Blacklist <small>New page</small></li>
+        <li>Knowledge Center <small>Keep as is</small></li>
+        <li>Content <small>Sections: Featured Parts · Content File Manager (+ CON-231) · Lead Time Uploader (bring step 3 back from Draft)</small></li>
+        <li>Companies <small>New page</small></li>
+        <li>Users <small>New page. Sections: List · Edit user · Invite admins</small></li>
+        <li>Company Roles <small>New page</small></li>
+        <li>Admin Roles <small>New page</small></li>
+        <li>Feature Access Limit <small>New page</small></li>
+        <li>🗄 Archive <small>Draft copy, Cover backup section, empty ADMIN FLOWS (nothing deleted)</small></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="ds">
+  <h2 id="ds">Design System findings</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Finding</th><th>Where</th><th>Fix</th></tr></thead>
+    <tbody>
+      <tr><td class="screen">All instances from the library</td><td>Every screen in the file</td><td>None. No local or detached components found.</td></tr>
+      <tr><td class="screen">Three sidebar variants</td><td>KC: library <code>Sidebar</code>, Admin | RSFC. RN: hand-built <code>Sidebar_new</code> frame, ASC-ES. CFM / Lead Time / Dashboard: library <code>Sidebar</code> with the old ASC-ES items and "Content" listed twice</td><td>Use one library Sidebar instance everywhere, with the 10 live items in live order (adds Feature Access Limit). If the component lacks that item, log it as a library gap; don't edit the library from this file.</td></tr>
+      <tr><td class="screen">Old header</td><td>RN, CFM, Lead Time, Dashboard ("Hi Admin, welcome to ASC Connected", Project selector)</td><td>Swap to the KC header (Admin | RSFC, no Project selector) and the home-icon breadcrumb.</td></tr>
+      <tr><td class="screen">Text without a text style, colors not linked to tokens</td><td>CFM Receipts empty / populated / Rollback: 7 text layers + 6 fills each. Lead Time Uploader: 4 fills. RN Bulk upload 1: 1 fill. Every CFM frame: 1 text layer</td><td>Apply Hydra text styles and bind the fills to Hydra color variables.</td></tr>
+      <tr><td class="screen">Hand-built screen</td><td>Dashboard: 3 instances against 40 text layers and 43 plain frames</td><td>Rebuild the KPI cards and filter card from library Card, Statistic, Segmented, DatePicker, Select and Checkbox.</td></tr>
+      <tr><td class="screen">Components likely needed for new modules</td><td>Roles create/edit: permission transfer list. Users edit: tabs. Feature Access: table cell with a select</td><td>Check the Hydra library for a Transfer component before building. If missing, report the gap instead of drawing one locally.</td></tr>
+      <tr><td class="screen">Live app bug copied into Figma</td><td>Header reads "Hi Admin, Welcome to ." in the live app and in every KC frame</td><td>Report to dev. In Figma, show the intended product name.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section aria-labelledby="next">
+  <h2 id="next">Remaining actions, in order</h2>
+  <ol class="prio">
+    <li><b>Approve the page structure</b> above, then reorganize: create module pages, move frames, archive duplicates. Nothing gets deleted.</li>
+    <li><b>Unify sidebar and header</b> on all existing frames (library Sidebar, Admin | RSFC, 10 live items).</li>
+    <li><b>Design the 7 missing modules</b>, simplest first: Access Blacklist → Companies → Company Roles → Admin Roles → Users → Feature Access Limit → Featured Parts.</li>
+    <li><b>Fix the Needs-changes screens</b>: Dashboard filter card, Release Notes Published Date column, Lead Time KPI labels, token fixes on Receipts.</li>
+    <li><b>Live walkthrough for the 🔍 items</b>: open each dialog and state in the dev app without saving, and compare it with its Figma frame.</li>
+  </ol>
+</section>
+</div>
+
+<script>
+const FIG = id => `https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---RSFC?node-id=${id.replace(':','-')}`;
+const S = { done: ['p-done','✅ Done'], miss: ['p-miss','❌ Missing'], chg: ['p-chg','🟡 Needs changes'], chk: ['p-chk','🔍 Double-check'] };
+
+const modules = [
+  { name: 'Global · Sidebar & header', route: 'all pages', where: 'Every frame', cov: 'Inconsistent', ds: 'Partly', rows: [
+    ['Sidebar', 'chg', 'Live sidebar: Dashboard · Release Notes · Access Blacklist · Knowledge Center ▸ (Manual Files, Data Feeds, Activity Log) · Content ▸ (Featured Parts, Content File Manager, Lead Time Uploader) · Companies · Users ▸ (List, Invite admins) · Company Roles · Admin Roles · Feature Access Limit. Figma has 3 variants; none matches exactly. KC is closest but has no Feature Access Limit.', 'Put the same library Sidebar instance, with the 10 live items, on every frame. Replace the hand-built Sidebar_new in Release Notes.', ['2918:23678','2218:10670','2009:5320']],
+    ['Header & breadcrumb', 'chg', 'Live: "Admin | RSFC", greeting with no Project selector, home-icon breadcrumb. RN, CFM, Lead Time and Dashboard show the old ASC-ES header and a breadcrumb without the home icon.', 'Swap the header and breadcrumb to the KC version.', ['2803:18583']],
+  ]},
+  { name: 'Dashboard', route: '/dashboard', where: '🚧 Content File Manager page (loose frame)', cov: 'Partial', ds: 'Weak', rows: [
+    ['Dashboard · Default', 'chg', 'Figma has Global KPIs and Specific analytics. Missing the live Filters card (Reporting window: Past week / Past month / Past year / All time / Custom; date range; Save as preset; Manage presets; Specific analytics scope with Companies and Users selects; "Include SpaceInch/RSFC usage" checkbox; Apply / Reset filters) and the Export Users CSV button. KPI cards are hand-built. Breadcrumb wrongly reads "Content / Content File Manager".', 'Move to the Dashboard page. Add the Filters card and Export button from library components. Rebuild the KPI cards with library Card / Statistic. Fix the breadcrumb.', ['2483:68240']],
+    ['Save preset / Manage presets dialogs', 'chk', 'Buttons exist in the live app; dialogs were not opened.', 'Open both in the dev app (cancel without saving) and design them if they are real dialogs.', []],
+  ]},
+  { name: 'Release Notes', route: '/release-notes', where: '🚧 Release Notes Manager', cov: 'Good', ds: 'Mostly', rows: [
+    ['List', 'chg', 'Live columns: Title · Published Date · Type · Status · New · Last edited · Actions. Figma shows the date under the title and has no Published Date column. Header count reads "11 release notes" in the live app.', 'Add the Published Date column (sortable).', ['2218:10670']],
+    ['New / Edit note', 'chk', 'Figma frames exist; the live form was not opened.', 'Open New Release Note in the dev app, compare fields, cancel.', ['2218:10832','2218:11057']],
+    ['Delete confirmation', 'chk', 'Figma exists. The live dialog was not triggered (destructive).', 'Confirm the dialog copy with dev or in a test entry.', ['2218:11282']],
+    ['Empty state', 'chk', 'Figma uses the Hydra Empty State Block (UATL-613). Can\'t be reproduced live because there is data.', 'Confirm copy with the PRD.', ['2218:11455']],
+    ['Bulk upload flow (upload, loading, confirm, success)', 'chg', '1 color not linked to a token on Bulk upload 1. The live flow was not run (it would create data).', 'Bind the fill to a token. Open the Bulk Upload dialog live and compare step 1.', ['2218:11484','2218:11533','2218:11560','2218:11581']],
+  ]},
+  { name: 'Access Blacklist', route: '/access-blacklist', where: '—', cov: 'None', ds: '—', rows: [
+    ['List', 'miss', 'Live: "3 blacklist entries" count, Search value input, type filter select, Add Entry button. Columns: Type (Email / Domain tag) · Value · Reason · Notes · Added on · Actions (Remove). Pagination 20 / page.', 'Create the list screen with library Table, Tag, Input.Search, Select, Button.', []],
+    ['Add blacklist entry dialog', 'miss', 'Live modal fields: Type (Domain default) · Value · Reason (Undisclosed default) · Notes. Buttons: Cancel, Add entry.', 'Create the modal with library Modal and Form fields.', []],
+    ['Empty / no search results', 'miss', 'Needed as a state; not visible live.', 'Use the Hydra Empty State Block.', []],
+    ['Remove confirmation', 'chk', 'Remove exists live; not clicked (destructive).', 'Ask dev whether Remove asks for confirmation, then design it.', []],
+  ]},
+  { name: 'Knowledge Center', route: '/data-hub/manual-files · /data-feeds · /activity-log', where: 'Knowledge Center page', cov: 'Complete', ds: 'Clean', rows: [
+    ['Manual Files · Default', 'chg', 'Matches the live layout (Companies panel, tabs, search, date range, table). Row actions differ: live has 4 icon buttons, Figma has a Download button plus a ⋮ menu. The section is labelled "Review", so this may be an intended change.', 'Decide whether the Figma row actions are the approved direction. If not, match the 4 live icons.', ['2803:18583','2885:32591']],
+    ['Activity Log · Default', 'done', 'Matches the live app: entries grouped by date with icon, action text, user and company. Library-clean.', 'None.', ['2834:3165']],
+    ['Data Feeds · Coming soon', 'done', 'Matches the live "Data Feeds is coming soon." empty state.', 'None.', ['2880:6757']],
+    ['Date range filter (active + calendar open)', 'done', 'The live app has the same Start date → End date picker and Clear filters button.', 'None.', ['2886:9873','2891:9815']],
+    ['List states: empty, loading, request failure', 'chk', 'DS-clean; can\'t be reproduced live.', 'Confirm copy with the PRD / dev.', ['2880:4140','2880:4887','2880:5321','2880:6034']],
+    ['Upload & Send File (step 1 recipients, step 2 file)', 'chk', 'DS-clean. The live Upload File dialog was not opened.', 'Open Upload File live, compare both steps, cancel.', ['2885:7184','2881:5362']],
+    ['Replace file · Delete file · Edit recipients', 'chk', 'DS-clean. Live dialogs not opened (destructive or editing).', 'Compare in the dev app on a test file.', ['2881:5629','2881:5833','2885:7487']],
+    ['Data Feeds proposals (populated, empty)', 'chk', 'Not live yet; the section is marked "Scope decision required".', 'Product decision: keep as a proposal or archive.', ['2834:3053','2851:4374']],
+  ]},
+  { name: 'Content', route: '/content/featured-parts · /content/file-manager · /lead-time', where: '🚧 Content File Manager page + Draft', cov: 'Partial', ds: 'Mostly', rows: [
+    ['Featured Parts', 'miss', 'Live: intro with 3 steps, "Enter figure number" + Find, "19 / 30 parts featured" counter, Featured list table (# drag order · Image · Figure No. · Name · Description · Status "Featured" · Remove). No design in any of the 7 open Figma files.', 'If it exists in another file, open that file and I\'ll move it here. Otherwise create the list, search-result and limit-reached (30/30) states.', []],
+    ['Content File Manager · Search empty', 'done', 'Matches the live app: intro, 2 steps, View receipts, Search catalog input, helper text.', 'None.', ['2009:5320']],
+    ['CFM · Search, autocomplete, not found, catalog error, results', 'chk', 'DS-clean. Searching is safe but these states were not walked through live.', 'Search a known figure number live and compare results and the expanded row.', ['2014:9388','2009:5380','2009:5410','2009:5440','2009:5608']],
+    ['CFM · Manage menus, validation, publish, rollback (+ CON-231)', 'chk', 'DS-clean. Would require publishing in the live app.', 'Walk through with dev on a test figure.', ['2116:41888','2016:4399','2016:12730','2443:44478']],
+    ['CFM · Receipts empty / populated / Rollback', 'chg', 'Each has 7 text layers without a Hydra text style and 6 colors not linked to tokens.', 'Apply Hydra text styles and bind the fills to Hydra color variables.', ['2016:21048','2016:16352','2016:28234']],
+    ['CFM · Duplicate "Figure result" frame', 'chg', 'Two identical frames. The whole CFM section is also duplicated on the Draft page.', 'Keep one, archive the other, and move the Draft copy to Archive.', ['2009:5440','2116:40536']],
+    ['Lead Time Uploader · Main', 'chg', 'Live summary: Latest Import · Declared Unit · Variants Updated · Total Catalog Variants Covered. Figma: Report Effective Date · Declared Unit · Total Catalog Variants Covered, plus a "dataset is 52 days old" alert and a Report Effective Date column that the live app doesn\'t have. 4 colors not linked to tokens.', 'Confirm whether the Figma version is the intended next step. If not, match the live labels. Bind the fills.', ['2504:21949']],
+    ['Lead Time · Import flow (steps 2–7)', 'chk', 'Step 3 sits on the Draft page, so the numbering jumps 2 → 4. Not run live (would import data).', 'Move step 3 back into the LEAD TIME Import section. Open Import Lead Time File live, compare step 2, cancel.', ['2504:22727','2601:29593','2504:22847','2570:20063','2504:22967','2504:23027']],
+    ['Lead Time · First-time use', 'chk', 'Uses the Hydra Empty State Block; can\'t be reproduced live because there is data.', 'Confirm copy.', ['2527:17421']],
+  ]},
+  { name: 'Companies', route: '/companies', where: '—', cov: 'None', ds: '—', rows: [
+    ['Companies list', 'miss', 'Live: Search; columns Name · Slug · Website · Country · Currency (filterable) · Feature Access (icon + "Custom limits applied" tag) · Actions. 10 / page.', 'Create with library Table, Tag, Input.Search.', []],
+    ['Company Settings (edit)', 'miss', 'Live page: Company Name · Website · Country (flag select) · Save Changes. Breadcrumb Companies / {id} / Data.', 'Create the form page.', []],
+    ['Company Feature Access', 'chk', 'Opened from the Feature Access icon; not opened during the audit.', 'Open live and inventory it.', []],
+  ]},
+  { name: 'Users', route: '/users-list · /users-list/invite-admins', where: '—', cov: 'None', ds: '—', rows: [
+    ['Users list', 'miss', 'Live: Search; columns Email · First Name · Last Name · Type (User / Admin tag) · Roles (multiple tags, e.g. Company Owner – First Test Company) · Feature Access icon · Edit.', 'Create with library Table and Tag.', []],
+    ['Edit user · Basic Information', 'miss', 'Tabs: Basic Information · Permissions · Admin Permissions · Feature Access Limit. Basic tab: Company select · First / Last Name · Email (read-only) · Country · Save Changes.', 'Create the tabbed page.', []],
+    ['Edit user · Permissions, Admin Permissions, Feature Access Limit tabs', 'miss', 'The tabs exist live; their contents were not opened.', 'Open each tab live, inventory it, then design.', []],
+    ['Invite admins', 'miss', 'Repeating row: Email + Admin role select + Remove. "Add another invite", "Send invitations".', 'Create the form with library Form.List pattern.', []],
+  ]},
+  { name: 'Company Roles', route: '/company-roles', where: '—', cov: 'None', ds: '—', rows: [
+    ['Company Roles list', 'miss', 'Live: Company select (First Test Company), Search, Create New Role. Columns Name · Description · System Role · Users (count) · Permissions (count) · View / Delete icons.', 'Create with library Table and Select.', []],
+    ['Create Company Role', 'miss', 'Full page: Name · Description · Permissions transfer list (Available ↔ Enabled, grouped Users / Company / Company Invites…, 30 items) · Create Role.', 'Create the page; check the library for a Transfer component first.', []],
+    ['Update Company Role (system role, read-only)', 'miss', 'Same layout as Create, all fields disabled for system roles.', 'Create as a read-only variant.', []],
+    ['Delete role confirmation', 'chk', 'Delete is disabled for system roles; custom roles were not tested.', 'Check on a test role with dev.', []],
+  ]},
+  { name: 'Admin Roles', route: '/admin-roles', where: '—', cov: 'None', ds: '—', rows: [
+    ['Admin Roles list', 'miss', 'Live: Search, Create New Role. Columns Name · Description · System Role · Users · Permissions · View / Delete. Rows: RSFC Employee, Global Administrator.', 'Create by reusing the Company Roles list pattern (no Company select).', []],
+    ['Create / Update / Delete admin role', 'chk', 'Not opened. Probably the same pattern as Company Roles; not verified.', 'Open Create New Role live and confirm before designing.', []],
+  ]},
+  { name: 'Feature Access Limit', route: '/feature-access-limit', where: '—', cov: 'None', ds: '—', rows: [
+    ['Feature Access Control · Default limits', 'miss', 'Live: title + "Manage default feature access limits for all platform users". Columns Feature Module (access-blacklist, admin-analytics, bom, company…) · Access Status (✓ Enabled / ✕ Disabled) · Custom Rules ("No custom rules" or a count chip) · Actions (Enabled / Disabled select).', 'Create with library Table, Select, status icons.', []],
+    ['Custom rules detail', 'chk', 'Opened from the custom-rules chip; not opened. Changing the Actions select saves immediately, so it was not touched.', 'Open the chip live and inventory it.', []],
+  ]},
+];
+
+let all = modules.flatMap(m => m.rows.map(r => r[1]));
+const count = k => all.filter(s => s === k).length;
+const realModules = modules.length - 1;
+document.getElementById('stats').innerHTML = [
+  ['', realModules, 'Live modules'], ['', all.length, 'Screens & features audited'],
+  ['done', count('done'), '✅ Done'], ['miss', count('miss'), '❌ Missing'],
+  ['chg', count('chg'), '🟡 Needs changes'], ['chk', count('chk'), '🔍 Double-check']
+].map(([c, n, l]) => `<div class="stat ${c}"><b>${n}</b><span>${l}</span></div>`).join('');
+
+const covClass = c => ({ Complete: 'p-done', Good: 'p-done', Partial: 'p-chg', Inconsistent: 'p-chg', None: 'p-miss' })[c] || '';
+document.getElementById('cov-body').innerHTML = modules.slice(1).map(m =>
+  `<tr><td class="screen">${m.name}</td><td><span class="route">${m.route}</span></td><td>${m.where}</td><td><span class="pill ${covClass(m.cov)}">${m.cov}</span></td><td>${m.ds}</td></tr>`).join('');
+
+const pill = s => `<span class="pill ${S[s][0]}">${S[s][1]}</span>`;
+document.getElementById('modules').innerHTML = modules.map(m => {
+  const tally = Object.keys(S).map(k => { const n = m.rows.filter(r => r[1] === k).length; return n ? `<span class="pill ${S[k][0]}">${n}</span>` : ''; }).join('');
+  const rows = m.rows.map(([screen, st, find, act, ids]) =>
+    `<tr data-s="${st}"><td class="screen">${screen}</td><td>${pill(st)}</td><td class="find">${find}</td><td class="act">${act}</td><td class="ref">${ids.length ? ids.map(id => `<a href="${FIG(id)}" target="_blank" rel="noopener">${id}</a>`).join('') : '—'}</td></tr>`).join('');
+  return `<div class="module"><div class="module-head"><h3>${m.name}</h3><span class="route">${m.route}</span><span class="tally">${tally}</span></div>
+    <div class="scroll"><table><thead><tr><th>Screen / feature</th><th>Status</th><th>Findings</th><th>Required action</th><th>Figma</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}).join('');
+
+const btns = document.querySelectorAll('.filters button');
+btns.forEach(b => b.addEventListener('click', () => {
+  btns.forEach(x => x.setAttribute('aria-pressed', x === b));
+  const f = b.dataset.f;
+  document.querySelectorAll('#modules tr[data-s]').forEach(tr => tr.hidden = !(f === 'all' || tr.dataset.s === f));
+  document.querySelectorAll('#modules .module').forEach(m => m.hidden = ![...m.querySelectorAll('tr[data-s]')].some(tr => !tr.hidden));
+}));
+</script>

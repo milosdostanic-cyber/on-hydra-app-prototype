@@ -4,7 +4,6 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useBomHubPath } from '../../context/ActiveProjectContext';
 import { shellLayout } from '../../theme/hydraAlias';
-import { bluePrimaryPrimitiveLight } from '../../theme/primaryPrimitiveBlue';
 import {
   hydraBaseNormal,
   hydraBaseStrong,
@@ -102,7 +101,7 @@ function BomMatchingStatsStrip({
 
   return (
     <Flex gap={token.margin} align="stretch" wrap="wrap" style={{ width: '100%' }}>
-      <Flex align="center" style={cardShellStyle(bluePrimaryPrimitiveLight[6])}>
+      <Flex align="center" style={cardShellStyle(token.colorPrimaryActive)}>
         {statInner('Total parts', summary.total)}
       </Flex>
       <Flex align="center" style={cardShellStyle(token.colorSuccessBorder)}>

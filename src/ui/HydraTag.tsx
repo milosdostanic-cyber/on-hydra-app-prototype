@@ -39,26 +39,31 @@ function toneColors(token: ReturnType<typeof theme.useToken>['token'], tone: Hyd
   };
 }
 
+/**
+ * Figma `Tag` / `Tag__Colorful` `content` frame: `paddingSM` inline, 1px block, inside `lineWidth` stroke → 24px tall.
+ * CSS borders sit outside the padding box, so inline padding subtracts `lineWidth` and block padding is 0.
+ * Borderless keeps a transparent border so both variants share the same box.
+ */
 function hydraTagRootStyle(
   token: ReturnType<typeof theme.useToken>['token'],
-  colors?: { background?: string; borderColor?: string; textColor?: string; borderWidth?: number },
+  colors?: { background?: string; borderColor?: string; textColor?: string },
   style?: CSSProperties,
 ): CSSProperties {
   return {
     marginInline: 0,
     marginBlock: 0,
     borderRadius: token.borderRadiusSM,
-    paddingInline: token.paddingSM,
-    paddingBlock: token.paddingXXS,
+    paddingInline: token.paddingSM - token.lineWidth,
+    paddingBlock: 0,
     ...hydraTextStyleToReactCss(hydraBaseNormal),
-    borderWidth: colors?.borderWidth ?? token.lineWidth,
+    borderWidth: token.lineWidth,
     borderStyle: token.lineType,
     borderColor: colors?.borderColor,
     background: colors?.background,
     color: colors?.textColor,
     display: 'inline-flex',
     alignItems: 'center',
-    gap: token.marginXXS,
+    gap: token.paddingXXS,
     ...style,
   };
 }
@@ -85,9 +90,8 @@ export function HydraTag({
   const colors = toneColors(token, tone);
   const rootStyle = hydraTagRootStyle(token, {
     background: colors.background,
-    borderColor: bordered ? colors.borderColor : undefined,
+    borderColor: bordered ? colors.borderColor : 'transparent',
     textColor: colors.textColor,
-    borderWidth: bordered ? undefined : 0,
   }, style);
 
   return (
@@ -118,8 +122,8 @@ type HydraColorfulTagProps = {
 };
 
 /**
- * Figma DS `Tag / Colorful` (node 137:7488) — antd preset ramp `X-1` bg / `X-3` border / `X-6` text.
- * Border is kept (Figma `border=true`); only layout metrics are overridden so colors come from the preset.
+ * Figma DS `Tag / Colorful` (node 137:7488) — antd preset ramp `X-1` bg / `X-3` border / `X-7` text.
+ * Only layout metrics are overridden so colors come from the preset.
  */
 export function HydraColorfulTag({
   children,
@@ -130,12 +134,12 @@ export function HydraColorfulTag({
   const { token } = theme.useToken();
   const rootStyle = hydraTagRootStyle(
     token,
-    bordered ? undefined : { borderWidth: 0 },
+    bordered ? undefined : { borderColor: 'transparent' },
     style,
   );
 
   return (
-    <Tag color={preset} bordered={bordered} styles={{ root: rootStyle }}>
+    <Tag color={preset} variant={bordered ? 'outlined' : 'filled'} styles={{ root: rootStyle }}>
       {children}
     </Tag>
   );

@@ -1,0 +1,1066 @@
+ Content Molecules Audit 
+ Hydra design system · Discovery · 20 Oct 2026
+ Reusable content molecules across ConnectED modules
+ A visual audit of the BOM, Release Notes, Part Search, SPEC, Admin and Content flows. It looks for cards and self-contained content blocks that repeat in at least two modules and should become one Hydra molecule driven by properties. It builds on the 19 Oct audit and this time also inventories Hydra's existing molecules. Discovery only: nothing was changed in Figma or in code.
+ 10 product molecules proposed 
+ 1 / 9 upgrades / new 
+ 60 samples linked (55 verified) 
+ 6 modules audited (all links opened) 
+ 1 + 1 built since 19 Oct (Empty State Block) · design-file utility (Flow Doc Card) 
+ [#summary] Summary [#changes] What changed [#selection-summary] 1. Selection Summary [#choice-list-row] 2. Choice List Row [#attribute-list] 3. Attribute List [#stat-tile] 4. Stat Tile [#outcome-summary] 5. Outcome Summary [#option-card] 6. Option Card [#file-dropzone] 7. File Upload Dropzone [#part-summary-card] 8. Part Summary Card [#progress-summary-bar] 9. Progress Summary Bar [#tagged-summary-card] 10. Tagged Summary Card [#flow-doc-card] Flow Doc Card [#built] Built [#hydra] Hydra molecules [#excluded] Excluded [#questions] Open questions [#coverage] Coverage 
+ Summary, sorted by reach
+ Almost every sample is still a plain frame or sits inside a modal slot, not a component instance. The same block is being redrawn module by module.
+ # Molecule Decision Based on Modules with samples Samples 
+ 1 [#selection-summary] Selection Summary New none Content Part Search SPEC BOM 7 
+ 2 [#choice-list-row] Choice List Row New none Content Part Search SPEC BOM 5 
+ 3 [#attribute-list] Attribute List New none Part Search BOM Admin 8 
+ 4 [#stat-tile] Stat Tile New none (the Hydra Statistic atom is related) SPEC BOM Admin 7 
+ 5 [#outcome-summary] Outcome Summary New none (the Hydra Result atom is related) BOM SPEC Admin 4 
+ 6 [#option-card] Option Card (ExportCard upgrade) Upgrade [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=826-1181] ExportCard → BOM SPEC 8 
+ 7 [#file-dropzone] File Upload Dropzone New none SPEC Admin 8 
+ 8 [#part-summary-card] Part Summary Card New BOM local "SKU Match Card" (promote) BOM Part Search 5 
+ 9 [#progress-summary-bar] Progress Summary Bar New none BOM SPEC 5 
+ 10 [#tagged-summary-card] Tagged Summary Card New SPEC local "recommendation_card" (promote) SPEC Release Notes 3 
+ Verified = I saw the element in a screenshot. Inferred = same pattern by name or identical text, not looked at closely.
+ ×N = copies of the same block on one screen (counted as one sample). New since 19 Oct marks samples the previous report did not have.
+ Open in Figma → goes to the element when it is a normal frame. Elements inside modal slots link to the nearest linkable frame (usually the screen).
+ Each block ends with a Markdown copy you can paste into the PLAN prompt.
+ What changed since the 19 Oct audit
+ Hydra inventory audited (skipped on 19 Oct). Empty State Block is now built (1932:81, with 9 Replace-in-modules cards), so it is no longer a proposal. ExportCard exists and BOM Export uses it, so Option Card becomes an upgrade of ExportCard .
+ 3 new candidates. Outcome Summary (a watchlist item on 19 Oct; BOM now makes it 3 modules), Progress Summary Bar (new: BOM and SPEC task progress) and Tagged Summary Card (merges the SPEC Recommendation Card and the Release Note Card, both excluded as single-module before).
+ Reach grew. Selection Summary +SPEC (4 modules); Stat Tile +BOM (3 screens); Attribute List +BOM guided matching and +Admin; Part Summary Card +BOM 2.11; Option Card +SPEC division checkbox cards and +BOM Cheat Sheet entry; Flow Doc Card BOM 3 → 8 copies.
+ Corrections. BOM 1.2 "Selected file" is an Alert atom, so it was removed from Selection Summary. The Admin import result uses the Hydra Statistic atom. BOM Export cards are Hydra ExportCard instances, not BOM local components as the 19 Oct report said.
+ More evidence. 19 samples are new since 19 Oct. Former Inferred samples SPEC "File selected", Admin "confirm" and BOM 1.2 radios are now Verified. Every frame in the linked nodes was text- and instance-scanned with read-only scripts (167 frames).
+ Product molecules
+ 1
+ Selection Summary
+ A soft, read-only panel at the top of a modal or step that tells the user what they are about to act on ("These parts will be added", "Adding", "Uploaded file").
+ New 4 modules · 7 samples Content Part Search SPEC BOM 
+ Canonical sample Content Content · BOM: Create BOM modal · [https://www.figma.com/design/pGzqSs0fMmuQ2BtjbMNVjP/Content---RSFC?node-id=9030-8465] Open in Figma → 
+ Why new Every module still draws this panel from plain frames inside modal slots, now in 4 modules. No Hydra molecule covers it. The Alert atom is a status message, not a "this is what you picked" summary. The anatomy is small and static (eyebrow plus 1 to 3 value lines), so a new molecule is the clean option.
+ Based on none
+ When to use vs. related Attribute List describes one object with label/value pairs. Selection Summary lists the objects that will be affected, under one eyebrow. For a status message such as BOM "Selected file", use the Alert atom: that panel is already an Alert instance, so it is no longer counted here.
+ Changed since 19 Oct +SPEC (Confirm Master SPEC "Uploaded file") and the Content name dialogs. The BOM 1.2 "Selected file" panel was removed because it turned out to be an Alert atom.
+ Where it appears (7 samples, 7 verified; verified in BOM, Content, Part Search, SPEC) 
+ Content Verified ×1 
+ Content · BOM: Create BOM modal
+ Canonical. Eyebrow "These variations will be added" with 2 value lines (14 Regular, 65 %).
+ frame (inside 🎰 modal slot) [https://www.figma.com/design/pGzqSs0fMmuQ2BtjbMNVjP/Content---RSFC?node-id=9030-8465] Open in Figma → 
+ Content Verified ×1 
+ Content · Submittal: Create Submittal Package modal
+ Same panel. One value line in Base/Strong (14 Medium).
+ frame (inside 🎰 modal slot) [https://www.figma.com/design/pGzqSs0fMmuQ2BtjbMNVjP/Content---RSFC?node-id=9030-7076] Open in Figma → 
+ Content Verified New since 19 Oct ×3 dialogs 
+ Content · New package / Package name dialogs
+ The same panel at the top of the name dialogs (9030:7980, 9030:10501 "Create a new BOM", 9030:8102 typed state). Not counted on 19 Oct.
+ frame (inside modal slot) [https://www.figma.com/design/pGzqSs0fMmuQ2BtjbMNVjP/Content---RSFC?node-id=9030-7980] Open in Figma → 
+ Part Search Verified ×1 
+ Part listing · Add to Submittal Package
+ Eyebrow "Adding", a value line (Base/Strong) and a muted sub-line "Figure 200-B".
+ frame (inside 🎰 modal slot) [https://www.figma.com/design/fyhH2NtH20puYbGLDChPwn/Part-Search---RSFC?node-id=11059-22758] Open in Figma → 
+ SPEC Verified New since 19 Oct ×1 
+ 02 — Upload SPEC · Confirm Master SPEC
+ Success tone (green fill and border), one inline line "Uploaded file: <file name>". This sample brings SPEC in.
+ frame "Processing Banner" (inside 🎰 modal slot) [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8028-39064] Open in Figma → 
+ BOM Verified ×1 
+ Local Components · BOM / Replace Match Picker
+ Eyebrow "Replace the match for this imported line" and a link-styled value.
+ local component (symbol) [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5573-294537] Open in Figma → 
+ BOM Verified ×1 
+ Local Components · BOM / Parsed Line Editor
+ Eyebrow "From your file" and a link-styled value.
+ local component (symbol) [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5570-201374] Open in Figma → 
+ Variations observed
+ Lines: 1, 2, or a title plus a muted sub-line
+ Tone: neutral grey (Content, Part Search, BOM) · success green (SPEC)
+ Value style: plain text · link (BOM local components)
+ Label placement: eyebrow above (most) · inline "Label: value" (SPEC)
+ Not observed yet
+ Long selections (10+ items, "+N more"), warning or error tone, truncation of very long part names.
+ Proposed properties
+ Property Type Values Default 
+ tone variant neutral | success neutral 
+ ✏️ eyebrow text — "These parts will be added" 
+ ✏️ value text — "S7166NV — 316 SS Needle Valve" 
+ show value 2 boolean true / false false 
+ ✏️ value 2 text — "Second item" 
+ show sub-line boolean true / false false 
+ ✏️ sub-line text — "Figure 200-B" 
+ value style variant text | link text 
+ Harmonization (one spec for every module) 
+ Element Values seen (modules) Chosen value Why 
+ Container Content, Part Search: 2 % fill, #f0f0f0 1 px border, radius 8, padding 16, gap 4 · SPEC: green fill and border, padding 16/24 · BOM: grey fill, no border colorFillQuaternary fill, colorBorderSecondary 1 px, borderRadiusLG, padding 16, gap marginXXS Canonical sample, used by 4 of 6 samples 
+ Eyebrow Content, Part Search, BOM: 14 Regular 45 %, above the value · SPEC: 14 Medium 88 %, inline Base/Normal, colorTextDescription, above the value Most common 
+ Value text Content BOM: 14 Regular 65 % · Content Submittal, Part Search: 14 Medium 65 % (Base/Strong) · SPEC: 14 Regular 88 % Base/Strong, colorTextSecondary 2 of 4 modules; reads as the object name 
+ Value style Text (Content, Part Search, SPEC) · link (BOM local) Property value style = text | link Carries meaning: the link opens the source line 
+ Tone Neutral (Content, Part Search, BOM) · success (SPEC) Property tone = neutral | success Success confirms a finished upload. Only SPEC uses it (see Open questions) 
+ Implementation-prompt block (Markdown) Copy ---
+**Molecule:** Selection Summary
+**Purpose:** A soft, read-only panel at the top of a modal or step that tells the user what they are about to act on ("These parts will be added", "Adding", "Uploaded file").
+**Decision:** new
+**Why:** Every module still draws this panel from plain frames inside modal slots, now in 4 modules. No Hydra molecule covers it. The Alert atom is a status message, not a "this is what you picked" summary. The anatomy is small and static (eyebrow plus 1 to 3 value lines), so a new molecule is the clean option.
+**Existing Hydra molecule:** none
+**Related molecules:** Attribute List describes one object with label/value pairs. Selection Summary lists the objects that will be affected, under one eyebrow. For a status message such as BOM "Selected file", use the Alert atom: that panel is already an Alert instance, so it is no longer counted here.
+**Destination:** Hydra file → Molecules section → new page ❖ Selection Summary
+**Canonical sample:** Content — Content · BOM: Create BOM modal — https://www.figma.com/design/pGzqSs0fMmuQ2BtjbMNVjP/Content---RSFC?node-id=9030-8465
+**Reach:** 4 modules, 7 samples
+**Samples:**
+| Module | Screen / frame | Node link | Source type | ×N | Verified / Inferred | What differs from canonical |
+|---|---|---|---|---|---|---|
+| Content | Content · BOM: Create BOM modal | https://www.figma.com/design/pGzqSs0fMmuQ2BtjbMNVjP/Content---RSFC?node-id=9030-8465 | frame (inside 🎰 modal slot) | ×1 | Verified | Canonical. Eyebrow "These variations will be added" with 2 value lines (14 Regular, 65 %). |
+| Content | Content · Submittal: Create Submittal Package modal | https://www.figma.com/design/pGzqSs0fMmuQ2BtjbMNVjP/Content---RSFC?node-id=9030-7076 | frame (inside 🎰 modal slot) | ×1 | Verified | Same panel. One value line in Base/Strong (14 Medium). |
+| Content | Content · New package / Package name dialogs | https://www.figma.com/design/pGzqSs0fMmuQ2BtjbMNVjP/Content---RSFC?node-id=9030-7980 | frame (inside modal slot) | ×3 dialogs | Verified | The same panel at the top of the name dialogs (9030:7980, 9030:10501 "Create a new BOM", 9030:8102 typed state). Not counted on 19 Oct. |
+| Part Search | Part listing · Add to Submittal Package | https://www.figma.com/design/fyhH2NtH20puYbGLDChPwn/Part-Search---RSFC?node-id=11059-22758 | frame (inside 🎰 modal slot) | ×1 | Verified | Eyebrow "Adding", a value line (Base/Strong) and a muted sub-line "Figure 200-B". |
+| SPEC | 02 — Upload SPEC · Confirm Master SPEC | https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8028-39064 | frame "Processing Banner" (inside 🎰 modal slot) | ×1 | Verified | Success tone (green fill and border), one inline line "Uploaded file: <file name>". This sample brings SPEC in. |
+| BOM | Local Components · BOM / Replace Match Picker | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5573-294537 | local component (symbol) | ×1 | Verified | Eyebrow "Replace the match for this imported line" and a link-styled value. |
+| BOM | Local Components · BOM / Parsed Line Editor | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5570-201374 | local component (symbol) | ×1 | Verified | Eyebrow "From your file" and a link-styled value. |
+**Variations observed:** Lines: 1, 2, or a title plus a muted sub-line; Tone: neutral grey (Content, Part Search, BOM) · success green (SPEC); Value style: plain text · link (BOM local components); Label placement: eyebrow above (most) · inline "Label: value" (SPEC)
+**Harmonization:**
+| Element | Values seen | Chosen value | Why |
+|---|---|---|---|
+| Container | Content, Part Search: 2 % fill, #f0f0f0 1 px border, radius 8, padding 16, gap 4 · SPEC: green fill and border, padding 16/24 · BOM: grey fill, no border | colorFillQuaternary fill, colorBorderSecondary 1 px, borderRadiusLG, padding 16, gap marginXXS | Canonical sample, used by 4 of 6 samples |
+| Eyebrow | Content, Part Search, BOM: 14 Regular 45 %, above the value · SPEC: 14 Medium 88 %, inline | Base/Normal, colorTextDescription, above the value | Most common |
+| Value text | Content BOM: 14 Regular 65 % · Content Submittal, Part Search: 14 Medium 65 % (Base/Strong) · SPEC: 14 Regular 88 % | Base/Strong, colorTextSecondary | 2 of 4 modules; reads as the object name |
+| Value style | Text (Content, Part Search, SPEC) · link (BOM local) | Property value style = text | link | Carries meaning: the link opens the source line |
+| Tone | Neutral (Content, Part Search, BOM) · success (SPEC) | Property tone = neutral | success | Success confirms a finished upload. Only SPEC uses it (see Open questions) |
+**Upgrade gap:** n/a (new molecule)
+**Proposed properties:** tone (variant: neutral | success, default neutral); ✏️ eyebrow (text: —, default "These parts will be added"); ✏️ value (text: —, default "S7166NV — 316 SS Needle Valve"); show value 2 (boolean: true / false, default false); ✏️ value 2 (text: —, default "Second item"); show sub-line (boolean: true / false, default false); ✏️ sub-line (text: —, default "Figure 200-B"); value style (variant: text | link, default text)
+**Not observed:** Long selections (10+ items, "+N more"), warning or error tone, truncation of very long part names.
+--- 
+ 2
+ Choice List Row
+ One compact, selectable row in a list of options (radio or checkbox), with a label, an optional secondary line and a trailing count.
+ New 4 modules · 5 samples Content Part Search SPEC BOM 
+ Canonical sample Content Content · BOM: Create BOM modal · [https://www.figma.com/design/pGzqSs0fMmuQ2BtjbMNVjP/Content---RSFC?node-id=9030-8465] Open in Figma → 
+ Why new Still hand-built in every module. The same three-part anatomy (control · label · trailing meta) repeats in 4 modules. The only differences are the content, the control type and whether a secondary line shows. Hydra Radio and Checkbox are atoms without the row chrome (padding, divider, selected fill, trailing meta).
+ Based on none
+ When to use vs. related Option Card (ExportCard upgrade) is for 2 to 4 rich choices with a description, icon or tag. Choice List Row is for longer, scannable lists of named things (packages, BOMs, Master SPECs), often under a search box.
+ Changed since 19 Oct No new occurrences. The BOM 1.2 sample is now Verified (it was Inferred).
+ Where it appears (5 samples, 5 verified; verified in BOM, Content, Part Search, SPEC) 
+ Content Verified ×10 rows 
+ Content · BOM: Create BOM modal
+ Canonical. Radio, label and a trailing "N items" meta. The first row is selected with a 2 % fill. The list scrolls inside a bordered box under a search field.
+ frame (inside 🎰 modal slot) [https://www.figma.com/design/pGzqSs0fMmuQ2BtjbMNVjP/Content---RSFC?node-id=9030-8465] Open in Figma → 
+ Content Verified ×3 rows 
+ Content · Submittal: Create Submittal Package modal
+ Same row. The meta reads "N parts". No search.
+ frame (inside 🎰 modal slot) [https://www.figma.com/design/pGzqSs0fMmuQ2BtjbMNVjP/Content---RSFC?node-id=9030-7076] Open in Figma → 
+ Part Search Verified ×3 rows 
+ Part listing · Add to Submittal Package
+ Identical to the Content submittal list.
+ frame (inside 🎰 modal slot) [https://www.figma.com/design/fyhH2NtH20puYbGLDChPwn/Part-Search---RSFC?node-id=11059-22758] Open in Figma → 
+ SPEC Verified ×3 rows + header 
+ 04 — Download ASC Master SPEC · Choose Master SPECs
+ Checkbox control, a Medium label with a secondary line, and a "Select all · 1 of 3 selected" header row. Rows 2 and 3 are misaligned (hand-built).
+ frame (inside 🎰 modal slot) [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8156-110292] Open in Figma → 
+ BOM Verified ×2 rows 
+ 1.2 — Hub · Upload destination modal
+ Bare Radio atoms with no padding, divider or fill. They would adopt the row.
+ Radio atoms (no row chrome) [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5289-28546] Open in Figma → 
+ Variations observed
+ Control: radio (Content, Part Search, BOM) · checkbox (SPEC)
+ Secondary line: absent · present (SPEC)
+ Trailing meta: "0 parts / 1 part / 3 parts", "7 items / 14 items" · absent (SPEC, BOM)
+ States seen: rest, selected (2 % fill), checked/unchecked
+ List context: plain stack · search + scroll (Content BOM) · select-all header (SPEC)
+ Not observed yet
+ Hover, disabled and error rows; long labels that wrap; an empty list ("No packages yet"); a loading list.
+ Proposed properties
+ Property Type Values Default 
+ control variant radio | checkbox radio 
+ state variant default | hover | selected | disabled default 
+ type variant item | header (select-all row with "N of M selected") item 
+ ✏️ label text — "Option label" 
+ show secondary boolean true / false false 
+ ✏️ secondary text — "Supporting detail" 
+ show meta boolean true / false true 
+ ✏️ meta text — "3 parts" 
+ show divider boolean true / false true 
+ Harmonization (one spec for every module) 
+ Element Values seen (modules) Chosen value Why 
+ Row padding Content, Part Search: 12 on all sides, 47 px tall · SPEC: 12, no divider · BOM: none Padding 12 (paddingSM) Canonical 
+ Divider Content, Part Search: bottom #f0f0f0 · SPEC, BOM: none colorBorderSecondary bottom border, property show divider Turn it off on the last row 
+ Label Content, Part Search, BOM: 14 Regular 88 % · SPEC: 14 Medium (with secondary line) Base/Normal, colorText Most common. The secondary line in colorTextDescription gives the hierarchy. SPEC changes 14 Medium → 14 Regular 
+ Trailing meta 14 Regular 45 %, right-aligned (Content, Part Search) Base/Normal, colorTextDescription Same everywhere it appears 
+ Selected row Content BOM: 2 % fill · others: no fill colorFillQuaternary fill in state selected Canonical 
+ Control Radio (Content, Part Search, BOM) · checkbox (SPEC) Property control = radio | checkbox Carries meaning: single choice vs multi choice 
+ Implementation-prompt block (Markdown) Copy ---
+**Molecule:** Choice List Row
+**Purpose:** One compact, selectable row in a list of options (radio or checkbox), with a label, an optional secondary line and a trailing count.
+**Decision:** new
+**Why:** Still hand-built in every module. The same three-part anatomy (control · label · trailing meta) repeats in 4 modules. The only differences are the content, the control type and whether a secondary line shows. Hydra Radio and Checkbox are atoms without the row chrome (padding, divider, selected fill, trailing meta).
+**Existing Hydra molecule:** none
+**Related molecules:** Option Card (ExportCard upgrade) is for 2 to 4 rich choices with a description, icon or tag. Choice List Row is for longer, scannable lists of named things (packages, BOMs, Master SPECs), often under a search box.
+**Destination:** Hydra file → Molecules section → new page ❖ Choice List Row
+**Canonical sample:** Content — Content · BOM: Create BOM modal — https://www.figma.com/design/pGzqSs0fMmuQ2BtjbMNVjP/Content---RSFC?node-id=9030-8465
+**Reach:** 4 modules, 5 samples
+**Samples:**
+| Module | Screen / frame | Node link | Source type | ×N | Verified / Inferred | What differs from canonical |
+|---|---|---|---|---|---|---|
+| Content | Content · BOM: Create BOM modal | https://www.figma.com/design/pGzqSs0fMmuQ2BtjbMNVjP/Content---RSFC?node-id=9030-8465 | frame (inside 🎰 modal slot) | ×10 rows | Verified | Canonical. Radio, label and a trailing "N items" meta. The first row is selected with a 2 % fill. The list scrolls inside a bordered box under a search field. |
+| Content | Content · Submittal: Create Submittal Package modal | https://www.figma.com/design/pGzqSs0fMmuQ2BtjbMNVjP/Content---RSFC?node-id=9030-7076 | frame (inside 🎰 modal slot) | ×3 rows | Verified | Same row. The meta reads "N parts". No search. |
+| Part Search | Part listing · Add to Submittal Package | https://www.figma.com/design/fyhH2NtH20puYbGLDChPwn/Part-Search---RSFC?node-id=11059-22758 | frame (inside 🎰 modal slot) | ×3 rows | Verified | Identical to the Content submittal list. |
+| SPEC | 04 — Download ASC Master SPEC · Choose Master SPECs | https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8156-110292 | frame (inside 🎰 modal slot) | ×3 rows + header | Verified | Checkbox control, a Medium label with a secondary line, and a "Select all · 1 of 3 selected" header row. Rows 2 and 3 are misaligned (hand-built). |
+| BOM | 1.2 — Hub · Upload destination modal | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5289-28546 | Radio atoms (no row chrome) | ×2 rows | Verified | Bare Radio atoms with no padding, divider or fill. They would adopt the row. |
+**Variations observed:** Control: radio (Content, Part Search, BOM) · checkbox (SPEC); Secondary line: absent · present (SPEC); Trailing meta: "0 parts / 1 part / 3 parts", "7 items / 14 items" · absent (SPEC, BOM); States seen: rest, selected (2 % fill), checked/unchecked; List context: plain stack · search + scroll (Content BOM) · select-all header (SPEC)
+**Harmonization:**
+| Element | Values seen | Chosen value | Why |
+|---|---|---|---|
+| Row padding | Content, Part Search: 12 on all sides, 47 px tall · SPEC: 12, no divider · BOM: none | Padding 12 (paddingSM) | Canonical |
+| Divider | Content, Part Search: bottom #f0f0f0 · SPEC, BOM: none | colorBorderSecondary bottom border, property show divider | Turn it off on the last row |
+| Label | Content, Part Search, BOM: 14 Regular 88 % · SPEC: 14 Medium (with secondary line) | Base/Normal, colorText | Most common. The secondary line in colorTextDescription gives the hierarchy. SPEC changes 14 Medium → 14 Regular |
+| Trailing meta | 14 Regular 45 %, right-aligned (Content, Part Search) | Base/Normal, colorTextDescription | Same everywhere it appears |
+| Selected row | Content BOM: 2 % fill · others: no fill | colorFillQuaternary fill in state selected | Canonical |
+| Control | Radio (Content, Part Search, BOM) · checkbox (SPEC) | Property control = radio | checkbox | Carries meaning: single choice vs multi choice |
+**Upgrade gap:** n/a (new molecule)
+**Proposed properties:** control (variant: radio | checkbox, default radio); state (variant: default | hover | selected | disabled, default default); type (variant: item | header (select-all row with "N of M selected"), default item); ✏️ label (text: —, default "Option label"); show secondary (boolean: true / false, default false); ✏️ secondary (text: —, default "Supporting detail"); show meta (boolean: true / false, default true); ✏️ meta (text: —, default "3 parts"); show divider (boolean: true / false, default true)
+**Not observed:** Hover, disabled and error rows; long labels that wrap; an empty list ("No packages yet"); a loading list.
+--- 
+ 3
+ Attribute List
+ Read-only label/value pairs that describe one object, shown as a grid, as rows, or as one inline "Label: value · …" line.
+ New 3 modules · 8 samples Part Search BOM Admin 
+ Canonical sample Part Search Part listing · Information & Technical Specifications · [https://www.figma.com/design/fyhH2NtH20puYbGLDChPwn/Part-Search---RSFC?node-id=11024-17036] Open in Figma → 
+ Why new Part metadata is drawn three ways (grid, rows, inline) in Part Search and BOM, and now also as plain sentences in the Admin publish check. One molecule with a layout variant fixes the label colour, value weight, empty-value dash and spacing. In code it maps to AntD Descriptions.
+ Based on none
+ When to use vs. related Nested inline inside Part Summary Card . Use Selection Summary instead when you list which objects are selected rather than describing one.
+ Changed since 19 Oct +BOM guided matching ("YOUR PART" on 2.11, 2.12, 2.13) and +Admin (CFM "Validation passed").
+ Where it appears (8 samples, 8 verified; verified in Admin, BOM, Part Search) 
+ Part Search Verified ×9 pairs 
+ Part listing · Information & Technical Specifications
+ Canonical. Grid with 4 columns, label above value (label 14 Regular 65 %, value 14 Medium).
+ frame [https://www.figma.com/design/fyhH2NtH20puYbGLDChPwn/Part-Search---RSFC?node-id=11024-17036] Open in Figma → 
+ Part Search Verified ×1 
+ STEP download modal · expanded SKU row
+ Inline: "Configuration: … · Length: … · Connection type: …".
+ frame (inside modal slot) [https://www.figma.com/design/fyhH2NtH20puYbGLDChPwn/Part-Search---RSFC?node-id=11024-17271] Open in Figma → 
+ Part Search Verified ×1 
+ STEP download modal · header meta
+ Inline, muted labels and an icon prefix on one item (part of the Part Summary header).
+ frame (inside modal slot) [https://www.figma.com/design/fyhH2NtH20puYbGLDChPwn/Part-Search---RSFC?node-id=11024-17271] Open in Figma → 
+ BOM Verified New since 19 Oct ×7 pairs 
+ 2.11 — Guided matching · "YOUR PART"
+ Rows: label with a colon on the left (45 %), value right-aligned, no dividers, inside a tinted panel with a header.
+ frame [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5572-204106] Open in Figma → 
+ No separate crop. Same pattern as the samples next to it; open it in Figma. 
+ BOM Verified New since 19 Oct ×7 pairs each 
+ 2.12 No suggestion · 2.13 Part Resolve · "YOUR PART"
+ The same rows as 2.11 (2.12 seen; 2.13 node 5818:49240 has the same text).
+ frame [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5741-48438] Open in Figma → 
+ BOM Verified ×6 pairs 
+ Cheat Sheet 1.4 — Part Match Details · "Your Part"
+ Rows with dividers: a fixed label column (12 Regular 65 %) and the value on the left (12 Regular).
+ frames [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=6497-60488] Open in Figma → 
+ No separate crop. Same pattern as the samples next to it; open it in Figma. 
+ BOM Verified ×1 
+ Local Components · SKU Match Card meta
+ Inline "Fig: … Brand: … UPC: …", wrapping onto 2 lines (see the Part Summary Card crop).
+ local component (nested) [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5499-144987] Open in Figma → 
+ Admin · CFM Verified New since 19 Oct ×1 
+ CFM · Validation passed
+ Plain lines "Action: … / Scope: … / Test download: …" with no label styling.
+ text lines in a confirm modal [https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2016-4692] Open in Figma → 
+ Variations observed
+ Layout: grid (2–4 columns) · rows (with or without dividers) · inline wrap
+ Label colour: 45 % or 65 %; colon or no colon
+ Empty value shown as "—" or "-"
+ Not observed yet
+ Long values that wrap, values with links or tags, copy-to-clipboard on values, editable values.
+ Proposed properties
+ Property Type Values Default 
+ layout variant grid | rows | inline rows 
+ columns variant 2 | 3 | 4 (grid only) 2 
+ show divider boolean true / false (rows only) false 
+ items nested instances 1–12 Attribute Item (✏️ label, ✏️ value) 4 items 
+ Harmonization (one spec for every module) 
+ Element Values seen (modules) Chosen value Why 
+ Label colour 45 % (BOM 2.11, Part Search inline) · 65 % (Part Search grid, Cheat Sheet) · plain (Admin) colorTextDescription Most common; keeps the value as the strongest text 
+ Label punctuation Colon (BOM 2.11, Part Search inline, Admin) · none (Part Search grid, Cheat Sheet) Colon only in layout inline Grid and rows already separate label and value visually 
+ Value 14 Medium (Part Search grid) · 14 Regular (BOM 2.11, Admin) · 12 Regular (Cheat Sheet) Base/Normal, colorText Most common. Part Search grid changes Medium → Regular; Cheat Sheet changes 12 px → 14 px 
+ Rows alignment Value right (BOM 2.11) · value left in a fixed column (Cheat Sheet) Label left, value right Canonical rows sample 
+ Dividers None (BOM 2.11) · yes (Cheat Sheet) Property show divider, default false A density choice, kept as one boolean 
+ Empty value "—" (BOM 2.11) · "-" (Cheat Sheet) "—" Typographic dash 
+ Section title "YOUR PART" uppercase (BOM) · "Your Part" (Cheat Sheet) · "Information & Technical Specifications" (Part Search) Not part of the molecule; sentence case Titles belong to the section around it 
+ Implementation-prompt block (Markdown) Copy ---
+**Molecule:** Attribute List
+**Purpose:** Read-only label/value pairs that describe one object, shown as a grid, as rows, or as one inline "Label: value · …" line.
+**Decision:** new
+**Why:** Part metadata is drawn three ways (grid, rows, inline) in Part Search and BOM, and now also as plain sentences in the Admin publish check. One molecule with a layout variant fixes the label colour, value weight, empty-value dash and spacing. In code it maps to AntD Descriptions.
+**Existing Hydra molecule:** none
+**Related molecules:** Nested inline inside Part Summary Card. Use Selection Summary instead when you list which objects are selected rather than describing one.
+**Destination:** Hydra file → Molecules section → new page ❖ Attribute List
+**Canonical sample:** Part Search — Part listing · Information & Technical Specifications — https://www.figma.com/design/fyhH2NtH20puYbGLDChPwn/Part-Search---RSFC?node-id=11024-17036
+**Reach:** 3 modules, 8 samples
+**Samples:**
+| Module | Screen / frame | Node link | Source type | ×N | Verified / Inferred | What differs from canonical |
+|---|---|---|---|---|---|---|
+| Part Search | Part listing · Information & Technical Specifications | https://www.figma.com/design/fyhH2NtH20puYbGLDChPwn/Part-Search---RSFC?node-id=11024-17036 | frame | ×9 pairs | Verified | Canonical. Grid with 4 columns, label above value (label 14 Regular 65 %, value 14 Medium). |
+| Part Search | STEP download modal · expanded SKU row | https://www.figma.com/design/fyhH2NtH20puYbGLDChPwn/Part-Search---RSFC?node-id=11024-17271 | frame (inside modal slot) | ×1 | Verified | Inline: "Configuration: … · Length: … · Connection type: …". |
+| Part Search | STEP download modal · header meta | https://www.figma.com/design/fyhH2NtH20puYbGLDChPwn/Part-Search---RSFC?node-id=11024-17271 | frame (inside modal slot) | ×1 | Verified | Inline, muted labels and an icon prefix on one item (part of the Part Summary header). |
+| BOM | 2.11 — Guided matching · "YOUR PART" | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5572-204106 | frame | ×7 pairs | Verified | Rows: label with a colon on the left (45 %), value right-aligned, no dividers, inside a tinted panel with a header. |
+| BOM | 2.12 No suggestion · 2.13 Part Resolve · "YOUR PART" | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5741-48438 | frame | ×7 pairs each | Verified | The same rows as 2.11 (2.12 seen; 2.13 node 5818:49240 has the same text). |
+| BOM | Cheat Sheet 1.4 — Part Match Details · "Your Part" | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=6497-60488 | frames | ×6 pairs | Verified | Rows with dividers: a fixed label column (12 Regular 65 %) and the value on the left (12 Regular). |
+| BOM | Local Components · SKU Match Card meta | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5499-144987 | local component (nested) | ×1 | Verified | Inline "Fig: … Brand: … UPC: …", wrapping onto 2 lines (see the Part Summary Card crop). |
+| Admin (CFM) | CFM · Validation passed | https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2016-4692 | text lines in a confirm modal | ×1 | Verified | Plain lines "Action: … / Scope: … / Test download: …" with no label styling. |
+**Variations observed:** Layout: grid (2–4 columns) · rows (with or without dividers) · inline wrap; Label colour: 45 % or 65 %; colon or no colon; Empty value shown as "—" or "-"
+**Harmonization:**
+| Element | Values seen | Chosen value | Why |
+|---|---|---|---|
+| Label colour | 45 % (BOM 2.11, Part Search inline) · 65 % (Part Search grid, Cheat Sheet) · plain (Admin) | colorTextDescription | Most common; keeps the value as the strongest text |
+| Label punctuation | Colon (BOM 2.11, Part Search inline, Admin) · none (Part Search grid, Cheat Sheet) | Colon only in layout inline | Grid and rows already separate label and value visually |
+| Value | 14 Medium (Part Search grid) · 14 Regular (BOM 2.11, Admin) · 12 Regular (Cheat Sheet) | Base/Normal, colorText | Most common. Part Search grid changes Medium → Regular; Cheat Sheet changes 12 px → 14 px |
+| Rows alignment | Value right (BOM 2.11) · value left in a fixed column (Cheat Sheet) | Label left, value right | Canonical rows sample |
+| Dividers | None (BOM 2.11) · yes (Cheat Sheet) | Property show divider, default false | A density choice, kept as one boolean |
+| Empty value | "—" (BOM 2.11) · "-" (Cheat Sheet) | "—" | Typographic dash |
+| Section title | "YOUR PART" uppercase (BOM) · "Your Part" (Cheat Sheet) · "Information & Technical Specifications" (Part Search) | Not part of the molecule; sentence case | Titles belong to the section around it |
+**Upgrade gap:** n/a (new molecule)
+**Proposed properties:** layout (variant: grid | rows | inline, default rows); columns (variant: 2 | 3 | 4 (grid only), default 2); show divider (boolean: true / false (rows only), default false); items (nested instances: 1–12 Attribute Item (✏️ label, ✏️ value), default 4 items)
+**Not observed:** Long values that wrap, values with links or tags, copy-to-clipboard on values, editable values.
+--- 
+ 4
+ Stat Tile
+ One labelled number (a count or KPI) with a semantic tone, shown alone or in a row of tiles.
+ New 3 modules · 7 samples SPEC BOM Admin 
+ Canonical sample SPEC 07 — Export and create outputs · Overall assessment · [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8112-21546] Open in Figma → 
+ Why new Now in 3 modules: BOM guided matching added 3 screens since 19 Oct. SPEC and BOM draw the same row tile by hand (same 24 px value, same 4 px coloured left edge, same label style). The Hydra Statistic atom covers only a stacked label and number: it has no tile container and no tone accent. Atoms are out of scope, so a small new molecule is cleaner than changing Statistic.
+ Based on none (the Hydra Statistic atom is related)
+ When to use vs. related Statistic (Hydra atom, 162:345): keep it for centred, stacked numbers, as in the Admin import result. Outcome Summary nests a row of Stat Tiles. This is not a dashboard card: no charts or trend arrows.
+ Changed since 19 Oct +BOM (2.14, 2.15 and their states). Admin turns out to use the Hydra Statistic atom, so it is a related sample rather than a hand-built one.
+ Where it appears (7 samples, 5 verified; verified in Admin, BOM, SPEC) 
+ SPEC Verified ×3 
+ 07 — Export and create outputs · Overall assessment
+ Canonical. Label on the left (14 Regular 45 %), value on the right (24 Medium, Heading 3), 4 px coloured left border (green, red, blue).
+ frames [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8112-21546] Open in Figma → 
+ SPEC Verified ×3 
+ 05C — Export doc ready
+ The same tiles on the export-finished state.
+ frames [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8230-83441] Open in Figma → 
+ No separate crop. Same pattern as the samples next to it; open it in Figma. 
+ SPEC Inferred ×3 
+ 05B — Submittal Package created · Success
+ The same tiles. The text is identical; not screenshotted today.
+ frames [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8429-11676] Open in Figma → 
+ BOM Verified New since 19 Oct ×3 
+ 2.14 — Guided matching · Complete
+ Same tile. Padding 12/20 (SPEC uses 12/20/12/24), light shadow. Tones green, orange, blue.
+ frames [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5574-297524] Open in Figma → 
+ BOM Verified New since 19 Oct ×4 
+ 2.15 — Matching results · Table
+ Four tiles above the results table (blue, green, red, orange).
+ frames [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5585-299533] Open in Figma → 
+ No separate crop. Same pattern as the samples next to it; open it in Figma. 
+ BOM Inferred New since 19 Oct ×4 each 
+ 2.15.1 Bulk · 2.16 Skipped filter · 2.17 Import processing
+ The same row repeated on three more matching-result states (5818:48665, 5585:301031, 5913:14424).
+ frames [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5913-14446] Open in Figma → 
+ Admin · RN Admin Verified ×2 
+ RN Admin · Bulk upload · Success
+ Stacked label over a tone-coloured number (24 SemiBold). No tile border.
+ Hydra Statistic atom ×2 [https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2218-11590] Open in Figma → 
+ Variations observed
+ Layout: row (label · value) in SPEC and BOM · stacked (Statistic atom) in Admin
+ Tone: success, warning (skipped), error (denied / needs attention), info (total / undecided)
+ Container: white tile with an accent border · none (Admin)
+ Not observed yet
+ Units or suffixes (%, KB), trend or delta, clickable tiles that filter a list, a loading state.
+ Proposed properties
+ Property Type Values Default 
+ tone variant neutral | success | warning | error | info neutral 
+ ✏️ label text — "Accepted" 
+ ✏️ value text — "0" 
+ Harmonization (one spec for every module) 
+ Element Values seen (modules) Chosen value Why 
+ Layout Row (SPEC, BOM) · stacked (Admin, Statistic atom) Row 2 of 3 modules. Admin keeps the Statistic atom (see Open questions) 
+ Value 24 Medium colorText, Heading 3 (SPEC, BOM) · 24 SemiBold, tone-coloured (Admin) Title/Heading 3, colorText Tone is shown by the accent, not the number 
+ Label 14 Regular 45 %, Base/Normal (all) Base/Normal, colorTextDescription Already the same 
+ Padding SPEC 12/20/12/24 · BOM 12/20/12/20 12 / 20 (paddingSM / paddingMD) Symmetric BOM value 
+ Accent 4 px left border: SPEC #b7eb8f, red, light blue · BOM #b7eb8f, orange, red, #0958d9 4 px left border bound to colorSuccessBorder / colorWarningBorder / colorErrorBorder / colorInfoBorder (neutral: colorBorderSecondary) The BOM blue (#0958d9) becomes colorInfoBorder 
+ Radius 8 (SPEC, BOM) borderRadiusLG Already the same 
+ Shadow BOM: light shadow · SPEC: none None Canonical 
+ Implementation-prompt block (Markdown) Copy ---
+**Molecule:** Stat Tile
+**Purpose:** One labelled number (a count or KPI) with a semantic tone, shown alone or in a row of tiles.
+**Decision:** new
+**Why:** Now in 3 modules: BOM guided matching added 3 screens since 19 Oct. SPEC and BOM draw the same row tile by hand (same 24 px value, same 4 px coloured left edge, same label style). The Hydra Statistic atom covers only a stacked label and number: it has no tile container and no tone accent. Atoms are out of scope, so a small new molecule is cleaner than changing Statistic.
+**Existing Hydra molecule:** none (the Hydra Statistic atom is related)
+**Related molecules:** Statistic (Hydra atom, 162:345): keep it for centred, stacked numbers, as in the Admin import result. Outcome Summary nests a row of Stat Tiles. This is not a dashboard card: no charts or trend arrows.
+**Destination:** Hydra file → Molecules section → new page ❖ Stat Tile
+**Canonical sample:** SPEC — 07 — Export and create outputs · Overall assessment — https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8112-21546
+**Reach:** 3 modules, 7 samples
+**Samples:**
+| Module | Screen / frame | Node link | Source type | ×N | Verified / Inferred | What differs from canonical |
+|---|---|---|---|---|---|---|
+| SPEC | 07 — Export and create outputs · Overall assessment | https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8112-21546 | frames | ×3 | Verified | Canonical. Label on the left (14 Regular 45 %), value on the right (24 Medium, Heading 3), 4 px coloured left border (green, red, blue). |
+| SPEC | 05C — Export doc ready | https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8230-83441 | frames | ×3 | Verified | The same tiles on the export-finished state. |
+| SPEC | 05B — Submittal Package created · Success | https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8429-11676 | frames | ×3 | Inferred | The same tiles. The text is identical; not screenshotted today. |
+| BOM | 2.14 — Guided matching · Complete | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5574-297524 | frames | ×3 | Verified | Same tile. Padding 12/20 (SPEC uses 12/20/12/24), light shadow. Tones green, orange, blue. |
+| BOM | 2.15 — Matching results · Table | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5585-299533 | frames | ×4 | Verified | Four tiles above the results table (blue, green, red, orange). |
+| BOM | 2.15.1 Bulk · 2.16 Skipped filter · 2.17 Import processing | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5913-14446 | frames | ×4 each | Inferred | The same row repeated on three more matching-result states (5818:48665, 5585:301031, 5913:14424). |
+| Admin (RN Admin) | RN Admin · Bulk upload · Success | https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2218-11590 | Hydra Statistic atom ×2 | ×2 | Verified | Stacked label over a tone-coloured number (24 SemiBold). No tile border. |
+**Variations observed:** Layout: row (label · value) in SPEC and BOM · stacked (Statistic atom) in Admin; Tone: success, warning (skipped), error (denied / needs attention), info (total / undecided); Container: white tile with an accent border · none (Admin)
+**Harmonization:**
+| Element | Values seen | Chosen value | Why |
+|---|---|---|---|
+| Layout | Row (SPEC, BOM) · stacked (Admin, Statistic atom) | Row | 2 of 3 modules. Admin keeps the Statistic atom (see Open questions) |
+| Value | 24 Medium colorText, Heading 3 (SPEC, BOM) · 24 SemiBold, tone-coloured (Admin) | Title/Heading 3, colorText | Tone is shown by the accent, not the number |
+| Label | 14 Regular 45 %, Base/Normal (all) | Base/Normal, colorTextDescription | Already the same |
+| Padding | SPEC 12/20/12/24 · BOM 12/20/12/20 | 12 / 20 (paddingSM / paddingMD) | Symmetric BOM value |
+| Accent | 4 px left border: SPEC #b7eb8f, red, light blue · BOM #b7eb8f, orange, red, #0958d9 | 4 px left border bound to colorSuccessBorder / colorWarningBorder / colorErrorBorder / colorInfoBorder (neutral: colorBorderSecondary) | The BOM blue (#0958d9) becomes colorInfoBorder |
+| Radius | 8 (SPEC, BOM) | borderRadiusLG | Already the same |
+| Shadow | BOM: light shadow · SPEC: none | None | Canonical |
+**Upgrade gap:** n/a (new molecule)
+**Proposed properties:** tone (variant: neutral | success | warning | error | info, default neutral); ✏️ label (text: —, default "Accepted"); ✏️ value (text: —, default "0")
+**Not observed:** Units or suffixes (%, KB), trend or delta, clickable tiles that filter a list, a loading state.
+--- 
+ 5
+ Outcome Summary
+ A summary panel at the end of a task: an optional status icon and title, a one-line explanation, then the counts as Stat Tiles.
+ New 3 modules · 4 samples BOM SPEC Admin 
+ Canonical sample BOM 2.14 — Guided matching · Complete · [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5574-297556] Open in Figma → 
+ Why new Three modules end a task by summarising what happened in the same order: status title, then a short explanation, then counts. On 19 Oct this was only on a watchlist (SPEC and Admin). BOM guided matching is now a third module. It is a small composition (text plus Stat Tiles) with no data logic of its own, so it fits as a molecule. Build it after Stat Tile.
+ Based on none (the Hydra Result atom is related)
+ When to use vs. related Result (Hydra atom, 204:403): full-page or centred outcomes with a large icon and buttons; keep it for empty or error pages. Alert (atom): a one-line status without counts, such as BOM 2.15 "All parts matched" or SPEC 05C "Document ready".
+ Changed since 19 Oct New proposal (it was a watchlist item on 19 Oct).
+ Where it appears (4 samples, 4 verified; verified in Admin, BOM, SPEC) 
+ BOM Verified New since 19 Oct ×1 
+ 2.14 — Guided matching · Complete
+ Canonical. A tinted panel with a success border: check icon and title (20 Medium), a summary line (16 Medium), a detail line (14 Regular 65 %), then a row of 3 Stat Tiles.
+ frame [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5574-297556] Open in Figma → 
+ SPEC Verified ×3 screens 
+ 07 — Export and create outputs (also 05B and 05C)
+ Grey panel without an icon. Title "Overall assessment" (16 Medium) and a description on the left, Stat Tiles on the right.
+ frame [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8112-21542] Open in Figma → 
+ SPEC Verified ×1 
+ 05 — Analysis dashboard
+ The same panel without tiles (title and one line).
+ frame [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8362-8955] Open in Figma → 
+ Admin · RN Admin Verified ×1 
+ RN Admin · Bulk upload · Success
+ Centred, Result-style: 48 px check icon, title, 2-line description, 2 Statistic atoms and a "Download error report" link.
+ frame (inside modal) [https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2218-11585] Open in Figma → 
+ Variations observed
+ Alignment: left (BOM, SPEC) · centred (Admin)
+ Icon: inline 20 px (BOM) · large centred (Admin) · none (SPEC)
+ Counts: below (BOM, Admin) · on the right (SPEC) · none (SPEC dashboard)
+ Extra: a link under the counts (Admin)
+ Not observed yet
+ Warning or error outcomes with counts, buttons inside the panel, more than 4 counts.
+ Proposed properties
+ Property Type Values Default 
+ tone variant neutral | success neutral 
+ layout variant stacked | inline stacked 
+ show icon boolean true / false false 
+ ✏️ title text — "Overall assessment" 
+ ✏️ description text — "Short explanation of the result." 
+ show stats boolean true / false (row of 1–4 Stat Tile instances) true 
+ show link boolean true / false false 
+ Harmonization (one spec for every module) 
+ Element Values seen (modules) Chosen value Why 
+ Alignment Left (BOM, SPEC) · centred (Admin) Left 2 of 3 modules 
+ Title 20 Medium, Heading 4 (BOM) · 16 Medium, Heading 5 (SPEC, Admin) Title/Heading 5 Most common. BOM changes 20 px → 16 px 
+ Description BOM: 16 Medium line plus 14 Regular 65 % · SPEC, Admin: 14 Regular 45 % Base/Normal, colorTextDescription (one or two lines) Most common. BOM folds its 16 Medium line into the description 
+ Status icon 20 px inline (BOM) · 48 px centred (Admin) · none (SPEC) Property show icon, 20 px inline before the title Canonical 
+ Counts position Below (BOM, Admin) · right (SPEC) Property layout = stacked | inline Carries meaning: narrow modal or panel vs wide page row 
+ Container BOM: 2 % fill, success border, radius 8, padding 20 · SPEC: 2 % fill, radius 6, padding 20 · Admin: none (modal body) colorFillQuaternary, borderRadiusLG, padding 20; border only when tone = success Canonical 
+ Implementation-prompt block (Markdown) Copy ---
+**Molecule:** Outcome Summary
+**Purpose:** A summary panel at the end of a task: an optional status icon and title, a one-line explanation, then the counts as Stat Tiles.
+**Decision:** new
+**Why:** Three modules end a task by summarising what happened in the same order: status title, then a short explanation, then counts. On 19 Oct this was only on a watchlist (SPEC and Admin). BOM guided matching is now a third module. It is a small composition (text plus Stat Tiles) with no data logic of its own, so it fits as a molecule. Build it after Stat Tile.
+**Existing Hydra molecule:** none (the Hydra Result atom is related)
+**Related molecules:** Result (Hydra atom, 204:403): full-page or centred outcomes with a large icon and buttons; keep it for empty or error pages. Alert (atom): a one-line status without counts, such as BOM 2.15 "All parts matched" or SPEC 05C "Document ready".
+**Destination:** Hydra file → Molecules section → new page ❖ Outcome Summary
+**Canonical sample:** BOM — 2.14 — Guided matching · Complete — https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5574-297556
+**Reach:** 3 modules, 4 samples
+**Samples:**
+| Module | Screen / frame | Node link | Source type | ×N | Verified / Inferred | What differs from canonical |
+|---|---|---|---|---|---|---|
+| BOM | 2.14 — Guided matching · Complete | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5574-297556 | frame | ×1 | Verified | Canonical. A tinted panel with a success border: check icon and title (20 Medium), a summary line (16 Medium), a detail line (14 Regular 65 %), then a row of 3 Stat Tiles. |
+| SPEC | 07 — Export and create outputs (also 05B and 05C) | https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8112-21542 | frame | ×3 screens | Verified | Grey panel without an icon. Title "Overall assessment" (16 Medium) and a description on the left, Stat Tiles on the right. |
+| SPEC | 05 — Analysis dashboard | https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8362-8955 | frame | ×1 | Verified | The same panel without tiles (title and one line). |
+| Admin (RN Admin) | RN Admin · Bulk upload · Success | https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2218-11585 | frame (inside modal) | ×1 | Verified | Centred, Result-style: 48 px check icon, title, 2-line description, 2 Statistic atoms and a "Download error report" link. |
+**Variations observed:** Alignment: left (BOM, SPEC) · centred (Admin); Icon: inline 20 px (BOM) · large centred (Admin) · none (SPEC); Counts: below (BOM, Admin) · on the right (SPEC) · none (SPEC dashboard); Extra: a link under the counts (Admin)
+**Harmonization:**
+| Element | Values seen | Chosen value | Why |
+|---|---|---|---|
+| Alignment | Left (BOM, SPEC) · centred (Admin) | Left | 2 of 3 modules |
+| Title | 20 Medium, Heading 4 (BOM) · 16 Medium, Heading 5 (SPEC, Admin) | Title/Heading 5 | Most common. BOM changes 20 px → 16 px |
+| Description | BOM: 16 Medium line plus 14 Regular 65 % · SPEC, Admin: 14 Regular 45 % | Base/Normal, colorTextDescription (one or two lines) | Most common. BOM folds its 16 Medium line into the description |
+| Status icon | 20 px inline (BOM) · 48 px centred (Admin) · none (SPEC) | Property show icon, 20 px inline before the title | Canonical |
+| Counts position | Below (BOM, Admin) · right (SPEC) | Property layout = stacked | inline | Carries meaning: narrow modal or panel vs wide page row |
+| Container | BOM: 2 % fill, success border, radius 8, padding 20 · SPEC: 2 % fill, radius 6, padding 20 · Admin: none (modal body) | colorFillQuaternary, borderRadiusLG, padding 20; border only when tone = success | Canonical |
+**Upgrade gap:** n/a (new molecule)
+**Proposed properties:** tone (variant: neutral | success, default neutral); layout (variant: stacked | inline, default stacked); show icon (boolean: true / false, default false); ✏️ title (text: —, default "Overall assessment"); ✏️ description (text: —, default "Short explanation of the result."); show stats (boolean: true / false (row of 1–4 Stat Tile instances), default true); show link (boolean: true / false, default false)
+**Not observed:** Warning or error outcomes with counts, buttons inside the panel, more than 4 counts.
+--- 
+ 6
+ Option Card (ExportCard upgrade)
+ A bordered card for picking one of a few rich choices (export route, document format, division, entry action), with an optional icon, tag, title, description and radio or checkbox.
+ Upgrade 2 modules · 8 samples BOM SPEC 
+ Canonical sample BOM 4.1 — Export · Excel/CSV (default) · [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5604-28134] Open in Figma → 
+ Why upgrade Hydra already has ExportCard on ❖ Cards, and the BOM Export screens now use it (remote instances). The other samples are the same card with a horizontal layout, an optional control (radio or checkbox), an optional tag and a selected state. All of these can be added as properties that default to today's ExportCard, so existing instances do not change. A separate new card would duplicate ExportCard.
+ Based on [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=826-1181] ExportCard → 
+ When to use vs. related Choice List Row is for long, compact lists. FeatureCard (❖ Cards) is a promotional part teaser with an image and one link; do not use Option Card for that. Cards with a full-width button inside (SPEC "ConnectED Actions") are not option cards (see Excluded).
+ Changed since 19 Oct Decision changed from New to Upgrade (the Hydra inventory was audited). +SPEC division checkbox cards and +BOM Cheat Sheet entry with a tag.
+ Where it appears (8 samples, 6 verified; verified in BOM, SPEC) 
+ BOM Verified ×4 
+ 4.1 — Export · Excel/CSV (default)
+ Canonical. Vertical, icon on top, title 16 Medium, description 14. The selected route uses the pressed state (blue border). On 2 of the 4 cards the description colour is overridden to 88 %.
+ Hydra ExportCard instances (remote) [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5604-28134] Open in Figma → 
+ No separate crop. Same pattern as the samples next to it; open it in Figma. 
+ BOM Inferred ×4 each 
+ 4.2 — 4.4 Export · other routes selected
+ The same ExportCard row with a different route selected (5603:307451, 5603:308343, 5603:307917).
+ Hydra ExportCard instances [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5603-307451] Open in Figma → 
+ BOM Verified ×2 
+ 1.1 — Hub · Get started
+ Horizontal (icon left of the title), title 20 Medium, 2 px blue border. Used as an entry action, not a selection.
+ BOM local "Shared / Export Format Card" instances [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5289-21301] Open in Figma → 
+ No separate crop. Same pattern as the samples next to it; open it in Figma. 
+ BOM Inferred ×2 
+ 1.6 — Hub · Empty state (no projects)
+ The same local cards above the empty state.
+ BOM local card instances [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5758-50201] Open in Figma → 
+ BOM Verified New since 19 Oct ×3 
+ Cheat Sheet 1.1 — BOM entry point
+ The same local card; the third card carries an "Internal Feature" tag instead of an icon.
+ BOM local card instances [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=6497-60208] Open in Figma → 
+ BOM Verified ×1 set 
+ Local Components · Shared / Export Format Card
+ The local source. Only Rest and Hover exist.
+ local component set (State=Rest/Hover) [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5546-188176] Open in Figma → 
+ SPEC Verified ×3 + 1 
+ 07 — Export · Revised document
+ No icon. Radio on the left, title 14 Medium; selected = blue border and tint. A grey "Coming soon" teaser (8231:83826) with a "Tell me when available" link.
+ frames [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8231-83808] Open in Figma → 
+ SPEC Verified New since 19 Oct ×3 
+ 02 — Upload SPEC · Confirm Master SPEC · Division
+ Checkbox cards (multi-select): title, sub-line and a "Detected from SPEC" tag; selected = blue border.
+ frames (inside 🎰 modal slot) [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8028-39064] Open in Figma → 
+ Variations observed
+ Layout: vertical (ExportCard) · horizontal (BOM Hub, Cheat Sheet, SPEC)
+ Control: none (BOM) · radio (SPEC export) · checkbox (SPEC division)
+ Leading visual: icon (BOM) · tag (Cheat Sheet, SPEC division) · none (SPEC export)
+ States seen: rest, hover, selected (blue border, with or without tint), disabled / coming soon
+ Not observed yet
+ Error state, price or metadata rows, a keyboard focus ring on the radio or checkbox variants.
+ Proposed properties
+ Property Type Values Default 
+ layout variant (new) vertical | horizontal vertical (today) 
+ control variant (new) none | radio | checkbox none (today) 
+ state variant (extend) default | hover | pressed | focus | selected | disabled | loading default (unchanged) 
+ show icon boolean (new) true / false true (today) 
+ ↳ 🎰 icon instance swap (new) Hydra icon set FileExcelOutlined (today) 
+ show tag boolean (new) true / false (nested Tag, exposed) false 
+ show link boolean (new) true / false false 
+ ✏️ link text (new) — "Tell me when available" 
+ ✏️ title / ✏️ description text (existing) — unchanged 
+ Upgrade gap (what ExportCard is missing today) 
+ The icon is a fixed nested FileExcelOutlined: no instance-swap property and not exposed. BOM 4.1 shows 4 different icons, so they were swapped by hand.
+ No horizontal layout.
+ No radio or checkbox control.
+ No explicit selected state; pressed is used as "selected".
+ No tag slot and no footer link ("Coming soon" teaser).
+ Description colour is overridden on some BOM instances.
+ Harmonization (one spec for every module) 
+ Element Values seen (modules) Chosen value Why 
+ Title 16 Medium, Heading 5 (ExportCard) · 20 Medium, Heading 4 (BOM Hub) · 14 Medium (SPEC) Title/Heading 5 Existing Hydra component; BOM Hub 20 → 16 px, SPEC 14 → 16 px 
+ Description 14 Regular 45 % · 88 % overrides on BOM 4.1 instances Base/Normal, colorTextDescription Removes instance overrides 
+ Border at rest None + card shadow (ExportCard) · 2 px #99c6e0 (BOM Hub) · 1 px #d9d9d9 (SPEC) ExportCard default; cards with control radio/checkbox get 1 px colorBorderSecondary Keeps existing instances unchanged 
+ Selected Blue border (all) · plus tint (SPEC export) colorPrimary border + colorPrimaryBg fill in state selected Most informative; already used in SPEC 
+ Radius 8 (ExportCard, SPEC) · 6 (BOM Hub) borderRadiusLG Most common 
+ Padding 24 (ExportCard, BOM Hub) · 0–12 (SPEC radio cards) 24 (paddingLG) in vertical, 16 (padding) in horizontal Follows the layout property 
+ Icon Coloured 24 px on top (ExportCard) · 20 px left (BOM Hub) · none (SPEC) ↳ 🎰 icon instance swap + show icon Today the icon is swapped by hand on instances 
+ Implementation-prompt block (Markdown) Copy ---
+**Molecule:** Option Card (ExportCard upgrade)
+**Purpose:** A bordered card for picking one of a few rich choices (export route, document format, division, entry action), with an optional icon, tag, title, description and radio or checkbox.
+**Decision:** upgrade
+**Why:** Hydra already has ExportCard on ❖ Cards, and the BOM Export screens now use it (remote instances). The other samples are the same card with a horizontal layout, an optional control (radio or checkbox), an optional tag and a selected state. All of these can be added as properties that default to today's ExportCard, so existing instances do not change. A separate new card would duplicate ExportCard.
+**Existing Hydra molecule:** ExportCard — https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=826-1181
+**Related molecules:** Choice List Row is for long, compact lists. FeatureCard (❖ Cards) is a promotional part teaser with an image and one link; do not use Option Card for that. Cards with a full-width button inside (SPEC "ConnectED Actions") are not option cards (see Excluded).
+**Destination:** Hydra file → Molecules section → ❖ Cards (ExportCard)
+**Canonical sample:** BOM — 4.1 — Export · Excel/CSV (default) — https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5604-28134
+**Reach:** 2 modules, 8 samples
+**Samples:**
+| Module | Screen / frame | Node link | Source type | ×N | Verified / Inferred | What differs from canonical |
+|---|---|---|---|---|---|---|
+| BOM | 4.1 — Export · Excel/CSV (default) | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5604-28134 | Hydra ExportCard instances (remote) | ×4 | Verified | Canonical. Vertical, icon on top, title 16 Medium, description 14. The selected route uses the pressed state (blue border). On 2 of the 4 cards the description colour is overridden to 88 %. |
+| BOM | 4.2 — 4.4 Export · other routes selected | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5603-307451 | Hydra ExportCard instances | ×4 each | Inferred | The same ExportCard row with a different route selected (5603:307451, 5603:308343, 5603:307917). |
+| BOM | 1.1 — Hub · Get started | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5289-21301 | BOM local "Shared / Export Format Card" instances | ×2 | Verified | Horizontal (icon left of the title), title 20 Medium, 2 px blue border. Used as an entry action, not a selection. |
+| BOM | 1.6 — Hub · Empty state (no projects) | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5758-50201 | BOM local card instances | ×2 | Inferred | The same local cards above the empty state. |
+| BOM | Cheat Sheet 1.1 — BOM entry point | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=6497-60208 | BOM local card instances | ×3 | Verified | The same local card; the third card carries an "Internal Feature" tag instead of an icon. |
+| BOM | Local Components · Shared / Export Format Card | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5546-188176 | local component set (State=Rest/Hover) | ×1 set | Verified | The local source. Only Rest and Hover exist. |
+| SPEC | 07 — Export · Revised document | https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8231-83808 | frames | ×3 + 1 | Verified | No icon. Radio on the left, title 14 Medium; selected = blue border and tint. A grey "Coming soon" teaser (8231:83826) with a "Tell me when available" link. |
+| SPEC | 02 — Upload SPEC · Confirm Master SPEC · Division | https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8028-39064 | frames (inside 🎰 modal slot) | ×3 | Verified | Checkbox cards (multi-select): title, sub-line and a "Detected from SPEC" tag; selected = blue border. |
+**Variations observed:** Layout: vertical (ExportCard) · horizontal (BOM Hub, Cheat Sheet, SPEC); Control: none (BOM) · radio (SPEC export) · checkbox (SPEC division); Leading visual: icon (BOM) · tag (Cheat Sheet, SPEC division) · none (SPEC export); States seen: rest, hover, selected (blue border, with or without tint), disabled / coming soon
+**Harmonization:**
+| Element | Values seen | Chosen value | Why |
+|---|---|---|---|
+| Title | 16 Medium, Heading 5 (ExportCard) · 20 Medium, Heading 4 (BOM Hub) · 14 Medium (SPEC) | Title/Heading 5 | Existing Hydra component; BOM Hub 20 → 16 px, SPEC 14 → 16 px |
+| Description | 14 Regular 45 % · 88 % overrides on BOM 4.1 instances | Base/Normal, colorTextDescription | Removes instance overrides |
+| Border at rest | None + card shadow (ExportCard) · 2 px #99c6e0 (BOM Hub) · 1 px #d9d9d9 (SPEC) | ExportCard default; cards with control radio/checkbox get 1 px colorBorderSecondary | Keeps existing instances unchanged |
+| Selected | Blue border (all) · plus tint (SPEC export) | colorPrimary border + colorPrimaryBg fill in state selected | Most informative; already used in SPEC |
+| Radius | 8 (ExportCard, SPEC) · 6 (BOM Hub) | borderRadiusLG | Most common |
+| Padding | 24 (ExportCard, BOM Hub) · 0–12 (SPEC radio cards) | 24 (paddingLG) in vertical, 16 (padding) in horizontal | Follows the layout property |
+| Icon | Coloured 24 px on top (ExportCard) · 20 px left (BOM Hub) · none (SPEC) | ↳ 🎰 icon instance swap + show icon | Today the icon is swapped by hand on instances |
+**Upgrade gap:** The icon is a fixed nested FileExcelOutlined: no instance-swap property and not exposed. BOM 4.1 shows 4 different icons, so they were swapped by hand.; No horizontal layout.; No radio or checkbox control.; No explicit selected state; pressed is used as "selected".; No tag slot and no footer link ("Coming soon" teaser).; Description colour is overridden on some BOM instances.
+**Proposed properties:** layout (variant (new): vertical | horizontal, default vertical (today)); control (variant (new): none | radio | checkbox, default none (today)); state (variant (extend): default | hover | pressed | focus | selected | disabled | loading, default default (unchanged)); show icon (boolean (new): true / false, default true (today)); ↳ 🎰 icon (instance swap (new): Hydra icon set, default FileExcelOutlined (today)); show tag (boolean (new): true / false (nested Tag, exposed), default false); show link (boolean (new): true / false, default false); ✏️ link (text (new): —, default "Tell me when available"); ✏️ title / ✏️ description (text (existing): —, default unchanged)
+**Not observed:** Error state, price or metadata rows, a keyboard focus ring on the radio or checkbox variants.
+--- 
+ 7
+ File Upload Dropzone
+ A dashed drop area that walks one file through empty → uploading → selected → error, inside an upload modal.
+ New 2 modules · 8 samples SPEC Admin 
+ Canonical sample SPEC 02 — Upload SPEC · Choose file · [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8028-37307] Open in Figma → 
+ Why new Admin (Release Notes bulk upload) and SPEC (Upload a SPEC) built the same four-state dropzone independently, from frames, with different button emphasis, radius and progress styles. SPEC even has two uploading versions (spinner and bar). One molecule with a state variant gives both flows the same behaviour. AntD Upload.Dragger only covers the empty drop area, not the full set of states.
+ Based on none
+ When to use vs. related BOM "Upload a file" is an Option Card entry point that opens an upload flow, which is a different job. Progress Summary Bar is for long tasks on a page, not for a single file inside the dropzone.
+ Changed since 19 Oct +SPEC uploading modal with a progress bar. SPEC "File selected" and Admin "confirm" are now Verified (they were Inferred).
+ Where it appears (8 samples, 8 verified; verified in Admin, SPEC) 
+ SPEC Verified ×1 
+ 02 — Upload SPEC · Choose file
+ Canonical, empty. Dashed box, upload icon without a tile, title 16 Medium, hint 14, secondary "Choose file".
+ frame "Drop Zone" (inside 🎰 modal slot) [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8028-37307] Open in Figma → 
+ SPEC Verified ×1 
+ 02 — Upload SPEC · File selected
+ Selected: file name (16 Medium) and size, "Choose file" to replace it.
+ frame (inside 🎰 modal slot) [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8305-89097] Open in Figma → 
+ SPEC Verified New since 19 Oct ×1 
+ 02 — Upload SPEC · Uploading (modal)
+ Uploading: a file row (icon tile, name, size), a progress bar, % and time left.
+ frame (inside 🎰 modal) [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8454-9193] Open in Figma → 
+ SPEC Verified ×1 
+ 02 — Upload SPEC · Uploading State
+ Uploading: spinner, "Uploading file…", name and size, no bar.
+ frame (inside 🎰 modal slot) [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8491-32544] Open in Figma → 
+ SPEC Verified ×1 
+ 02 — Upload SPEC · File cannot be processed
+ Error: red dashed border and tint, error icon, bold reason, "Choose another file".
+ instance of a local modal [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8028-41317] Open in Figma → 
+ Admin · RN Admin Verified ×1 
+ RN Admin · Bulk upload 1
+ Empty: icon in a tinted square, title 16 Regular, hint 12, small primary "Choose file", radius 14.
+ frame (inside modal) [https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2218-11520] Open in Figma → 
+ Admin · RN Admin Verified ×1 
+ RN Admin · Loading
+ Uploading: name, size, a bar with % and "Uploading…" with a spinner.
+ frame [https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2218-11540] Open in Figma → 
+ Admin · RN Admin Verified ×1 
+ RN Admin · confirm
+ Selected: name and size, a "Remove file" link and "Choose file".
+ frame [https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2218-11567] Open in Figma → 
+ Variations observed
+ States: empty · uploading · selected · error (error only in SPEC)
+ Progress: spinner (SPEC 8491) · bar with % (SPEC 8454, Admin)
+ Button: secondary (SPEC) · small primary (Admin)
+ Icon: bare line icon (SPEC) · icon in a tinted square (Admin)
+ Not observed yet
+ Drag-over (hover) state, multi-file uploads, a file type rejected before upload, cancel during upload.
+ Proposed properties
+ Property Type Values Default 
+ state variant empty | uploading | selected | error empty 
+ ✏️ title text — "Drag and drop a file here" 
+ ✏️ hint text — "CSV or XLSX accepted" 
+ ✏️ file name text — "notes-list.csv" 
+ ✏️ file size text — "6.1 KB" 
+ show remove boolean true / false false 
+ ✏️ error text — "The file is password-protected." 
+ Button, Progress nested instances exposed Default button; Progress line 
+ Harmonization (one spec for every module) 
+ Element Values seen (modules) Chosen value Why 
+ Border 1 px #d9d9d9 dashed (SPEC) · 2 px 10 % black dashed (Admin) 1 px dashed colorBorder Canonical 
+ Radius 6 (SPEC) · 14 (Admin) borderRadiusLG Closest Hydra token; Admin 14 → 8 
+ Padding 24 (SPEC) · 28–32 (Admin) 24 (paddingLG) Canonical 
+ Title 16 Medium, Heading 5 (SPEC) · 16 Regular, Large/Normal (Admin) Title/Heading 5 Canonical 
+ Hint 14 Regular 45 % (SPEC) · 12 Regular 45 % (Admin) Base/Normal, colorTextDescription Canonical; Admin 12 → 14 px 
+ Button Secondary (SPEC) · small primary (Admin) Default (secondary) Button, exposed The modal footer already has the primary action 
+ Icon Bare upload icon (SPEC) · icon in a tinted square (Admin) Bare icon, colorPrimary Canonical (see Open questions) 
+ Progress Spinner (SPEC 8491) · bar with % (SPEC 8454, Admin) Progress bar with % 2 of 3 samples; shows real progress 
+ File row Left-aligned row with an icon tile (SPEC 8454) · centred name + size (SPEC 8305, Admin) Centred name + size Most common 
+ Remove "Remove file" link (Admin) · replace only (SPEC) Property show remove An optional action, off by default 
+ Implementation-prompt block (Markdown) Copy ---
+**Molecule:** File Upload Dropzone
+**Purpose:** A dashed drop area that walks one file through empty → uploading → selected → error, inside an upload modal.
+**Decision:** new
+**Why:** Admin (Release Notes bulk upload) and SPEC (Upload a SPEC) built the same four-state dropzone independently, from frames, with different button emphasis, radius and progress styles. SPEC even has two uploading versions (spinner and bar). One molecule with a state variant gives both flows the same behaviour. AntD Upload.Dragger only covers the empty drop area, not the full set of states.
+**Existing Hydra molecule:** none
+**Related molecules:** BOM "Upload a file" is an Option Card entry point that opens an upload flow, which is a different job. Progress Summary Bar is for long tasks on a page, not for a single file inside the dropzone.
+**Destination:** Hydra file → Molecules section → new page ❖ File Upload Dropzone
+**Canonical sample:** SPEC — 02 — Upload SPEC · Choose file — https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8028-37307
+**Reach:** 2 modules, 8 samples
+**Samples:**
+| Module | Screen / frame | Node link | Source type | ×N | Verified / Inferred | What differs from canonical |
+|---|---|---|---|---|---|---|
+| SPEC | 02 — Upload SPEC · Choose file | https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8028-37307 | frame "Drop Zone" (inside 🎰 modal slot) | ×1 | Verified | Canonical, empty. Dashed box, upload icon without a tile, title 16 Medium, hint 14, secondary "Choose file". |
+| SPEC | 02 — Upload SPEC · File selected | https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8305-89097 | frame (inside 🎰 modal slot) | ×1 | Verified | Selected: file name (16 Medium) and size, "Choose file" to replace it. |
+| SPEC | 02 — Upload SPEC · Uploading (modal) | https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8454-9193 | frame (inside 🎰 modal) | ×1 | Verified | Uploading: a file row (icon tile, name, size), a progress bar, % and time left. |
+| SPEC | 02 — Upload SPEC · Uploading State | https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8491-32544 | frame (inside 🎰 modal slot) | ×1 | Verified | Uploading: spinner, "Uploading file…", name and size, no bar. |
+| SPEC | 02 — Upload SPEC · File cannot be processed | https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8028-41317 | instance of a local modal | ×1 | Verified | Error: red dashed border and tint, error icon, bold reason, "Choose another file". |
+| Admin (RN Admin) | RN Admin · Bulk upload 1 | https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2218-11520 | frame (inside modal) | ×1 | Verified | Empty: icon in a tinted square, title 16 Regular, hint 12, small primary "Choose file", radius 14. |
+| Admin (RN Admin) | RN Admin · Loading | https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2218-11540 | frame | ×1 | Verified | Uploading: name, size, a bar with % and "Uploading…" with a spinner. |
+| Admin (RN Admin) | RN Admin · confirm | https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2218-11567 | frame | ×1 | Verified | Selected: name and size, a "Remove file" link and "Choose file". |
+**Variations observed:** States: empty · uploading · selected · error (error only in SPEC); Progress: spinner (SPEC 8491) · bar with % (SPEC 8454, Admin); Button: secondary (SPEC) · small primary (Admin); Icon: bare line icon (SPEC) · icon in a tinted square (Admin)
+**Harmonization:**
+| Element | Values seen | Chosen value | Why |
+|---|---|---|---|
+| Border | 1 px #d9d9d9 dashed (SPEC) · 2 px 10 % black dashed (Admin) | 1 px dashed colorBorder | Canonical |
+| Radius | 6 (SPEC) · 14 (Admin) | borderRadiusLG | Closest Hydra token; Admin 14 → 8 |
+| Padding | 24 (SPEC) · 28–32 (Admin) | 24 (paddingLG) | Canonical |
+| Title | 16 Medium, Heading 5 (SPEC) · 16 Regular, Large/Normal (Admin) | Title/Heading 5 | Canonical |
+| Hint | 14 Regular 45 % (SPEC) · 12 Regular 45 % (Admin) | Base/Normal, colorTextDescription | Canonical; Admin 12 → 14 px |
+| Button | Secondary (SPEC) · small primary (Admin) | Default (secondary) Button, exposed | The modal footer already has the primary action |
+| Icon | Bare upload icon (SPEC) · icon in a tinted square (Admin) | Bare icon, colorPrimary | Canonical (see Open questions) |
+| Progress | Spinner (SPEC 8491) · bar with % (SPEC 8454, Admin) | Progress bar with % | 2 of 3 samples; shows real progress |
+| File row | Left-aligned row with an icon tile (SPEC 8454) · centred name + size (SPEC 8305, Admin) | Centred name + size | Most common |
+| Remove | "Remove file" link (Admin) · replace only (SPEC) | Property show remove | An optional action, off by default |
+**Upgrade gap:** n/a (new molecule)
+**Proposed properties:** state (variant: empty | uploading | selected | error, default empty); ✏️ title (text: —, default "Drag and drop a file here"); ✏️ hint (text: —, default "CSV or XLSX accepted"); ✏️ file name (text: —, default "notes-list.csv"); ✏️ file size (text: —, default "6.1 KB"); show remove (boolean: true / false, default false); ✏️ error (text: —, default "The file is password-protected."); Button, Progress (nested instances: exposed, default Default button; Progress line)
+**Not observed:** Drag-over (hover) state, multi-file uploads, a file type rejected before upload, cancel during upload.
+--- 
+ 8
+ Part Summary Card
+ Identifies one catalog part: thumbnail, part or SKU number (copyable), match or origin tags, name, key attributes and View Product / View PDF links.
+ New 2 modules · 5 samples BOM Part Search 
+ Canonical sample BOM 2.11 — Guided matching · Review suggestions · [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5741-48203] Open in Figma → 
+ Why new BOM 2.11 now reuses the local "BOM / SKU Match Card / Horizontal" (Rest/Selected), which confirms it as the starting point to promote. BOM Cheat Sheet redraws the same card, and Part Search uses the same identity block as the header of every variant-download modal. Hydra FeatureCard is not an upgrade path: it is a teaser (title, description, image, one link) with no part number, tags, attributes or selected state, and adding those would restructure it.
+ Based on BOM local "SKU Match Card" (promote)
+ When to use vs. related Nests Attribute List (inline) for Fig / Brand / UPC. FeatureCard is for promoted parts with marketing copy. Tagged Summary Card summarises a text item, not a part. Loose draft frames of the SKU Match Card already sit on the Hydra Empty State Block page (see Open questions).
+ Changed since 19 Oct +BOM 2.11 (3 instances of the local component).
+ Where it appears (5 samples, 4 verified; verified in BOM, Part Search) 
+ BOM Verified New since 19 Oct ×3 
+ 2.11 — Guided matching · Review suggestions
+ Canonical. Image, SKU with copy, origin and confidence tags, title, Fig/Brand/UPC inline, View Product / View PDF. The best match uses State=Selected.
+ BOM local SKU Match Card instances [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5741-48203] Open in Figma → 
+ BOM Verified ×3 
+ Cheat Sheet 1.4 — Part Match Details · ASC Equivalents
+ Hand-built: tags on top, title 14 Medium, SKU with copy on the right, links and an optional inline warning "Not Installation Ready".
+ frames [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=6497-60519] Open in Figma → 
+ BOM Verified ×3 
+ Local Components · SKU Match Card (Horizontal, Vertical) + SKU-Card
+ The local sources: the Horizontal set with Rest/Selected states, a Vertical set (5570:204055) and a text-only SKU-Card frame (5741:48054).
+ local component sets + frame [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5499-144987] Open in Figma → 
+ Part Search Verified ×1 
+ Part listing · Select variants for STEP download (modal header)
+ Borderless header: 96 px image, figure number (20 Medium), name and an inline meta row.
+ frame (inside modal slot) [https://www.figma.com/design/fyhH2NtH20puYbGLDChPwn/Part-Search---RSFC?node-id=11024-17271] Open in Figma → 
+ No separate crop. Same pattern as the samples next to it; open it in Figma. 
+ Part Search Inferred ×3 
+ Select variants for PDF / DWG download · Add to BOM (modal headers)
+ The same header; the text is identical (11059:23573, 11059:24699, 11059:20915).
+ frames (inside modal slot) [https://www.figma.com/design/fyhH2NtH20puYbGLDChPwn/Part-Search---RSFC?node-id=11059-23573] Open in Figma → 
+ Variations observed
+ Container: bordered card (BOM) · borderless header (Part Search)
+ Image: present · absent (SKU-Card)
+ Tags: none · origin (Domestic / Import) · match quality (Exact Match, High 94 %)
+ Footer: links · inline warning notice
+ States: rest · selected
+ Not observed yet
+ Missing-image placeholder, very long titles, loading skeleton, disabled or unavailable part.
+ Proposed properties
+ Property Type Values Default 
+ container variant card | plain card 
+ state variant default | hover | selected default 
+ show image boolean true / false true 
+ ✏️ part number text — "4371000821" 
+ show copy boolean true / false true 
+ ✏️ title text — "Gate Valve, Flanged, Class 150" 
+ show tags boolean true / false (nested Tag ×2, exposed) true 
+ show attributes boolean true / false (nested Attribute List inline, exposed) true 
+ show links boolean true / false true 
+ show notice boolean true / false (nested Alert, exposed) false 
+ Harmonization (one spec for every module) 
+ Element Values seen (modules) Chosen value Why 
+ Part number 16 Medium (BOM 2.11) · 14 Medium (Cheat Sheet) · 20 Medium (Part Search header) Title/Heading 5 Canonical 
+ Title 14 Regular (BOM 2.11) · 14 Medium (Cheat Sheet) · 16 Medium (Part Search) Base/Normal, colorText Canonical; the part number carries the emphasis 
+ Meta 14 Regular with muted labels (BOM 2.11, Part Search) · 12 Regular 45 % (Cheat Sheet) Nested Attribute List, layout inline Reuses the Attribute List spec 
+ Image 64 px (BOM 2.11) · 60 px (Cheat Sheet) · 96 px (Part Search) 64 px Canonical 
+ Padding / gap 20 / 20 (BOM 2.11) · 12 / 12 (Cheat Sheet) 16 / 16 (padding / margin) Closest Hydra token between both 
+ Border Rest #d9d9d9 · selected #99c6e0 with #f6fafc fill Rest colorBorderSecondary; selected colorPrimaryBorder + colorPrimaryBg Hydra tokens for the same intent 
+ Tags position Next to the number (BOM 2.11) · own row on top (Cheat Sheet) Next to the number, right-aligned Canonical 
+ Container Card (BOM) · plain header (Part Search) Property container = card | plain Carries meaning: list item vs modal header 
+ Implementation-prompt block (Markdown) Copy ---
+**Molecule:** Part Summary Card
+**Purpose:** Identifies one catalog part: thumbnail, part or SKU number (copyable), match or origin tags, name, key attributes and View Product / View PDF links.
+**Decision:** new
+**Why:** BOM 2.11 now reuses the local "BOM / SKU Match Card / Horizontal" (Rest/Selected), which confirms it as the starting point to promote. BOM Cheat Sheet redraws the same card, and Part Search uses the same identity block as the header of every variant-download modal. Hydra FeatureCard is not an upgrade path: it is a teaser (title, description, image, one link) with no part number, tags, attributes or selected state, and adding those would restructure it.
+**Existing Hydra molecule:** BOM local "SKU Match Card" (promote)
+**Related molecules:** Nests Attribute List (inline) for Fig / Brand / UPC. FeatureCard is for promoted parts with marketing copy. Tagged Summary Card summarises a text item, not a part. Loose draft frames of the SKU Match Card already sit on the Hydra Empty State Block page (see Open questions).
+**Destination:** Hydra file → Molecules section → new page ❖ Part Summary Card
+**Canonical sample:** BOM — 2.11 — Guided matching · Review suggestions — https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5741-48203
+**Reach:** 2 modules, 5 samples
+**Samples:**
+| Module | Screen / frame | Node link | Source type | ×N | Verified / Inferred | What differs from canonical |
+|---|---|---|---|---|---|---|
+| BOM | 2.11 — Guided matching · Review suggestions | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5741-48203 | BOM local SKU Match Card instances | ×3 | Verified | Canonical. Image, SKU with copy, origin and confidence tags, title, Fig/Brand/UPC inline, View Product / View PDF. The best match uses State=Selected. |
+| BOM | Cheat Sheet 1.4 — Part Match Details · ASC Equivalents | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=6497-60519 | frames | ×3 | Verified | Hand-built: tags on top, title 14 Medium, SKU with copy on the right, links and an optional inline warning "Not Installation Ready". |
+| BOM | Local Components · SKU Match Card (Horizontal, Vertical) + SKU-Card | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5499-144987 | local component sets + frame | ×3 | Verified | The local sources: the Horizontal set with Rest/Selected states, a Vertical set (5570:204055) and a text-only SKU-Card frame (5741:48054). |
+| Part Search | Part listing · Select variants for STEP download (modal header) | https://www.figma.com/design/fyhH2NtH20puYbGLDChPwn/Part-Search---RSFC?node-id=11024-17271 | frame (inside modal slot) | ×1 | Verified | Borderless header: 96 px image, figure number (20 Medium), name and an inline meta row. |
+| Part Search | Select variants for PDF / DWG download · Add to BOM (modal headers) | https://www.figma.com/design/fyhH2NtH20puYbGLDChPwn/Part-Search---RSFC?node-id=11059-23573 | frames (inside modal slot) | ×3 | Inferred | The same header; the text is identical (11059:23573, 11059:24699, 11059:20915). |
+**Variations observed:** Container: bordered card (BOM) · borderless header (Part Search); Image: present · absent (SKU-Card); Tags: none · origin (Domestic / Import) · match quality (Exact Match, High 94 %); Footer: links · inline warning notice; States: rest · selected
+**Harmonization:**
+| Element | Values seen | Chosen value | Why |
+|---|---|---|---|
+| Part number | 16 Medium (BOM 2.11) · 14 Medium (Cheat Sheet) · 20 Medium (Part Search header) | Title/Heading 5 | Canonical |
+| Title | 14 Regular (BOM 2.11) · 14 Medium (Cheat Sheet) · 16 Medium (Part Search) | Base/Normal, colorText | Canonical; the part number carries the emphasis |
+| Meta | 14 Regular with muted labels (BOM 2.11, Part Search) · 12 Regular 45 % (Cheat Sheet) | Nested Attribute List, layout inline | Reuses the Attribute List spec |
+| Image | 64 px (BOM 2.11) · 60 px (Cheat Sheet) · 96 px (Part Search) | 64 px | Canonical |
+| Padding / gap | 20 / 20 (BOM 2.11) · 12 / 12 (Cheat Sheet) | 16 / 16 (padding / margin) | Closest Hydra token between both |
+| Border | Rest #d9d9d9 · selected #99c6e0 with #f6fafc fill | Rest colorBorderSecondary; selected colorPrimaryBorder + colorPrimaryBg | Hydra tokens for the same intent |
+| Tags position | Next to the number (BOM 2.11) · own row on top (Cheat Sheet) | Next to the number, right-aligned | Canonical |
+| Container | Card (BOM) · plain header (Part Search) | Property container = card | plain | Carries meaning: list item vs modal header |
+**Upgrade gap:** n/a (new molecule)
+**Proposed properties:** container (variant: card | plain, default card); state (variant: default | hover | selected, default default); show image (boolean: true / false, default true); ✏️ part number (text: —, default "4371000821"); show copy (boolean: true / false, default true); ✏️ title (text: —, default "Gate Valve, Flanged, Class 150"); show tags (boolean: true / false (nested Tag ×2, exposed), default true); show attributes (boolean: true / false (nested Attribute List inline, exposed), default true); show links (boolean: true / false, default true); show notice (boolean: true / false (nested Alert, exposed), default false)
+**Not observed:** Missing-image placeholder, very long titles, loading skeleton, disabled or unavailable part.
+--- 
+ 9
+ Progress Summary Bar
+ Shows how far a long-running task has got: a title and a step line on the left, a full-width progress bar with %, and optional actions on the right.
+ New 2 modules · 5 samples BOM SPEC 
+ Canonical sample BOM 2.11 — Guided matching · Review suggestions · [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5707-48333] Open in Figma → 
+ Why new Not reported on 19 Oct. BOM and SPEC show the progress of a long task with the same strip. In BOM 2.11 and SPEC 06 the card padding, title style and gap are identical, which suggests copy and paste. Hydra has the Progress and Alert atoms but not this composition, and BOM even built a hand-made "Alert" frame to hold one.
+ Based on none
+ When to use vs. related Steps (navigation) shows where you are in a wizard; the Progress Summary Bar shows how far a running task is. The dropzone uploading state has its own inline bar. Alert (atom) is for messages without progress.
+ Changed since 19 Oct New proposal.
+ Where it appears (5 samples, 5 verified; verified in BOM, SPEC) 
+ BOM Verified New since 19 Oct ×1 
+ 2.11 — Guided matching · Review suggestions
+ Canonical. White card: "0/10 reviewed" (16 Medium) and "10 remaining · 0 skipped", a progress bar, 5 %, and a link-style "Accept all high matches" button.
+ frame [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5707-48333] Open in Figma → 
+ BOM Verified New since 19 Oct ×1 
+ 2.12 — Guided matching · No suggestion
+ The same card at 70 %.
+ frame [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5741-48431] Open in Figma → 
+ BOM Verified New since 19 Oct ×1 
+ 3.2 — Workspace · Main (In progress)
+ Yellow resume strip: "Continue file upload process for …?", "Continue from: Match parts · Step 3 of 3", bar 74 %, Cancel and Continue upload.
+ frame named "Alert" [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5709-51639] Open in Figma → 
+ BOM Verified New since 19 Oct ×3 
+ 3.3 — Workspace · Pending uploads expanded
+ Three resume strips under a "3 uploads pending completion" Collapse.
+ frames inside a Collapse [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5709-53141] Open in Figma → 
+ SPEC Verified New since 19 Oct ×1 
+ 06 — Re-analysis · In progress
+ The same white card: "Re-analysis in progress", "Refreshing findings · 2 of 4 steps complete", bar 70 %, no action.
+ frame [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8076-134488] Open in Figma → 
+ Variations observed
+ Tone: white card (BOM 2.11, SPEC) · yellow strip (BOM 3.2, 3.3)
+ Actions: none (SPEC) · one link button (BOM 2.11) · Cancel + primary (BOM 3.2)
+ Context: on its own · stacked inside a Collapse (BOM 3.3)
+ Not observed yet
+ Error or paused state, indeterminate progress, a determinate bar without %.
+ Proposed properties
+ Property Type Values Default 
+ tone variant default | warning default 
+ ✏️ title text — "0/10 reviewed" 
+ ✏️ meta text — "10 remaining · 0 skipped" 
+ show percent boolean true / false true 
+ show actions boolean true / false (Buttons exposed) false 
+ Progress nested instance exposed (percent value) Progress line 
+ Harmonization (one spec for every module) 
+ Element Values seen (modules) Chosen value Why 
+ Container White card, radius 6, padding 12/20, gap 20 (BOM 2.11, SPEC) · yellow strip, radius 0, padding 12/24, bottom border (BOM 3.2) colorBgContainer, borderRadius, padding 12/20 (paddingSM / paddingMD), gap 20 Canonical, identical in two modules 
+ Tone Default (white) · warning (yellow) Property tone = default | warning Carries meaning: an interrupted task that needs the user 
+ Title 16 Medium (all) Title/Heading 5 Already the same 
+ Step line 14 Regular 45 % (all) Base/Normal, colorTextDescription Already the same 
+ Percent 14 Regular, after the bar (all) Base/Normal, colorText Already the same 
+ Actions None · link button · Cancel + primary Property show actions, Hydra Buttons exposed One optional slot 
+ Implementation-prompt block (Markdown) Copy ---
+**Molecule:** Progress Summary Bar
+**Purpose:** Shows how far a long-running task has got: a title and a step line on the left, a full-width progress bar with %, and optional actions on the right.
+**Decision:** new
+**Why:** Not reported on 19 Oct. BOM and SPEC show the progress of a long task with the same strip. In BOM 2.11 and SPEC 06 the card padding, title style and gap are identical, which suggests copy and paste. Hydra has the Progress and Alert atoms but not this composition, and BOM even built a hand-made "Alert" frame to hold one.
+**Existing Hydra molecule:** none
+**Related molecules:** Steps (navigation) shows where you are in a wizard; the Progress Summary Bar shows how far a running task is. The dropzone uploading state has its own inline bar. Alert (atom) is for messages without progress.
+**Destination:** Hydra file → Molecules section → new page ❖ Progress Summary Bar
+**Canonical sample:** BOM — 2.11 — Guided matching · Review suggestions — https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5707-48333
+**Reach:** 2 modules, 5 samples
+**Samples:**
+| Module | Screen / frame | Node link | Source type | ×N | Verified / Inferred | What differs from canonical |
+|---|---|---|---|---|---|---|
+| BOM | 2.11 — Guided matching · Review suggestions | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5707-48333 | frame | ×1 | Verified | Canonical. White card: "0/10 reviewed" (16 Medium) and "10 remaining · 0 skipped", a progress bar, 5 %, and a link-style "Accept all high matches" button. |
+| BOM | 2.12 — Guided matching · No suggestion | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5741-48431 | frame | ×1 | Verified | The same card at 70 %. |
+| BOM | 3.2 — Workspace · Main (In progress) | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5709-51639 | frame named "Alert" | ×1 | Verified | Yellow resume strip: "Continue file upload process for …?", "Continue from: Match parts · Step 3 of 3", bar 74 %, Cancel and Continue upload. |
+| BOM | 3.3 — Workspace · Pending uploads expanded | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5709-53141 | frames inside a Collapse | ×3 | Verified | Three resume strips under a "3 uploads pending completion" Collapse. |
+| SPEC | 06 — Re-analysis · In progress | https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8076-134488 | frame | ×1 | Verified | The same white card: "Re-analysis in progress", "Refreshing findings · 2 of 4 steps complete", bar 70 %, no action. |
+**Variations observed:** Tone: white card (BOM 2.11, SPEC) · yellow strip (BOM 3.2, 3.3); Actions: none (SPEC) · one link button (BOM 2.11) · Cancel + primary (BOM 3.2); Context: on its own · stacked inside a Collapse (BOM 3.3)
+**Harmonization:**
+| Element | Values seen | Chosen value | Why |
+|---|---|---|---|
+| Container | White card, radius 6, padding 12/20, gap 20 (BOM 2.11, SPEC) · yellow strip, radius 0, padding 12/24, bottom border (BOM 3.2) | colorBgContainer, borderRadius, padding 12/20 (paddingSM / paddingMD), gap 20 | Canonical, identical in two modules |
+| Tone | Default (white) · warning (yellow) | Property tone = default | warning | Carries meaning: an interrupted task that needs the user |
+| Title | 16 Medium (all) | Title/Heading 5 | Already the same |
+| Step line | 14 Regular 45 % (all) | Base/Normal, colorTextDescription | Already the same |
+| Percent | 14 Regular, after the bar (all) | Base/Normal, colorText | Already the same |
+| Actions | None · link button · Cancel + primary | Property show actions, Hydra Buttons exposed | One optional slot |
+**Upgrade gap:** n/a (new molecule)
+**Proposed properties:** tone (variant: default | warning, default default); ✏️ title (text: —, default "0/10 reviewed"); ✏️ meta (text: —, default "10 remaining · 0 skipped"); show percent (boolean: true / false, default true); show actions (boolean: true / false (Buttons exposed), default false); Progress (nested instance: exposed (percent value), default Progress line)
+**Not observed:** Error or paused state, indeterminate progress, a determinate bar without %.
+--- 
+ 10
+ Tagged Summary Card
+ A small card that summarises one text item with a coloured type tag, a title, a short description and optional meta or status (a recommendation, a release note).
+ New 2 modules · 3 samples SPEC Release Notes 
+ Canonical sample SPEC 05 — Analysis dashboard · Recommendations · [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8362-8978] Open in Figma → 
+ Why new On 19 Oct both were excluded as single-module (Recommendation Card only in SPEC, Release Note Card only in Release Notes). Seen together they are the same molecule. SPEC already has a local component with states (Rest, Hover, Resolved), so promote it and add what Release Notes needs (no status, no meta).
+ Based on SPEC local "recommendation_card" (promote)
+ When to use vs. related Part Summary Card identifies a catalog part (image, SKU, attributes). FeatureCard is a promo card with an image and a link. The Release Notes "View All" page uses a table, not cards.
+ Changed since 19 Oct New proposal (merges two exclusions from 19 Oct).
+ Where it appears (3 samples, 3 verified; verified in Release Notes, SPEC) 
+ SPEC Verified ×21 
+ 05 — Analysis dashboard · Recommendations
+ Canonical. Action tag, status badge, title 14, description 12 and a "Section · Page" meta line. States Rest / Hover / Resolved.
+ SPEC local component recommendation_card (8362:7673) [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8362-8978] Open in Figma → 
+ SPEC Verified ×5 
+ 05 Review and edit · 06 Re-analysis · sidebar list
+ The same component in the review sidebar, without a description (also on 8066:124202).
+ same local component [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8076-133925] Open in Figma → 
+ Release Notes Verified New since 19 Oct ×3 
+ Release Notes · What's New modal
+ Hand-built: the type tag sits inline before a 16 Medium title, description 14, padding 24, grey fill.
+ frames "Card - Feature / Improvement / Fix" [https://www.figma.com/design/a4gviD5oViRhasSCN6cC8Z/Release-Notes?node-id=1-5350] Open in Figma → 
+ Variations observed
+ Tag: own row (SPEC) · inline before the title (Release Notes)
+ Status: badge (SPEC) · none (Release Notes)
+ Meta line: section and page (SPEC) · none
+ States: rest, hover, resolved (SPEC) · static (Release Notes)
+ Not observed yet
+ A selected state, actions inside the card, truncation of long titles.
+ Proposed properties
+ Property Type Values Default 
+ state variant default | hover | resolved default 
+ ✏️ title text — "Clarify code reference" 
+ show description boolean true / false true 
+ ✏️ description text — "Short summary of the item." 
+ show meta boolean true / false false 
+ ✏️ meta text — "Section 22 05 00 · Page 8" 
+ show status boolean true / false (nested Badge, exposed) false 
+ Tag nested instance exposed Tag colorful 
+ Harmonization (one spec for every module) 
+ Element Values seen (modules) Chosen value Why 
+ Tag position Own row above the title (SPEC) · inline before the title (Release Notes) Own row above the title Canonical; works for long tags 
+ Title 14 Regular (SPEC) · 16 Medium (Release Notes) Base/Medium (14 Medium) Keeps the dense SPEC grid; adds weight for scanning 
+ Description 12 Regular 45 % (SPEC) · 14 Regular 45 % (Release Notes) Base/Normal, colorTextDescription Hydra base size; SPEC 12 → 14 px (see Open questions) 
+ Padding 12 (SPEC) · 24 (Release Notes) 16 (padding) Closest Hydra token between both 
+ Container No fill, #f0f0f0 border, radius 6 (SPEC) · 2 % fill, #d9d9d9 border, radius 8 (Release Notes) colorBgContainer, colorBorderSecondary, borderRadiusLG Hydra card tokens 
+ Tag text Uppercase ("UPDATE REFERENCE", SPEC) · sentence case ("Feature", Release Notes) Sentence case Hydra typography; a content change in SPEC 
+ Implementation-prompt block (Markdown) Copy ---
+**Molecule:** Tagged Summary Card
+**Purpose:** A small card that summarises one text item with a coloured type tag, a title, a short description and optional meta or status (a recommendation, a release note).
+**Decision:** new
+**Why:** On 19 Oct both were excluded as single-module (Recommendation Card only in SPEC, Release Note Card only in Release Notes). Seen together they are the same molecule. SPEC already has a local component with states (Rest, Hover, Resolved), so promote it and add what Release Notes needs (no status, no meta).
+**Existing Hydra molecule:** SPEC local "recommendation_card" (promote)
+**Related molecules:** Part Summary Card identifies a catalog part (image, SKU, attributes). FeatureCard is a promo card with an image and a link. The Release Notes "View All" page uses a table, not cards.
+**Destination:** Hydra file → Molecules section → new page ❖ Tagged Summary Card
+**Canonical sample:** SPEC — 05 — Analysis dashboard · Recommendations — https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8362-8978
+**Reach:** 2 modules, 3 samples
+**Samples:**
+| Module | Screen / frame | Node link | Source type | ×N | Verified / Inferred | What differs from canonical |
+|---|---|---|---|---|---|---|
+| SPEC | 05 — Analysis dashboard · Recommendations | https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8362-8978 | SPEC local component recommendation_card (8362:7673) | ×21 | Verified | Canonical. Action tag, status badge, title 14, description 12 and a "Section · Page" meta line. States Rest / Hover / Resolved. |
+| SPEC | 05 Review and edit · 06 Re-analysis · sidebar list | https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8076-133925 | same local component | ×5 | Verified | The same component in the review sidebar, without a description (also on 8066:124202). |
+| Release Notes | Release Notes · What's New modal | https://www.figma.com/design/a4gviD5oViRhasSCN6cC8Z/Release-Notes?node-id=1-5350 | frames "Card - Feature / Improvement / Fix" | ×3 | Verified | Hand-built: the type tag sits inline before a 16 Medium title, description 14, padding 24, grey fill. |
+**Variations observed:** Tag: own row (SPEC) · inline before the title (Release Notes); Status: badge (SPEC) · none (Release Notes); Meta line: section and page (SPEC) · none; States: rest, hover, resolved (SPEC) · static (Release Notes)
+**Harmonization:**
+| Element | Values seen | Chosen value | Why |
+|---|---|---|---|
+| Tag position | Own row above the title (SPEC) · inline before the title (Release Notes) | Own row above the title | Canonical; works for long tags |
+| Title | 14 Regular (SPEC) · 16 Medium (Release Notes) | Base/Medium (14 Medium) | Keeps the dense SPEC grid; adds weight for scanning |
+| Description | 12 Regular 45 % (SPEC) · 14 Regular 45 % (Release Notes) | Base/Normal, colorTextDescription | Hydra base size; SPEC 12 → 14 px (see Open questions) |
+| Padding | 12 (SPEC) · 24 (Release Notes) | 16 (padding) | Closest Hydra token between both |
+| Container | No fill, #f0f0f0 border, radius 6 (SPEC) · 2 % fill, #d9d9d9 border, radius 8 (Release Notes) | colorBgContainer, colorBorderSecondary, borderRadiusLG | Hydra card tokens |
+| Tag text | Uppercase ("UPDATE REFERENCE", SPEC) · sentence case ("Feature", Release Notes) | Sentence case | Hydra typography; a content change in SPEC |
+**Upgrade gap:** n/a (new molecule)
+**Proposed properties:** state (variant: default | hover | resolved, default default); ✏️ title (text: —, default "Clarify code reference"); show description (boolean: true / false, default true); ✏️ description (text: —, default "Short summary of the item."); show meta (boolean: true / false, default false); ✏️ meta (text: —, default "Section 22 05 00 · Page 8"); show status (boolean: true / false (nested Badge, exposed), default false); Tag (nested instance: exposed, default Tag colorful)
+**Not observed:** A selected state, actions inside the card, truncation of long titles.
+--- 
+ Design-file utility
+ ★
+ Flow Doc Card
+ A design-file annotation card that sits next to each flow and explains it to stakeholders (eyebrow, title, body, steps, links). Not shipped UI.
+ Utility 4 modules · 4 samples Content Part Search SPEC BOM 
+ Still the widest-reaching pattern (4 of 6 modules) and redrawn in every file; BOM now has 8 copies (3 on 19 Oct). It is not product UI, so it should not sit with product molecules. Harmonize to the 520 px width used by Content, Part Search and SPEC (BOM is 380 px), with optional steps and links blocks.
+ Content Verified ×1 
+ 01 — Content download history · Info
+ Canonical. Eyebrow "FLOW 01 OF 01", title and paragraphs.
+ frame [https://www.figma.com/design/pGzqSs0fMmuQ2BtjbMNVjP/Content---RSFC?node-id=9030-9517] Open in Figma → 
+ Part Search Verified ×1 
+ 01 - Part listing · Info
+ Same anatomy, with a numbered steps block.
+ frame [https://www.figma.com/design/fyhH2NtH20puYbGLDChPwn/Part-Search---RSFC?node-id=11024-16995] Open in Figma → 
+ SPEC Verified ×7 (one per flow) 
+ 01 — Project SPEC list · How this flow works
+ Same anatomy, named "How this flow works" (8091:17222, 8156:110277, 8091:17226, 8091:17228, 8091:17230, 8112:31552).
+ frames [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8091-17220] Open in Figma → 
+ BOM Verified New since 19 Oct ×8 
+ Doc · 2D · Guided matching
+ Narrower (380 px) with "Purpose / Screens / Key rules" headings and link lines. Other copies: 5625:20, 5626:20, 5640:20, 5626:24, 5626:32, 5625:24, 5625:28.
+ frames [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5626-28] Open in Figma → 
+ Built since 19 Oct: Empty State Block
+ The 19 Oct report proposed it as new. It now exists on [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1932-42] ❖ Empty State Block → as [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1932-81] component 1932:81 → with a [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-168] Replace in modules section → .
+ Properties: ✏️ title · show description · ✏️ description · show action; nested Illustration and Action are exposed 
+ Mapped occurrences (9)
+ BOM · 1.6 Hub empty (5758:50206)
+ BOM · 2.2 Cheat Sheet no results (6497:60672)
+ BOM · 3.4 Workspace empty (5709:54926)
+ BOM · 2.12 No suggestion (5741:48880)
+ BOM · 2.13 Part Resolve (5818:49278)
+ Content · Empty (9018:2321)
+ Admin · RN Admin empty (2218:11482)
+ Admin · RN Admin bulk upload, behind the modal (2218:11510)
+ Admin · CFM receipts empty (2016:25744)
+ Follow-ups
+ The component has no description. Add the Hydra-format description (code mapping, properties, Use for / Do not use for) in a BUILD pass.
+ No new occurrences were found today. CFM "No files for this target" (2009:5806) is the Table's built-in empty state, so it should not use this block.
+ Draft frames "BOM / SKU Match Card / Horizontal" sit loose on this page inside "Frame 1" (1935:314). They belong to the Part Summary Card work, not to Empty State Block.
+ Existing Hydra molecules
+ Inventoried by script on the Molecules pages (❖ Sidebar, ❖ Topbar, ❖ Cards, ❖ Empty State Block). Related atoms checked for decisions: Statistic (162:345), Result (204:403).
+ Molecule Link Properties / variants Used in modules? Upgrade candidate for 
+ Sidebar [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=662-10029] 662:10029 → No properties (fixed composition) Yes, every module (instances) — 
+ Logo Placeholder [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=740-78264] 740:78264 → No properties (internal helper of Sidebar) Through Sidebar — 
+ Topbar [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=768-62213] 768:62213 → Product (text), Desc (text) Yes, every module — 
+ ExportCard [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=826-1181] 826:1181 → ✏️ title, ✏️ description, state = default | hover | pressed | focus | disabled | loading; nested FileExcelOutlined (not swappable); bound to spacing, radius, fill and text tokens BOM 4.1–4.4 Export (×4 per screen) Option Card 
+ FeatureCard [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1555-370] 1555:370 → ✏️ title, ✏️ description, state = default | hover; image, Divider, link Button with ArrowRightOutlined Not seen inside the linked nodes None (related to Part Summary Card and Tagged Summary Card) 
+ Empty State Block [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1932-81] 1932:81 → ✏️ title, show description, ✏️ description, show action; Illustration and Action exposed; 9 Replace-in-modules cards; no description text BOM, Content, Admin (9 mapped) Built — documentation follow-up only 
+ ExportCard · 6 states FeatureCard · default / hover 
+ Excluded candidates
+ Seen during the audit, but an atom, organizational, an organism, a different interaction, or single-module.
+ Candidate Reason Note 
+ BOM 1.2 "Selected file" panel Atom It is an Alert (success) instance, so it was removed from Selection Summary. 
+ BOM 2.15 "All parts matched", SPEC 05C "Document ready", SPEC 06 "Re-analysis complete" Atom Alert instances. 
+ CFM validation and publish modals (passed, blocked, warning, success, failure, confirmations) Atom / organizational Modal confirm pattern. Only the "Validation passed" content lines count, under Attribute List. 
+ CFM "No files for this target" Table built-in state The AntD Table empty state, not an Empty State Block. 
+ SPEC "ConnectED Actions" cards and the Part Search "Actions" panel Different interaction / too generic A Hydra Card with a full-width button inside; the card itself is not a choice. 
+ BOM Category Tile (Replace Match Picker) Single module BOM only. 
+ BOM Field Mapping Select / Status Single module BOM column mapping only. 
+ BOM Parsed Line Editor, Replace Match Picker Organism BOM composites of several molecules and form fields. 
+ SPEC TOC_card (review table of contents) Navigation A table-of-contents list. 
+ Release Notes home "Modules" cards (BOM · 9 BOMs · Open module) Single module Only in the background of the What's New screen. 
+ Part Search detail hero ("100-A" header) Page header Organizational by definition. 
+ Wizard steps, bulk-action bars, modal shells, tables, pagination, tags, badges Navigation / organizational / atoms Already shared instances or atoms. 
+ RN Admin New / Edit note forms Organism Forms. 
+ Open questions
+ Stat Tile vs the Statistic atom. Admin already uses the Hydra Statistic atom (stacked, coloured number). Should Admin keep it, or adopt the row Stat Tile? I recommend: Stat Tile for count rows on pages and panels, Statistic for centred numbers in result modals.
+ Outcome Summary: molecule or documented pattern? It is a small composition (title, description, Stat Tiles). I recommend building it as a molecule after Stat Tile, because 3 modules repeat it. If you prefer fewer molecules, document it as "Alert or heading + Stat Tile row" instead.
+ Option Card: one ExportCard upgrade for both "entry action" and "pick an option"? BOM uses the same card to navigate (Get started) and to choose (Export route, SPEC formats, divisions). I recommend one upgraded ExportCard with control = none | radio | checkbox.
+ File Upload Dropzone: icon treatment. SPEC uses a bare icon, Admin an icon in a tinted square. The plan picks the bare icon (SPEC canonical). Say if you prefer the tinted square.
+ Selection Summary: keep the success tone? Only SPEC "Uploaded file" uses it. Keeping tone = neutral | success is cheap; dropping it means SPEC turns neutral.
+ Tagged Summary Card: SPEC density. Harmonising the description to 14 px makes the 21-card SPEC grid taller. Keep 14 px (Hydra base) or allow a compact size?
+ Progress Summary Bar: warning tone. BOM resume strips are yellow. Keep tone = warning, or use the default card plus a warning Tag?
+ Draft frames on the Empty State Block page. "Frame 1" (1935:314) holds loose BOM SKU Match Card frames. Move them to a future Part Summary Card page, or delete them?
+ Flow Doc Card: where should it live? In Hydra → Molecules with a "Docs" prefix, or in a separate design-ops file?
+ Coverage
+ Tools: Figma MCP, read-only ( create_session , get_metadata for structure, read-only use_figma scripts for text, instances, positions and measurements, get_screenshot for the visual check), then local crops. Method: a text and instance scan of every frame in the linked nodes, a visual pass on representative screens, then measurements of each sample for the harmonization tables. Access: all 7 linked nodes opened; no failures. Archived work: no pages, sections or frames named Archive, Old, WIP, Exploration or Deprecated inside the linked nodes; hidden images on the BOM page root were skipped. Both Admin pages carry a 🚧 prefix ("Release Notes Manager", "Content File Manager"); they were audited because they were linked explicitly.
+ Module Linked node Looked at Gaps 
+ BOM BOM · Prototype Flows (page 673:23362) 76 frames text-scanned in 9 sections: Local Components (8), 1 Hub (7), 2A–2E Upload & Import (30), 3 Workspace (6), 4 Export (5), Cheat Sheet (7), BOM-356 core (6), BOM-356 fix (7). 14 screenshots: 1.1, 1.2, 2.11, 2.12, 2.14, 2.15, 3.2, 3.3, 4.1, Cheat Sheet 1.1 and 1.4, Local Components, Doc 2D. 2A–2C and the BOM-356 screens were checked by text and instance scan only (mapping rows, tables, alerts); no new candidates there. 
+ SPEC SPEC - Core user flows (Release 1) (8075:133874) 33 frames text-scanned in 7 sections. 13 screenshots: 07 Export, 05C, 05 dashboard, 06 in progress, 04 Master SPEC, Confirm Master SPEC, Choose file, File selected, Uploading state, Uploading modal, error modal, How this flow works. Review-and-edit screens (document editor) checked by text scan only. 
+ Admin UATL-367 · Content File Manager · Admin (2009:5319) 27 frames text-scanned in 5 sections. 4 screenshots: Validation passed, Publish success, Figure result · No files, Figure number expanded row. Search, Manage menu and receipts screens checked by text scan only (search bar, dropdowns, tables). 
+ Admin RN - ADMIN (2218:10669) 9 frames text-scanned. 4 screenshots: Bulk upload 1, Loading, confirm, Success. New / Edit note forms skipped (organisms). 
+ Content 01 — Content download history (5603:308790) 11 frames text-scanned. 5 screenshots: BOM modal, Submittal modal, New package dialog, Empty, Info. — 
+ Part Search 01 - Part listing (11024:16994) 7 frames text-scanned. 4 screenshots: Choose an action, Add to Submittal Package, STEP variants, Info. PDF / DWG / Add to BOM modals matched to STEP by identical text (Inferred). 
+ Release Notes Release Notes Flow (1:5012) 4 frames text-scanned. 1 screenshot: What's New modal. View All (table) and Profile Menu (menu) checked by text scan only. 
+ Hydra Hydra DS (3ghYBXR6XVUEaeBo3D5E4q) Page list; all 4 Molecules pages inventoried by script (components, properties, nested instances, bound variables, descriptions). Atom pages Statistic, Result and Radio read for the upgrade/new decisions. 4 screenshots: ExportCard, FeatureCard, Empty State Block, Hydra export action. The AI contract page is read in PLAN mode, not in this audit. 
+ Files
+ [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2] BOM → · [https://www.figma.com/design/a4gviD5oViRhasSCN6cC8Z/Release-Notes] Release Notes → · [https://www.figma.com/design/fyhH2NtH20puYbGLDChPwn/Part-Search---RSFC] Part Search → · [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected] SPEC → · [https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected] Admin → · [https://www.figma.com/design/pGzqSs0fMmuQ2BtjbMNVjP/Content---RSFC] Content → · [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS] Hydra → 
+ Previous report: Documentation/content-molecules-audit-2026-10-19.html (kept unchanged).
+ Generated 20 Oct 2026 · read-only audit · screenshots from Figma, cropped for legibility 
+ 

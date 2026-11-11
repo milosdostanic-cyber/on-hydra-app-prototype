@@ -1,0 +1,201 @@
+ Empty State Block 
+ Hydra design system · Molecule report · verification of the built molecule · 21 Oct 2026
+ Empty State Block
+ Built Verified · 3 issues fixed 21 Oct New molecule 
+ An illustration, a title, an optional description and an optional action for a page or panel that has no content yet. It was built in Hydra after the 19 Oct audit, without a plan report. This page checks what exists: the component, the page, the 9 “Replace in modules” cards and every link into the module files. Nothing was changed in Figma.
+ 9 / 9 links open a real empty state 
+ 8 / 9 cards match the module copy (after fixes) 
+ 3 modules: BOM (5), Content (1), Admin (3) 
+ 5 properties + 3 exposed atoms 
+ 0 · 0 · 3 · 6 open issues: critical · high · medium · low 
+ [#verdict] Verdict [#issues] Issues [#checks] Checks [#component] Component [#page] Page structure [#cards] Replace in modules [#harmonization] Harmonization [#missing] Missing occurrences [#questions] Open questions [#coverage] Coverage 
+ Verdict
+ Update 21 Oct 2026: the three approved fixes are done (secondary-action property, description, BOM 1.6 label); the extra Upload button is gone from 8 cards. Open: BOM 2.2 “Clear search”, the title size option, the loose instance and the draft frame. The original verdict follows. Not ready to document or publish. The component is well built (auto layout, tokens, text styles, real nested atoms) and all 9 module links are correct. But one hard-coded button, “Upload BOM file”, has no property and appears in every instance, so 8 of the 9 cards do not match their module. Fix that first, add the description, correct the BOM 1.6 label, and decide on a size option. Then the Jira and Change Log documentation can follow.
+ Works Component structure, variable bindings, text styles, exposed Empty and Button atoms, page layout like Stat Tile, all 9 links, no missing occurrences.
+ Must fix The hard-coded second button (1972:6139), the missing description, the BOM 1.6 placeholder label.
+ Decide A section / page size for the title, the button order, whether Admin adopts the block, whether “no search results” belongs here.
+ Issues, ranked by severity
+ Node links open the Hydra DS file unless they say BOM, Content or Admin.
+ # Severity Issue, evidence and suggested fix 
+ 1 Critical Fixed 21 Oct Hard-coded second button “Upload BOM file” in every instance Fixed: Added show secondary action (boolean, default off, id show secondary action#2018:0), bound to the button's visibility, and exposed the nested button. The layer keeps the name CTA: Export and the label “Upload BOM file” as the default content. Actions still hugs (134 px with the secondary off, 295 px in BOM 3.4). Only BOM 3.4 has it on. Original finding The component has an Actions frame ( [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1972-6205] 1972:6205 → ) with a second Button instance named CTA: Export ( [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1972-6139] 1972:6139 → ): type default, UploadOutlined icon, label “Upload BOM file”. No property controls it, it is not exposed, and show action only hides the primary button. It therefore shows in all 9 Replace-in-modules cards and in every future instance in any module. Only BOM 3.4 has this button; in the other 8 cards it is wrong. Fix: Add a boolean show secondary action (default false) bound to that button's visibility, expose the nested instance, rename the layer to Secondary action and give it a neutral label without the BOM icon. Then set it on in BOM 3.4 (“Upload BOM file”) and BOM 2.2 (“Clear search”) only. 
+ 2 High Fixed 21 Oct No component description Fixed: Description added to 1932:81 (what it is and when to use it). Original finding The description of [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1932-81] Empty State Block 1932:81 → is empty. The 20 Oct audit already flagged it. Stat Tile has the Hydra-format description; this one does not. Fix: Add the Hydra description: “A Hydra product composition … It is not an Ant Design component.”, code mapping (AntD Empty + Typography + Button), the property list, Use for, Do not use for (table built-in empty states, errors, alerts). 
+ 3 High Fixed 21 Oct BOM 1.6 card shows the placeholder label “Primary action” Fixed: Primary action label on instance 1934:188 is now “New BOM Project”; secondary is off. Original finding Instance [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-188] 1934:188 → in card [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-177] 1934:177 → keeps the default button label. The module button says “New BOM Project” ( [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5758-50206] BOM 5758:50206 → ). Fix: Set the exposed Action ✏️ title to “New BOM Project” (the + icon is already set). 
+ 4 Medium No size option: every title becomes 24 px The title is fixed to Title/Heading 3 (24 px). Module titles are 24 px (BOM 1.6, 2.2), 20 px (BOM 3.4), 16 px (BOM 2.12, 2.13, Content) and 14 px (Admin ×3, the bare Empty atom caption). The 19 Oct proposal had size = section | page (default section). Without it, 6 of 9 places get a much larger title when they adopt the block, including small panels inside the BOM guided matching screens. Fix: Decide (see Open questions): add size = page | section (page = Heading 3 24 px, section = Heading 5 16 px, smaller paddings), or accept 24 px everywhere and record it as a harmonization decision. 
+ 5 Medium BOM 2.2 card misses the “Clear search” button The module shows two medium buttons: “Clear search” (default) then “Search All Parts” (primary) ( [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=6497-60672] BOM 6497:60672 → ). The card [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-224] 1934:224 → shows “Search All Parts” plus the wrong “Upload BOM file”. The block also puts the primary button first, while 2.2 puts it last. Fix: After the secondary-action fix, set the secondary label to “Clear search”. Decide the button order rule (primary first, as in BOM 3.4, or primary last, as in BOM 2.2) and note it in the description. 
+ 6 Medium Loose instance on the canvas Instance [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1972-6073] 1972:6073 → sits on the page outside both sections, just right of Replace in modules. It carries the BOM 2.12 copy with a “Primary action” button and the extra Upload button. Probably a leftover test instance. Fix: Delete it, or move it into a card if it was meant to be one (2.12 already has a card). 
+ 7 Low Hidden draft frame still on the page “Frame 1” [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1935-314] 1935:314 → (hidden) holds BOM SKU Match Card drafts. They belong to the Part Summary Card work. Fix: Move them to a Part Summary Card page or Drafts, or delete them. 
+ 8 Low Admin occurrences are the bare Empty atom RN Admin ×2 and CFM Receipts use only the Hydra Empty atom with its 14 px caption (no title, description or action). Adopting the block turns a small caption into a 24 px title. This is a visual change, not a like-for-like swap. Fix: Confirm with design that Admin should adopt the block (see Open questions). 
+ 9 Low Mixed token families on spacing Root padding top and bottom are bound to Size/Margin/marginXXL (48) and the Actions gap to Size/Padding/paddingSM (12). Values are right; the families are swapped (padding uses a margin token, a gap uses a padding token). Fix: Optional: rebind to the matching family when the component is next edited. No visual change. Note: no padding token exists at 48 px. 
+ 10 Low show action is on by default The default instance shows the placeholder “Primary action” button. The 19 Oct proposal had it off by default; 4 of 9 occurrences have no action. Fix: Keep or flip it; if you flip it, existing instances that rely on the default would lose their button, so check the 5 cards with an action first. 
+ 11 Low Cards hold an extra wrapper frame Each card has a frame named Instance (clips content) around the instance, then the link. The rule says a card holds only the instance and the link. Nothing is clipped today. Fix: Optional clean-up when the section is rebuilt. 
+ 12 Low Link labels for RN Admin Two links read “Admin · Release Notes Admin · …”; the agreed label is “Admin · RN Admin · …” (CFM already uses “Admin · CFM · …”). Fix: Rename the two link texts. Hyperlinks are correct. 
+ Checks
+ Check Result Evidence 
+ Component is a real COMPONENT in the page's Components section; names in English Pass 1932:81 in section Components 1932:107. A single component (no variants), which fits: no variant axis was needed. 
+ Property names follow Hydra conventions Pass ✏️ title , show description , ✏️ description , show action . Nested Illustration (Empty) and Action (Button) are exposed, so their own properties (type, label, icons, size) are available. 
+ Every control has a property Pass Fixed 21 Oct: the second button CTA: Export (1972:6139) now has show secondary action (default off) and is exposed. 
+ Auto layout Pass Root: vertical, centred, fixed width 640, height hugs. Content and Text frames fill; text max width 560; title and description auto-height, centred. In the 406 px cards (FILL) long text wraps and nothing overflows. 
+ Colours, spacing and radii bound to Hydra variables Pass Title colorText , description colorTextDescription ; root padding marginXXL / paddingLG, gaps marginLG / margin / marginXS / paddingSM. No raw hex on the component's own layers. Token families are mixed on two values (Low issue). 
+ Hydra text styles Pass Title Title/Heading 3 (Barlow Medium 24), description Base/Normal (Barlow Regular 14). 
+ Nested atoms are real Hydra instances, not detached copies Pass Illustration → Empty set 124:2772 (type=basic); Action and CTA → Button set 35:13238. Nothing detached. 
+ Description on the component Pass Fixed 21 Oct: description added to 1932:81. It is two sentences, shorter than the full Hydra-format descriptions on Option Card; extend with the code mapping and property list if you want parity. 
+ Page structure matches Stat Tile Pass Same pattern: section Components, then section Replace in modules holding a frame with one Module · X frame per module and a wrapping Cards row. Order BOM, Content, Admin follows the agreed module order. Extra nodes on the page: loose instance 1972:6073 and hidden Frame 1 1935:314 (Medium / Low). 
+ 9 cards: each holds a real instance of 1932:81 Pass All 9 are instances of 1932:81, not detached. Overrides are component properties, exposed nested properties, size from FILL, and on BOM 1.6 / 3.4 the + icon's fill bound to colorTextLightSolid (a token, same as the label). 
+ 9 links open a real node that is an empty state Pass All 9 node IDs exist in the module files and each is an empty state (verified in screenshots). 
+ Card copy matches the module occurrence Issue After the 21 Oct fixes the extra Upload button is gone from 8 cards and BOM 1.6 reads “New BOM Project”. Still open: BOM 2.2 misses “Clear search”, and the title size differs in 6 of 9 modules (Medium issues 4 and 5). 
+ Missing occurrences in the linked module nodes Pass None found. SPEC, Part Search and Release Notes have no empty state; CFM “No files for this target” is a table empty state (correctly left out). 
+ Duplicates Pass No duplicate cards. Two pairs share copy because they are the same panel on consecutive flow steps (BOM 2.12 / 2.13, RN Admin empty / bulk upload); each node needs its own replacement. 
+ Dark mode Not tested Not tested: it needs a temporary test frame, and this was a read-only check. All colours are bound to Customize Theme variables, so it should follow the theme. 
+ Visual check of Components and Replace in modules at normal scale Pass No clipped text and no overlap. Re-checked 21 Oct after the fixes: the component and all 9 cards were screenshotted again. 
+ Component
+ [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1932-81] Empty State Block 1932:81 → on page [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1932-42] ❖ Empty State Block 1932:42 → . Default state below (after the 21 Oct fixes): primary button only; the secondary button is off by default.
+ Default instance: “Primary action” comes from show action ; the secondary button is hidden by show secondary action (default off). 
+ Properties
+ Property Type Default Controls 
+ ✏️ title Text Nothing here yet Title 
+ show description Boolean true Description visibility 
+ ✏️ description Text Explain why it is empty and what the user can do next. Description 
+ show action Boolean true Primary button only (1932:100) 
+ show secondary action Boolean false Secondary button CTA: Export (1972:6139), added 21 Oct 
+ Illustration (exposed) Empty atom type = basic basic | simple, show description off 
+ Action (exposed) Button atom primary, large, “Primary action” All Button properties 
+ Secondary action (exposed) Button atom default, large, UploadOutlined, “Upload BOM file” All Button properties 
+ Anatomy, tokens and text styles
+ Layer Layout Bound variables Text style 
+ Empty State Block (root) 1932:81 Vertical, centred, fixed 640 wide, hug height. Padding 48 / 24 / 48 / 24, gap 24. No fill or stroke. padding top/bottom Size/Margin/marginXXL , left/right Size/Padding/paddingLG , gap Size/Margin/marginLG — 
+ Content 1932:82 Vertical, fill width, gap 16 gap Size/Margin/margin — 
+ Illustration 1932:83 Empty atom instance, hug (atom) — 
+ Text 1932:97 Vertical, fill width, max width 560, gap 8 gap Size/Margin/marginXS — 
+ Title 1932:98 Fill, auto height, centred fill colorText Title/Heading 3 (24) 
+ Description 1932:99 Fill, auto height, centred fill colorTextDescription Base/Normal (14) 
+ Actions 1972:6205 Horizontal, hug, centred, gap 12 gap Size/Padding/paddingSM — 
+ Action 1932:100 Button atom, primary large (atom) Large/Normal 
+ CTA: Export 1972:6139 Button atom, default large, icon left (atom) Large/Normal 
+ Description
+ Added 21 Oct. “A Hydra product composition (not an Ant Design component): an empty-state block with an illustration, a title, an optional description and optional primary and secondary actions. Use it when a list, table or page has no content yet.”
+ Page structure
+ Compared with [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1992-42] ❖ Stat Tile → : both pages have a Components section and a Replace in modules section with one Module · <name> frame per module and a wrapping row of cards. This page matches that pattern. Differences: the page also holds a loose instance ( [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1972-6073] 1972:6073 → ) to the right of Replace in modules and a hidden draft frame ( [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1935-314] 1935:314 → ); Stat Tile has neither. The Components section is wide (1392 px) with the component placed left of centre; that is cosmetic.
+ Whole page: Components (top), Replace in modules (below), loose instance 1972:6073 (right).
+ Replace in modules section
+ [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-168] Section 1934:168 → . After the 21 Oct fixes only BOM 3.4 shows the secondary “Upload BOM file” button.
+ Replace in modules: the 9 cards
+ Each card was checked three ways: the instance (property values and overrides), the link (does the node exist, and is it an empty state), and the copy (card vs module screenshot).
+ Module Screen Module node Hydra card Result 
+ BOM 1.6 — Hub · Empty state (no projects) [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5758-50206] 5758:50206 → [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-177] 1934:177 → Matches 
+ BOM 2.2 — Cheat Sheet · No Results [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=6497-60672] 6497:60672 → [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-224] 1934:224 → Issues 
+ BOM 3.4 — Workspace · Empty (no items yet) [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5709-54926] 5709:54926 → [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-273] 1934:273 → Matches 
+ BOM 2.12 — Guided matching · No suggestion [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5741-48880] 5741:48880 → [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-318] 1934:318 → Matches 
+ BOM 2.13 — Guided matching · Part Resolve [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5818-49278] 5818:49278 → [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-370] 1934:370 → Matches 
+ Content Content · Empty [https://www.figma.com/design/pGzqSs0fMmuQ2BtjbMNVjP/Content---RSFC?node-id=9018-2321] 9018:2321 → [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-421] 1934:421 → Matches 
+ Admin RN Admin · Empty State [https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2218-11482] 2218:11482 → [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-466] 1934:466 → Matches 
+ Admin RN Admin · Bulk upload 1 (behind the modal) [https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2218-11510] 2218:11510 → [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-508] 1934:508 → Matches 
+ Admin CFM · Receipts empty [https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2016-25744] 2016:25744 → [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-550] 1934:550 → Matches 
+ Card by card
+ BOM Verified Matches 
+ 1.6 — Hub · Empty state (no projects)
+ Hydra card [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-177] 1934:177 → · instance 1934:188 
+ Module: [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5758-50206] BOM 5758:50206 → 
+ Link target: Frame “Empty State Card” in screen 5758:50189
+ Module: No projects yet · Upload a file, search parts, or start from scratch to create your first BOM · [+ New BOM Project]
+ Card: No projects yet · …first BOM. · [+ New BOM Project]
+ Result: Link correct (a real empty state). Fixed 21 Oct: label is now “New BOM Project” and the extra Upload button is off. Only drift left: the card adds a period to the description. Title 24 px in both.
+ BOM Verified Issues 
+ 2.2 — Cheat Sheet · No Results
+ Hydra card [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-224] 1934:224 → · instance 1934:235 
+ Module: [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=6497-60672] BOM 6497:60672 → 
+ Link target: Frame “Empty State Container” in screen 6497:60659
+ Module: No matching parts found · Try another keyword… · [Clear search] [Search All Parts] (medium)
+ Card: No matching parts found · same description · [Search All Parts] (medium)
+ Result: Link correct. The wrong Upload button is gone (21 Oct). Still open: “Clear search” missing, button order differs. Primary button is medium, the other cards use large (matches the module, so fine).
+ BOM Verified Matches 
+ 3.4 — Workspace · Empty (no items yet)
+ Hydra card [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-273] 1934:273 → · instance 1934:284 
+ Module: [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5709-54926] BOM 5709:54926 → 
+ Link target: Frame “Container” in screen 5709:53250
+ Module: No BOM items yet · Upload a BOM file to import parts… · [+ Add item] [Upload BOM file]
+ Card: Same copy and both buttons
+ Result: Link correct. Copy and buttons match. show secondary action is on here (the only card). Only drift: title 20 px (Heading 4) in the module, 24 px in the block.
+ BOM Verified Matches 
+ 2.12 — Guided matching · No suggestion
+ Hydra card [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-318] 1934:318 → · instance 1934:329 
+ Module: [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5741-48880] BOM 5741:48880 → 
+ Link target: Frame “Container” in screen 5741:48409
+ Module: [simple inbox image] No catalog options for this line. · Choose a part from the catalog… (no button)
+ Card: Same copy, Empty type=simple, show action off, no buttons
+ Result: Link correct. Extra Upload button removed (21 Oct). Title 16 px (Heading 5) in the module, 24 px in the block. The module image is hand-drawn, not the Empty atom; type=simple matches it.
+ BOM Verified Matches 
+ 2.13 — Guided matching · Part Resolve
+ Hydra card [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-370] 1934:370 → · instance 1934:381 
+ Module: [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5818-49278] BOM 5818:49278 → 
+ Link target: Frame “Container” in screen 5818:49209
+ Module: Same as 2.12 (same panel, next flow step)
+ Card: Same as 2.12, no buttons
+ Result: Link correct. Same panel as 2.12 on the next step, so the same copy; not a duplicate card because both nodes need replacing. Extra Upload button removed (21 Oct); title 16 → 24 px.
+ Content Verified Matches 
+ Content · Empty
+ Hydra card [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-421] 1934:421 → · instance 1934:432 
+ Module: [https://www.figma.com/design/pGzqSs0fMmuQ2BtjbMNVjP/Content---RSFC?node-id=9018-2321] Content 9018:2321 → 
+ Link target: Frame “Empty state” in screen 9018:1520 (section 01 — Content download history)
+ Module: No downloads yet · Download history starts from the release date — anything downloaded before then is not shown. · [Browse Part Search]
+ Card: Same copy · [Browse Part Search]
+ Result: Link correct. Extra Upload button removed (21 Oct). Title 16 px (Heading 5) in the module, 24 px in the block. The module description has a manual line break; the card wraps naturally (fine).
+ Admin Verified Matches 
+ RN Admin · Empty State
+ Hydra card [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-466] 1934:466 → · instance 1934:477 
+ Module: [https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2218-11482] Admin 2218:11482 → 
+ Link target: Frame “Empty State Container” in screen 2218:11455
+ Module: Empty atom only: image + “No release notes yet” (14 px caption)
+ Card: No release notes yet (24 px title), description off, action off, no buttons
+ Result: Link correct. Extra Upload button removed (21 Oct). The module uses the bare atom (14 px caption), the card a 24 px title. Link label should read “Admin · RN Admin · …”.
+ Admin Verified Matches 
+ RN Admin · Bulk upload 1 (behind the modal)
+ Hydra card [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-508] 1934:508 → · instance 1934:519 
+ Module: [https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2218-11510] Admin 2218:11510 → 
+ Link target: Frame “Empty State Container” in screen 2218:11484 (Bulk note creation flow), covered by the Quick Bulk Upload modal
+ Module: Same empty state as RN Admin · Empty State, behind a modal
+ Card: Same as the RN Admin card, no buttons
+ Result: Link correct (it is a real empty state, hidden by the modal overlay). Same occurrence on the next flow step; keep the card because the node needs replacing. Same as the previous card.
+ Admin Verified Matches 
+ CFM · Receipts empty
+ Hydra card [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1934-550] 1934:550 → · instance 1934:561 
+ Module: [https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2016-25744] Admin 2016:25744 → 
+ Link target: Empty atom instance “No receipts yet” in screen 2016:21048 (05 · Receipts & Rollback)
+ Module: Empty atom only: image + “No receipts yet” (14 px caption)
+ Card: No receipts yet (24 px title), no buttons
+ Result: Link correct; it points at the Empty atom instance itself, which is linkable. Extra Upload button removed (21 Oct); 14 px → 24 px.
+ Harmonization: what changes when modules adopt the block
+ Element Values seen in modules Built value Comment 
+ Title 24 px Heading 3 (BOM 1.6, 2.2) · 20 px Heading 4 (BOM 3.4) · 16 px Heading 5 (BOM 2.12, 2.13, Content) · 14 px caption (Admin ×3) 24 px Title/Heading 3 Largest value chosen. Without a size option, 6 of 9 places grow (Medium issue 4). 
+ Description 14 px Base/Normal, description colour (all that have one) 14 px Base/Normal , colorTextDescription No change. 
+ Illustration Empty atom basic (BOM 1.6, 2.2, 3.4, Content, Admin) · hand-drawn simple inbox (BOM 2.12, 2.13) Empty atom, basic or simple BOM 2.12 / 2.13 move from a hand-drawn image to the atom. Good. 
+ Buttons None (4) · one primary large (BOM 1.6, Content) · primary + default large (BOM 3.4) · default + primary medium (BOM 2.2) Primary (optional) + hard-coded default Needs an optional secondary action and a stated order (Critical issue 1, Medium issue 5). 
+ Spacing Gap 24 (BOM 1.6, 2.2) · 16 (BOM 3.4, 2.12, 2.13) · 20 (Content); padding 80 / 24 / 64 / 0 Padding 48 / 24, outer gap 24, inner gap 16, text gap 8 Reasonable single spec on Hydra tokens. 
+ Missing occurrences and rejected candidates
+ All linked module nodes were scanned by script for “No …”, “Nothing …” and “Empty …” text and for Empty atom instances, and the hits were checked in screenshots. No uncovered empty state was found. 
+ Candidate Where Decision 
+ “No files for this target.” (Empty atom 2009:5866 inside a hand-built files table) [https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2009-5806] Admin · CFM · Figure result · No files → Table built-in state The empty body of a table, as the 20 Oct audit said. Correctly not covered. 
+ “No suggestion for this part” [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5741-48436] BOM 2.12 · Alert 5741:48436 → Atom An Alert (warning) instance. 
+ “No catalog options” (short label) [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5741-48473] BOM 2.12 · Text 5741:48473 → Same panel A label in the panel that holds the 2.12 empty state; not a separate occurrence (Inferred, from metadata). 
+ “No approved HVAC unit specified for AHU-3” (×3) SPEC 05 Recommendation list, 06 Re-analysis, TOC Not an empty state Recommendation copy. 
+ “No project” Release Notes · What's New modal (1:5094) Not an empty state Body text in a release note. 
+ “No file” table cells (hidden) Admin · CFM receipts and rollback tables Hidden / table cell 
+ Part Search 01 - Part listing (11024:16994) No hits. 
+ CFM “No files for this target”: inside the table, so it stays the table's own empty state. 
+ Open questions
+ Size option for the title? Add size = page | section (page 24 px, section 16 px) as the 19 Oct plan proposed, or keep one 24 px title everywhere? I recommend the size option: BOM 2.12 / 2.13 and Content sit inside panels where 24 px is too loud.
+ Button order with two buttons. BOM 3.4 puts the primary button first; BOM 2.2 puts it last. Pick one rule for the block (Ant Design usually puts the primary action last in a row, but this block centres them). I recommend primary first, matching BOM 3.4 and the current build.
+ Should Admin adopt the block? RN Admin and CFM Receipts use the bare Empty atom with a 14 px caption and no description. Adopting the block gives them a real title. I recommend adopting it with the section size, and adding a one-line description where it helps.
+ “No results” states. The 19 Oct audit said search “not found” results should not use this block, but BOM 2.2 (Cheat Sheet · No Results) is in the build. It looks and works like the other empty states, so I recommend keeping it and removing that line from the guidance.
+ Loose instance and draft frame. Delete instance 1972:6073 and move or delete Frame 1 (1935:314)?
+ Coverage and method
+ File What was checked 
+ Hydra Page ❖ Empty State Block (1932:42): full node tree, component 1932:81 (properties, layout, variable bindings, text styles, nested instances, description), all 9 cards (instance, overrides, hyperlinks), loose and hidden nodes. Page ❖ Stat Tile (1992:42) for structure. Screenshots: page, Components, Replace in modules, component, each card. 
+ BOM Page 673:23362 (BOM · Prototype Flows) scanned. 5 link targets opened, text sizes read, screenshots of each. 
+ Content Section 5603:308790 scanned; link target 9018:2321 opened and screenshotted. 
+ Admin Sections 2009:5319 (CFM) and 2218:10669 (RN Admin) scanned; 3 link targets opened; screens 2218:11455, 2218:11484, 2016:21048 and the CFM table state 2009:5806 screenshotted. 
+ SPEC Section 8075:133874 scanned (text + Empty atom). No empty state. 
+ Part Search Section 11024:16994 scanned. No hits. 
+ Release Notes Section 1:5012 scanned. No empty state. 
+ Read-only: no Figma file was changed. The scans find text starting with “No”, “Nothing”, “Empty”, “There are no” or “You have no”, plus instances of the Hydra Empty atom. An empty state with other wording and no Empty atom would not be found. Dark mode and the 1000 px FILL test were not run, because they need temporary frames. Not checked: whether the Hydra library has been published with this component; Jira and Change Log documentation (none exists yet).
+ Hydra design system · Empty State Block verification · 21 Oct 2026 
+ 

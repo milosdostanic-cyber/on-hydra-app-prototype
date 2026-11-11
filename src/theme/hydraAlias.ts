@@ -6,10 +6,17 @@ import {
   hydraBoxShadow,
   hydraBoxShadowSecondary,
   hydraBoxShadowTertiary,
+  hydraColorBgMaskLight,
+  hydraErrorSemanticsLight,
   hydraNeutralGray3Dark,
   hydraNeutralGray3Light,
+  hydraSuccessSemanticsLight,
+  hydraWarningSemanticsLight,
 } from './hydraSemanticColors';
 import { hydraSidebarBrandBandHeightPx } from './hydraMenuMetrics';
+
+/** Figma **Customize Theme** `Style/lineWidthFocus` → **Colors** `Scale/value-4`. */
+export const hydraLineWidthFocus = 4;
 
 /**
  * Ant Design **alias** tokens (spacing, neutrals, surfaces) merged with Hydra `theme.token` overrides.
@@ -20,6 +27,12 @@ export const hydraLightAlias = theme.getDesignToken({
     ...hydraAntdTypographyToken,
     ...bluePrimarySemantics,
     ...blueInfoSemantics,
+    ...hydraSuccessSemanticsLight,
+    ...hydraWarningSemanticsLight,
+    ...hydraErrorSemanticsLight,
+    colorBgMask: hydraColorBgMaskLight,
+    controlOutline: bluePrimarySemantics.colorPrimaryBorder,
+    lineWidthFocus: hydraLineWidthFocus,
     /** Figma `colorBgLayout` → `Neutral/gray-3` (not antd default `#f5f5f5`). */
     colorBgLayout: hydraNeutralGray3Light,
     boxShadow: hydraBoxShadow,
@@ -35,7 +48,8 @@ export const hydraDarkAlias = theme.getDesignToken({
     ...hydraAntdTypographyToken,
     ...bluePrimarySemanticsDark,
     ...blueInfoSemanticsDark,
-    /** Figma `colorBgLayout` → `Neutral/gray-3` (not antd dark default `#000000`). */
+    lineWidthFocus: hydraLineWidthFocus,
+    /** Repo-only dark layout surface until the Dark pass. */
     colorBgLayout: hydraNeutralGray3Dark,
     boxShadow: hydraBoxShadow,
     boxShadowSecondary: hydraBoxShadowSecondary,

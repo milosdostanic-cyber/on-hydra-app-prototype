@@ -7,6 +7,7 @@ import { PackageCreateEditModal } from '../../submittal/components/PackageCreate
 import {
   Alert,
   App,
+  Badge,
   Button,
   Card,
   Empty,
@@ -33,7 +34,6 @@ import { useSpecDocument } from '../hooks/useSpecDocument';
 import { trackSpecEvent } from '../specAnalytics';
 import { specHomePath } from '../specNavigation';
 import { navigateSpecWorkspaceTab, specWorkspaceTabItems } from '../specWorkspaceTabs';
-import { HydraTag } from '../../ui/HydraTag';
 import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 /**
@@ -108,9 +108,10 @@ export function SpecSubmittalsPage() {
       dataIndex: 'status',
       width: 140,
       render: (status: SpecSubmittalObligation['status']) => (
-        <HydraTag tone={status === 'open' ? 'warning' : status === 'in-package' ? 'success' : 'default'}>
-          {submittalObligationStatusLabel[status]}
-        </HydraTag>
+        <Badge
+          status={status === 'open' ? 'warning' : status === 'in-package' ? 'success' : 'default'}
+          text={submittalObligationStatusLabel[status]}
+        />
       ),
     },
     {
@@ -119,9 +120,9 @@ export function SpecSubmittalsPage() {
       width: 120,
       render: (_, row) =>
         row.missingDocuments ? (
-          <HydraTag tone="warning">Missing</HydraTag>
+          <Badge status="warning" text="Missing" />
         ) : (
-          <HydraTag tone="success">Ready</HydraTag>
+          <Badge status="success" text="Ready" />
         ),
     },
     {

@@ -3,6 +3,7 @@ import {
   ExclamationCircleOutlined,
   FileSearchOutlined,
   PlusOutlined,
+  SwapOutlined,
   UploadOutlined,
 } from '@ant-design/icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -20,6 +21,7 @@ import { mockBomProjects } from '../data/mockData';
 import { MAX_UPLOAD_BYTES, VALID_UPLOAD_TYPES } from '../constants/uploadLimits';
 import { resolveBomProjectStatus } from '../bomProjectStatus';
 import { BomProjectStatusTag } from '../components/BomTags';
+import { HydraTag } from '../../ui/HydraTag';
 import type { BomProject } from '../data/types';
 import { shellLayout } from '../../theme/hydraAlias';
 import {
@@ -82,7 +84,7 @@ export function BomSiteProjectsPage() {
   const [projectsPage, setProjectsPage] = useState(1);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
-  const [hoveredQuickAction, setHoveredQuickAction] = useState<'upload' | 'search' | null>(null);
+  const [hoveredQuickAction, setHoveredQuickAction] = useState<'upload' | 'search' | 'crossReference' | null>(null);
   const [uploadDestModalOpen, setUploadDestModalOpen] = useState(false);
   const [pendingUpload, setPendingUpload] = useState<{ name: string; size: number } | null>(null);
   const [projectsListKey, setProjectsListKey] = useState(0);
@@ -350,7 +352,7 @@ export function BomSiteProjectsPage() {
     }, 900);
   };
 
-  const getQuickActionStyle = (kind: 'upload' | 'search'): CSSProperties => {
+  const getQuickActionStyle = (kind: 'upload' | 'search' | 'crossReference'): CSSProperties => {
     const isHovered = hoveredQuickAction === kind;
     return {
       background: token.colorBgContainer,
@@ -391,7 +393,7 @@ export function BomSiteProjectsPage() {
           />
 
           <Row gutter={[token.padding, token.padding]} align="stretch">
-          <Col xs={24} md={12} style={{ display: 'flex' }}>
+          <Col xs={24} md={8} style={{ display: 'flex' }}>
             <Card
               style={{ ...getQuickActionStyle('upload'), width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}
               styles={{
@@ -424,7 +426,7 @@ export function BomSiteProjectsPage() {
               </Flex>
             </Card>
           </Col>
-          <Col xs={24} md={12} style={{ display: 'flex' }}>
+          <Col xs={24} md={8} style={{ display: 'flex' }}>
             <Card
               style={{ ...getQuickActionStyle('search'), width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}
               styles={{
@@ -454,6 +456,43 @@ export function BomSiteProjectsPage() {
                     Competitor lines or ASC catalog. Match to parts or search and add to your project.
                   </Typography.Paragraph>
                 ) : null}
+              </Flex>
+            </Card>
+          </Col>
+          <Col xs={24} md={8} style={{ display: 'flex' }}>
+            <Card
+              style={{ ...getQuickActionStyle('crossReference'), width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}
+              styles={{
+                body: {
+                  padding: token.paddingMD,
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                },
+              }}
+              onClick={() => navigate('/bom/cross-reference')}
+              onMouseEnter={() => setHoveredQuickAction('crossReference')}
+              onMouseLeave={() => setHoveredQuickAction(null)}
+            >
+              <Flex vertical gap={token.marginXS} style={{ flex: 1 }}>
+                <Flex align="center" justify="space-between" gap={token.marginXS} wrap="wrap">
+                  <Flex align="center" gap={token.marginSM}>
+                    <SwapOutlined style={{ fontSize: hydraTitleHeading4.fontSize, color: token.colorInfo }} />
+                    <Typography.Title
+                      level={4}
+                      style={{ margin: 0, whiteSpace: 'nowrap', ...hydraTextStyleToReactCss(hydraTitleHeading4) }}
+                    >
+                      Part Cross-Reference
+                    </Typography.Title>
+                  </Flex>
+                  <HydraTag tone="processing">Internal feature</HydraTag>
+                </Flex>
+                <Typography.Paragraph
+                  type="secondary"
+                  style={{ margin: 0, ...hydraTextStyleToReactCss(hydraBaseNormal) }}
+                >
+                  Match competitor parts to comparable RSFC parts.
+                </Typography.Paragraph>
               </Flex>
             </Card>
           </Col>

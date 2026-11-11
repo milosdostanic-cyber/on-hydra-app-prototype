@@ -90,7 +90,7 @@ All design tokens ultimately trace to these files under `src/theme/`:
 | `hydraAlias.ts` | `hydraLightAlias`, `hydraDarkAlias`, **`shellLayout`** (header height, sider width, etc.) |
 | `hydraSemanticColors.ts` | Neutral / dark-menu chrome literals |
 | `primaryPrimitiveBlue.ts` | `Primary/primary-*` ramps (blue) |
-| `primaryPrimitiveOrange.ts` | `Volcano/volcano-*` ramps (orange) |
+| `primaryPrimitiveOrange.ts` | `Hydra Action Orange/hydra-*` ramps (orange) |
 | `buttonPrimaryPalette.ts` | Orange solid Button palette |
 | `sidebarSemantics.ts` | Sidebar-specific color semantics |
 | `hydraTypography.ts` | Named text-style helpers (e.g. `hydraSmallStrong`) |

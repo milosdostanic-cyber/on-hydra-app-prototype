@@ -1,0 +1,2958 @@
+{
+  "schema": "admin-figma-ledger/v1",
+  "createdAt": "2026-10-30",
+  "updatedAt": "2026-10-30",
+  "note": "State for the hydra-admin-to-figma agent. Keys and IDs below were observed on 2026-10-30 and are reference only; re-discover them live every run.",
+  "files": {
+    "target": {
+      "name": "Admin - RSFC",
+      "fileKey": "rONB8aMPanOjS3GC1uN16d"
+    },
+    "library": {
+      "name": "Hydra Ant Design - DS",
+      "fileKey": "3ghYBXR6XVUEaeBo3D5E4q",
+      "entryNode": "204:47936",
+      "libraryKey": "lk-0d30b3c585621778932fa331ee41bae63d4de909f26f80911a7a4b3db61a93641afadfdebd413c3fee615b87b1b49ed17cf9574625892ba8af7162787da919ed",
+      "subscribedInTarget": true
+    },
+    "liveApp": "https://admin.hydra-dev.spaceinch.tech/dashboard"
+  },
+  "layout": {
+    "status": "approved; arrangement applied 2026-10-30 (see layoutRuns)",
+    "note": "LAYOUT mode has not run. The target file already has one page per module (observed 2026-10-30). Access Blacklist was built on its existing page without a LAYOUT run (coordinator default, 2026-10-30).",
+    "observedPages": [
+      {
+        "id": "260:653",
+        "name": "🖼️ Cover"
+      },
+      {
+        "id": "2799:2428",
+        "name": "📝 Change Log"
+      },
+      {
+        "id": "260:654",
+        "name": "--"
+      },
+      {
+        "id": "2958:63284",
+        "name": "Dashboard"
+      },
+      {
+        "id": "2218:7642",
+        "name": "Release Notes"
+      },
+      {
+        "id": "2958:63285",
+        "name": "Access Blacklist"
+      },
+      {
+        "id": "2803:16056",
+        "name": "Knowledge Center"
+      },
+      {
+        "id": "0:1",
+        "name": "Content"
+      },
+      {
+        "id": "2958:63286",
+        "name": "Companies"
+      },
+      {
+        "id": "2958:63287",
+        "name": "Users"
+      },
+      {
+        "id": "2958:63288",
+        "name": "Company Roles"
+      },
+      {
+        "id": "2958:63289",
+        "name": "Admin Roles"
+      },
+      {
+        "id": "2958:63290",
+        "name": "Feature Access Limit"
+      },
+      {
+        "id": "2958:63291",
+        "name": "--"
+      },
+      {
+        "id": "2109:27298",
+        "name": "🗄 Archive"
+      }
+    ],
+    "sectionOrder": [
+      "List",
+      "Detail",
+      "Create",
+      "Edit",
+      "Dialogs",
+      "Empty",
+      "Loading",
+      "Error",
+      "Success"
+    ],
+    "sectionNaming": "NN · <Section> (e.g. '01 · List'); frames 'NN.MM · <Module> · <Screen> · <State>'",
+    "frameSize": {
+      "width": 1750,
+      "height": 970,
+      "source": "Knowledge Center frames, e.g. 2803:18583"
+    },
+    "frameGeometry": "Sections are plain Sections with no fill. Frames sit at canvas x/y inside sections, matching KC: first frame at (48, 80), 96 between frames, section height 1190, 290 between sections. No spacing variable used for these canvas gaps (coordinator default 3).",
+    "frameGapVariable": null
+  },
+  "shellReference": {
+    "frame": {
+      "id": "2803:18583",
+      "name": "01.01 · Manual Files · Default",
+      "page": "Knowledge Center",
+      "width": 1750,
+      "height": 970
+    },
+    "sidebar": {
+      "instanceId": "2926:34668",
+      "componentKey": "88c193bc9ebefb764b66b8e8ca0efe30271e28b7",
+      "componentProperties": "none",
+      "note": "Master Sidebar (DS node 662:10029) has 9 customer-app items. Admin labels and icons in the KC instance are overrides. No Feature Access Limit slot (DS gap). Live sidebar (30 Oct) has 10 items: Dashboard, Release Notes, Access Blacklist, Knowledge Center >, Content >, Companies, Users >, Company Roles, Admin Roles, Feature Access Limit."
+    },
+    "topbar": {
+      "instanceId": "2806:3013",
+      "componentKey": "9ce98bc65867acdef6a229ab6516fbb76e1f05eb",
+      "productOverride": "Hi Admin, Welcome to .",
+      "liveText30Oct": "Hi Admin, Welcome to . (shows 'Hi User, Welcome to .' while loading)"
+    },
+    "breadcrumb": {
+      "wrapperId": "2803:18588",
+      "instanceId": "2803:18589",
+      "componentSetKey": "8adfc11018c00e66f364408440c5cc8bfcc75de7",
+      "variant": "items=3"
+    },
+    "modalReference": {
+      "overlayId": "2885:7599",
+      "frame": "2885:7487 '02.09 · Edit Recipients · Unchanged'",
+      "note": "Modal__Overlay with Modal (slot) used as the base for all Access Blacklist dialogs."
+    }
+  },
+  "readyForDev": {
+    "note": "devStatus could not be read: Plugin API returned 'devStatus is not a supported API'; figma-console REST returned 403 Invalid token. No node touched has Ready for Dev in its name, section or page. KC source frames were only cloned, never edited.",
+    "protectedSeen": [],
+    "fingerprints": {
+      "2483:68240": {
+        "date": "2026-10-30",
+        "module": "Dashboard",
+        "method": "djb2 hash of JSON list of frame + every descendant: id,type,name,w,h,x/y relative to frame,visible,fills,strokes,boundVariables,characters,textStyleId,main component key,variantProperties,componentProperties",
+        "nodeCount": 324,
+        "hash": 847599935,
+        "hashAfterMove": 847599935,
+        "result": "identical"
+      }
+    }
+  },
+  "modules": {
+    "Access Blacklist": {
+      "status": "built",
+      "builtAt": "2026-10-30",
+      "plan": "Documents/plans/2026-10-30-admin-figma-access-blacklist-plan.md",
+      "route": "/access-blacklist",
+      "page": {
+        "id": "2958:63285",
+        "name": "Access Blacklist",
+        "pendingLayoutApproval": true
+      },
+      "existingNodes": [
+        {
+          "id": "2958:63294",
+          "type": "SECTION",
+          "name": "Access Blacklist · To design",
+          "protected": false,
+          "action": "Left in place (coordinator default 9)"
+        }
+      ],
+      "liveWalk": "Done 2026-10-30 in the user's Chrome (signed in): list, first-load skeleton, Add dialog default, Add dialog domain validation error, Remove confirmation, filtered empty. Nothing saved or removed.",
+      "sections": [
+        {
+          "id": "3001:42",
+          "name": "01 · List"
+        },
+        {
+          "id": "3001:43",
+          "name": "02 · Create"
+        },
+        {
+          "id": "3001:44",
+          "name": "03 · Dialogs"
+        },
+        {
+          "id": "3001:45",
+          "name": "04 · Empty"
+        },
+        {
+          "id": "3001:46",
+          "name": "05 · Loading"
+        },
+        {
+          "id": "3001:47",
+          "name": "06 · Error"
+        },
+        {
+          "id": "3001:48",
+          "name": "07 · Success"
+        }
+      ],
+      "approvedUxImprovements": [
+        "UX-1",
+        "UX-2",
+        "UX-3",
+        "UX-4",
+        "UX-6",
+        "UX-7"
+      ],
+      "skippedUxImprovements": [
+        "UX-5 (Type stays a Select)"
+      ],
+      "built": [
+        {
+          "id": "3001:49",
+          "name": "01.01 · Access Blacklist · List · Default",
+          "copiedFrom": "2803:18583"
+        },
+        {
+          "id": "3006:4428",
+          "name": "02.01 · Access Blacklist · Add entry · Default",
+          "copiedFrom": "3005:2662 (itself from 3001:49 + overlay 2885:7599)"
+        },
+        {
+          "id": "3005:2662",
+          "name": "02.02 · Access Blacklist · Add entry · Invalid value",
+          "copiedFrom": "3001:49 + overlay 2885:7599 (via scratch C-01)"
+        },
+        {
+          "id": "3005:3120",
+          "name": "02.03 · Access Blacklist · Add entry · Save failed",
+          "copiedFrom": "3001:49 + overlay 2885:7599 (via scratch C-01)"
+        },
+        {
+          "id": "3005:3188",
+          "name": "03.01 · Access Blacklist · Remove entry · Confirm",
+          "copiedFrom": "3001:49 + overlay 2885:7599 (via scratch C-01)"
+        },
+        {
+          "id": "3005:3256",
+          "name": "03.02 · Access Blacklist · Remove entry · Remove failed",
+          "copiedFrom": "3001:49 + overlay 2885:7599 (via scratch C-01)"
+        },
+        {
+          "id": "3005:3324",
+          "name": "04.01 · Access Blacklist · Empty · No entries yet",
+          "copiedFrom": "3001:49"
+        },
+        {
+          "id": "3005:3377",
+          "name": "04.02 · Access Blacklist · Empty · No matching entries",
+          "copiedFrom": "3001:49"
+        },
+        {
+          "id": "3005:3430",
+          "name": "05.01 · Access Blacklist · Loading · First load",
+          "copiedFrom": "3001:49"
+        },
+        {
+          "id": "3005:3483",
+          "name": "06.01 · Access Blacklist · Error · List failed to load",
+          "copiedFrom": "3001:49"
+        },
+        {
+          "id": "3005:3536",
+          "name": "07.01 · Access Blacklist · Success · Entry added",
+          "copiedFrom": "3001:49"
+        },
+        {
+          "id": "3005:3589",
+          "name": "07.02 · Access Blacklist · Success · Entry removed",
+          "copiedFrom": "3001:49"
+        }
+      ],
+      "dsGaps": [
+        "Sidebar: no Feature Access Limit item and no sub-menus for Companies / Company Roles / Admin Roles (not a blocker per coordinator default)",
+        "No plain titled Card component: list container is the KC hand-built 'Table card' frame, bound to Hydra variables",
+        "Table column widths and tag-cell height have no Hydra variable (raw geometry kept, see plan)"
+      ],
+      "revisions": [
+        {
+          "date": "2026-10-30",
+          "changes": [
+            "Sidebar: reset icon overrides and re-swapped every menu item icon in all 12 frames so icons follow the .menu__item variant colour (selected icon was white via a colorSidebarMenuItemText override copied from KC).",
+            "E-01, E-02: hand-built Empty + Button replaced with Hydra Empty State Block (3010:12114, 3010:12156) per hydra-ux-patterns.md empty-state pattern. E-02 uses the secondary action \"Clear filters\".",
+            "ER-01: Empty + \"Try again\" replaced with copies of the KC error Alert (3010:12188) and Retry button (3010:12195), per the ADM error pattern.",
+            "LO-01 kept as Skeleton because the live app shows a skeleton (ADM pattern uses Spin).",
+            "Modal__Overlay in C-01, C-02, C-03, D-01, D-02 set to exactly 1750x970 at 0,0 with STRETCH/STRETCH constraints (C-03, D-01, D-02 were 1030 tall)."
+          ],
+          "removedNodes": [
+            "3006:4220",
+            "3006:4245",
+            "3006:4269",
+            "3006:4283",
+            "3006:4301",
+            "3006:4315"
+          ]
+        },
+        {
+          "date": "2026-10-30",
+          "changes": [
+            "D-01, D-02: Modal__Overlay slot swapped from Modal to Hydra Modal__Confirmation (warning icon, title, description, Cancel + danger \"Remove\"), per hydra-ux-patterns.md section 7.3.",
+            "D-02: the in-modal error Alert is gone with the old Modal; the failure is now an error Message (3022:5795, copied from S-02 Message 3006:4424) centred at the top, above the overlay.",
+            "Checked against sections 7 and 8: form modal labels, markers, 8/24 spacing, footer, field error, save-failed Alert, overlay all match. Row action stays a DS Table cell text action (Table cell with Buttons is a DS gap; open question in the patterns doc)."
+          ]
+        }
+      ]
+    },
+    "Companies": {
+      "status": "built",
+      "plannedAt": "2026-10-30",
+      "plan": "Documents/plans/2026-10-30-admin-figma-companies-plan.md",
+      "routes": [
+        "/companies",
+        "/companies/:id/feature-access-limit",
+        "/companies/:id/data"
+      ],
+      "page": {
+        "id": "2958:63286",
+        "name": "Companies"
+      },
+      "existingNodes": [
+        {
+          "id": "2958:63296",
+          "type": "SECTION",
+          "name": "Companies · To design",
+          "protected": false,
+          "action": "Left in place; new sections start 290 below it (y 873)"
+        }
+      ],
+      "liveWalk": "Done 2026-10-30 in the user's Chrome (signed in): list, Country and Feature Access filters, search no-match, Feature Access page (select opened, not changed), Company Settings (default, name-required error, country select opened). Nothing saved, reset or deleted. Loading, failure, toasts and reset confirmation read from product source.",
+      "plannedSections": [
+        {
+          "name": "01 · List",
+          "y": 873
+        },
+        {
+          "name": "02 · Detail",
+          "y": 2353
+        },
+        {
+          "name": "03 · Edit",
+          "y": 3833
+        },
+        {
+          "name": "04 · Dialogs",
+          "y": 5313
+        },
+        {
+          "name": "05 · Empty",
+          "y": 6793
+        },
+        {
+          "name": "06 · Loading",
+          "y": 8273
+        },
+        {
+          "name": "07 · Error",
+          "y": 9753
+        },
+        {
+          "name": "08 · Success",
+          "y": 11233
+        }
+      ],
+      "plannedScreens": [
+        "L-01",
+        "L-02",
+        "DT-01",
+        "ED-01",
+        "ED-02",
+        "D-01",
+        "E-01",
+        "LO-01",
+        "LO-02",
+        "LO-03",
+        "ER-01",
+        "ER-02",
+        "S-01",
+        "S-02"
+      ],
+      "optionalScreens": [
+        "DT-02",
+        "ER-03",
+        "S-03"
+      ],
+      "copySources": {
+        "page-level": "3001:49",
+        "dialog": "3005:3188 (+ overlay)",
+        "form": "3006:4428",
+        "empty": "3005:3377",
+        "error": "3005:3483",
+        "success": "3005:3536",
+        "loading": "2880:5321 (Spin pattern)"
+      },
+      "approvedUxImprovements": [
+        "UX-1",
+        "UX-2",
+        "UX-3",
+        "UX-4",
+        "UX-5",
+        "UX-6",
+        "UX-7"
+      ],
+      "dsGaps": [
+        "Table cell has no icon-only Button",
+        "Table cell has no Select",
+        "Sidebar: no Feature Access Limit, no chevrons",
+        "No plain Card component",
+        "No Transfer component in Hydra (only SwapOutlined icon)"
+      ],
+      "openQuestions": 10,
+      "built": [
+        {
+          "id": "3020:3683",
+          "name": "01.01 · Companies · List · Default",
+          "copiedFrom": "3001:49"
+        },
+        {
+          "id": "3022:5211",
+          "name": "01.02 · Companies · List · Country filter open",
+          "copiedFrom": "3020:3683"
+        },
+        {
+          "id": "3022:990",
+          "name": "02.01 · Companies · Feature Access Control · Default",
+          "copiedFrom": "3020:3683"
+        },
+        {
+          "id": "3021:4415",
+          "name": "03.01 · Companies · Company Settings · Default",
+          "copiedFrom": "3020:3683 (form items from AB 3005:2662, Save button from AB 3003:847)"
+        },
+        {
+          "id": "3021:4764",
+          "name": "03.02 · Companies · Company Settings · Name required",
+          "copiedFrom": "3021:4415 (caption from AB 3005:2662)"
+        },
+        {
+          "id": "3022:9473",
+          "name": "04.01 · Companies · Reset to default · Confirm",
+          "copiedFrom": "3022:990 + overlay AB 3005:3241"
+        },
+        {
+          "id": "3022:5824",
+          "name": "05.01 · Companies · Empty · No matching companies",
+          "copiedFrom": "3020:3683 + Empty state AB 3006:4268"
+        },
+        {
+          "id": "3022:6341",
+          "name": "06.01 · Companies · Loading · List",
+          "copiedFrom": "3020:3683 + container AB 3006:4300 + Hydra Spin"
+        },
+        {
+          "id": "3022:8953",
+          "name": "06.02 · Companies · Loading · Company Settings",
+          "copiedFrom": "3021:4415 + Loading state 3022:6341"
+        },
+        {
+          "id": "3022:9135",
+          "name": "06.03 · Companies · Loading · Feature Access Control",
+          "copiedFrom": "3022:990 + Loading state 3022:6341"
+        },
+        {
+          "id": "3022:6104",
+          "name": "07.01 · Companies · Error · List failed to load",
+          "copiedFrom": "3020:3683 + Error state AB 3006:4300"
+        },
+        {
+          "id": "3022:9353",
+          "name": "07.02 · Companies · Error · Company Settings save failed",
+          "copiedFrom": "3021:4415 + Message AB 3006:4419"
+        },
+        {
+          "id": "3022:9385",
+          "name": "08.01 · Companies · Success · Company Settings saved",
+          "copiedFrom": "3021:4415 + Message AB 3006:4419"
+        },
+        {
+          "id": "3022:9414",
+          "name": "08.02 · Companies · Success · Feature Access updated",
+          "copiedFrom": "3022:990 + Message AB 3006:4419"
+        }
+      ],
+      "builtAt": "2026-10-30",
+      "sections": [
+        {
+          "id": "3020:3675",
+          "name": "01 · List",
+          "y": 873
+        },
+        {
+          "id": "3020:3676",
+          "name": "02 · Detail",
+          "y": 2353
+        },
+        {
+          "id": "3020:3677",
+          "name": "03 · Edit",
+          "y": 3833
+        },
+        {
+          "id": "3020:3678",
+          "name": "04 · Dialogs",
+          "y": 5313
+        },
+        {
+          "id": "3020:3679",
+          "name": "05 · Empty",
+          "y": 6793
+        },
+        {
+          "id": "3020:3680",
+          "name": "06 · Loading",
+          "y": 8273
+        },
+        {
+          "id": "3020:3681",
+          "name": "07 · Error",
+          "y": 9753
+        },
+        {
+          "id": "3020:3682",
+          "name": "08 · Success",
+          "y": 11233
+        }
+      ],
+      "skippedUxImprovements": [
+        "UX-8 (confirm before Disable)"
+      ],
+      "decisions": "Coordinator accepted every default of the plan (Q1-Q10), not confirmed by the user one by one. Pattern doc 7-9 read before build; row actions kept as Hydra Table cell text links (doc 8.5 DS gap), Feature Access actions cell = bound Auto Layout wrapper with Select + small default Button; D-01 copied from AB 3005:3241 (Modal__Confirmation) with orange primary.",
+      "notes": [
+        "Sidebar: selected item set to Companies via .menu__item selected variant. Reset + swap away/back left icon vectors on colorIcon, so each icon Vector fill was bound to its label's colour variable; check passed for all 9 items in every frame (copies inherit it).",
+        "Raw geometry kept: Companies table column widths 220/190/fill/150/150/190/300, Feature Access widths fill/300/420, action cell height 54, Select width 120, popover and message absolute positions, frame/section canvas positions.",
+        "Auto Layout form container needed fills cleared (default createAutoLayout fill) - fixed.",
+        "First scripted attempts rolled back on error; no partial nodes remained."
+      ],
+      "revisions": [
+        {
+          "date": "2026-10-30",
+          "by": "main session review",
+          "changes": [
+            "Sidebar in all 14 Companies frames: removed the hand-bound icon fill overrides the build added; icons now follow the .menu__item variant (reset overrides, swap away and back, rename). Verified by toggling selected on 3022:990."
+          ]
+        }
+      ]
+    },
+    "Users": {
+      "status": "built",
+      "builtAt": "2026-10-30",
+      "plan": "Documents/plans/2026-10-30-admin-figma-users-plan.md",
+      "approvedScope": [
+        "L-01",
+        "L-02",
+        "CR-01",
+        "CR-02",
+        "ED-01",
+        "ED-02",
+        "ED-03",
+        "ED-04",
+        "ED-05",
+        "E-01",
+        "E-02",
+        "LO-01",
+        "LO-02",
+        "ER-01",
+        "ER-02",
+        "ER-03",
+        "S-01",
+        "S-02",
+        "S-03"
+      ],
+      "approvedUx": [
+        "UX-1",
+        "UX-2",
+        "UX-3",
+        "UX-4",
+        "UX-5",
+        "UX-6",
+        "UX-7",
+        "UX-8",
+        "UX-9",
+        "UX-10",
+        "UX-12",
+        "UX-13"
+      ],
+      "skippedUx": [
+        "UX-11"
+      ],
+      "routes": [
+        "/users-list",
+        "/users-list/invite-admins",
+        "/users-list/:userId"
+      ],
+      "page": {
+        "id": "2958:63287",
+        "name": "Users"
+      },
+      "existingNodes": [
+        {
+          "id": "2958:63298",
+          "type": "SECTION",
+          "name": "Users · To design",
+          "protected": "unknown",
+          "action": "Left in place. devStatus unreadable."
+        }
+      ],
+      "devStatus": "unreadable (devStatus is not a supported API). No existing screen moved or edited.",
+      "built": [
+        {
+          "id": "3043:15814",
+          "name": "01.01 · Users · Users list · Default",
+          "screen": "L-01",
+          "section": "3032:42",
+          "copiedFrom": "3020:3683",
+          "outcome": "Built (verified fix pass)",
+          "fixes": "UX-13 Roles (first tag + DS Tag +N, — for no role); all cells 54",
+          "heightFix": {
+            "before": {
+              "height": 970,
+              "clipped": false
+            },
+            "after": {
+              "height": 970,
+              "sizing": "HUG",
+              "minHeight": 970,
+              "clipped": false
+            },
+            "sidebarStretch": true
+          }
+        },
+        {
+          "id": "3043:17188",
+          "name": "01.02 · Users · Users list · Roles filter open",
+          "screen": "L-02",
+          "section": "3032:42",
+          "copiedFrom": "3022:5211",
+          "outcome": "Built (verified fix pass)",
+          "fixes": "UX-13 Roles; filter popover kept inside frame",
+          "heightFix": {
+            "before": {
+              "height": 970,
+              "clipped": false
+            },
+            "after": {
+              "height": 970,
+              "sizing": "HUG",
+              "minHeight": 970,
+              "clipped": false
+            },
+            "sidebarStretch": true
+          }
+        },
+        {
+          "id": "3045:8564",
+          "name": "01.03 · Users · Users list · Roles overflow tooltip",
+          "screen": "L-03 (UX-13 reveal)",
+          "section": "3032:42",
+          "copiedFrom": "3043:15814",
+          "outcome": "Built (verified fix pass)",
+          "fixes": "New (UX-13 reveal state): DS Tooltip over +N",
+          "heightFix": {
+            "before": {
+              "height": 970,
+              "clipped": false
+            },
+            "after": {
+              "height": 970,
+              "sizing": "HUG",
+              "minHeight": 970,
+              "clipped": false
+            },
+            "sidebarStretch": true
+          }
+        },
+        {
+          "id": "3043:17848",
+          "name": "02.01 · Users · Invite admins · Default",
+          "screen": "CR-01",
+          "section": "3032:43",
+          "copiedFrom": "3021:4415",
+          "outcome": "Built (verified fix pass)",
+          "fixes": "Run 3 fixes: labels, icons (Add = PlusOutlined, Remove/Send no icon), sidebar Invite admins",
+          "heightFix": {
+            "before": {
+              "height": 970,
+              "clipped": false
+            },
+            "after": {
+              "height": 970,
+              "sizing": "HUG",
+              "minHeight": 970,
+              "clipped": false
+            },
+            "sidebarStretch": true
+          }
+        },
+        {
+          "id": "3043:18181",
+          "name": "02.02 · Users · Invite admins · Invalid email",
+          "screen": "CR-02",
+          "section": "3032:43",
+          "copiedFrom": "3021:4415",
+          "outcome": "Built (verified fix pass)",
+          "fixes": "Run 3 fixes: same as CR-01 plus error caption",
+          "heightFix": {
+            "before": {
+              "height": 970,
+              "clipped": false
+            },
+            "after": {
+              "height": 970,
+              "sizing": "HUG",
+              "minHeight": 970,
+              "clipped": false
+            },
+            "sidebarStretch": true
+          }
+        },
+        {
+          "id": "3044:1728",
+          "name": "03.01 · Users · Edit user · Basic information · Default",
+          "screen": "ED-01",
+          "section": "3032:44",
+          "copiedFrom": "3021:4415",
+          "outcome": "Built (verified fix pass)",
+          "fixes": "Email helper caption set to Hug (was centred)",
+          "heightFix": {
+            "before": {
+              "height": 970,
+              "clipped": false
+            },
+            "after": {
+              "height": 970,
+              "sizing": "HUG",
+              "minHeight": 970,
+              "clipped": false
+            },
+            "sidebarStretch": true
+          }
+        },
+        {
+          "id": "3044:2555",
+          "name": "03.02 · Users · Edit user · Basic information · First name required",
+          "screen": "ED-02",
+          "section": "3032:44",
+          "copiedFrom": "3044:1728",
+          "outcome": "Built (verified fix pass)",
+          "fixes": "Both captions set to Hug (were centred)",
+          "heightFix": {
+            "before": {
+              "height": 970,
+              "clipped": false
+            },
+            "after": {
+              "height": 970,
+              "sizing": "HUG",
+              "minHeight": 970,
+              "clipped": false
+            },
+            "sidebarStretch": true
+          }
+        },
+        {
+          "id": "3044:4365",
+          "name": "03.03 · Users · Edit user · Permissions · Default",
+          "screen": "ED-03",
+          "section": "3032:44",
+          "copiedFrom": "3044:1728",
+          "outcome": "Built (verified fix pass)",
+          "fixes": "Save moved under Company roles; role select type=multiple; height 970 -> 1020 (was clipped)",
+          "heightFix": {
+            "before": {
+              "height": 970,
+              "clipped": true
+            },
+            "after": {
+              "height": 1020,
+              "sizing": "HUG",
+              "minHeight": 970,
+              "clipped": false
+            },
+            "sidebarStretch": true
+          }
+        },
+        {
+          "id": "3045:2508",
+          "name": "03.04 · Users · Edit user · Admin permissions · Default",
+          "screen": "ED-04",
+          "section": "3032:44",
+          "copiedFrom": "3044:4365",
+          "outcome": "Built (verified fix pass)",
+          "fixes": "Save moved under Admin roles; role select type=multiple",
+          "heightFix": {
+            "before": {
+              "height": 970,
+              "clipped": false
+            },
+            "after": {
+              "height": 970,
+              "sizing": "HUG",
+              "minHeight": 970,
+              "clipped": false
+            },
+            "sidebarStretch": true
+          }
+        },
+        {
+          "id": "3045:4308",
+          "name": "03.05 · Users · Edit user · Feature access · Default",
+          "screen": "ED-05",
+          "section": "3032:44",
+          "copiedFrom": "3022:990",
+          "outcome": "Built (verified fix pass)",
+          "fixes": "Reset (trash) moved from Users row to Revit Plugin (the Disabled custom rule)",
+          "heightFix": {
+            "before": {
+              "height": 970,
+              "clipped": false
+            },
+            "after": {
+              "height": 970,
+              "sizing": "HUG",
+              "minHeight": 970,
+              "clipped": false
+            },
+            "sidebarStretch": true
+          }
+        },
+        {
+          "id": "3045:5492",
+          "name": "04.01 · Users · Users list · No matching users",
+          "screen": "E-01",
+          "section": "3032:45",
+          "copiedFrom": "3022:5824",
+          "outcome": "Built (verified fix pass)",
+          "fixes": "Audited, no change",
+          "heightFix": {
+            "before": {
+              "height": 970,
+              "clipped": false
+            },
+            "after": {
+              "height": 970,
+              "sizing": "HUG",
+              "minHeight": 970,
+              "clipped": false
+            },
+            "sidebarStretch": true
+          }
+        },
+        {
+          "id": "3045:5825",
+          "name": "04.02 · Users · Edit user · Admin permissions · No admin role",
+          "screen": "E-02",
+          "section": "3032:45",
+          "copiedFrom": "3045:2508",
+          "outcome": "Built (verified fix pass)",
+          "fixes": "Admin roles select type=multiple",
+          "heightFix": {
+            "before": {
+              "height": 970,
+              "clipped": false
+            },
+            "after": {
+              "height": 970,
+              "sizing": "HUG",
+              "minHeight": 970,
+              "clipped": false
+            },
+            "sidebarStretch": true
+          }
+        },
+        {
+          "id": "3045:6141",
+          "name": "05.01 · Users · Users list · Loading",
+          "screen": "LO-01",
+          "section": "3032:46",
+          "copiedFrom": "3022:6341",
+          "outcome": "Built (verified fix pass)",
+          "fixes": "Card title 47 users -> Users list (count unknown while loading); fix pass: Companies loading/error structure",
+          "heightFix": {
+            "before": {
+              "height": 970,
+              "clipped": false
+            },
+            "after": {
+              "height": 970,
+              "sizing": "HUG",
+              "minHeight": 970,
+              "clipped": false
+            },
+            "sidebarStretch": true
+          }
+        },
+        {
+          "id": "3045:6425",
+          "name": "05.02 · Users · Edit user · Loading",
+          "screen": "LO-02",
+          "section": "3032:46",
+          "copiedFrom": "3022:8953",
+          "outcome": "Built (verified fix pass)",
+          "fixes": "Audited, no change; fix pass: Companies loading/error structure",
+          "heightFix": {
+            "before": {
+              "height": 970,
+              "clipped": false
+            },
+            "after": {
+              "height": 970,
+              "sizing": "HUG",
+              "minHeight": 970,
+              "clipped": false
+            },
+            "sidebarStretch": true
+          }
+        },
+        {
+          "id": "3045:6643",
+          "name": "06.01 · Users · Users list · Failed to load",
+          "screen": "ER-01",
+          "section": "3032:47",
+          "copiedFrom": "3022:6104",
+          "outcome": "Built (verified fix pass)",
+          "fixes": "Card title 47 users -> Users list (count unknown on failure); fix pass: Companies loading/error structure",
+          "heightFix": {
+            "before": {
+              "height": 970,
+              "clipped": false
+            },
+            "after": {
+              "height": 970,
+              "sizing": "HUG",
+              "minHeight": 970,
+              "clipped": false
+            },
+            "sidebarStretch": true
+          }
+        },
+        {
+          "id": "3045:6933",
+          "name": "06.02 · Users · Edit user · Save failed",
+          "screen": "ER-02",
+          "section": "3032:47",
+          "copiedFrom": "3022:9353",
+          "outcome": "Built (verified fix pass)",
+          "fixes": "Email helper caption added (parity with ED-01)",
+          "heightFix": {
+            "before": {
+              "height": 970,
+              "clipped": false
+            },
+            "after": {
+              "height": 970,
+              "sizing": "HUG",
+              "minHeight": 970,
+              "clipped": false
+            },
+            "sidebarStretch": true
+          }
+        },
+        {
+          "id": "3045:6970",
+          "name": "06.03 · Users · Invite admins · Send failed",
+          "screen": "ER-03",
+          "section": "3032:47",
+          "copiedFrom": "3043:17848",
+          "outcome": "Built (verified fix pass)",
+          "fixes": "Button icons aligned with CR-01; Send renamed",
+          "heightFix": {
+            "before": {
+              "height": 970,
+              "clipped": false
+            },
+            "after": {
+              "height": 970,
+              "sizing": "HUG",
+              "minHeight": 970,
+              "clipped": false
+            },
+            "sidebarStretch": true
+          }
+        },
+        {
+          "id": "3045:7445",
+          "name": "07.01 · Users · Edit user · Saved",
+          "screen": "S-01",
+          "section": "3032:48",
+          "copiedFrom": "3022:9385",
+          "outcome": "Built (verified fix pass)",
+          "fixes": "Email helper caption added (parity with ED-01)",
+          "heightFix": {
+            "before": {
+              "height": 970,
+              "clipped": false
+            },
+            "after": {
+              "height": 970,
+              "sizing": "HUG",
+              "minHeight": 970,
+              "clipped": false
+            },
+            "sidebarStretch": true
+          }
+        },
+        {
+          "id": "3045:7482",
+          "name": "07.02 · Users · Edit user · Permissions saved",
+          "screen": "S-02",
+          "section": "3032:48",
+          "copiedFrom": "3044:4365",
+          "outcome": "Built (verified fix pass)",
+          "fixes": "Save moved under Company roles; role select type=multiple; height 970 -> 1020 (was clipped)",
+          "heightFix": {
+            "before": {
+              "height": 970,
+              "clipped": true
+            },
+            "after": {
+              "height": 1020,
+              "sizing": "HUG",
+              "minHeight": 970,
+              "clipped": false
+            },
+            "sidebarStretch": true
+          }
+        },
+        {
+          "id": "3045:7584",
+          "name": "07.03 · Users · Invite admins · Results",
+          "screen": "S-03",
+          "section": "3032:48",
+          "copiedFrom": "3043:17848",
+          "outcome": "Built (verified fix pass)",
+          "fixes": "Button icons aligned with CR-01; Send renamed",
+          "heightFix": {
+            "before": {
+              "height": 970,
+              "clipped": false
+            },
+            "after": {
+              "height": 970,
+              "sizing": "HUG",
+              "minHeight": 970,
+              "clipped": false
+            },
+            "sidebarStretch": true
+          }
+        }
+      ],
+      "sections": [
+        {
+          "id": "3032:42",
+          "name": "01 · List",
+          "y": 909,
+          "h": 1190,
+          "width": 5538
+        },
+        {
+          "id": "3032:43",
+          "name": "02 · Create",
+          "y": 2389,
+          "h": 1190
+        },
+        {
+          "id": "3032:44",
+          "name": "03 · Edit",
+          "y": 3869,
+          "h": 2420,
+          "rows": [
+            80,
+            1310
+          ]
+        },
+        {
+          "id": "3032:45",
+          "name": "04 · Empty",
+          "y": 6579,
+          "h": 1190
+        },
+        {
+          "id": "3032:46",
+          "name": "05 · Loading",
+          "y": 8059,
+          "h": 1190
+        },
+        {
+          "id": "3032:47",
+          "name": "06 · Error",
+          "y": 9539,
+          "h": 1190
+        },
+        {
+          "id": "3032:48",
+          "name": "07 · Success",
+          "y": 11019,
+          "h": 1240
+        }
+      ],
+      "buildRun2": {
+        "startedAt": "2026-10-30T14:02+01:00",
+        "note": "Found 6 unrecorded frames from an earlier run (stable 90 s, no concurrent writer). Recorded IDs 3032:49, 3041:736, 3042:4846 and stray 3041:939 do not exist.",
+        "foundFrames": [
+          {
+            "id": "3043:15814",
+            "name": "01.01 · Users · Users list · Default",
+            "screen": "L-01"
+          },
+          {
+            "id": "3043:17188",
+            "name": "01.02 · Users · Users list · Roles filter open",
+            "screen": "L-02"
+          },
+          {
+            "id": "3043:17848",
+            "name": "02.01 · Users · Invite admins · Default",
+            "screen": "CR-01"
+          },
+          {
+            "id": "3043:18181",
+            "name": "02.02 · Users · Invite admins · Invalid email",
+            "screen": "CR-02"
+          },
+          {
+            "id": "3044:1728",
+            "name": "03.01 · Users · Edit user · Basic information · Default",
+            "screen": "ED-01"
+          },
+          {
+            "id": "3044:2555",
+            "name": "03.02 · Users · Edit user · Basic information · First name required",
+            "screen": "ED-02"
+          }
+        ],
+        "strayDropdownCheckbox": "not found on page at start of run (already gone)",
+        "concurrentWriter": {
+          "detectedAt": "2026-10-30T14:2x+01:00",
+          "evidence": [
+            "13 frames appeared in sections 03-07 during this run that this run did not create (3044:4365, 3045:2508, 3045:4308, 3045:5492, 3045:5825, 3045:6141, 3045:6425, 3045:6643, 3045:6933, 3045:6970, 3045:7445, 3045:7482, 3045:7584)",
+            "node ids 3047:5807..3047:5826 created after this run's last write (3045:8674)",
+            "L-01 and L-02 Roles tag 2 text/visibility reverted to the old data (Global Administrator, +3 more) after this run set +N tags; ED-02 Tabs slot child removed by another writer"
+          ],
+          "action": "This run stopped all Figma writes. Frames from the other writer are not verified and not recorded as built."
+        }
+      },
+      "ux13": {
+        "approach": "DS Table cell type=tag: tag 1 = first role (Tag__Colorful gold, or Tag default for Super administrator), tag 2 = nested swap to DS Tag type=default reading +N. No detach.",
+        "detachedNodes": [],
+        "appliedOn": [
+          "3043:15814",
+          "3043:17188",
+          "3045:8564"
+        ],
+        "notApplicable": {
+          "3045:5492": "table hidden (empty state)",
+          "3045:6141": "table hidden (Spin)",
+          "3045:6643": "table hidden (error)"
+        },
+        "rowHeights": "header + 10 rows, all 54 px, in 3043:15814, 3043:17188, 3045:8564"
+      },
+      "dsGaps": [
+        "Roles filter instance has two checkbox slots, so L-02 shows Company Member and Company Owner only.",
+        "Table cell type=tag has two tag slots. UX-13: tag 1 = first role, tag 2 swapped to DS Tag reading +N; no detach.",
+        "Tag__Status has no default variant with the icon hidden, so Skipped uses the plain Tag.",
+        "Pagination has no page buttons (U-A-01): the control shows page 1 and 10 / page while the card says 47 users. Logged as a DS gap by user decision.",
+        "No Select cell. Feature access reuses the Companies status-select wrapper.",
+        "Badge cells render the nested Badge__Status label. The cell label alone shows Success.",
+        "Column widths and Message positions use the same raw geometry as the Companies frames.",
+        ".select_input type=multiple renders the value as plain text (no tag chips). Role selects use it for the mode=\"multiple\" mapping.",
+        "Input__Caption status=default renders colorText; helper text is bound to colorTextDescription (U-A-24).",
+        "Input__Search has no filled state; the entered search term is bound to colorText (U-A-30)."
+      ],
+      "notes": [
+        "Placeholder 2958:63298 left in place. devStatus unreadable. No existing screen moved or edited.",
+        "Sidebar icon matches the label variable after selection and one swap to UnorderedListOutlined. Swap-away was not used because it rebinds the icon to colorIcon.",
+        "Long tables show the first rows only. The lists continue.",
+        "Live app was not reopened in this build. Copy is from the 30 Oct plan walk."
+      ],
+      "buildRun3": {
+        "startedAt": "2026-10-30T14:18+01:00",
+        "stability": "Two deterministic fingerprints 45 s apart identical for all 20 frames; highest ids 3047:5818, 3047:5826 unchanged. Other writer stopped (user).",
+        "decision": "Keep the 13 frames from the other build; audit and fix in place.",
+        "audit": {
+          "scope": "20 frames",
+          "bindingAudit": "no raw fills/strokes/padding/gap/radius/effects, no unstyled text, no local or detached instances, no groups (non-instance nodes)",
+          "visualFindings": {
+            "3044:1728": "Email helper caption FILL (centred)",
+            "3044:2555": "two captions FILL (centred)",
+            "3044:4365": "Save changes below matrix, clipped at frame bottom; Company roles not a multiple select",
+            "3045:2508": "Save changes below matrix; Admin roles not a multiple select",
+            "3045:4308": "trash icon button on Users row (no custom rule there)",
+            "3045:6141": "card title 47 users while loading",
+            "3045:6643": "card title 47 users on failed load",
+            "3045:6933": "Email helper missing",
+            "3045:7445": "Email helper missing"
+          }
+        },
+        "result": "All 20 frames re-read by ID, 7 section screenshots checked, audit fixes applied."
+      },
+      "heightFix": {
+        "rule": "root HUG + minHeight 970; Body HUG; Sidebar FILL; Right HUG + minHeight 970; Content/Main HUG; width fixed 1750",
+        "frames": 20,
+        "grew": [
+          "3044:4365",
+          "3045:7482"
+        ],
+        "overlaysInside": true,
+        "otherPagesTouched": false
+      },
+      "fixPass": {
+        "date": "2026-10-30",
+        "audit": "Documents/plans/2026-10-30-admin-figma-users-audit.md",
+        "findings": {
+          "U-A-01": {
+            "outcome": "Not fixed (DS gap)",
+            "note": "Pagination has no page buttons. User decision: log as a DS gap only."
+          },
+          "U-A-02": {
+            "outcome": "Fixed",
+            "note": "Last name cells bound to colorText on 01.01–01.03 (30 cells)."
+          },
+          "U-A-03": {
+            "outcome": "Fixed",
+            "note": "5 hidden Feature access cells deleted per list frame (15)."
+          },
+          "U-A-04": {
+            "outcome": "Fixed",
+            "note": "Stale hidden label values (US, HR, USD, -) cleared on 87 Type, Roles and Feature access cells; visible text unchanged."
+          },
+          "U-A-05": {
+            "outcome": "Fixed",
+            "note": "All 20 breadcrumbs now HomeOutlined (icon only) / Users / page, as Companies. Dropdown chevron off."
+          },
+          "U-A-06": {
+            "outcome": "Fixed",
+            "note": "Super administrator Actions cell shows “—” in colorTextDescription, right-aligned, renamed `Table / Table cell · no actions` (3043:16614, 3043:17293, 3045:8669)."
+          },
+          "U-A-07": {
+            "outcome": "Fixed",
+            "note": "Primary `Button size=large` “Invite admins”, no icon (Companies has no page CTA to copy), right of the title on 01.01, 01.02, 01.03, 04.01, 05.01, 06.01. Only primary on each frame."
+          },
+          "U-A-08": {
+            "outcome": "Fixed",
+            "note": "Popover at x 1032, y 329: right edge on the trigger (1280), top on the header bottom (the header moved 2 px with the CTA)."
+          },
+          "U-A-09": {
+            "outcome": "Not fixed (accepted DS gap)",
+            "note": "Filter dropdown has two option slots."
+          },
+          "U-A-10": {
+            "outcome": "Fixed",
+            "note": "Lena Novak row: all 7 cells state=hover on 01.03; rows stay 54."
+          },
+          "U-A-11": {
+            "outcome": "No issue",
+            "note": "Tooltip re-anchored to a 4 px gap above “+3” after the 2 px shift."
+          },
+          "U-A-12": {
+            "outcome": "Fixed",
+            "note": "Placeholder overrides reset on 02.01 (Input colorTextPlaceholder, Select placeholder colour)."
+          },
+          "U-A-13": {
+            "outcome": "Fixed",
+            "note": "Remove wrapped in `Form item · Remove` (gap paddingXS, Input__Label title “ ”); Remove y = input y."
+          },
+          "U-A-14": {
+            "outcome": "Fixed",
+            "note": "Hidden Website item deleted."
+          },
+          "U-A-15": {
+            "outcome": "Fixed",
+            "note": "Intro moved to Title block as `Page description` (Base/Normal, colorTextDescription, gap marginXXS); also 06.03 and 07.03."
+          },
+          "U-A-16": {
+            "outcome": "Superseded",
+            "note": "See U-A-58."
+          },
+          "U-A-17": {
+            "outcome": "Fixed",
+            "note": "Remove hidden on single-row frames (02.01, 06.03, 07.03); shown on 02.02 (2 rows)."
+          },
+          "U-A-18": {
+            "outcome": "Fixed",
+            "note": "Via U-A-05."
+          },
+          "U-A-19": {
+            "outcome": "Fixed",
+            "note": "Three placeholder overrides reset on 02.02; “not-an-email” kept as a value."
+          },
+          "U-A-20": {
+            "outcome": "Fixed",
+            "note": "Both Remove buttons level with their inputs (y 292, y 410)."
+          },
+          "U-A-21": {
+            "outcome": "Fixed",
+            "note": "Hidden Website item deleted."
+          },
+          "U-A-22": {
+            "outcome": "Fixed",
+            "note": "Intro moved to Title block."
+          },
+          "U-A-23": {
+            "outcome": "Fixed",
+            "note": "Via U-A-05."
+          },
+          "U-A-24": {
+            "outcome": "Fixed",
+            "note": "Email helper text bound to colorTextDescription on 03.01, 03.02, 06.02, 07.01 (reset alone gives colorText, the DS caption default)."
+          },
+          "U-A-25": {
+            "outcome": "Fixed",
+            "note": "24 hidden leftovers deleted."
+          },
+          "U-A-26": {
+            "outcome": "Fixed",
+            "note": "25 hidden leftovers deleted."
+          },
+          "U-A-27": {
+            "outcome": "Fixed",
+            "note": "6 hidden leftovers deleted."
+          },
+          "U-A-28": {
+            "outcome": "Fixed",
+            "note": "Heading + description grouped in `Section title block`, gap marginXXS."
+          },
+          "U-A-29": {
+            "outcome": "Fixed (already matched)",
+            "note": "Decision: match Companies. Users reset already uses the same trash icon (3027:3559), small icon-only default button and row layout as Companies 3022:5164. No change."
+          },
+          "U-A-30": {
+            "outcome": "Fixed",
+            "note": "“zzzz” bound to colorText. DS gap logged: Input__Search has no filled state."
+          },
+          "U-A-31": {
+            "outcome": "Fixed",
+            "note": "Hidden table and pagination row deleted."
+          },
+          "U-A-32": {
+            "outcome": "Fixed",
+            "note": "Admin roles placeholder override reset (colorTextDescription, the Select placeholder colour)."
+          },
+          "U-A-33": {
+            "outcome": "Fixed",
+            "note": "7 hidden top-level leftovers deleted, including the hidden heading and stale matrix."
+          },
+          "U-A-34": {
+            "outcome": "Fixed",
+            "note": "Hidden table and pagination row deleted."
+          },
+          "U-A-35": {
+            "outcome": "Fixed",
+            "note": "Tabs visible on 05.02, Spin only in the content area below them (Companies loading pattern; no Skeleton used). Page description stays hidden."
+          },
+          "U-A-36": {
+            "outcome": "Fixed",
+            "note": "Retry overrides reset, Companies Retry props applied: 65 x 32."
+          },
+          "U-A-37": {
+            "outcome": "Fixed",
+            "note": "Matches Companies: `Error state` (padding 48, gap paddingMD, centred), Alert 640 wide, Retry centred (x 971)."
+          },
+          "U-A-38": {
+            "outcome": "Fixed",
+            "note": "Hidden table and pagination row deleted."
+          },
+          "U-A-39": {
+            "outcome": "Fixed",
+            "note": "Message centred (x 755, centre 875), y 16."
+          },
+          "U-A-40": {
+            "outcome": "Fixed",
+            "note": "Copy: “Failed to update user. Try again.” (DS Message error)."
+          },
+          "U-A-41": {
+            "outcome": "Fixed",
+            "note": "Message centred (x 673), y 16."
+          },
+          "U-A-42": {
+            "outcome": "Fixed",
+            "note": "Placeholder overrides reset."
+          },
+          "U-A-43": {
+            "outcome": "Fixed",
+            "note": "Remove wrapper applied (hidden: single row)."
+          },
+          "U-A-44": {
+            "outcome": "Fixed",
+            "note": "Inner select input fills the instance (634.5)."
+          },
+          "U-A-45": {
+            "outcome": "Fixed",
+            "note": "Hidden Website item deleted."
+          },
+          "U-A-46": {
+            "outcome": "Fixed",
+            "note": "Message centred (x 772), y 16."
+          },
+          "U-A-47": {
+            "outcome": "Fixed",
+            "note": "Message centred (x 733), y 16."
+          },
+          "U-A-48": {
+            "outcome": "Fixed",
+            "note": "24 hidden leftovers deleted."
+          },
+          "U-A-49": {
+            "outcome": "Fixed",
+            "note": "Message centred (x 743), y 16."
+          },
+          "U-A-50": {
+            "outcome": "Fixed",
+            "note": "Placeholder overrides reset."
+          },
+          "U-A-51": {
+            "outcome": "Fixed",
+            "note": "Remove wrapper applied (hidden: single row)."
+          },
+          "U-A-52": {
+            "outcome": "Fixed",
+            "note": "Inner select input fills the instance."
+          },
+          "U-A-53": {
+            "outcome": "Fixed",
+            "note": "Hidden Website item and 3 hidden Status cells deleted."
+          },
+          "U-A-54": {
+            "outcome": "Fixed",
+            "note": "Results: mark.ellison Assigned / mira.horvat Invited / anna.kovac Skipped “Already a Global Administrator.”"
+          },
+          "U-A-55": {
+            "outcome": "Fixed",
+            "note": "All 20 frames fixed width 1750, hug height, min 970."
+          },
+          "U-A-56": {
+            "outcome": "Fixed",
+            "note": "All five messages centred at y 16 (U-A-39/41/46/47/49)."
+          },
+          "U-A-57": {
+            "outcome": "Kept (decision)",
+            "note": "“Users list” while loading or failed; count when known."
+          },
+          "U-A-58": {
+            "outcome": "Fixed (already matched)",
+            "note": "Decision: match Companies. Companies settings form gap is paddingLG (24), the same as all Users forms (the 20 in the audit is the card body gap). No change."
+          },
+          "U-A-59": {
+            "outcome": "Fixed",
+            "note": "13 select layers renamed (Company select, Company roles select, Admin roles select, Admin role select)."
+          },
+          "U-A-60": {
+            "outcome": "Fixed",
+            "note": "Caption: “Enter a valid email address”."
+          },
+          "U-A-61": {
+            "outcome": "Kept (decision)",
+            "note": "“Send invitations” keeps no icon."
+          },
+          "U-A-62": {
+            "outcome": "Fixed",
+            "note": "Loading cards hug as Companies: 05.01 card 297 (Companies 297), 05.02 card 316 (tabs + Spin)."
+          }
+        },
+        "deleted": "120 hidden copy leftovers across 16 frames (approved); scratch: none",
+        "created": [
+          "Invite admins buttons 3065:6966, 3065:6979, 3065:6988, 3065:6997, 3065:7006, 3065:7015",
+          "Form item · Remove wrappers (one per invite row, 02.01, 02.02 x2, 06.03, 07.03)",
+          "Section title block 3065:7178 (03.05)",
+          "Loading state frames (05.01, 05.02)"
+        ],
+        "verification": "20 frames re-read by ID: width fixed 1750, hug height min 970, nothing clipped, overlays inside, Sidebar and Right full height, every table row 54, one primary per screen, no raw values. 7 section screenshots checked.",
+        "newIssues": [
+          "Breadcrumb items=3 turns on the dropdown chevron on the current link; set show dropdown off on all 20.",
+          "Text cell “—” in the right-aligned Actions column needed cell alignment MAX.",
+          "Page header is 40 high on list frames (size=large CTA) vs 38 on Companies.",
+          "Companies 3022:5164 reset-row Status select is 45 high (Companies not edited).",
+          "Companies hides the card title in loading and error states (the audit says it shows the count)."
+        ]
+      }
+    },
+    "Company Roles": {
+      "status": "built",
+      "plannedAt": "2026-10-30",
+      "plan": "Documents/plans/2026-10-30-admin-figma-company-roles-plan.md",
+      "routes": [
+        "/company-roles",
+        "/create-company-role/:companyId",
+        "/company-roles/:companyId/:roleName"
+      ],
+      "page": {
+        "id": "2958:63288",
+        "name": "Company Roles"
+      },
+      "existingNodes": [
+        {
+          "id": "2958:63300",
+          "type": "SECTION",
+          "name": "Company Roles · To design",
+          "protected": "treated as protected",
+          "action": "Left in place (not moved, edited or deleted)"
+        }
+      ],
+      "liveWalk": "Not done: Cursor Computer Use refused screenshots and accessibility reads (Screen Recording off). Plan built from product source.",
+      "plannedScreens": [
+        "L-01",
+        "L-02",
+        "DT-01",
+        "CR-01",
+        "CR-02",
+        "ED-01",
+        "ED-02",
+        "D-01",
+        "D-02",
+        "E-01",
+        "LO-01",
+        "LO-02",
+        "ER-01",
+        "ER-02",
+        "ER-03",
+        "S-01",
+        "S-02",
+        "S-03"
+      ],
+      "optionalScreens": [
+        "L-03",
+        "L-04",
+        "CR-03",
+        "E-02"
+      ],
+      "copySources": {
+        "list": "3043:15814",
+        "form": "3021:4415",
+        "permissionTable": "3044:4365",
+        "errorCaption": "3044:2555",
+        "empty": "3045:5492",
+        "loadingList": "3045:6141",
+        "loadingForm": "3022:8953",
+        "errorList": "3045:6643",
+        "errorMessage": "3045:6933",
+        "successMessage": "3045:7445",
+        "confirm": "3005:3188",
+        "confirmFailed": "3005:3256",
+        "confirmFallback": "3022:9473"
+      },
+      "dsGaps": [
+        "No Transfer or Tree in Hydra; permissions planned as a Checkbox matrix (Question 1).",
+        "No checkbox Table cell; bound wrapper cell with Hydra Checkbox.",
+        ".menu__submenu_list items=1 not confirmed.",
+        "Sidebar has no Feature Access Limit item."
+      ],
+      "builtAt": "2026-10-30",
+      "approvedScope": "Lean set of 18 screens; UX-1 to UX-11; all question defaults (Q1 Checkbox matrix confirmed by user; Q10 build from source, no live walk)",
+      "sections": [
+        {
+          "id": "3067:2088",
+          "name": "01 · List"
+        },
+        {
+          "id": "3067:2089",
+          "name": "02 · Detail"
+        },
+        {
+          "id": "3067:2090",
+          "name": "03 · Create"
+        },
+        {
+          "id": "3067:2091",
+          "name": "04 · Edit"
+        },
+        {
+          "id": "3067:2092",
+          "name": "05 · Dialogs"
+        },
+        {
+          "id": "3067:2093",
+          "name": "06 · Empty"
+        },
+        {
+          "id": "3067:2094",
+          "name": "07 · Loading"
+        },
+        {
+          "id": "3067:2095",
+          "name": "08 · Error"
+        },
+        {
+          "id": "3067:2096",
+          "name": "09 · Success"
+        }
+      ],
+      "built": [
+        {
+          "id": "3067:4236",
+          "name": "01.01 · Company Roles · Company roles list · Default",
+          "screen": "L-01",
+          "section": "3067:2088",
+          "copiedFrom": "3043:15814",
+          "outcome": "Built"
+        },
+        {
+          "id": "3069:771",
+          "name": "01.02 · Company Roles · Company roles list · Company select open",
+          "screen": "L-02",
+          "section": "3067:2088",
+          "copiedFrom": "3067:4236",
+          "outcome": "Built"
+        },
+        {
+          "id": "3070:3688",
+          "name": "02.01 · Company Roles · View system role · Company Owner",
+          "screen": "DT-01",
+          "section": "3067:2089",
+          "copiedFrom": "3044:4365",
+          "outcome": "Built"
+        },
+        {
+          "id": "3070:984",
+          "name": "03.01 · Company Roles · Create role · Default",
+          "screen": "CR-01",
+          "section": "3067:2090",
+          "copiedFrom": "3044:4365",
+          "outcome": "Built"
+        },
+        {
+          "id": "3070:2059",
+          "name": "03.02 · Company Roles · Create role · Missing fields",
+          "screen": "CR-02",
+          "section": "3067:2090",
+          "copiedFrom": "3070:984 + caption 3044:2792",
+          "outcome": "Built"
+        },
+        {
+          "id": "3070:2493",
+          "name": "04.01 · Company Roles · Edit role · Default",
+          "screen": "ED-01",
+          "section": "3067:2091",
+          "copiedFrom": "3070:984",
+          "outcome": "Built"
+        },
+        {
+          "id": "3070:2988",
+          "name": "04.02 · Company Roles · Edit role · Name required",
+          "screen": "ED-02",
+          "section": "3067:2091",
+          "copiedFrom": "3070:2493 + caption 3044:2792",
+          "outcome": "Built"
+        },
+        {
+          "id": "3070:4644",
+          "name": "05.01 · Company Roles · Delete role · Confirm",
+          "screen": "D-01",
+          "section": "3067:2092",
+          "copiedFrom": "3067:4236 + overlay 3005:3241",
+          "outcome": "Built"
+        },
+        {
+          "id": "3070:5102",
+          "name": "05.02 · Company Roles · Delete role · Delete failed",
+          "screen": "D-02",
+          "section": "3067:2092",
+          "copiedFrom": "3070:4644 + message 3045:6966",
+          "outcome": "Built"
+        },
+        {
+          "id": "3070:6364",
+          "name": "06.01 · Company Roles · Company roles list · No matching roles",
+          "screen": "E-01",
+          "section": "3067:2093",
+          "copiedFrom": "3067:4236 + empty 3045:5769",
+          "outcome": "Built"
+        },
+        {
+          "id": "3070:6655",
+          "name": "07.01 · Company Roles · Company roles list · Loading",
+          "screen": "LO-01",
+          "section": "3067:2094",
+          "copiedFrom": "3067:4236 + loading 3065:7185",
+          "outcome": "Built"
+        },
+        {
+          "id": "3070:6904",
+          "name": "07.02 · Company Roles · Edit role · Loading",
+          "screen": "LO-02",
+          "section": "3067:2094",
+          "copiedFrom": "3070:2493 + loading 3022:9133",
+          "outcome": "Built"
+        },
+        {
+          "id": "3070:7174",
+          "name": "08.01 · Company Roles · Company roles list · Failed to load",
+          "screen": "ER-01",
+          "section": "3067:2095",
+          "copiedFrom": "3067:4236 + error state 3045:6920",
+          "outcome": "Built"
+        },
+        {
+          "id": "3070:7428",
+          "name": "08.02 · Company Roles · Create role · Create failed",
+          "screen": "ER-02",
+          "section": "3067:2095",
+          "copiedFrom": "3070:984 + message 3045:6966",
+          "outcome": "Built"
+        },
+        {
+          "id": "3070:7887",
+          "name": "08.03 · Company Roles · Edit role · Save failed",
+          "screen": "ER-03",
+          "section": "3067:2095",
+          "copiedFrom": "3070:2493 + message 3045:6966",
+          "outcome": "Built"
+        },
+        {
+          "id": "3070:8337",
+          "name": "09.01 · Company Roles · Company roles list · Role created",
+          "screen": "S-01",
+          "section": "3067:2096",
+          "copiedFrom": "3067:4236 + message 3045:7478",
+          "outcome": "Built"
+        },
+        {
+          "id": "3070:8858",
+          "name": "09.02 · Company Roles · Edit role · Role updated",
+          "screen": "S-02",
+          "section": "3067:2096",
+          "copiedFrom": "3070:2493 + message 3045:7478",
+          "outcome": "Built"
+        },
+        {
+          "id": "3070:9305",
+          "name": "09.03 · Company Roles · Company roles list · Role deleted",
+          "screen": "S-03",
+          "section": "3067:2096",
+          "copiedFrom": "3067:4236 + message 3045:7478",
+          "outcome": "Built"
+        }
+      ],
+      "buildNotes": [
+        "Form screens copied from Users ED-03 (3044:4365) instead of Companies 3021:4415: it already holds the bound page header, settings card and permissions table.",
+        "Sidebar: .menu__submenu_list has no items=1 variant (only 2-6), so Company Roles is a single selected item (Companies precedent). Icon recipe and selected on/off proof passed on every frame.",
+        "Matrix shows 6 of 17 company modules (Q3 default).",
+        "hydra-ux-audit fix: hint text next to the disabled Save changes on 04.01 and 09.02.",
+        "Final gates passed on all 18 frames: remote Hydra instances only, no detached instances, no hidden own nodes, every own fill/stroke/padding/gap/radius bound, every text styled, sidebar = Company Roles only, breadcrumb starts with HomeOutlined."
+      ],
+      "fixPass": {
+        "date": "2026-10-30",
+        "frames": 18,
+        "labels": {
+          "replaced": 30,
+          "sources": [
+            "3043:17864",
+            "3044:4383"
+          ],
+          "note": "colon was a text layer; replaced with colon-free Users label instances"
+        },
+        "sidebar": {
+          "usersActionSwap": "2798:24177 -> 2798:23926",
+          "open": "false"
+        },
+        "checks": "icon colour + toggle proof passed; gates clean"
+      }
+    },
+    "Admin Roles": {
+      "status": "built",
+      "plannedAt": "2026-10-30",
+      "plan": "Documents/plans/2026-10-30-admin-figma-admin-roles-plan.md",
+      "routes": [
+        "/admin-roles",
+        "/create-admin-role",
+        "/admin-roles/:roleName"
+      ],
+      "page": {
+        "id": "2958:63289",
+        "name": "Admin Roles"
+      },
+      "existingNodes": [
+        {
+          "id": "2958:63302",
+          "type": "SECTION",
+          "name": "Admin Roles · To design",
+          "action": "Left in place"
+        }
+      ],
+      "liveWalk": "Skipped by user choice; built from product source.",
+      "plannedScreens": [
+        "L-01",
+        "DT-01",
+        "CR-01",
+        "CR-02",
+        "ED-01",
+        "ED-02",
+        "D-01",
+        "D-02",
+        "E-01",
+        "LO-01",
+        "LO-02",
+        "ER-01",
+        "ER-02",
+        "ER-03",
+        "S-01",
+        "S-02",
+        "S-03"
+      ],
+      "optionalScreens": [
+        "L-02",
+        "L-03",
+        "CR-03"
+      ],
+      "copySourceModule": "Company Roles (2958:63288), one counterpart per screen",
+      "dsGaps": [
+        "No Transfer or Tree; Checkbox matrix",
+        "No checkbox Table cell",
+        ".menu__submenu_list has no items=1",
+        "Sidebar has no Feature Access Limit item"
+      ],
+      "builtAt": "2026-10-30",
+      "approvedScope": "Lean set of 17 screens; UX-1, UX-3 to UX-11 (UX-2 not used); all question defaults (Q6 confirmed: RSFC Employee source description shown as is)",
+      "sections": [
+        {
+          "id": "3076:1232",
+          "name": "01 · List"
+        },
+        {
+          "id": "3076:1233",
+          "name": "02 · Detail"
+        },
+        {
+          "id": "3076:1234",
+          "name": "03 · Create"
+        },
+        {
+          "id": "3076:1235",
+          "name": "04 · Edit"
+        },
+        {
+          "id": "3076:1236",
+          "name": "05 · Dialogs"
+        },
+        {
+          "id": "3076:1237",
+          "name": "06 · Empty"
+        },
+        {
+          "id": "3076:1238",
+          "name": "07 · Loading"
+        },
+        {
+          "id": "3076:1239",
+          "name": "08 · Error"
+        },
+        {
+          "id": "3076:1240",
+          "name": "09 · Success"
+        }
+      ],
+      "built": [
+        {
+          "id": "3076:1241",
+          "name": "01.01 · Admin Roles · Admin roles list · Default",
+          "screen": "L-01",
+          "section": "3076:1232",
+          "copiedFrom": "3067:4236",
+          "outcome": "Built"
+        },
+        {
+          "id": "3078:6633",
+          "name": "02.01 · Admin Roles · View system role · Global Administrator",
+          "screen": "DT-01",
+          "section": "3076:1233",
+          "copiedFrom": "3070:3688",
+          "outcome": "Built"
+        },
+        {
+          "id": "3078:2616",
+          "name": "03.01 · Admin Roles · Create role · Default",
+          "screen": "CR-01",
+          "section": "3076:1234",
+          "copiedFrom": "3070:984",
+          "outcome": "Built"
+        },
+        {
+          "id": "3078:3150",
+          "name": "03.02 · Admin Roles · Create role · Missing fields",
+          "screen": "CR-02",
+          "section": "3076:1234",
+          "copiedFrom": "3070:2059",
+          "outcome": "Built"
+        },
+        {
+          "id": "3078:3661",
+          "name": "04.01 · Admin Roles · Edit role · Default",
+          "screen": "ED-01",
+          "section": "3076:1235",
+          "copiedFrom": "3070:2493",
+          "outcome": "Built"
+        },
+        {
+          "id": "3078:4224",
+          "name": "04.02 · Admin Roles · Edit role · Name required",
+          "screen": "ED-02",
+          "section": "3076:1235",
+          "copiedFrom": "3070:2988",
+          "outcome": "Built"
+        },
+        {
+          "id": "3077:577",
+          "name": "05.01 · Admin Roles · Delete role · Confirm",
+          "screen": "D-01",
+          "section": "3076:1236",
+          "copiedFrom": "3070:4644",
+          "outcome": "Built"
+        },
+        {
+          "id": "3077:1260",
+          "name": "05.02 · Admin Roles · Delete role · Delete failed",
+          "screen": "D-02",
+          "section": "3076:1236",
+          "copiedFrom": "3070:5102",
+          "outcome": "Built"
+        },
+        {
+          "id": "3077:1904",
+          "name": "06.01 · Admin Roles · Admin roles list · No matching roles",
+          "screen": "E-01",
+          "section": "3076:1237",
+          "copiedFrom": "3070:6364",
+          "outcome": "Built"
+        },
+        {
+          "id": "3077:2166",
+          "name": "07.01 · Admin Roles · Admin roles list · Loading",
+          "screen": "LO-01",
+          "section": "3076:1238",
+          "copiedFrom": "3070:6655",
+          "outcome": "Built"
+        },
+        {
+          "id": "3078:4782",
+          "name": "07.02 · Admin Roles · Edit role · Loading",
+          "screen": "LO-02",
+          "section": "3076:1238",
+          "copiedFrom": "3070:6904",
+          "outcome": "Built"
+        },
+        {
+          "id": "3077:2383",
+          "name": "08.01 · Admin Roles · Admin roles list · Failed to load",
+          "screen": "ER-01",
+          "section": "3076:1239",
+          "copiedFrom": "3070:7174",
+          "outcome": "Built"
+        },
+        {
+          "id": "3078:4972",
+          "name": "08.02 · Admin Roles · Create role · Create failed",
+          "screen": "ER-02",
+          "section": "3076:1239",
+          "copiedFrom": "3070:7428",
+          "outcome": "Built"
+        },
+        {
+          "id": "3078:5504",
+          "name": "08.03 · Admin Roles · Edit role · Save failed",
+          "screen": "ER-03",
+          "section": "3076:1239",
+          "copiedFrom": "3070:7887",
+          "outcome": "Built"
+        },
+        {
+          "id": "3077:2606",
+          "name": "09.01 · Admin Roles · Admin roles list · Role created",
+          "screen": "S-01",
+          "section": "3076:1240",
+          "copiedFrom": "3070:8337",
+          "outcome": "Built"
+        },
+        {
+          "id": "3078:6068",
+          "name": "09.02 · Admin Roles · Edit role · Role updated",
+          "screen": "S-02",
+          "section": "3076:1240",
+          "copiedFrom": "3070:8858",
+          "outcome": "Built"
+        },
+        {
+          "id": "3077:3289",
+          "name": "09.03 · Admin Roles · Admin roles list · Role deleted",
+          "screen": "S-03",
+          "section": "3076:1240",
+          "copiedFrom": "3070:9305",
+          "outcome": "Built"
+        }
+      ],
+      "buildNotes": [
+        "Every frame cloned from its Company Roles counterpart; Company filter and 'Company: …' line removed from the copies (deleted, not hidden).",
+        "Sidebar: Admin Roles selected via the .menu__item selected variant only. resetOverrides() or a swap-away on the icon rebinds it to colorIcon (both tried, rolled back by the check); the copied icons already follow the variant. Icon/label variable check and selected on/off proof passed; no icon fill set by hand.",
+        "Matrix: six Users ED-04 rows (Access Blacklist, Admin Invites, Admin Roles, Companies, Knowledge Center, Users); the three '—' cells replaced by Checkbox cells cloned from the same column. DT-01 '—' cells switched to Table cell type=badge; badge text is a Badge__Status text override.",
+        "RSFC Employee description truncates with an ellipsis in the 446-wide Description column (Table cell behaviour).",
+        "Final gates passed on all 17 frames: remote Hydra instances only, no hidden own nodes, every own fill/stroke/padding/gap/radius bound, every text styled, sidebar = Admin Roles only, Users collapsed (2798:23926), breadcrumb starts with HomeOutlined, no label colons, at most one primary per screen, overlays x0 y0 full frame STRETCH, frames 1750 wide hug min 970."
+      ],
+      "placeholder": "2958:63302 left untouched (not moved, edited or deleted)"
+    },
+    "Feature Access Limit": {
+      "status": "built",
+      "plannedAt": "2026-10-30",
+      "plan": "Documents/plans/2026-10-30-admin-figma-feature-access-limit-plan.md",
+      "routes": [
+        "/feature-access-limit"
+      ],
+      "page": {
+        "id": "2958:63290",
+        "name": "Feature Access Limit"
+      },
+      "existingNodes": [
+        {
+          "id": "2958:63304",
+          "type": "SECTION",
+          "name": "Feature Access Limit · To design",
+          "protected": "treated as protected",
+          "action": "Left in place; new sections start 290 below it (y 837)"
+        }
+      ],
+      "liveWalk": "Skipped (Screen Recording off); plan built from product source.",
+      "plannedScreens": [
+        "L-01",
+        "LO-01",
+        "ER-01",
+        "ER-02",
+        "S-01"
+      ],
+      "optionalScreens": [
+        "L-02",
+        "RO-01",
+        "D-01"
+      ],
+      "copySources": {
+        "L-01": "3022:990",
+        "LO-01": "3022:9135",
+        "ER-01": "3022:6104 (error block)",
+        "ER-02": "S-01 copy",
+        "S-01": "3022:9414",
+        "D-01 overlay": "3022:9473"
+      },
+      "dsGaps": [
+        "Sidebar master 662:10029 has 9 .menu__submenu slots and no properties: no Feature Access Limit item (plan Q1, default Option A: extra linked .menu__submenu instance)",
+        ".menu__submenu_list has no items=1",
+        "No Select table cell (Companies bound wrapper reused)",
+        "Table cell type=action renders text links only"
+      ],
+      "openQuestions": 8,
+      "builtAt": "2026-10-30",
+      "approvedScope": "Lean set of 5; UX-1 to UX-4 (UX-5, UX-6 off); Q1 option A and Q2 slugs confirmed by the user; other questions on defaults",
+      "sections": [
+        {
+          "id": "3083:3578",
+          "name": "01 · List",
+          "y": 837
+        },
+        {
+          "id": "3083:3579",
+          "name": "02 · Loading",
+          "y": 2317
+        },
+        {
+          "id": "3083:3580",
+          "name": "03 · Error",
+          "y": 3797
+        },
+        {
+          "id": "3083:3581",
+          "name": "04 · Success",
+          "y": 5277
+        }
+      ],
+      "built": [
+        {
+          "id": "3083:3582",
+          "name": "01.01 · Feature Access Limit · Default limits · Default",
+          "screen": "L-01",
+          "section": "3083:3578",
+          "copiedFrom": "3022:990",
+          "outcome": "Built"
+        },
+        {
+          "id": "3083:4495",
+          "name": "02.01 · Feature Access Limit · Default limits · Loading",
+          "screen": "LO-01",
+          "section": "3083:3579",
+          "copiedFrom": "3083:3582 + Loading state 3022:9351",
+          "outcome": "Built"
+        },
+        {
+          "id": "3083:4729",
+          "name": "03.01 · Feature Access Limit · Default limits · Failed to load",
+          "screen": "ER-01",
+          "section": "3083:3580",
+          "copiedFrom": "3083:3582 + Error state 3022:6330",
+          "outcome": "Built"
+        },
+        {
+          "id": "3083:4969",
+          "name": "03.02 · Feature Access Limit · Default limits · Update failed",
+          "screen": "ER-02",
+          "section": "3083:3580",
+          "copiedFrom": "3083:3582 + Message 3022:9469",
+          "outcome": "Built"
+        },
+        {
+          "id": "3083:5362",
+          "name": "04.01 · Feature Access Limit · Default limits · Updated",
+          "screen": "S-01",
+          "section": "3083:3581",
+          "copiedFrom": "3083:3582 + Message 3022:9469",
+          "outcome": "Built"
+        }
+      ],
+      "sidebarExtraItem": {
+        "note": "Option A: linked Hydra .menu__submenu (set 92fb308e…, open=false) with nested menu item (set f1e79422…) title 'Feature Access Limit', icon LockOutlined 43998828…, selected=true, tags and action off; absolute in Body at x 0 y 506 (next 48 px step under Admin Roles). Icon colour follows the variant (toggle proof passed).",
+        "instances": [
+          "3083:3930",
+          "3083:4559",
+          "3083:4793",
+          "3083:5033",
+          "3083:5426"
+        ]
+      },
+      "removedFromCopies": [
+        "Reset to default button in the bom-static-matches row (3083:3634, copy-only node; defaults have no reset)",
+        "Columns frame replaced by the state block on LO-01 (3083:4510) and ER-01 (3083:4744)"
+      ],
+      "dsRequests": [
+        "Sidebar needs a 10th slot for Feature Access Limit (master 662:10029 has 9 slots, no properties)"
+      ],
+      "buildNotes": [
+        "Gates passed on all 5 frames: remote Hydra instances only, no hidden own nodes, all own fills/strokes/padding/gap/radius bound, every text styled, only Feature Access Limit selected, Users collapsed (2798:23926), breadcrumb starts with HomeOutlined, dropdown off, no colons, no primary button, Messages centred at y 16, frames 1750 fixed / hug / min 970."
+      ]
+    },
+    "Dashboard": {
+      "status": "built",
+      "plannedAt": "2026-10-30",
+      "plan": "Documents/plans/2026-10-30-admin-figma-dashboard-plan.md",
+      "routes": [
+        "/dashboard (AppRoute.DASHBOARD -> business/analytics/pages/AnalyticsPage)"
+      ],
+      "page": {
+        "id": "2958:63284",
+        "name": "Dashboard"
+      },
+      "existingNodes": [
+        {
+          "id": "2958:63292",
+          "type": "SECTION",
+          "name": "Dashboard · Current design · Needs changes",
+          "x": 0,
+          "y": 0,
+          "w": 1846,
+          "h": 1724,
+          "protected": "treated as protected (user decision 30 Oct)"
+        },
+        {
+          "id": "2483:68240",
+          "type": "FRAME",
+          "name": "Dashboard",
+          "w": 1750,
+          "h": 1504,
+          "xInSection": 48,
+          "yInSection": 80,
+          "protected": "move only (user decision 30 Oct); devStatus unreadable"
+        }
+      ],
+      "liveWalk": "not done (Screen Recording off); all screens from source",
+      "plannedScreens": [
+        "E-00 Move 2483:68240",
+        "L-01 Company scope applied",
+        "C-01 Save as preset",
+        "C-02 Save as preset · Name already used",
+        "DI-01 Manage saved presets",
+        "DI-02 Delete preset · Confirm",
+        "EM-01 No saved presets yet",
+        "LO-01 Loading analytics",
+        "ER-01 Analytics failed to load",
+        "ER-02 Export failed",
+        "S-01 Users exported",
+        "S-02 Preset saved"
+      ],
+      "optionalScreens": [
+        "L-02 Preset changed",
+        "L-03 All time",
+        "ED-01 Rename preset",
+        "DI-03 Update preset · Confirm",
+        "ER-03 Save as preset · Save failed",
+        "S-03 Preset deleted"
+      ],
+      "copySources": {
+        "shell": "3083:3582 (Feature Access Limit L-01)",
+        "filtersCard": "2981:64839 (clone only, inside protected 2483:68240)",
+        "pageHeader": "2969:64018 (clone only)",
+        "formModal": "3006:4428, 3005:2662",
+        "confirmation": "3005:3188",
+        "tableRows": "3001:49",
+        "loading": "3022:6341",
+        "error": "3022:6104",
+        "message": "3022:9469"
+      },
+      "dsGaps": [
+        "Sidebar has no Feature Access Limit slot (extra linked item reused)",
+        "No Card component",
+        "No modal width tokens; no Table cell with buttons",
+        "Verify at BUILD: DatePicker range + disabled, Button loading, Select multiple"
+      ],
+      "openQuestions": [
+        "Q1 where E-00 goes (default: new 01 · List, old empty section to Archive)",
+        "Q2 L-01 as scoped state",
+        "Q3 lean 11 vs 17",
+        "Q4 Stat Tile vs Statistic",
+        "Q5 top bar text",
+        "Q6 Segmented vs small buttons",
+        "Q7 row actions",
+        "Q8 modal widths",
+        "Q9 sample data"
+      ],
+      "builtAt": "2026-10-30",
+      "decisions": {
+        "scope": "lean 11 New + 1 Move",
+        "ux": "all kept",
+        "Q1": "A (move into 01 · List, archive old section)",
+        "Q2": "no new default frame",
+        "Q7": "changed: visible text actions Rename, Update, Delete (danger), right-aligned, no kebab",
+        "other": "defaults (Q4 Stat Tile neutral, Q5 keep topbar copy, Q6 Segmented, Q8 538/1135, Q9 fictional data)"
+      },
+      "built": [
+        {
+          "id": "3089:3143",
+          "name": "01.02 · Dashboard · Company scope applied · Default",
+          "section": "3085:593",
+          "copiedFrom": "3083:3582 (FAL shell) + Filters card 2981:64839"
+        },
+        {
+          "id": "3093:586",
+          "name": "02.01 · Dashboard · Save as preset · Default",
+          "section": "3093:585",
+          "copiedFrom": "3089:3143 + AB overlay 3005:2715"
+        },
+        {
+          "id": "3093:1136",
+          "name": "02.02 · Dashboard · Save as preset · Name already used",
+          "section": "3093:585",
+          "copiedFrom": "3093:586"
+        },
+        {
+          "id": "3095:8355",
+          "name": "03.01 · Dashboard · Manage saved presets · Default",
+          "section": "3095:8354",
+          "copiedFrom": "3089:3143 + overlay 3093:704 + Modal 1135"
+        },
+        {
+          "id": "3097:1398",
+          "name": "03.02 · Dashboard · Delete preset · Confirm",
+          "section": "3095:8354",
+          "copiedFrom": "3095:8355 + CR confirm overlay 3070:4712"
+        },
+        {
+          "id": "3097:2099",
+          "name": "04.01 · Dashboard · Manage saved presets · No saved presets",
+          "section": "3097:2098",
+          "copiedFrom": "3095:8355 + Empty State Block"
+        },
+        {
+          "id": "3097:3909",
+          "name": "05.01 · Dashboard · Loading analytics · Default",
+          "section": "3097:3908",
+          "copiedFrom": "3089:3143 + Companies loading card 3022:6353"
+        },
+        {
+          "id": "3097:4299",
+          "name": "06.01 · Dashboard · Analytics failed · Default",
+          "section": "3097:4298",
+          "copiedFrom": "3089:3143 + Companies error card 3022:6116"
+        },
+        {
+          "id": "3097:4688",
+          "name": "06.02 · Dashboard · Export failed · Default",
+          "section": "3097:4298",
+          "copiedFrom": "3089:3143 + Message error"
+        },
+        {
+          "id": "3097:5078",
+          "name": "07.01 · Dashboard · Users exported · Default",
+          "section": "3097:5077",
+          "copiedFrom": "3089:3143 + Message success"
+        },
+        {
+          "id": "3097:5471",
+          "name": "07.02 · Dashboard · Preset saved · Default",
+          "section": "3097:5077",
+          "copiedFrom": "3089:3143 + Message success"
+        }
+      ],
+      "sections": [
+        {
+          "id": "3085:593",
+          "name": "01 · List",
+          "y": 0
+        },
+        {
+          "id": "3093:585",
+          "name": "02 · Create",
+          "y": 2014
+        },
+        {
+          "id": "3095:8354",
+          "name": "03 · Dialogs",
+          "y": 3846
+        },
+        {
+          "id": "3097:2098",
+          "name": "04 · Empty",
+          "y": 5678
+        },
+        {
+          "id": "3097:3908",
+          "name": "05 · Loading",
+          "y": 7510
+        },
+        {
+          "id": "3097:4298",
+          "name": "06 · Error",
+          "y": 9498
+        },
+        {
+          "id": "3097:5077",
+          "name": "07 · Success",
+          "y": 11578
+        }
+      ],
+      "buildNotes": [
+        "Sidebar: Dashboard selected via the menu item variant, extra Feature Access Limit item unselected; no resetOverrides or icon swap (they rebind to colorIcon). Icon/label variable check and on/off proof passed. Searched from the Sidebar instance: frame.findAll does not reach Sidebar internals on a fresh copy.",
+        "Shell height: Main, Content, Right and Body switched to hug, Body minHeight = frame minHeight (970), so frames grow with content.",
+        "Sections 02-07 were first created on the Cover page (current page defaulted to the first page) and moved to Dashboard in the same session; the Cover frame 2613:2460 was not touched.",
+        "Protected fingerprint: 847599935 before and after the move and before/after the Filters card copy; some later sessions return 4147769075 with no field differences inside a call. Screenshot of 2483:68240 matches the planning screenshot."
+      ],
+      "buildDsGaps": [
+        "Modal inside Modal__Overlay is locked at 538; 1135 modals use the overlay as scrim (its modal hidden) plus a separate linked Modal resized on top.",
+        ".select_input type=multiple: three fixed tag slots, no count property (unused hidden); no disabled + filled variant.",
+        "Table cell type=tag hugs to 56; set to the 54 text-row height as in Company Roles.",
+        "No Card component (known); loading and error cards copied from Companies."
+      ],
+      "skipped": [
+        "Export tooltip (hover state)",
+        "optional L-02, L-03, ED-01, DI-03, ER-03, S-03"
+      ],
+      "fixPass": {
+        "date": "2026-10-30",
+        "finding": "1135 Modal taller than content",
+        "fixed": [
+          {
+            "frame": "3095:8355",
+            "modal": "3096:1648",
+            "h": [
+              364,
+              280
+            ]
+          },
+          {
+            "frame": "3097:1398",
+            "modal": "3097:1517",
+            "h": [
+              364,
+              280
+            ]
+          },
+          {
+            "frame": "3097:2099",
+            "modal": "3097:2218",
+            "h": [
+              364,
+              337
+            ]
+          }
+        ],
+        "note": "Modal, Content Wrapper and slot hug; empty Footer hidden; Content Wrapper bottom padding = Size/Padding/padding; EM-01 empty Actions row hidden (no property); overlays unchanged"
+      }
+    },
+    "Release Notes": {
+      "status": "built",
+      "plannedAt": "2026-10-30",
+      "plan": "Documents/plans/2026-10-30-admin-figma-release-notes-plan.md",
+      "routes": [
+        "/release-notes (AppRoute.RELEASE_NOTES -> business/release-notes/pages/ReleaseNotesAdminPage)"
+      ],
+      "page": {
+        "id": "2218:7642",
+        "name": "Release Notes"
+      },
+      "existingNodes": [
+        {
+          "id": "2218:10669",
+          "type": "SECTION",
+          "name": "Release Notes · Admin",
+          "protected": "move only; to Archive when empty"
+        },
+        {
+          "id": "2218:10670",
+          "type": "FRAME",
+          "to": "01 · List"
+        },
+        {
+          "id": "2218:11455",
+          "type": "FRAME",
+          "to": "04 · Empty"
+        },
+        {
+          "id": "2218:11282",
+          "type": "FRAME",
+          "to": "03 · Dialogs"
+        },
+        {
+          "id": "2218:12859",
+          "type": "SECTION",
+          "to": "02 · Create (whole flow)"
+        },
+        {
+          "id": "2218:14091",
+          "type": "SECTION",
+          "to": "02 · Create (whole flow)"
+        }
+      ],
+      "liveWalk": "not done (Screen Recording off); new screens from source",
+      "plannedScreens": [
+        "L-01",
+        "C-01",
+        "C-02",
+        "C-03",
+        "C-04",
+        "DI-01",
+        "DI-02",
+        "DI-03",
+        "LO-01",
+        "ER-01",
+        "S-01",
+        "S-02",
+        "S-03"
+      ],
+      "optionalScreens": [
+        "EM-01",
+        "ER-02",
+        "S-04"
+      ],
+      "copySources": {
+        "shell": "3083:3582",
+        "tableCard": "3001:49",
+        "tagCells": "3095:8355",
+        "formModal": "3093:586",
+        "confirmation": "3097:1398",
+        "dropZone": "2881:5629",
+        "error": "3022:6104",
+        "message": "3022:9469"
+      },
+      "dsGaps": [
+        "No Upload/Dragger component",
+        "No rich-text editor",
+        "Modal in Modal__Overlay locked at 538",
+        "Sidebar has no Feature Access Limit slot"
+      ],
+      "builtAt": "2026-10-30",
+      "sections": {
+        "01 · List": "3104:1585",
+        "02 · Create": "3104:1586",
+        "03 · Dialogs": "3104:1587",
+        "04 · Empty": "3104:1588",
+        "05 · Loading": "3104:1589",
+        "06 · Error": "3104:1590",
+        "07 · Success": "3104:1591"
+      },
+      "builtFrames": [
+        {
+          "key": "L-01",
+          "id": "3104:1592",
+          "name": "01.02 · Release Notes · List · Current shell",
+          "copiedFrom": "3083:3582 shell + 3001:86 table card"
+        },
+        {
+          "key": "C-01",
+          "id": "3105:3583",
+          "name": "02.01 · New release note · Not ready to publish",
+          "copiedFrom": "L-01 + overlay 3097:1516 + fresh DS Modal (681) + form 3093:706"
+        },
+        {
+          "key": "C-02",
+          "id": "3106:4410",
+          "name": "02.02 · New release note · Save failed",
+          "copiedFrom": "C-01 + Alert 3022:6331"
+        },
+        {
+          "key": "C-03",
+          "id": "3107:3383",
+          "name": "02.03 · Bulk upload · File not supported",
+          "copiedFrom": "L-01 + overlay 2881:5745 (resized to frame)"
+        },
+        {
+          "key": "C-04",
+          "id": "3107:4157",
+          "name": "02.04 · Bulk upload · Upload failed",
+          "copiedFrom": "C-03"
+        },
+        {
+          "key": "DI-01",
+          "id": "3107:4822",
+          "name": "03.01 · Delete release note · Delete failed",
+          "copiedFrom": "L-01 + confirmation 3097:1570 + Message 3097:5196"
+        },
+        {
+          "key": "DI-02",
+          "id": "3107:5415",
+          "name": "03.02 · Discard unsaved changes · Confirm",
+          "copiedFrom": "C-01 + confirmation 3097:1570"
+        },
+        {
+          "key": "DI-03",
+          "id": "3107:6461",
+          "name": "03.03 · Publish imported notes · Confirm",
+          "copiedFrom": "C-03 + Result + Stat Tile + confirmation 3097:1570"
+        },
+        {
+          "key": "LO-01",
+          "id": "3107:7182",
+          "name": "05.01 · Release notes · Loading",
+          "copiedFrom": "L-01 + Skeleton basic x3"
+        },
+        {
+          "key": "ER-01",
+          "id": "3107:7456",
+          "name": "06.01 · Release notes · Failed to load",
+          "copiedFrom": "L-01 + Error state 3022:6331 parent"
+        },
+        {
+          "key": "S-01",
+          "id": "3107:7728",
+          "name": "07.01 · Release note published",
+          "copiedFrom": "L-01 + Message 3097:5196"
+        },
+        {
+          "key": "S-02",
+          "id": "3107:8333",
+          "name": "07.02 · Release note deleted",
+          "copiedFrom": "L-01 + Message 3097:5196"
+        },
+        {
+          "key": "S-03",
+          "id": "3107:8913",
+          "name": "07.03 · Imported notes published",
+          "copiedFrom": "L-01 + Message 3097:5196"
+        }
+      ],
+      "skipped": [
+        "EM-01 (optional, user excluded)",
+        "ER-02 (optional)",
+        "S-04 (optional)"
+      ],
+      "buildDsGaps": [
+        "Modal in Modal__Overlay locked at 538: note form uses emptied overlay + separate DS Modal at 681",
+        "No rich-text editor: toolbar = text Buttons (icons + H1/H2) over Input__TextArea",
+        "No Upload/Dragger: drop zone frame copied from Knowledge Center 2881:5629 (already bound)",
+        "Table cell action children cannot be deleted in instances: unused Action 2 hidden",
+        "Select has no placeholder/value property: nested text overridden (value text fill copied from Input value text)",
+        "Sidebar has no Feature Access Limit slot (extra item kept, unselected)"
+      ],
+      "buildNotes": [
+        "Release Notes selected via menu item variant only; label and icon share one colour variable on all 10 items",
+        "Dashboard DI-02 wide Modal had its Footer removed; C-01 uses a fresh instance of the same DS Modal",
+        "Fingerprint tolerance 0.05 px on relative positions (0.01 px float noise on nested vectors); all other fields exact",
+        "In dialog screens the page primary sits under the scrim; the active dialog has one primary",
+        "2218:10669 moved to Archive 2109:27298 at (0,8929) when empty; not deleted"
+      ],
+      "fixPass": {
+        "date": "2026-10-31",
+        "pageHeaders": [
+          "3113:7820",
+          "3114:7820",
+          "3114:7849",
+          "3114:7869",
+          "3114:7889",
+          "3114:7909",
+          "3114:7931",
+          "3114:7951",
+          "3114:7966",
+          "3114:7981",
+          "3114:8001",
+          "3114:8021"
+        ],
+        "removedCardExtras": [
+          "3105:3595",
+          "3106:4422",
+          "3107:3395",
+          "3107:4169",
+          "3107:4834",
+          "3107:5427",
+          "3107:6473",
+          "3107:7194",
+          "3107:7468",
+          "3107:7740",
+          "3107:8345",
+          "3107:8925"
+        ],
+        "helperTextColor": "colorTextDescription",
+        "sentenceCase": [
+          "Published date",
+          "Summary for modal",
+          "Full release note content"
+        ],
+        "protectedUntouched": true
+      }
+    }
+  },
+  "createdNodes": [
+    "3001:42",
+    "3001:43",
+    "3001:44",
+    "3001:45",
+    "3001:46",
+    "3001:47",
+    "3001:48",
+    "3001:49",
+    "3006:4428",
+    "3005:2662",
+    "3005:3120",
+    "3005:3188",
+    "3005:3256",
+    "3005:3324",
+    "3005:3377",
+    "3005:3430",
+    "3005:3483",
+    "3005:3536",
+    "3005:3589",
+    "3010:12114",
+    "3010:12156",
+    "3010:12188",
+    "3010:12195",
+    "3022:5795",
+    "3020:3675",
+    "3020:3676",
+    "3020:3677",
+    "3020:3678",
+    "3020:3679",
+    "3020:3680",
+    "3020:3681",
+    "3020:3682",
+    "3020:3683",
+    "3022:5211",
+    "3022:990",
+    "3021:4415",
+    "3021:4764",
+    "3022:9473",
+    "3022:5824",
+    "3022:6341",
+    "3022:8953",
+    "3022:9135",
+    "3022:6104",
+    "3022:9353",
+    "3022:9385",
+    "3022:9414",
+    "3043:15814",
+    "3043:17188",
+    "3043:17848",
+    "3043:18181",
+    "3044:1728",
+    "3044:2555",
+    "3044:4365",
+    "3045:2508",
+    "3045:4308",
+    "3045:5492",
+    "3045:5825",
+    "3045:6141",
+    "3045:6425",
+    "3045:6643",
+    "3045:6933",
+    "3045:6970",
+    "3045:7445",
+    "3045:7482",
+    "3045:7584",
+    "3032:42",
+    "3032:43",
+    "3032:44",
+    "3032:45",
+    "3032:46",
+    "3032:47",
+    "3032:48",
+    {
+      "date": "2026-10-30",
+      "module": "Feature Access Limit",
+      "sections": [
+        "3083:3578",
+        "3083:3579",
+        "3083:3580",
+        "3083:3581"
+      ],
+      "frames": [
+        "3083:3582",
+        "3083:4495",
+        "3083:4729",
+        "3083:4969",
+        "3083:5362"
+      ]
+    },
+    {
+      "date": "2026-10-30",
+      "module": "Dashboard",
+      "id": "3085:593",
+      "type": "SECTION",
+      "name": "01 · List",
+      "page": "2958:63284"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "3093:585",
+      "type": "SECTION",
+      "name": "02 · Create",
+      "module": "Dashboard"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "3095:8354",
+      "type": "SECTION",
+      "name": "03 · Dialogs",
+      "module": "Dashboard"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "3097:2098",
+      "type": "SECTION",
+      "name": "04 · Empty",
+      "module": "Dashboard"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "3097:3908",
+      "type": "SECTION",
+      "name": "05 · Loading",
+      "module": "Dashboard"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "3097:4298",
+      "type": "SECTION",
+      "name": "06 · Error",
+      "module": "Dashboard"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "3097:5077",
+      "type": "SECTION",
+      "name": "07 · Success",
+      "module": "Dashboard"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "3089:3143",
+      "type": "FRAME",
+      "name": "01.02 · Dashboard · Company scope applied · Default",
+      "module": "Dashboard"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "3093:586",
+      "type": "FRAME",
+      "name": "02.01 · Dashboard · Save as preset · Default",
+      "module": "Dashboard"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "3093:1136",
+      "type": "FRAME",
+      "name": "02.02 · Dashboard · Save as preset · Name already used",
+      "module": "Dashboard"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "3095:8355",
+      "type": "FRAME",
+      "name": "03.01 · Dashboard · Manage saved presets · Default",
+      "module": "Dashboard"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "3097:1398",
+      "type": "FRAME",
+      "name": "03.02 · Dashboard · Delete preset · Confirm",
+      "module": "Dashboard"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "3097:2099",
+      "type": "FRAME",
+      "name": "04.01 · Dashboard · Manage saved presets · No saved presets",
+      "module": "Dashboard"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "3097:3909",
+      "type": "FRAME",
+      "name": "05.01 · Dashboard · Loading analytics · Default",
+      "module": "Dashboard"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "3097:4299",
+      "type": "FRAME",
+      "name": "06.01 · Dashboard · Analytics failed · Default",
+      "module": "Dashboard"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "3097:4688",
+      "type": "FRAME",
+      "name": "06.02 · Dashboard · Export failed · Default",
+      "module": "Dashboard"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "3097:5078",
+      "type": "FRAME",
+      "name": "07.01 · Dashboard · Users exported · Default",
+      "module": "Dashboard"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "3097:5471",
+      "type": "FRAME",
+      "name": "07.02 · Dashboard · Preset saved · Default",
+      "module": "Dashboard"
+    },
+    "3104:1585",
+    "3104:1586",
+    "3104:1587",
+    "3104:1588",
+    "3104:1589",
+    "3104:1590",
+    "3104:1591",
+    "3104:1592",
+    "3105:3583",
+    "3106:4410",
+    "3107:3383",
+    "3107:4157",
+    "3107:4822",
+    "3107:5415",
+    "3107:6461",
+    "3107:7182",
+    "3107:7456",
+    "3107:7728",
+    "3107:8333",
+    "3107:8913"
+  ],
+  "removedScratchNodes": [
+    {
+      "id": "3005:517",
+      "note": "First C-01 build, created and removed in this run (Select rendered at its default width); replaced by 3006:4428"
+    }
+  ],
+  "movedNodes": [
+    {
+      "date": "2026-10-30",
+      "id": "2483:68240",
+      "name": "Dashboard",
+      "from": "section 2958:63292 (48,80)",
+      "to": "section 3085:593 '01 · List' (48,80) on Dashboard 2958:63284",
+      "fingerprint": "identical (847599935, 324 nodes)"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "2958:63292",
+      "name": "Dashboard · Current design · Needs changes",
+      "from": "Dashboard page (0,0)",
+      "to": "🗄 Archive 2109:27298 (0,6915)",
+      "note": "empty after the frame move; not deleted"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "2218:10670",
+      "name": "Release Notes Admin",
+      "from": "section 2218:10669",
+      "to": "section 3104:1585 '01 · List' (48,80)",
+      "fingerprint": "identical (2859678517, 333 nodes)"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "2218:12859",
+      "name": "MANUAL NOTE CREATION FLOW",
+      "from": "section 2218:10669",
+      "to": "section 3104:1586 '02 · Create' (48,80)",
+      "fingerprint": "identical within 0.05 px (843 nodes; rounded hash 351710671 vs 1675644211 from sub-pixel rounding only)"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "2218:14091",
+      "name": "BULK NOTE CREATION FLOW",
+      "from": "section 2218:10669",
+      "to": "section 3104:1586 '02 · Create' (48,2830)",
+      "fingerprint": "identical (2700172349, 280 nodes)"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "2218:11282",
+      "name": "Release Notes Admin - Delete Note",
+      "from": "section 2218:10669",
+      "to": "section 3104:1587 '03 · Dialogs' (48,80)",
+      "fingerprint": "identical (4204326339, 351 nodes)"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "2218:11455",
+      "name": "Release Notes Admin - Empty State",
+      "from": "section 2218:10669",
+      "to": "section 3104:1588 '04 · Empty' (48,80)",
+      "fingerprint": "identical (263897501, 175 nodes)"
+    },
+    {
+      "date": "2026-10-30",
+      "id": "2218:10669",
+      "name": "Release Notes · Admin",
+      "from": "Release Notes page (0,0)",
+      "to": "🗄 Archive 2109:27298 (0,8929)",
+      "note": "empty after the moves; not deleted"
+    }
+  ],
+  "layoutRuns": [
+    {
+      "date": "2026-10-30",
+      "plan": "Documents/plans/2026-10-30-admin-figma-arrange-pages-plan.md",
+      "userApproval": "User said yes to applying canvas colour and section fill to all module pages and to arranging screens the same way everywhere, without deleting anything.",
+      "pages": {
+        "Dashboard": "2958:63284",
+        "Release Notes": "2218:7642",
+        "Knowledge Center": "2803:16056",
+        "Content": "0:1",
+        "Companies": "2958:63286",
+        "Users": "2958:63287",
+        "Company Roles": "2958:63288",
+        "Admin Roles": "2958:63289",
+        "Feature Access Limit": "2958:63290"
+      },
+      "changed": "Canvas #787A7E, all section fills white 10%, x/y of top-level sections and of screens inside sections, section sizes. Placeholder To-design sections: colour only.",
+      "notChanged": "No node deleted, renamed or reparented. No screen resized. Screen fingerprints identical before and after.",
+      "screensChecked": {
+        "Release Notes": 9,
+        "Knowledge Center": 17,
+        "Content": 39,
+        "Dashboard": 1
+      },
+      "notes": [
+        "Release Notes bulk flow kept in order Bulk upload, Loading, confirm, Success.",
+        "Access Blacklist placeholder section 2958:63294 could not be found on any page or in Archive on 30 Oct (ledger said it was left in place).",
+        "Devstatus (Ready for Dev) still unreadable through the Plugin API and REST token."
+      ]
+    }
+  ],
+  "dsRequests": [
+    "Sidebar needs a 10th slot for Feature Access Limit"
+  ]
+}

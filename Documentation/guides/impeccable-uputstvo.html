@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="sr"><head><meta charset="utf-8"><title>Impeccable – uputstvo</title>
+<style>
+@page{size:A4;margin:14mm}
+body{font:10pt/1.35 -apple-system,Helvetica,Arial,sans-serif;color:#111}
+h1{font-size:19pt;margin:0 0 1.5mm}
+p.sub{margin:0 0 4mm;color:#555}
+h2{font-size:11.5pt;margin:5mm 0 1.5mm;padding-bottom:1mm;border-bottom:1.5px solid #111;break-after:avoid}
+table{width:100%;border-collapse:collapse}
+tr{break-inside:avoid}
+td{padding:1.4mm 2mm;border-bottom:1px solid #ddd;vertical-align:top}
+td:nth-child(1){width:20%;font-family:Menlo,monospace;font-size:9pt;font-weight:600}
+td:nth-child(2){width:30%}
+td:nth-child(3){width:50%;font-family:Menlo,monospace;font-size:8.6pt;color:#222;background:#f6f6f6}
+.note{margin-top:5mm;padding:3mm;border:1px solid #999;border-radius:2mm;font-size:9.5pt;break-inside:avoid}
+</style></head><body>
+<h1>Impeccable – uputstvo za komande</h1>
+<p class="sub">Plugin za dizajn UI-a. Komande kucaš kao <b>/impeccable &lt;komanda&gt; [meta]</b>. Bez argumenta predlaže 2–3 komande po stanju projekta. Primeri su iz Hydra projekta.</p>
+
+<h2>Build – pravljenje</h2>
+<table>
+<tr><td>shape</td><td>Isplanira UX/UI pre koda.</td><td>/impeccable shape BOM korak "pregled pre importa"</td></tr>
+<tr><td>init</td><td>Upiše kontekst proizvoda u PRODUCT.md.</td><td>/impeccable init  (jednom, na početku projekta)</td></tr>
+<tr><td>document</td><td>Generiše DESIGN.md iz koda.</td><td>/impeccable document  (posle promene tema/tokena u src/theme)</td></tr>
+<tr><td>extract</td><td>Izvuče tokene i komponente u design system.</td><td>/impeccable extract src/ui/HydraTag.tsx</td></tr>
+<tr><td>craft</td><td>Zastarela, isto kao običan zahtev.</td><td>Umesto nje: "napravi novi ekran Download Center filtera"</td></tr>
+</table>
+
+<h2>Evaluate – ocena</h2>
+<table>
+<tr><td>critique</td><td>UX pregled sa ocenom po heuristikama.</td><td>/impeccable critique src/bom/pages/BomMatchingPage.tsx</td></tr>
+<tr><td>audit</td><td>Tehnička provera: a11y, performanse, responsive.</td><td>/impeccable audit src/spec/pages/SpecSubmittalsPage.tsx</td></tr>
+</table>
+
+<h2>Refine – doterivanje</h2>
+<table>
+<tr><td>polish</td><td>Završni prolaz pre isporuke.</td><td>/impeccable polish src/search/components/VariantActionSelectionModal.tsx</td></tr>
+<tr><td>bolder</td><td>Pojačava bezlične ekrane.</td><td>/impeccable bolder src/catalog/FeaturedParts.tsx</td></tr>
+<tr><td>quieter</td><td>Stišava preopterećene ekrane.</td><td>/impeccable quieter src/spec/components/SpecRecommendationCard.tsx</td></tr>
+<tr><td>distill</td><td>Skida višak, ostavlja suštinu.</td><td>/impeccable distill src/shell/content/DownloadCenterPage.tsx</td></tr>
+<tr><td>harden</td><td>Greške, i18n, ivični slučajevi.</td><td>/impeccable harden BOM import (prazan fajl, 500 redova, loš format)</td></tr>
+<tr><td>onboard</td><td>Prvo pokretanje, prazna stanja.</td><td>/impeccable onboard Spec Submittals kad nema nijednog projekta</td></tr>
+</table>
+
+<h2>Enhance – dodavanje</h2>
+<table>
+<tr><td>animate</td><td>Svrsishodna animacija.</td><td>/impeccable animate otvaranje Variant modala (kratko, bez treperenja)</td></tr>
+<tr><td>colorize</td><td>Boja u monohromatskom UI-ju.</td><td>/impeccable colorize status kolonu u tabeli</td></tr>
+<tr><td>typeset</td><td>Tipografija i hijerarhija.</td><td>/impeccable typeset src/shell/content/ProductCatalogContent.tsx</td></tr>
+<tr><td>layout</td><td>Razmaci, ritam, hijerarhija.</td><td>/impeccable layout Part detail strana (razmak između sekcija)</td></tr>
+<tr><td>delight</td><td>Ličnost i detalji.</td><td>/impeccable delight uspešan import BOM-a (poruka potvrde)</td></tr>
+<tr><td>overdrive</td><td>Gura iznad uobičajenog.</td><td>/impeccable overdrive Featured Parts hero (samo za marketing deo)</td></tr>
+</table>
+
+<h2>Fix</h2>
+<table>
+<tr><td>clarify</td><td>Tekstovi, labele, greške.</td><td>/impeccable clarify poruke u BOM matching ("Choose" umesto "Refine")</td></tr>
+<tr><td>adapt</td><td>Uređaji i veličine ekrana.</td><td>/impeccable adapt Download Center za tablet 768px</td></tr>
+<tr><td>optimize</td><td>Performanse UI-a.</td><td>/impeccable optimize BOM tabelu sa 2000 redova</td></tr>
+</table>
+
+<h2>Iterate – samo web</h2>
+<table>
+<tr><td>live</td><td>Biraš element u browseru i iteriraš.</td><td>/impeccable live  (dev server mora da radi; klikneš karticu, dobiješ alternative)</td></tr>
+<tr><td>generate</td><td>n varijanti imenovanog elementa.</td><td>/impeccable generate 3 redesign SpecRecommendationCard</td></tr>
+</table>
+
+<h2>Ostalo</h2>
+<table>
+<tr><td>pin / unpin</td><td>Zasebna prečica za komandu.</td><td>/impeccable pin audit  → posle toga kucaš samo /audit</td></tr>
+<tr><td>hooks</td><td>Automatski detektor posle izmena UI fajlova.</td><td>/impeccable hooks on   (status za proveru, off za gašenje)</td></tr>
+<tr><td>doctor</td><td>Proverava zastarele PRODUCT/DESIGN fajlove.</td><td>/impeccable doctor</td></tr>
+<tr><td>(bez argumenta)</td><td>Predloži 2–3 komande po stanju projekta.</td><td>/impeccable</td></tr>
+</table>
+
+<div class="note"><b>Za Hydra projekat:</b> najkorisniji su audit, polish, layout i typeset. Za Figma/DS rad su manje relevantni. AGENTS.md traži @hydra-ux-audit za UI rad, pa proveri da se ne preklapaju. Tvrdnje u primerima (fajlovi, ekrani) su ilustracije; zameni ih svojim metama.</div>
+</body></html>

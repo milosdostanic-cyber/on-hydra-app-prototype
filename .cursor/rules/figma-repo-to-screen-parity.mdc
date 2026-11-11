@@ -71,7 +71,7 @@ Optional but helpful: Figma URL with `node-id` (must still match current selecti
 1. **Resolve** the repo link to a file path; open and read the screen component and its imports.
 2. **Decompose** the UI: regions, antd/Hydra components (`src/ui/antd.ts`), layout (`shellLayout`, `Flex`, `Card`, tables, modals, tags, etc.).
 3. **Extract a parity spec** from code (not from screenshots):
-   - Typography roles → names in `src/theme/figmaTypography.ts` / antd `Typography` levels.
+   - Typography roles → names in `src/theme/hydraTypography.ts` / antd `Typography` levels.
    - Colors / surfaces → semantic tokens from `theme.useToken()` usage and `src/theme/*` mirrors.
    - Spacing / radius → `token.padding*`, `margin*`, `borderRadius*`, `shellLayout`.
    - Component inventory → list of DS component names to search in Figma (Button, Input, Table, Tag, Menu, …).
@@ -115,8 +115,8 @@ Summarize briefly:
 
 | Code | Figma |
 |------|--------|
-| `src/theme/figmaTypography.ts` roles | Text styles / typography variables in DS |
-| `src/theme/primaryPrimitive*.ts`, `figmaSemanticColors.ts` | `Color/Primary/*`, `Neutral/*`, Customize Theme paths in docs |
+| `src/theme/hydraTypography.ts` roles | Text styles / typography variables in DS |
+| `src/theme/primaryPrimitive*.ts`, `hydraSemanticColors.ts` | `Color/Primary/*`, `Neutral/*`, Customize Theme paths in docs |
 | `src/ui/antd.ts` exports | Ant Design components in Hydra DS library |
 | `shellLayout`, `sidebarSemanticsLight` | Layout spacing + sidebar/menu components/tokens |
 

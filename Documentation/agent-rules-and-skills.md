@@ -206,6 +206,14 @@ Skills are folders with `SKILL.md`. Cursor loads them when attached or registere
 
 ---
 
+## hydra-ux-pattern
+
+- **Location:** `.cursor/skills/hydra-ux-pattern/SKILL.md` (rules in `rules/`)
+- **Purpose:** Registry of approved Hydra/RSFC UX pattern rules (currently **UX-001**: 20px horizontal gap between independent form controls; **UX-002**: table links use `colorLink`, not `colorLinkActive`; **UX-003**: module entry page title = `Title/Heading 2` + `Large/Normal` description, `colorText` / `colorTextDescription`, `paddingXXS` gap; **UX-004**: table Actions column is last, header and cell actions right-aligned, never centered; **UX-005**: page search = `Input` (search icon) + primary `Button` "Search", same size, `paddingXS` gap, never `Input__Search`; **UX-006**: screen frames min height 970) with a read-only audit and approval-gated fix workflow across the 7 RSFC Figma files. DS is read-only.
+- **How to invoke:** `@hydra-ux-pattern` + `audit UX-001 in <module>`; fixes only with `Fix approved UX-001 <scope>`
+
+---
+
 ## hydra-ux-audit
 
 - **Location:** `.cursor/skills/hydra-ux-audit/SKILL.md`
@@ -309,6 +317,53 @@ Skills are folders with `SKILL.md`. Cursor loads them when attached or registere
 
 ---
 
+# AGENTS
+
+Claude Code subagents live in `.claude/agents/*.md` (this project only).
+
+---
+
+## hydra-molecule-builder
+
+- **Location:** `.claude/agents/hydra-molecule-builder.md`
+- **Purpose:** Find, plan and build reusable content molecules in the Hydra DS Figma file from the ConnectED module files.
+- **What it does:**
+  - AUDIT (read-only): scans the linked sections of all module files, groups candidates into molecules (upgrade an existing Hydra molecule or new), and writes `Documentation/molecule-audit-<date>.html` with screenshots, links and copy-ready molecule blocks.
+  - PLAN (read-only, default): plans one molecule - every occurrence across modules, rejected candidates, properties, tokens - and writes `Documentation/molecules/<molecule>.html` for approval.
+  - BUILD (only with an approved plan): one page per molecule in the Molecules section, Hydra naming, exposed atoms, token-bound styles, plus a "Replace in modules" section with one instance and one link per occurrence. Checks structure, links, FILL width, Dark mode and icon colours, then updates the report.
+  - Uses the standing audit decisions (linked nodes only, both Admin sections, no themes, no archived work, visual check, HTML reports).
+  - Never edits module files, tokens, styles or existing components.
+- **How to invoke:** "Use the hydra-molecule-builder agent to audit the modules" → "…to plan <molecule>" → reply "Plan approved".
+
+---
+
+## hydra-ds-compliance
+
+- **Location:** `.claude/agents/hydra-ds-compliance.md`
+- **Purpose:** Audit and fix design-system drift in the 7 RSFC module files (Admin, Content, Release Notes, Part Search, Unified Search, BOM, SPEC) against the Hydra Ant Design - DS library, and document recurring UX patterns.
+- **What it does:**
+  - AUDIT (read-only, default): checks DS component instances (detached, look-alikes, outdated, wrong variant), token binding (colour, spacing, radius, effects), text styles by role, colour roles and spacing scale. Writes `Documentation/ds-compliance-audit-<date>.html` with finding IDs, screenshots, current vs expected and links. Caches the DS inventory and typography role table in `Documentation/ds-inventory.json`.
+  - FIX (only with "Fix approved" + finding IDs): swaps to DS instances, binds variables and applies text styles in the module files. Snaps only; anything that would visibly change the design is marked "Needs designer decision".
+  - PATTERNS (read-only in Figma): writes `Documentation/hydra-ux-patterns.md` - spacing map, layout and interaction patterns, typography and colour usage, inconsistencies.
+  - Never edits the Hydra DS file or creates components, variables or styles.
+- **How to invoke:** "Use the hydra-ds-compliance agent to audit the modules" → reply "Fix approved: BOM-001, BOM-004, …"; or "…to document UX patterns".
+
+---
+
+## hydra-admin-to-figma
+
+- **Location:** `.claude/agents/hydra-admin-to-figma.md`
+- **Purpose:** Walk the live Hydra Admin app in the browser, one module at a time, and put each module's important screens into the Admin - RSFC Figma file using only Hydra Ant Design - DS components, variables and text styles.
+- **What it does:**
+  - LAYOUT (read-only until "Layout approved"): one page per live sidebar module, the same section order on every page (List, Detail, Create, Edit, Dialogs, Empty, Loading, Error, Success), an Archive page for old copies. Applying it only creates pages and moves frames.
+  - PLAN (read-only, default): walks one module live (screens, dialogs, states; never saves data), reads its Figma page and writes `Documents/plans/<date>-admin-figma-<module>-plan.md` with the action per screen (Move only / Keep / Rebuild / New), Hydra components, small UX improvements, blockers and questions.
+  - BUILD (only with "Build approved: <module>"): builds the approved screens with the Hydra-only screen-recreator contract and `hydra-ux-audit`, then asks before the next module.
+  - Ready for Dev frames can be moved but never changed; a before/after fingerprint rolls back any change.
+  - Never creates tokens or components, never leaves raw values, never types a password. State is kept in `Documentation/admin-figma-ledger.json`.
+- **How to invoke:** "Use the hydra-admin-to-figma agent to plan the Admin layout" → "Layout approved" → "…to plan Access Blacklist" → "Build approved: Access Blacklist".
+
+---
+
 # DOCUMENTS (not rules/skills, but agents use them)
 
 ---
@@ -399,6 +454,7 @@ https://www.figma.com/design/…?node-id=…
 | `.cursor/rules/` | All rules (`.mdc`) |
 | `.cursor/skills/` | Project skills (`figma-console-mcp`, `prd-ux-implementation-planner`, `hydra-ux-audit`, `hydra-figma-flow-explainer`, `hydra-module-builder`) |
 | `.agents/skills/` | External skills (`caveman`, `caveman-compress`) |
+| `.claude/agents/` | Claude Code subagents (`hydra-molecule-builder`, `hydra-ds-compliance`, `hydra-admin-to-figma`) |
 | `Documentation/hydra-ai-pack/` | Portable checklist and skill copy |
 | `Documents/plans/` | Plans from `@plan-orchestrator` |
 | `Documents/Bom/` | BOM plans and userflow docs |

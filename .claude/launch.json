@@ -14,6 +14,13 @@
       "runtimeArgs": ["run", "storybook"],
       "port": 6006,
       "autoPort": false
+    },
+    {
+      "name": "docs-static",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "Documentation"],
+      "port": 8765,
+      "autoPort": false
     }
   ]
 }

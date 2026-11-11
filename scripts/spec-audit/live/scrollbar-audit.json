@@ -1,0 +1,60 @@
+{
+  "ports": [
+    {
+      "index": 0,
+      "label": "Document sections",
+      "scroll": {
+        "top": 322,
+        "bottom": 875,
+        "left": 281,
+        "right": 535
+      },
+      "panel": {
+        "top": 247,
+        "bottom": 876,
+        "right": 536
+      },
+      "bottomGap": 1,
+      "rightGap": 1,
+      "scrollable": true
+    },
+    {
+      "index": 1,
+      "label": "port-1",
+      "scroll": {
+        "top": 323,
+        "bottom": 875,
+        "left": 545,
+        "right": 1095
+      },
+      "panel": {
+        "top": 248,
+        "bottom": 875,
+        "right": 1095
+      },
+      "bottomGap": 0,
+      "rightGap": 0,
+      "scrollable": true
+    },
+    {
+      "index": 2,
+      "label": "port-2",
+      "scroll": {
+        "top": 347,
+        "bottom": 875,
+        "left": 1105,
+        "right": 1487
+      },
+      "panel": {
+        "top": 247,
+        "bottom": 876,
+        "right": 1488
+      },
+      "bottomGap": 1,
+      "rightGap": 1,
+      "scrollable": true
+    }
+  ],
+  "pass": true,
+  "url": "http://localhost:5173/projects/3/spec/spec-scan-21/edit?recommendation=rec%3Aspec-scan-21%3Aspec-scan-21-cit-3-3&section=sec-211339&citation=spec-scan-21-cit-3-3&version=v1"
+}

@@ -16,19 +16,19 @@ We may be **somewhat more creative** when it improves **clarity, hierarchy, and 
 ## Composition
 
 - **Combine existing building blocks** from **`src/ui/antd.ts`** (and established shell/layout patterns) when a single component is not enough.
-- **Cards and grouped content:** It is fine to use **`Card`**, **`Space`**, **`Flex`**, **`Divider`**, **`Typography`**, **`Tag`**, etc., composed together to form **cards, panels, or summary strips**—including patterns that are not a single named “Card template” in Figma, as long as spacing, type, and colors come from **tokens** and **figmaTypography** as usual.
+- **Cards and grouped content:** It is fine to use **`Card`**, **`Space`**, **`Flex`**, **`Divider`**, **`Typography`**, **`Tag`**, etc., composed together to form **cards, panels, or summary strips**—including patterns that are not a single named “Card template” in Figma, as long as spacing, type, and colors come from **tokens** and **hydraTypography** as usual.
 - Prefer **semantic theme tokens** (`colorBgContainer`, `colorBorderSecondary`, `colorFillAlter`, `padding*`, `margin*`, `borderRadius*`) for surfaces and grouping before reaching for primitives.
 
 ## Primitive colors (use with restraint)
 
-- We may use **existing primitive / ramp colors** from the mirrored modules (e.g. **`primaryPrimitiveBlue`**, **`primaryPrimitiveOrange`**, **`buttonPrimaryPalette`**, **`figmaSemanticColors`**, and semantics that reference them) to add **accent, emphasis, or subtle variation**—for example a tinted header area, a soft border, or a highlight—**without overdoing it**.
+- We may use **existing primitive / ramp colors** from the mirrored modules (e.g. **`primaryPrimitiveBlue`**, **`primaryPrimitiveOrange`**, **`buttonPrimaryPalette`**, **`hydraSemanticColors`**, and semantics that reference them) to add **accent, emphasis, or subtle variation**—for example a tinted header area, a soft border, or a highlight—**without overdoing it**.
 - **Do not** introduce **new** arbitrary hex values in JSX/CSS for “prettier” UI; if something needs a recurring new color, follow **figma-repo-parity.mdc** (repo + Figma) or escalate.
 - **Restraint:** Fewer strong colors beats noisy screens. Default to **neutral surfaces + one clear primary action**; use extra primitive-driven accents only when they **aid scanning or state** (e.g. risk, success, section identity).
 
 ## Checklist
 
 - [ ] Creativity serves **UX** (hierarchy, grouping, feedback)—not decoration for its own sake.
-- [ ] Composition uses **barrel + tokens**; typography still from **figmaTypography** / **theme** only.
+- [ ] Composition uses **barrel + tokens**; typography still from **hydraTypography** / **theme** only.
 - [ ] Any primitive-based color is **imported from allowed mirror modules** or exposed via **theme**, not pasted literals.
 - [ ] Visual noise is **limited**; the screen still feels like **Hydra / Ant Design**.
 

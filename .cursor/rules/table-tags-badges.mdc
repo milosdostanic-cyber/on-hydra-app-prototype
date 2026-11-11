@@ -1,0 +1,58 @@
+---
+description: How table columns show status, type, confidence and file type (Badge, Tag, colorful Tag, or plain text)
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Table columns: badge, tag, or plain text
+
+**Language:** English. User rule, 2026-11-09. Applies to every module (Admin, Content, BOM, SPEC, Part Search, Unified Search, Release Notes), in Figma and in code.
+
+**One idea:** a "Type" column is the one place where different values get different colours (plus file types). Everything else is a badge, a tone tag, a neutral tag or plain text.
+
+## Which treatment for which column
+
+| Column kind | Treatment | Figma | Examples |
+| --- | --- | --- | --- |
+| Status of a record, or access state | Dot + label, left aligned | `Badge__Status`, table cell `type=badge` | Draft / Published, Active / Error, Enabled / Disabled, Allowed / Not allowed, Ready / Needs review, Included / Excluded |
+| Confidence or match quality | Tone tag | `Tag__Status` | High / Medium / Low, Added manually |
+| Content file type | Colourful tag by fixed table | `Tag__Colorful` (see `content-file-type-tags.mdc`) | RFA, PDF, DWG |
+| Small closed **Type** (every "Type" column) | Colourful tag, one fixed colour per value, border on | `Tag__Colorful` | Admin / User, System / Custom, Domain / Email, Feature / Fix / Improvement |
+| Roles, labels the user creates | Neutral tag | `Tag` | Users → Roles, Knowledge Center categories |
+| Everything else | Plain text | | Category, division, manufacturer, version, unit, counts, quantities, dates, Yes / No, feed format (CSV / JSON / XML) |
+
+## Rules
+
+- A record status is never a tag (`Tag__Status` or `Tag__Colorful`). See the status badge rule.
+- A count is never a tag. Write "2 matches" as plain text.
+- A value keeps one colour on every screen, in Figma and in code. Never recolour it per module.
+- Colourful tags are for Type columns and file types only. Roles, categories and other labels stay neutral.
+- Colours repeat across different columns (only 10 presets), but never inside one column.
+
+## Type colours (2026-11-09)
+
+Full lookup, including file types: `Documentation/type-tag-colors.md`. Keep both in sync.
+
+| Column | Value | `Tag__Colorful` colour |
+| --- | --- | --- |
+| Users → Type | Admin | `volcano` |
+| Users → Type | User | `blue` |
+| Company Roles → Type, Admin Roles → System Role | System | `geekblue` |
+| Company Roles → Type | Custom | `gold` |
+| Access Blacklist → Type | Domain | `purple` |
+| Access Blacklist → Type | Email | `cyan` |
+| Release Notes → Type | Feature | `green` |
+| Release Notes → Type | Improvement | `blue` |
+| Release Notes → Type | Fix | `orange` |
+
+A new Type value takes a free preset and is added to this table.
+- "New" markers keep one colour everywhere the marker appears.
+- Tag columns align left.
+
+## Decisions (2026-11-09)
+
+- Every Type column uses colourful tags, a different colour per value (see Type colours).
+- Knowledge Center feed Format: plain text.
+- Yes / No facts: plain text. Access and permission state (Allowed / Not allowed, Enabled / Disabled): badge.
+- Admin Roles System Role: tag "System" when true, empty when not.
+- Users → Roles stays neutral.

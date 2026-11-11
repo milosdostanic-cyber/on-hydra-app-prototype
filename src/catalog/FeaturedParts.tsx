@@ -16,7 +16,6 @@ import {
 } from './featuredPartsConfig';
 import { BomCardTitle } from '../bom/components/BomCardTitle';
 import { PageDescription } from '../shell/PageDescription';
-import { hydraFeaturedPartsPanelBgLight } from '../theme/hydraSemanticColors';
 import {
   hydraLargeNormal,
   hydraTextStyleToReactCss,
@@ -187,7 +186,7 @@ export function FeaturedParts({ contextNote, emphasized = false, panel = false }
           width: '100%',
           boxSizing: 'border-box',
           padding: token.paddingLG,
-          background: hydraFeaturedPartsPanelBgLight,
+          background: token.colorPrimaryBg,
           borderRadius: token.borderRadiusLG,
           boxShadow: token.boxShadowTertiary,
         }}

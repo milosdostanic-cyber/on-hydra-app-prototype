@@ -6,7 +6,8 @@ import { CatalogThumbnailPlaceholder } from '../../catalog/CatalogThumbnailPlace
 import { useActionTrail, useActionTrailModuleLifecycle } from '../../context/ActionTrailContext';
 import { actionTrailTableRowProps } from '../../search/actionTrailStyles';
 import { useDownloadHistory } from '../../search/revitDownloadQueue';
-import { HydraColorfulTag, HydraTag, type HydraColorfulPreset } from '../../ui/HydraTag';
+import { contentFileTypeTagPreset } from '../../search/contentFileTypeTags';
+import { HydraColorfulTag, HydraTag } from '../../ui/HydraTag';
 import {
   App,
   Avatar,
@@ -78,19 +79,6 @@ function formatDownloadedDate(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-/** Figma `Tag / Colorful` presets; status hues (red, green, gold) stay reserved for state. */
-const FORMAT_PRESETS: Record<string, HydraColorfulPreset> = {
-  RFA: 'geekblue',
-  PDF: 'magenta',
-  DWG: 'cyan',
-  STEP: 'purple',
-};
-
-/** Preset step 3 is the border that belongs to the same ramp as the chip fill. */
-function formatChipBorder(preset: HydraColorfulPreset): string {
-  return `var(--ant-${preset}-3)`;
 }
 
 /** Part actions panel order; unknown codes follow in their original order. */
@@ -434,14 +422,9 @@ export function DownloadCenterPage() {
         return (
           <Flex gap={token.marginXXS} wrap="wrap">
             {sortFormats(row.formats).map((format) => {
-              const preset = FORMAT_PRESETS[format];
+              const preset = contentFileTypeTagPreset(format);
               return preset ? (
-                <HydraColorfulTag
-                  key={format}
-                  preset={preset}
-                  bordered
-                  style={{ borderColor: formatChipBorder(preset) }}
-                >
+                <HydraColorfulTag key={format} preset={preset} bordered>
                   {format}
                 </HydraColorfulTag>
               ) : (

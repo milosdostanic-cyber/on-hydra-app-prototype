@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #141414;
+        --ink-2: #595959;
+        --ink-3: #8c8c8c;
+        --line: #f0f0f0;
+        --line-strong: #d9d9d9;
+        --surface: #ffffff;
+        --surface-alt: #fafafa;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 32px 36px 40px;
+        width: 1240px;
+        font-family: 'Barlow', sans-serif;
+        color: var(--ink);
+        background: var(--surface);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      h1 {
+        font-size: 30px;
+        line-height: 38px;
+        font-weight: 600;
+        margin: 0 0 4px;
+      }
+
+      .sub {
+        font-size: 16px;
+        line-height: 24px;
+        color: var(--ink-2);
+        margin: 0 0 28px;
+      }
+
+      h2 {
+        font-size: 20px;
+        line-height: 28px;
+        font-weight: 500;
+        margin: 0 0 4px;
+      }
+
+      .hint {
+        font-size: 14px;
+        line-height: 22px;
+        color: var(--ink-2);
+        margin: 0 0 16px;
+      }
+
+      section {
+        padding: 22px 0 26px;
+        border-top: 1px solid var(--line);
+      }
+
+      /* ---- ramp ---- */
+      .ramp-row {
+        display: grid;
+        grid-template-columns: 210px repeat(10, 1fr);
+        gap: 6px;
+        align-items: end;
+        margin-bottom: 14px;
+      }
+
+      .ramp-label {
+        font-size: 14px;
+        line-height: 20px;
+        font-weight: 500;
+        padding-bottom: 6px;
+      }
+
+      .ramp-label small {
+        display: block;
+        font-size: 12px;
+        line-height: 18px;
+        font-weight: 400;
+        color: var(--ink-3);
+      }
+
+      .step-head {
+        font-size: 12px;
+        line-height: 18px;
+        color: var(--ink-3);
+        text-align: center;
+      }
+
+      .swatch {
+        height: 52px;
+        border-radius: 4px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+      }
+
+      .hex {
+        font-size: 11px;
+        line-height: 16px;
+        text-align: center;
+        color: var(--ink-2);
+        margin-top: 5px;
+        letter-spacing: 0.2px;
+      }
+
+      .ramp-notes {
+        display: grid;
+        grid-template-columns: 210px repeat(10, 1fr);
+        gap: 6px;
+        margin-top: 2px;
+      }
+
+      .note {
+        font-size: 11px;
+        line-height: 15px;
+        text-align: center;
+        color: var(--ink);
+        background: var(--surface-alt);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 5px 3px;
+      }
+
+      .note.navy {
+        grid-column: span 4;
+      }
+
+      /* ---- before / after ---- */
+      .ba {
+        display: grid;
+        grid-template-columns: 230px 1fr 1fr;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+
+      .ba > div {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+        font-size: 13px;
+        line-height: 20px;
+      }
+
+      .ba > div:nth-child(3n + 2),
+      .ba > div:nth-child(3n + 3) {
+        border-left: 1px solid var(--line);
+      }
+
+      .ba .head {
+        background: var(--surface-alt);
+        font-size: 13px;
+        line-height: 20px;
+        font-weight: 500;
+        color: var(--ink-2);
+      }
+
+      .ba .rowlabel {
+        font-weight: 500;
+        color: var(--ink);
+      }
+
+      .ba .rowlabel small {
+        display: block;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 18px;
+        color: var(--ink-3);
+      }
+
+      .code {
+        font-size: 11px;
+        line-height: 16px;
+        color: var(--ink-3);
+        margin-top: 7px;
+        letter-spacing: 0.2px;
+      }
+
+      /* demo bits */
+      .btn {
+        display: inline-block;
+        padding: 5px 16px;
+        border-radius: 6px;
+        color: #fff;
+        font-size: 14px;
+        line-height: 22px;
+        font-weight: 400;
+      }
+
+      .lnk {
+        font-size: 14px;
+        line-height: 22px;
+      }
+
+      .menu {
+        border-radius: 4px;
+        overflow: hidden;
+        width: 210px;
+      }
+
+      .menu div {
+        padding: 6px 12px;
+        font-size: 13px;
+        line-height: 20px;
+      }
+
+      .side {
+        display: flex;
+        gap: 10px;
+        align-items: stretch;
+      }
+
+      .side .bar {
+        width: 92px;
+        height: 78px;
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+      }
+
+      .side .band {
+        height: 22px;
+      }
+
+      .side .body {
+        height: 56px;
+      }
+
+      /* ---- unchanged ---- */
+      .keep {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+
+      .keep .cell {
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 14px 16px;
+      }
+
+      .keep .dot {
+        height: 32px;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+      }
+
+      .keep .name {
+        font-size: 14px;
+        line-height: 22px;
+        font-weight: 500;
+      }
+
+      .keep .meta {
+        font-size: 12px;
+        line-height: 18px;
+        color: var(--ink-3);
+      }
+
+      .keep .same {
+        display: inline-block;
+        margin-top: 8px;
+        font-size: 11px;
+        line-height: 16px;
+        padding: 1px 8px;
+        border-radius: 10px;
+        background: #f6ffed;
+        border: 1px solid #b7eb8f;
+        color: #389e0d;
+      }
+
+      footer {
+        margin-top: 26px;
+        padding-top: 14px;
+        border-top: 1px solid var(--line);
+        font-size: 12px;
+        line-height: 18px;
+        color: var(--ink-3);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Color changes — ASC (production) → RSFC (prototype)</h1>
+    <p class="sub">
+      Every value below is the exact hex used in code. Compared: <strong>on-hydra-app</strong> @ develop vs
+      <strong>on-hydra-app-prototype</strong>.
+    </p>
+
+    <section style="border-top: none; padding-top: 0">
+      <h2>1. The brand color scale (10 shades, light → dark)</h2>
+      <p class="hint">
+        One scale drives links, selected rows, highlights and the sidebar. The whole scale was reseeded,
+        and the four darkest shades are locked to the brand navy.
+      </p>
+
+      <div class="ramp-row" id="head-row">
+        <div class="ramp-label"></div>
+      </div>
+      <div class="ramp-row" id="old-row">
+        <div class="ramp-label">Production — ASC teal<small>token <code>blue1…blue10</code></small></div>
+      </div>
+      <div class="ramp-row" id="new-row">
+        <div class="ramp-label">Prototype — RSFC blue<small>token <code>primary-1…primary-10</code></small></div>
+      </div>
+      <div class="ramp-notes">
+        <div></div>
+        <div class="note">selected row / chip background</div>
+        <div></div>
+        <div class="note">borders</div>
+        <div></div>
+        <div class="note">hover fill</div>
+        <div class="note"><strong>main brand color</strong><br />links, primary</div>
+        <div class="note navy"><strong>brand Navy — locked</strong><br />sidebar, link hover / pressed, submenu</div>
+      </div>
+    </section>
+
+    <section>
+      <h2>2. Where you actually see it</h2>
+      <p class="hint">Same UI elements, rendered with the real values from each repo.</p>
+
+      <div class="ba">
+        <div class="head">Element</div>
+        <div class="head">Before — production (ASC)</div>
+        <div class="head">After — prototype (RSFC)</div>
+
+        <div class="rowlabel">Main action button<small>filled primary</small></div>
+        <div>
+          <span class="btn" style="background: #005d85">Download</span>
+          <div class="code">#005D85 · hover #0073A5</div>
+        </div>
+        <div>
+          <span class="btn" style="background: #f05a23">Download</span>
+          <div class="code">#F05A23 · hover #FC834E · pressed #C93E14 — NEW, no orange existed before</div>
+        </div>
+
+        <div class="rowlabel">Link</div>
+        <div>
+          <span class="lnk" style="color: #005d85">Open project</span>
+          <div class="code">#005D85 · hover #0073A5 (lighter)</div>
+        </div>
+        <div>
+          <span class="lnk" style="color: #2576bb">Open project</span>
+          <div class="code">#2576BB · hover #004173 (darker — contrast)</div>
+        </div>
+
+        <div class="rowlabel">Selected menu item</div>
+        <div>
+          <div class="menu">
+            <div style="background: #004173; color: #50b8e4">Part Search</div>
+            <div style="background: #0073a5; color: #ffffff">Content</div>
+          </div>
+          <div class="code">plate #004173 · text #50B8E4</div>
+        </div>
+        <div>
+          <div class="menu">
+            <div style="background: #ebf5fa; color: #00365f">Part Search</div>
+            <div style="background: #004173; color: #ffffff">Content</div>
+          </div>
+          <div class="code">plate #EBF5FA · text #00365F — light plate, dark text (inverted)</div>
+        </div>
+
+        <div class="rowlabel">Sidebar<small>logo band + body</small></div>
+        <div>
+          <div class="side">
+            <div class="bar">
+              <div class="band" style="background: #0073a5"></div>
+              <div class="body" style="background: #0073a5"></div>
+            </div>
+          </div>
+          <div class="code">#0073A5 (teal, one surface)</div>
+        </div>
+        <div>
+          <div class="side">
+            <div class="bar">
+              <div class="band" style="background: #141414"></div>
+              <div class="body" style="background: #004173"></div>
+            </div>
+          </div>
+          <div class="code">band #141414 · body #004173 (navy)</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>3. What did NOT change</h2>
+      <p class="hint">Identical in both repos — these are standard Ant Design values, not brand colors.</p>
+      <div class="keep">
+        <div class="cell">
+          <div class="dot" style="background: #52c41a"></div>
+          <div class="name">Success</div>
+          <div class="meta">#52C41A</div>
+          <span class="same">no change</span>
+        </div>
+        <div class="cell">
+          <div class="dot" style="background: #faad14"></div>
+          <div class="name">Warning</div>
+          <div class="meta">#FAAD14</div>
+          <span class="same">no change</span>
+        </div>
+        <div class="cell">
+          <div class="dot" style="background: #ff4d4f"></div>
+          <div class="name">Error</div>
+          <div class="meta">#FF4D4F</div>
+          <span class="same">no change</span>
+        </div>
+        <div class="cell">
+          <div class="dot" style="background: #1677ff"></div>
+          <div class="name">Info</div>
+          <div class="meta">#1677FF — deliberately not the brand blue</div>
+          <span class="same">stays standard blue</span>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      Also unchanged: greys and neutrals (brand grey #A7A9AC has no UI role), spacing, corner radii and
+      component sizes. Brand-guide accents #EB1E23, #FFCD05, #FA961E and #231F20 are for charts and
+      illustrations only and are not wired into UI components.
+    </footer>
+
+    <script>
+      const OLD = ['#B8EAFF', '#75D6FF', '#2EC0FF', '#00A4EB', '#0073A5', '#005D85', '#004461', '#002E42', '#00151F', '#000B0F'];
+      const NEW = ['#EBF5FA', '#C7E1ED', '#99C6E0', '#6EABD4', '#4890C7', '#2576BB', '#004173', '#00365F', '#002A4A', '#001D35'];
+
+      const headRow = document.getElementById('head-row');
+      for (let i = 1; i <= 10; i += 1) {
+        const el = document.createElement('div');
+        el.className = 'step-head';
+        el.textContent = `shade ${i}`;
+        headRow.appendChild(el);
+      }
+
+      const fill = (rowId, hexes) => {
+        const row = document.getElementById(rowId);
+        hexes.forEach((hex) => {
+          const cell = document.createElement('div');
+          const sw = document.createElement('div');
+          sw.className = 'swatch';
+          sw.style.background = hex;
+          const label = document.createElement('div');
+          label.className = 'hex';
+          label.textContent = hex;
+          cell.appendChild(sw);
+          cell.appendChild(label);
+          row.appendChild(cell);
+        });
+      };
+
+      fill('old-row', OLD);
+      fill('new-row', NEW);
+    </script>
+  </body>
+</html>

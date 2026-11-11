@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>RSFC rebrand — design scope</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1f26; --ink-2:#3d4655; --ink-3:#5c6675;
+    --bg:#fff; --bg-2:#f5f8fb; --line:#d8dee8;
+    --keep:#0f7b4f; --keep-bg:#e8f5ee;
+    --change:#9a5b00; --change-bg:#fdf4e3;
+    --add:#1257a6; --add-bg:#e8f1fc;
+    --block:#8a4b00; --block-bg:#fdf4e3;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --body:'Barlow',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --head:'Barlow Condensed','Barlow',sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:var(--body);font-size:17px;line-height:1.55;color:var(--ink);background:var(--bg-2)}
+  a{color:#1257a6}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:0 28px 80px}
+  nav{position:sticky;top:0;z-index:10;background:var(--bg-2);border-bottom:1px solid var(--line);padding:14px 0;margin:0 -28px 28px}
+  nav .in{max-width:1180px;margin:0 auto;padding:0 28px;display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center}
+  nav a{font-size:15px;font-weight:600;color:var(--ink-2);text-decoration:none;padding:4px 0}
+  nav a:hover{color:var(--ink)}
+  nav .sep{color:var(--line);user-select:none}
+
+  header{padding:32px 0 24px;border-bottom:2px solid var(--ink);margin-bottom:32px}
+  header h1{font-family:var(--head);font-size:38px;font-weight:800;text-transform:uppercase;margin:0 0 6px;letter-spacing:.01em}
+  header .sub{font-family:var(--head);font-size:20px;font-weight:700;color:#c44a12;margin:0 0 14px;text-transform:uppercase}
+  header .lede{font-size:17px;color:var(--ink-2);max-width:72ch;margin:0}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:18px;font-size:15px;color:var(--ink-3)}
+  .meta b{color:var(--ink);font-weight:700}
+
+  section{margin:0 0 48px;scroll-margin-top:70px}
+  h2{font-family:var(--head);font-size:26px;font-weight:800;text-transform:uppercase;margin:0 0 10px;color:var(--ink);letter-spacing:.02em}
+  h3{font-family:var(--head);font-size:19px;font-weight:700;margin:28px 0 10px;text-transform:uppercase;letter-spacing:.03em}
+  p,.note{margin:0 0 12px;max-width:78ch}
+  .note{font-size:16px;color:var(--ink-3)}
+  ul{margin:0 0 14px;padding-left:22px;max-width:78ch}
+  li{margin-bottom:6px}
+  code{font-family:var(--mono);font-size:15px;background:var(--bg-2);padding:2px 6px;border-radius:4px;border:1px solid var(--line)}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:18px 0 24px}
+  .card{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:16px 18px;border-left:4px solid var(--line)}
+  .card .n{font-family:var(--head);font-size:36px;font-weight:800;line-height:1}
+  .card .l{font-size:15px;font-weight:700;margin-top:4px}
+  .card .d{font-size:15px;color:var(--ink-3);margin-top:6px;line-height:1.4}
+  .card.ok{border-left-color:var(--keep)} .card.ok .n{color:var(--keep)}
+  .card.ch{border-left-color:var(--change)} .card.ch .n{color:var(--change)}
+  .card.ad{border-left-color:var(--add)} .card.ad .n{color:var(--add)}
+  .card.bl{border-left-color:var(--block)} .card.bl .n{color:var(--block)}
+
+  .tw{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:14px 0 20px;background:var(--bg)}
+  table{width:100%;border-collapse:collapse;font-size:16px;min-width:880px}
+  th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:#1a3a5c;color:#fff;font-family:var(--head);font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:var(--bg-2)}
+  td.l{font-weight:700;white-space:nowrap}
+
+  .sw{display:inline-block;width:16px;height:16px;border-radius:3px;border:1px solid rgba(0,0,0,.15);vertical-align:-3px;margin-right:8px}
+  .hex{font-family:var(--mono);font-size:15px}
+
+  .b{display:inline-block;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:3px 8px;border-radius:4px;border:1px solid;white-space:nowrap}
+  .keep{color:var(--keep);background:var(--keep-bg);border-color:#b6ddc7}
+  .change{color:var(--change);background:var(--change-bg);border-color:#ecd8ab}
+  .add{color:var(--add);background:var(--add-bg);border-color:#bcd7f4}
+  .block{color:var(--block);background:var(--block-bg);border-color:#ecd8ab}
+  .verify{color:#6b2f9e;background:#f3ebfc;border-color:#ddc7f2}
+
+  .call{border:1px solid var(--line);border-left:4px solid #c44a12;border-radius:8px;padding:16px 18px;margin:16px 0;background:#fff8f5}
+  .call .ct{font-family:var(--head);font-weight:700;font-size:17px;margin:0 0 8px;text-transform:uppercase}
+  .call p:last-child{margin-bottom:0}
+
+  .tasks{list-style:none;padding:0;margin:14px 0}
+  .tasks li{padding:12px 0;border-bottom:1px solid var(--line);font-size:16px;line-height:1.45}
+  .tasks li:last-child{border-bottom:0}
+  .tasks .ph{font-family:var(--head);font-weight:700;font-size:15px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+
+  .split{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin:14px 0}
+  .box{border:1px solid var(--line);border-radius:8px;padding:16px;background:var(--bg)}
+  .box h4{font-family:var(--head);font-size:16px;font-weight:700;text-transform:uppercase;margin:0 0 10px;letter-spacing:.04em}
+  .box ul{margin:0;padding-left:20px;font-size:16px}
+
+  /* progress */
+  .prog{display:flex;align-items:center;gap:16px;padding:16px 18px;background:var(--bg);border:1px solid var(--line);border-radius:8px;margin:0 0 24px}
+  .prog .bar{flex:1;height:10px;background:var(--bg-2);border-radius:5px;overflow:hidden}
+  .prog .bar div{height:100%;background:#c44a12;border-radius:5px;transition:width .3s}
+  .prog .txt{font-size:16px;font-weight:600;white-space:nowrap}
+  .prog .rst{font-size:15px;color:var(--ink-3);background:none;border:0;cursor:pointer;text-decoration:underline;padding:0;font-family:inherit}
+  .prog .rst:hover{color:var(--ink)}
+
+  /* checklists */
+  .chkhead{font-family:var(--head);font-size:17px;font-weight:700;text-transform:uppercase;margin:24px 0 10px;letter-spacing:.03em;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .chkhead .cnt{font-size:15px;font-weight:600;color:var(--ink-3);text-transform:none;font-family:var(--body)}
+  .chk{list-style:none;padding:0;margin:0 0 8px}
+  .chk li{display:flex;gap:12px;padding:14px 16px;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:8px;margin-bottom:8px;background:var(--bg);align-items:flex-start}
+  .chk li[data-s="ready"]{border-left-color:#c44a12}
+  .chk li[data-s="blocked"]{border-left-color:var(--block);background:var(--block-bg)}
+  .chk li[data-s="later"]{border-left-color:#1a3a5c}
+  .chk li.done{opacity:.55}
+  .chk li.done .tt{text-decoration:line-through;color:var(--ink-3)}
+  .chk label{flex:0 0 auto;cursor:pointer;padding-top:2px}
+  .chk input{position:absolute;opacity:0;width:0;height:0}
+  .chk .bx{width:22px;height:22px;border:2px solid var(--ink-3);border-radius:5px;display:grid;place-items:center;background:var(--bg)}
+  .chk .bx svg{width:14px;height:14px;stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round}
+  .chk input:checked+.bx{background:#1a3a5c;border-color:#1a3a5c}
+  .chk input:checked+.bx svg{display:block}
+  .chk .bx svg{display:none}
+  .chk .body{flex:1;min-width:0}
+  .chk .tt{font-size:17px;font-weight:600;margin:0 0 4px;line-height:1.35}
+  .chk .td{font-size:15px;color:var(--ink-3);margin:0;line-height:1.45}
+  .chk .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .tag{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:2px 8px;border-radius:4px;border:1px solid}
+  .tag.ready{color:#9c3a12;background:#fdefe9;border-color:#f7cdb9}
+  .tag.blocked{color:var(--block);background:var(--block-bg);border-color:#ecd8ab}
+  .tag.later{color:#1a3a5c;background:#e8eef4;border-color:#bccdda}
+
+  .legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin:12px 0 20px;font-size:15px;color:var(--ink-2)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .steps{counter-reset:step;list-style:none;padding:0;margin:16px 0 24px;max-width:none}
+  .steps li{counter-increment:step;display:grid;grid-template-columns:36px 1fr;gap:12px 16px;padding:14px 16px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px;background:var(--bg);align-items:start}
+  .steps li::before{content:counter(step);font-family:var(--head);font-weight:800;font-size:20px;color:#c44a12;line-height:1.2}
+  .steps .st{font-weight:700;font-size:17px;margin:0 0 4px}
+  .steps .sd{font-size:15px;color:var(--ink-3);margin:0;line-height:1.45}
+  .steps .deps{font-size:14px;color:var(--ink-3);margin-top:6px}
+  .steps .deps b{color:var(--ink-2)}
+  .glance{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0 24px}
+  .glance .g{border:1px solid var(--line);border-radius:8px;padding:16px 18px;background:var(--bg)}
+  .glance .g h4{font-family:var(--head);font-size:16px;font-weight:800;text-transform:uppercase;margin:0 0 12px;letter-spacing:.04em}
+  .glance .g.asc{border-top:3px solid var(--ink-3)}
+  .glance .g.rsfc{border-top:3px solid #c44a12}
+  .glance dl{margin:0;display:grid;gap:8px;font-size:15px}
+  .glance dt{font-weight:700;color:var(--ink-2)}
+  .glance dd{margin:0 0 0 0;color:var(--ink)}
+  .ramp-mini{display:flex;flex-wrap:wrap;gap:4px;margin:10px 0}
+  .ramp-mini span{font-size:13px;font-family:var(--mono);padding:4px 8px;border-radius:4px;border:1px solid var(--line);white-space:nowrap}
+  .ramp-mini .mk{border-color:#c44a12;background:#fff8f5}
+  .ramp-mini .ok{border-color:#b6ddc7;background:var(--keep-bg)}
+
+  .sum{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin:0 0 24px}
+  .sum a{display:block;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);text-decoration:none;color:inherit;font-size:15px}
+  .sum a:hover{border-color:#c44a12}
+  .sum .sn{font-family:var(--head);font-weight:800;font-size:22px;color:#c44a12}
+  .sum .sl{font-size:14px;color:var(--ink-3);margin-top:2px}
+
+  @media(max-width:720px){
+    body{font-size:16px}
+    header h1{font-size:30px}
+    table{font-size:15px;min-width:720px}
+    th{font-size:13px}
+    nav .in{gap:4px 12px}
+    nav a{font-size:14px}
+    .glance{grid-template-columns:1fr}
+  }
+  @media print{
+    nav{display:none}
+    .wrap{padding:0}
+    table{min-width:0;font-size:11pt}
+    th{position:static;background:#e8eef4!important;color:#000!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav aria-label="Sections">
+  <div class="in">
+    <a href="#overview">Overview</a><span class="sep">·</span>
+    <a href="#colors">Colors</a><span class="sep">·</span>
+    <a href="#typography">Typography</a><span class="sep">·</span>
+    <a href="#logo">Logo</a><span class="sep">·</span>
+    <a href="#blockers">Blockers</a><span class="sep">·</span>
+    <a href="#tasks">Tasks</a><span class="sep">·</span>
+    <a href="#scope">Out of scope</a>
+    <span class="sep">·</span>
+    <a href="asc-to-rsfc-design-rebrand-audit.html">Full audit →</a>
+  </div>
+</nav>
+
+<header id="overview">
+  <h1>RSFC rebrand</h1>
+  <p class="sub">Design scope</p>
+  <p class="lede">Design-owned work for the RSFC rebrand in Figma. Comparison tables show <b>Figma now</b>, <b>repo now</b>, <b>RSFC requirement</b>, and <b>action</b>. Checklists below each section are the concrete tasks — progress saves in this browser.</p>
+  <div class="meta">
+    <span><b>Sources</b> Migration inventory · RSFC At-A-Glance (Aug 2026) · Final Logos</span>
+    <span><b>Jira</b> UATL-520 · ROAD-103</span>
+    <span><b>Evidence</b> <a href="asc-to-rsfc-design-rebrand-audit.html">Full three-way audit</a></span>
+  </div>
+</header>
+
+<section>
+  <h2>ASC → RSFC at a glance</h2>
+  <div class="glance">
+    <div class="g asc">
+      <h4>Today — ASC</h4>
+      <dl>
+        <div><dt>Corporate identity</dt><dd>ASC Engineered Solutions</dd></div>
+        <div><dt>Product name</dt><dd>ConnectED <span class="note" style="display:inline">(unchanged)</span></dd></div>
+        <div><dt>Body font</dt><dd>Cairo 400 / 600</dd></div>
+        <div><dt>Headings</dt><dd>Same family, weight 600</dd></div>
+        <div><dt>Primary interactive</dt><dd><span class="hex">#0073A5</span> + link <span class="hex">#00B9F0</span></dd></div>
+        <div><dt>Sidebar / CTA</dt><dd>Navy <span class="hex">#004173</span> · Orange <span class="hex">#F05A23</span></dd></div>
+        <div><dt>Logo</dt><dd>2 modes · 2.45 : 1 · no logomark</dd></div>
+      </dl>
+    </div>
+    <div class="g rsfc">
+      <h4>Target — RSFC</h4>
+      <dl>
+        <div><dt>Corporate identity</dt><dd>Reliable Safety &amp; Flow Corporation <span class="note" style="display:inline">(naming rule TBD)</span></dd></div>
+        <div><dt>Product name</dt><dd>ConnectED <span class="note" style="display:inline">(unchanged)</span></dd></div>
+        <div><dt>Body font</dt><dd>Barlow 400 / 600</dd></div>
+        <div><dt>Headings</dt><dd>Barlow Condensed 800 · subheads 700</dd></div>
+        <div><dt>Primary interactive</dt><dd>Light Blue <span class="hex">#2576BB</span> — <b>role undefined</b></dd></div>
+        <div><dt>Sidebar / CTA</dt><dd>Keep Navy + Orange</dd></div>
+        <div><dt>Logo</dt><dd>3 lockups × 4 variants · 4.31 : 1 horizontal</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><span class="b keep">Keep</span> already correct</span>
+    <span><span class="b change">Change</span> remap or replace</span>
+    <span><span class="b add">Add</span> new in DS</span>
+    <span><span class="b block">Blocked</span> waiting on decision</span>
+    <span><span class="b verify">Verify</span> confirm before acting</span>
+  </div>
+</section>
+
+<section>
+  <h2>Status</h2>
+  <div class="cards">
+    <div class="card ok"><div class="n">2</div><div class="l">Already match RSFC</div><div class="d">Navy <span class="hex">#004173</span> and Orange <span class="hex">#F05A23</span> — correct in Figma and repo.</div></div>
+    <div class="card ch"><div class="n">2</div><div class="l">Must remap</div><div class="d">Legacy blues <span class="hex">#0073A5</span> and <span class="hex">#00B9F0</span> — still primary/link in both systems.</div></div>
+    <div class="card ad"><div class="n">7</div><div class="l">New / missing</div><div class="d">Light Blue, Gray, 4 accent colours, logo matrix, brand devices.</div></div>
+    <div class="card bl"><div class="n">5</div><div class="l">Blocked on decision</div><div class="d">Light Blue role, authoritative hex values, naming rule, logo clear space, ramp strategy.</div></div>
+  </div>
+
+  <div class="call">
+    <p class="ct">Three things that change the sequence</p>
+    <p><b>1. One blue ramp, not three colours.</b> Navy (<span class="hex">#004173</span>), ASC primary (<span class="hex">#0073A5</span>), and link blue (<span class="hex">#00B9F0</span>) are steps 7, 6, and 4 of the same <code>Primary/primary-*</code> ramp. You cannot “keep navy” and “remap the blues” without choosing a ramp strategy first.</p>
+    <p><b>2. Logo is not token-bound.</b> Remapping colour variables does not update logo artwork. Logo = separate asset + component restructure workstream.</p>
+    <p><b>3. Figma Info ≠ repo Info.</b> <s>Figma aliases <code>Color/Info/*</code> to primary; repo uses Daybreak Blue.</s> <b>Reconciled 2026-09-17</b> — Figma <code>Color/Info/*</code> now aliases <code>Daybreak Blue/blue-*</code>, matching the repo. The same pass fixed <code>Radio</code>, which had used <code>colorInfoText</code> where Ant Design uses <code>colorPrimary</code>.</p>
+  </div>
+
+  <h3>Recommended order</h3>
+  <ol class="steps">
+    <li><div><p class="st">Close blockers (external + design-led)</p><p class="sd">Light Blue role, authoritative hex values, ramp strategy, heading mechanism, web fallback. Logo clear space for sidebar layout.</p><p class="deps"><b>Unblocks:</b> colour remap, expanded sidebar header</p></div></li>
+    <li><div><p class="st">Logo + typography in Figma (parallel)</p><p class="sd">No external blockers except sidebar layout. Typography ~50 bindings including Compact mode.</p><p class="deps"><b>Can start now</b></p></div></li>
+    <li><div><p class="st">Colour semantics doc → Figma variable edits</p><p class="sd">Sign-off before any hex change. Remap primary + Info together. Add data-viz palette and tint levels.</p><p class="deps"><b>Depends on:</b> step 1</p></div></li>
+    <li><div><p class="st">Brand devices + publish library</p><p class="sd">Angle Graphic, Accent Bar, gradient. Freeze mapping, publish once, verify propagation.</p><p class="deps"><b>Depends on:</b> steps 2–3</p></div></li>
+    <li><div><p class="st">Product files → QA → reverse audit</p><p class="sd">Shell first. Content promo is a redesign, not recolour. Grep Figma for ASC strings, Cairo, legacy blues, old logo fills.</p><p class="deps"><b>Depends on:</b> step 4 + copy naming rule (Product)</p></div></li>
+  </ol>
+
+  <div class="prog" id="prog">
+    <div class="txt" id="progtxt">0 / 0 done</div>
+    <div class="bar"><div id="progbar" style="width:0%"></div></div>
+    <button class="rst" type="button" id="reset">Reset</button>
+  </div>
+
+  <div class="sum" id="sum" aria-label="Task groups">
+    <a href="#colors"><div class="sn" data-sum="color">—</div><div class="sl">Colours</div></a>
+    <a href="#typography"><div class="sn" data-sum="type">—</div><div class="sl">Typography</div></a>
+    <a href="#logo"><div class="sn" data-sum="logo">—</div><div class="sl">Logo</div></a>
+    <a href="#logo"><div class="sn" data-sum="devices">—</div><div class="sl">Brand devices</div></a>
+    <a href="#blockers"><div class="sn" data-sum="decide">—</div><div class="sl">Decisions</div></a>
+    <a href="#tasks"><div class="sn" data-sum="publish">—</div><div class="sl">Publish</div></a>
+    <a href="#tasks"><div class="sn" data-sum="product">—</div><div class="sl">Product files</div></a>
+    <a href="#tasks"><div class="sn" data-sum="qa">—</div><div class="sl">QA</div></a>
+    <a href="#tasks"><div class="sn" data-sum="audit">—</div><div class="sl">Reverse audit</div></a>
+    <a href="#scope"><div class="sn" data-sum="done">—</div><div class="sl">Done criteria</div></a>
+  </div>
+</section>
+
+<!-- ═══ COLORS ═══ -->
+<section id="colors">
+  <h2>Colors</h2>
+  <p class="note">Figma = <code>Colors</code> collection + <code>Customize Theme</code>. Repo = <code>primaryPrimitiveBlue.ts</code>, <code>primaryPrimitiveOrange.ts</code>, <code>antdTheme.ts</code>.</p>
+
+  <div class="tw"><table>
+    <thead>
+      <tr>
+        <th>Colour</th>
+        <th>Hex</th>
+        <th>Figma (now)</th>
+        <th>Repo (now)</th>
+        <th>RSFC requirement</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="l"><span class="sw" style="background:#F05A23"></span>Orange</td>
+        <td class="hex">#F05A23</td>
+        <td><code>Volcano/volcano-6</code></td>
+        <td><code>volcanoPrimitiveLight[5]</code></td>
+        <td>Primary button / solid CTA</td>
+        <td><span class="b keep">Keep</span></td>
+      </tr>
+      <tr>
+        <td class="l"><span class="sw" style="background:#004173"></span>Navy</td>
+        <td class="hex">#004173</td>
+        <td><code>Primary/primary-7</code></td>
+        <td><code>bluePrimaryPrimitiveLight[6]</code></td>
+        <td>Sidebar surface, brand anchor</td>
+        <td><span class="b keep">Keep</span></td>
+      </tr>
+      <tr>
+        <td class="l"><span class="sw" style="background:#0073A5"></span>ASC primary blue</td>
+        <td class="hex">#0073A5</td>
+        <td><code>Primary/primary-6</code> · <code>colorPrimary</code></td>
+        <td><code>bluePrimaryPrimitiveLight[5]</code> · <code>colorPrimary</code></td>
+        <td>Retire — remap through semantic mapping</td>
+        <td><span class="b change">Change</span> <span class="b block">Blocked</span></td>
+      </tr>
+      <tr>
+        <td class="l"><span class="sw" style="background:#00B9F0"></span>ASC link blue</td>
+        <td class="hex">#00B9F0</td>
+        <td><code>Primary/primary-4</code> · link hover</td>
+        <td><code>bluePrimaryPrimitiveLight[3]</code> · <code>colorLinkHover</code></td>
+        <td>Retire — remap link / selected / hover states</td>
+        <td><span class="b change">Change</span> <span class="b block">Blocked</span></td>
+      </tr>
+      <tr>
+        <td class="l"><span class="sw" style="background:#2576BB"></span>Light Blue</td>
+        <td class="hex">#2576BB</td>
+        <td>Absent</td>
+        <td>Absent</td>
+        <td>Co-equal primary anchor — <b>UI role undefined</b></td>
+        <td><span class="b add">Add</span> <span class="b verify">Decide role</span></td>
+      </tr>
+      <tr>
+        <td class="l"><span class="sw" style="background:#A7A9AC"></span>Gray</td>
+        <td class="hex">#A7A9AC</td>
+        <td>Absent</td>
+        <td>Absent</td>
+        <td>Brand grey — likely collateral only, not UI neutral</td>
+        <td><span class="b add">Add</span> <span class="b verify">Decide scope</span></td>
+      </tr>
+      <tr>
+        <td class="l"><span class="sw" style="background:#002A49"></span>Dark Navy shade</td>
+        <td class="hex">#002A49</td>
+        <td><code>primary-9</code> = <span class="hex">#002A4A</span></td>
+        <td><code>bluePrimaryPrimitiveLight[8]</code> = <span class="hex">#002A4A</span></td>
+        <td>Shade tier — stronger contrast</td>
+        <td><span class="b verify">Verify</span> (off by 1 in blue channel)</td>
+      </tr>
+      <tr>
+        <td class="l"><span class="sw" style="background:#FA961E"></span>Accent orange</td>
+        <td class="hex">#FA961E</td>
+        <td><code>Sunset Orange</code> = <span class="hex">#fa8c16</span> (close, not equal)</td>
+        <td>Absent</td>
+        <td>Charts / illustrations only — do not overwrite antd ramp</td>
+        <td><span class="b add">Add</span> (data-viz palette)</td>
+      </tr>
+      <tr>
+        <td class="l"><span class="sw" style="background:#FFCD05"></span>Yellow</td>
+        <td class="hex">#FFCD05</td>
+        <td>Ant Design gold/yellow — no match</td>
+        <td>Absent</td>
+        <td>Charts / illustrations only</td>
+        <td><span class="b add">Add</span> (data-viz palette)</td>
+      </tr>
+      <tr>
+        <td class="l"><span class="sw" style="background:#231F20"></span>Near-black</td>
+        <td class="hex">#231F20</td>
+        <td><code>gray-12</code> = <span class="hex">#141414</span></td>
+        <td>Absent</td>
+        <td>Brand ink — artwork uses 3 different values</td>
+        <td><span class="b add">Add</span> <span class="b verify">Confirm hex</span></td>
+      </tr>
+      <tr>
+        <td class="l"><span class="sw" style="background:#EB1E23"></span>Red</td>
+        <td class="hex">#EB1E23</td>
+        <td><code>Dust Red</code> = <span class="hex">#f5222d</span> (close, not equal)</td>
+        <td>Absent</td>
+        <td>Charts only — <b>not</b> <code>colorError</code></td>
+        <td><span class="b add">Add</span> (data-viz palette)</td>
+      </tr>
+      <tr>
+        <td class="l">Neutral ramp</td>
+        <td>—</td>
+        <td><code>Neutral/gray-1…13</code></td>
+        <td>Ant Design standard</td>
+        <td>Unchanged</td>
+        <td><span class="b keep">Keep</span></td>
+      </tr>
+      <tr>
+        <td class="l">Volcano ramp</td>
+        <td>—</td>
+        <td><code>Volcano/volcano-1…10</code></td>
+        <td><code>volcanoPrimitiveLight/Dark</code></td>
+        <td>Unchanged — step 6 is RSFC Orange</td>
+        <td><span class="b keep">Keep</span></td>
+      </tr>
+      <tr>
+        <td class="l"><code>Color/Info/*</code></td>
+        <td>—</td>
+        <td>Aliases <code>Primary/primary-*</code></td>
+        <td>Maps to Daybreak Blue</td>
+        <td>Reconcile when primary ramp changes</td>
+        <td><span class="b change">Change</span> <span class="b block">Blocked</span></td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <h3>The three-blues problem</h3>
+  <p>Navy, ASC primary, and link blue sit on one generated ramp. Reseeding for Light Blue can silently move Navy off <span class="hex">#004173</span>.</p>
+  <div class="ramp-mini">
+    <span>primary-4 <span class="hex">#00B9F0</span> <span class="b change">Remap</span></span>
+    <span class="mk">primary-6 <span class="hex">#0073A5</span> <span class="b change">Remap</span></span>
+    <span class="ok">primary-7 <span class="hex">#004173</span> <span class="b keep">Keep</span></span>
+    <span>primary-9 <span class="hex">#002A4A</span> <span class="b verify">≈ shade</span></span>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Strategy</th><th>What happens</th><th>Trade-off</th></tr></thead>
+    <tbody>
+      <tr><td class="l">Reseed ramp</td><td>New RSFC blue becomes seed; all steps regenerate</td><td>Navy may leave step 7 — must pin or relocate explicitly</td></tr>
+      <tr><td class="l">Freeze ramp</td><td>Keep <code>primary-*</code> steps; remap only semantic aliases</td><td>Legacy blues stay in primitives; semantics do the work</td></tr>
+      <tr><td class="l">Split ramp</td><td>Separate navy ramp + interactive ramp</td><td>Cleanest long-term; net-new primitive structure</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Do not touch</h3>
+  <p>Daybreak Blue, Sunset Orange, Dust Red, Gold, Yellow, Volcano/button palette, neutral ramp, spacing, radii, shadows — unless a deliberate parity exception is documented.</p>
+
+  <div class="chkhead">What to do — colours <span class="cnt chk-cnt" data-g="color"></span></div>
+  <ul class="chk" data-g="color">
+    <li data-s="ready" data-id="c1"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Write semantic UI colour mapping document</p><p class="td">Sign-off from Product + client before any Figma variable edit. Per inventory: no blind hex replacement.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="c2"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Prepare Light Blue role options + ramp strategy</p><p class="td">Three options: reseed ramp, freeze current steps, or split into two ramps. Present to Product/client.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="c3"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Document what stays unchanged</p><p class="td">Navy, Orange, Volcano ramp, neutral ramp, button palette, shadows, radii — protect from unnecessary churn.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="c4"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Define data-viz palette for 4 accent colours</p><p class="td">Yellow, near-black, red, accent orange — outside semantic layer, charts/illustrations only.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="c5"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Model tint levels (55% / 15%)</p><p class="td">Two discrete levels in Figma — named variables or mapped to ramp steps.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="blocked" data-id="c6"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Remap <span class="hex">#0073A5</span> and <span class="hex">#00B9F0</span> in Figma</p><p class="td">Update <code>Primary/primary-*</code> + <code>Customize Theme</code> semantics. Validate link, hover, selected, nav, table, info states.</p><div class="tags"><span class="tag blocked">Blocked — Light Blue role</span></div></div></li>
+    <li data-s="blocked" data-id="c7"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Reconcile <code>Color/Info/*</code> aliases</p><p class="td">Figma aliases Info → primary; repo maps to Daybreak. Must land in same pass as primary change.</p><div class="tags"><span class="tag blocked">Blocked — ramp decision</span></div></div></li>
+    <li data-s="ready" data-id="c9"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Confirm Dark Navy shade hex</p><p class="td">Guide prints <span class="hex">#002A49</span>; Figma/repo use <span class="hex">#002A4A</span> at primary-9. Guide RGB line may contradict Navy.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="c10"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Decide Gray <span class="hex">#A7A9AC</span> scope</p><p class="td">Brand collateral only vs UI neutral. Artwork uses <span class="hex">#A8A9AC</span> — do not seed from SVG fills.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="later" data-id="c8"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Contrast QA after remap</p><p class="td">Sidebar selected-on-navy, link hover, white-alpha menu text — light and dark modes.</p><div class="tags"><span class="tag later">After remap</span></div></div></li>
+  </ul>
+</section>
+
+<!-- ═══ TYPOGRAPHY ═══ -->
+<section id="typography">
+  <h2>Typography</h2>
+  <p class="note">Figma = <code>Typography</code> collection. Repo = <code>figmaTypography.ts</code>, <code>hydraTypography.ts</code>, <code>hydraAntdTypography.ts</code>.</p>
+
+  <div class="tw"><table>
+    <thead>
+      <tr>
+        <th>Role</th>
+        <th>Figma (now)</th>
+        <th>Repo (now)</th>
+        <th>RSFC requirement</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="l">Body</td>
+        <td>Cairo · <code>fontFamily</code></td>
+        <td><code>hydraFontFamilyName</code> = Cairo</td>
+        <td>Barlow Regular (400)</td>
+        <td><span class="b change">Change</span></td>
+      </tr>
+      <tr>
+        <td class="l">Headings</td>
+        <td>Cairo · weight 600 · no separate family slot</td>
+        <td>Same <code>fontFamily</code> · <code>W_SEMI = 600</code></td>
+        <td>Barlow Condensed ExtraBold (800)</td>
+        <td><span class="b add">Add</span> family + weight</td>
+      </tr>
+      <tr>
+        <td class="l">Subheadings</td>
+        <td>Role does not exist</td>
+        <td>Role does not exist</td>
+        <td>Barlow Condensed Bold (700)</td>
+        <td><span class="b add">Add</span> new role</td>
+      </tr>
+      <tr>
+        <td class="l">Strong / emphasis</td>
+        <td>Weight 600 (shared with headings)</td>
+        <td><code>fontWeightStrong</code> = 600</td>
+        <td>Barlow SemiBold (600) — split from headings first</td>
+        <td><span class="b change">Change</span></td>
+      </tr>
+      <tr>
+        <td class="l">Monospace</td>
+        <td>Same as body</td>
+        <td><code>fontFamilyCode</code> = brand font</td>
+        <td>Not specified — Barlow is not monospace</td>
+        <td><span class="b verify">Decide</span></td>
+      </tr>
+      <tr>
+        <td class="l">Web fallback</td>
+        <td>—</td>
+        <td><code>'Cairo', sans-serif</code></td>
+        <td>Not in guide — Calibri is Office/email only</td>
+        <td><span class="b block">Blocked</span></td>
+      </tr>
+      <tr>
+        <td class="l">Type scale (sizes)</td>
+        <td>Ant Design metrics</td>
+        <td>Same metrics mirrored</td>
+        <td>Unchanged — family/weight only</td>
+        <td><span class="b keep">Keep</span></td>
+      </tr>
+      <tr>
+        <td class="l">Compact mode</td>
+        <td>25 styles · second mode</td>
+        <td><code>hydraCompactFontMap</code></td>
+        <td>Same rebinding as default mode</td>
+        <td><span class="b change">Change</span> (easy to miss)</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="tw"><table>
+    <thead>
+      <tr>
+        <th>Weight</th>
+        <th>Figma</th>
+        <th>Repo</th>
+        <th>RSFC needs</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="l">400</td><td><code>fontWeightNormal</code></td><td><code>W_REG</code></td><td>Body</td><td><span class="b keep">Keep</span></td></tr>
+      <tr><td class="l">600</td><td><code>fontWeightStrong</code></td><td><code>W_SEMI</code></td><td>Body strong — <b>not</b> headings</td><td><span class="b change">Split</span></td></tr>
+      <tr><td class="l">700</td><td>Absent</td><td>Absent</td><td>Subheadings</td><td><span class="b add">Add</span></td></tr>
+      <tr><td class="l">800</td><td>Absent</td><td>Absent</td><td>Headings</td><td><span class="b add">Add</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="call">
+    <p class="ct">Ant Design has no heading-font token</p>
+    <p>Condensed headings cannot ship through <code>theme.token.fontFamily</code> alone. Design must specify the mechanism for engineering (CSS on <code>Typography</code>, component override, or wrapper).</p>
+  </div>
+
+  <div class="chkhead">What to do — typography <span class="cnt chk-cnt" data-g="type"></span></div>
+  <ul class="chk" data-g="type">
+    <li data-s="ready" data-id="t1"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Change <code>fontFamily</code> variable: Cairo → Barlow</p><p class="td">Figma <code>Typography/Font Family/fontFamily</code></p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="t2"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Add Barlow Condensed family variable</p><p class="td">Second family slot — required before heading styles can bind.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="t3"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Add weight variables 700 and 800</p><p class="td">Currently only 400 and 600 exist in Figma.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="t4"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Rebind <code>Title/Heading 1–5</code> → Condensed 800</p><p class="td">Family and weight only. Do not change sizes or line heights.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="t5"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Define and add subheading role → Condensed 700</p><p class="td">New semantic role. Decide which sizes (candidate: Large, Extra Large).</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="t6"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Rebind remaining ~20 text styles to Barlow</p><p class="td">Base, Small, Large, Extra Large variants — family only.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="t7"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Mirror all bindings in Compact mode</p><p class="td">~25 styles × 2 modes = ~50 bindings. Easy to miss.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="t8"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Write heading mechanism spec for engineering</p><p class="td">How condensed headings ship in code — antd has no heading-font token.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="t9"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Write webfont delivery spec</p><p class="td">Barlow + Barlow Condensed, weights 400/600/700/800. Propose web fallback stack.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="t11"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Decide monospace / code font</p><p class="td">Barlow is not monospaced. Today <code>fontFamilyCode</code> follows brand font — specify keep system mono or change.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="later" data-id="t10"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">QA non-inheriting surfaces</p><p class="td">PDFs, email templates, manually styled Figma text, hardcoded frontend styles.</p><div class="tags"><span class="tag later">After publish</span></div></div></li>
+  </ul>
+</section>
+
+<!-- ═══ LOGO ═══ -->
+<section id="logo">
+  <h2>Logo</h2>
+
+  <div class="tw"><table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Figma (now)</th>
+        <th>Repo (now)</th>
+        <th>RSFC requirement</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="l">Component API</td>
+        <td><code>Mode</code> = On_White | On_Dark (1 lockup, 2 variants)</td>
+        <td><code>ascWordmarkSvgUrl</code> onDark / onLight</td>
+        <td><code>Lockup</code> × <code>Variant</code> — 3 lockups × 4 variants</td>
+        <td><span class="b add">Restructure</span></td>
+      </tr>
+      <tr>
+        <td class="l">Horizontal lockup</td>
+        <td>ASC artwork · 2.45 : 1</td>
+        <td><code>On_White.svg</code> · 186×76</td>
+        <td>RSFC horizontal · <b>4.31 : 1</b> — 76% wider</td>
+        <td><span class="b change">Change</span> + re-layout sidebar</td>
+      </tr>
+      <tr>
+        <td class="l">Logomark</td>
+        <td>None — collapsed rail uses full wordmark</td>
+        <td>None</td>
+        <td>Logomark 0.98 : 1 — delivered in Final Logos</td>
+        <td><span class="b add">Add</span></td>
+      </tr>
+      <tr>
+        <td class="l">Wordmark</td>
+        <td>—</td>
+        <td>—</td>
+        <td>Black + White only (no Primary/Reverse shipped)</td>
+        <td><span class="b add">Add</span> (monochrome contexts)</td>
+      </tr>
+      <tr>
+        <td class="l">Favicon / app icon</td>
+        <td>—</td>
+        <td>ASC-based</td>
+        <td>Re-export from Logomark SVG</td>
+        <td><span class="b change">Change</span> — Design supplies assets</td>
+      </tr>
+      <tr>
+        <td class="l">SVG intake</td>
+        <td>—</td>
+        <td>Clean viewBox</td>
+        <td>8/10 SVGs have wrong <code>width</code>/<code>height</code> — strip on import</td>
+        <td><span class="b change">Fix on import</span></td>
+      </tr>
+      <tr>
+        <td class="l">Background rule</td>
+        <td>Informal 2-variant rule</td>
+        <td>—</td>
+        <td>≤10% tint · reversed on dark · full-colour on navy at large scale only</td>
+        <td><span class="b add">Document</span></td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <h3>Variant matrix — what shipped (RGB)</h3>
+  <p>Product work uses RGB SVGs only. CMYK/PMS = print. Wordmark has no Primary/Reverse variants.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Lockup</th><th>Aspect</th><th>Primary</th><th>Reverse</th><th>White</th><th>Black</th><th>Use in product</th></tr></thead>
+    <tbody>
+      <tr><td class="l">Horizontal</td><td>4.31 : 1</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>Expanded sidebar — after header re-layout</td></tr>
+      <tr><td class="l">Logomark</td><td>0.98 : 1</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td><b>Collapsed rail, favicon, app icon</b></td></tr>
+      <tr><td class="l">Wordmark</td><td>3.87 : 1</td><td>—</td><td>—</td><td>✓</td><td>✓</td><td>Monochrome contexts only</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Shell / sidebar branding</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Surface</th><th>Figma (now)</th><th>Repo (now)</th><th>RSFC requirement</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td class="l">Expanded header</td><td>ASC horizontal + ConnectED label</td><td>256px sidebar · full wordmark</td><td>RSFC lockup — 76% wider at same height</td><td><span class="b change">Re-layout</span> <span class="b block">Blocked</span></td></tr>
+      <tr><td class="l">Collapsed rail (72px)</td><td>Full wordmark squeezed in</td><td>Same — existing defect</td><td>Logomark only</td><td><span class="b add">Add</span></td></tr>
+      <tr><td class="l">Product label</td><td><code>ConnectED</code> at Heading 4</td><td>Text beside logo</td><td>Product name unchanged — verify fits after type change</td><td><span class="b verify">Verify</span></td></tr>
+      <tr><td class="l">Accessible name</td><td>—</td><td><code>alt="ASC Engineered Solutions"</code></td><td>Approved RSFC name string</td><td><span class="b block">Blocked</span> naming rule</td></tr>
+      <tr><td class="l">Favicon / app icon</td><td>—</td><td>ASC-based / missing manifest</td><td>Re-export from Logomark SVG</td><td><span class="b change">Design supplies</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Brand devices (not in inventory)</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Device</th><th>Figma</th><th>Repo</th><th>Requirement</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td class="l">Angle Graphic</td><td>Absent</td><td>Absent</td><td>30° · max 20% of space</td><td><span class="b add">Add</span></td></tr>
+      <tr><td class="l">Accent Bar</td><td>Absent</td><td>Absent</td><td>Thin rule · orange or navy</td><td><span class="b add">Add</span> or extend Divider</td></tr>
+      <tr><td class="l">Gradients</td><td>—</td><td>1 hardcoded ASC gradient</td><td>Approved — rebuild in RSFC colours</td><td><span class="b change">Change</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="chkhead">What to do — logo <span class="cnt chk-cnt" data-g="logo"></span></div>
+  <ul class="chk" data-g="logo">
+    <li data-s="ready" data-id="l1"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Restructure <code>Logo</code> component: Lockup × Variant</p><p class="td">3 lockups × 4 variants. Replaces current <code>Mode</code> = On_White | On_Dark.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="l2"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Import 10 RGB SVGs into variant matrix</p><p class="td">Wordmark missing Primary/Reverse. CMYK/PMS = print only.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="l3"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Fix SVG intake: strip wrong width/height</p><p class="td">8/10 files declare <code>11.51×9.38</code> — keep viewBox only.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="l4"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Rename delivery typos on import</p><p class="td">CYMK→CMYK, Wormark→Wordmark, RFSC→RSFC.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="l5"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Set Logomark for collapsed sidebar rail</p><p class="td">Fixes existing defect — full ASC wordmark in 72px rail today.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="l6"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Document logo background-tint usage rule</p><p class="td">≤10% tint on white; reversed on dark; full-colour on navy at large scale only.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="l7"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Re-export favicon + app icon set from Logomark SVG</p><p class="td">Deliver assets to engineering. Delivered PNGs are 1× only.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="l10"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Choose expanded-sidebar lockup</p><p class="td">Horizontal (full colour) vs Wordmark (monochrome) vs reduced height. Present options before client clear-space arrives.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="blocked" data-id="l8"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Re-layout expanded sidebar header band</p><p class="td">RSFC horizontal is 76% wider. Needs min size + clear space from client.</p><div class="tags"><span class="tag blocked">Blocked — client</span></div></div></li>
+    <li data-s="later" data-id="l9"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Verify logo propagation in all Figma files</p><p class="td">Umbrella, BOM, Content, SeisBrace, Admin, DataHub, login/auth. Do not hand-replace inheriting instances.</p><div class="tags"><span class="tag later">After publish</span></div></div></li>
+  </ul>
+
+  <div class="chkhead">What to do — brand devices <span class="cnt chk-cnt" data-g="devices"></span></div>
+  <ul class="chk" data-g="devices">
+    <li data-s="ready" data-id="d1"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Raise Angle Graphic + Accent Bar as scope addition</p><p class="td">Not in migration inventory — flag to Product before building.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="d2"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Build Angle Graphic component (30°, max 20%)</p><p class="td">Solid, gradient, reduced-opacity variants.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="ready" data-id="d3"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Build or extend Accent Bar</p><p class="td">Check existing Divider first. Orange or navy, vertical/horizontal.</p><div class="tags"><span class="tag ready">Ready</span></div></div></li>
+    <li data-s="later" data-id="d4"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Rebuild hardcoded gradient in RSFC colours</p><p class="td">Gradients now brand-approved. Coordinate with engineering on repo gradient.</p><div class="tags"><span class="tag later">After colour</span></div></div></li>
+  </ul>
+</section>
+
+<!-- ═══ BLOCKERS ═══ -->
+<section id="blockers">
+  <h2>Decisions &amp; blockers</h2>
+  <p class="note">Five need Product or Client. Three are design-led but must be written down before engineering starts. Copy naming blocks all ASC string updates in Figma screens.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Decision</th><th>Owner</th><th>Why it blocks</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="l">Light Blue <span class="hex">#2576BB</span> UI role</td>
+        <td>Product + Client</td>
+        <td>Determines whether <code>Primary/primary-*</code> ramp is reseeded. Blocks all colour token work.</td>
+      </tr>
+      <tr>
+        <td class="l">One authoritative hex per brand colour</td>
+        <td>Client / Branding</td>
+        <td>Guide vs artwork disagree on Gray, near-black, dark shade.</td>
+      </tr>
+      <tr>
+        <td class="l">Which colour is Secondary</td>
+        <td>Client / Branding</td>
+        <td>Yellow, near-black, red, accent orange — guide layout is ambiguous.</td>
+      </tr>
+      <tr>
+        <td class="l">Full name vs RSFC in UI</td>
+        <td>Product + Client</td>
+        <td>Guide never uses “RSFC” in body copy. Blocks all copy changes.</td>
+      </tr>
+      <tr>
+        <td class="l">Logo min size + clear space</td>
+        <td>Client / Branding</td>
+        <td>Blocks sidebar header layout.</td>
+      </tr>
+      <tr>
+        <td class="l"><code>primary-*</code> ramp strategy</td>
+        <td>Design</td>
+        <td>Reseed, freeze, or split — Navy and both retired blues are same ramp steps 7/6/4.</td>
+      </tr>
+      <tr>
+        <td class="l">Condensed heading mechanism</td>
+        <td>Design → Engineering</td>
+        <td>No antd heading-font token exists.</td>
+      </tr>
+      <tr>
+        <td class="l">Web font fallback stack</td>
+        <td>Design</td>
+        <td>Calibri is Office/email only.</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="chkhead">Decisions to close <span class="cnt chk-cnt" data-g="decide"></span></div>
+  <ul class="chk" data-g="decide">
+    <li data-s="blocked" data-id="b1"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Light Blue <span class="hex">#2576BB</span> UI role agreed</p><p class="td">Product + Client. Unblocks all colour token work.</p><div class="tags"><span class="tag blocked">External</span></div></div></li>
+    <li data-s="blocked" data-id="b2"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">One authoritative hex per brand colour</p><p class="td">Client / Branding. Gray, near-black, dark shade disagree across sources.</p><div class="tags"><span class="tag blocked">External</span></div></div></li>
+    <li data-s="blocked" data-id="b3"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Secondary colour identity confirmed</p><p class="td">Yellow, near-black, red, accent orange — guide layout is ambiguous.</p><div class="tags"><span class="tag blocked">External</span></div></div></li>
+    <li data-s="blocked" data-id="b4"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Full name vs RSFC in UI copy rule</p><p class="td">Product + Client. Guide never uses “RSFC” in body copy.</p><div class="tags"><span class="tag blocked">External</span></div></div></li>
+    <li data-s="blocked" data-id="b5"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Logo min size + clear space documented</p><p class="td">Client / Branding. Unblocks expanded sidebar header layout.</p><div class="tags"><span class="tag blocked">External</span></div></div></li>
+    <li data-s="ready" data-id="b6"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt"><code>primary-*</code> ramp strategy chosen</p><p class="td">Design-led: reseed, freeze current steps, or split into two ramps.</p><div class="tags"><span class="tag ready">Design</span></div></div></li>
+    <li data-s="ready" data-id="b7"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Condensed heading mechanism spec signed off</p><p class="td">Design → Engineering. No antd heading-font token.</p><div class="tags"><span class="tag ready">Design</span></div></div></li>
+    <li data-s="ready" data-id="b8"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Web font fallback stack agreed</p><p class="td">Design-led. Calibri is Office/email only — propose web-safe stack.</p><div class="tags"><span class="tag ready">Design</span></div></div></li>
+  </ul>
+
+  <h3>Copy in Figma — blocked on naming rule</h3>
+  <p>Product owns wording. Design updates Figma once the rule is set. Do not guess “RSFC” in body copy — the brand guide never uses that abbreviation.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Where (Figma / product)</th><th>Current string</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td class="l">Content — promo card</td><td>“Trusted ASC Data”</td><td><span class="b change">Redesign</span> — not a recolour</td></tr>
+      <tr><td class="l">Shell / auth</td><td>ASC corporate name in chrome</td><td><span class="b block">Blocked</span> — naming rule</td></tr>
+      <tr><td class="l">BOM / SPEC surfaces</td><td>ASC product references in UI copy</td><td><span class="b block">Blocked</span> — naming rule</td></tr>
+      <tr><td class="l">Preserve</td><td><code>ASC-SR-155-TH</code> SKUs, ASCE 7-16/7-22, ConnectED</td><td><span class="b keep">Keep</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ═══ PUBLISH + PRODUCT + QA ═══ -->
+<section id="tasks">
+  <h2>Publish, product files, QA</h2>
+  <p class="note">Depends on library publish. Shell first — it sets sidebar, auth, and chrome for every app. Do not hand-edit inheriting instances; fix the library and let propagation run.</p>
+
+  <div class="chkhead">Publish &amp; propagate <span class="cnt chk-cnt" data-g="publish"></span></div>
+  <ul class="chk" data-g="publish">
+    <li data-s="later" data-id="p1"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Freeze foundation mapping document</p><p class="td">Colours, typography, logo matrix, brand devices — sign-off before publish.</p><div class="tags"><span class="tag later">After foundations</span></div></div></li>
+    <li data-s="later" data-id="p2"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Publish design system library</p><p class="td">Single publish event after logo + typography + colour land.</p><div class="tags"><span class="tag later">After foundations</span></div></div></li>
+    <li data-s="blocked" data-id="p3"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Verify library propagation — no hand-edits on inheriting instances</p><p class="td">Confirm linked files pick up tokens, text styles, and Logo component before screen work.</p><div class="tags"><span class="tag blocked">After publish</span></div></div></li>
+  </ul>
+
+  <div class="chkhead">Product Figma files <span class="cnt chk-cnt" data-g="product"></span></div>
+  <ul class="chk" data-g="product">
+    <li data-s="later" data-id="f1"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Shell / Umbrella</p><p class="td">Sidebar logo, nav chrome, auth surfaces. First — sets pattern for all apps.</p><div class="tags"><span class="tag later">After publish</span></div></div></li>
+    <li data-s="later" data-id="f2"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">BOM</p><p class="td">Foundations + surviving local overrides only.</p><div class="tags"><span class="tag later">After publish</span></div></div></li>
+    <li data-s="later" data-id="f3"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">SPEC</p><p class="td">Foundations + surviving local overrides only.</p><div class="tags"><span class="tag later">After publish</span></div></div></li>
+    <li data-s="later" data-id="f4"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">SeisBrace</p><p class="td">Foundations + surviving local overrides only.</p><div class="tags"><span class="tag later">After publish</span></div></div></li>
+    <li data-s="later" data-id="f5"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Content File Manager</p><p class="td">Redesign “Trusted ASC Data” promo — not a recolour. Also check hero gradient (15 hardcoded stops in repo).</p><div class="tags"><span class="tag later">After publish</span> <span class="tag blocked">Copy blocked</span></div></div></li>
+    <li data-s="later" data-id="f6"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Submittal Manager</p><p class="td">Foundations + surviving local overrides only.</p><div class="tags"><span class="tag later">After publish</span></div></div></li>
+    <li data-s="later" data-id="f7"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Admin</p><p class="td">Foundations + surviving local overrides only.</p><div class="tags"><span class="tag later">After publish</span></div></div></li>
+    <li data-s="later" data-id="f8"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">DataHub</p><p class="td">Foundations + surviving local overrides only.</p><div class="tags"><span class="tag later">After publish</span></div></div></li>
+  </ul>
+
+  <div class="chkhead">QA <span class="cnt chk-cnt" data-g="qa"></span></div>
+  <ul class="chk" data-g="qa">
+    <li data-s="later" data-id="q1"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Visual QA — all 8 surfaces</p><p class="td">Order: Umbrella → BOM → Spec → SeisBrace → Content → Submittal → Admin → DataHub. Light + dark.</p><div class="tags"><span class="tag later">After product files</span></div></div></li>
+    <li data-s="later" data-id="q2"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Interaction states pass</p><p class="td">Hover, focus, selected, disabled, error, empty — per component set.</p><div class="tags"><span class="tag later">After product files</span></div></div></li>
+    <li data-s="later" data-id="q3"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Contrast pass</p><p class="td">Sidebar selected-on-navy, links, alerts, table selection — especially after colour remap.</p><div class="tags"><span class="tag later">After colour</span></div></div></li>
+    <li data-s="later" data-id="q4"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Non-inheriting surfaces checked</p><p class="td">PDFs, email templates, manually styled Figma text, detached components.</p><div class="tags"><span class="tag later">Final</span></div></div></li>
+  </ul>
+
+  <div class="chkhead">Reverse audit <span class="cnt chk-cnt" data-g="audit"></span></div>
+  <ul class="chk" data-g="audit">
+    <li data-s="later" data-id="a1"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Figma search — ASC naming</p><p class="td">ASC, ASC Engineered Solutions, ASC-ES, ASC ConnectED, legacy product strings.</p><div class="tags"><span class="tag later">Final</span></div></div></li>
+    <li data-s="later" data-id="a2"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Figma search — legacy visual tokens</p><p class="td">Cairo, <span class="hex">#0073A5</span>, <span class="hex">#00B9F0</span>, old logo artwork, hardcoded fills.</p><div class="tags"><span class="tag later">Final</span></div></div></li>
+    <li data-s="later" data-id="a3"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Logo SVG fill audit</p><p class="td">SVG fills are not token-bound — check every exported logo instance.</p><div class="tags"><span class="tag later">Final</span></div></div></li>
+  </ul>
+</section>
+
+<!-- ═══ OUT OF SCOPE ═══ -->
+<section id="scope">
+  <h2>Out of design scope</h2>
+  <div class="split">
+    <div class="box">
+      <h4>Engineering</h4>
+      <ul>
+        <li>All code and theme-file edits</li>
+        <li>Favicon/manifest wiring</li>
+        <li>Renaming <code>ASC*</code> code identifiers</li>
+        <li>Email/PDF implementation</li>
+        <li>Auth, domains, analytics</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h4>Product</h4>
+      <ul>
+        <li>Naming rules and all copy</li>
+        <li>SKU codes (e.g. <code>ASC-SR-155-TH</code>)</li>
+        <li>Confluence / Jira / PRD updates</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h4>Client / Branding</h4>
+      <ul>
+        <li>Authoritative colour values</li>
+        <li>Logo clear space + min size</li>
+        <li>Legal wording, domains, photography</li>
+        <li>Final launch sign-off</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h4>No change needed</h4>
+      <ul>
+        <li>Icons (Ant Design set)</li>
+        <li>Spacing, radii, shadows</li>
+        <li>Volcano + button palette</li>
+        <li>ASCE 7-16 / 7-22 references</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Definition of done</h3>
+  <ul class="chk" data-g="done">
+    <li data-s="later" data-id="x1"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Foundation mapping frozen and signed off</p><p class="td">Colour semantics, typography bindings, logo matrix, brand devices.</p></div></li>
+    <li data-s="later" data-id="x2"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Library published; propagation verified</p><p class="td">No unnecessary hand-edits on inheriting instances.</p></div></li>
+    <li data-s="later" data-id="x3"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">All 8 surfaces pass visual QA</p><p class="td">Light + dark, all interaction states, contrast.</p></div></li>
+    <li data-s="later" data-id="x4"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Non-inheriting surfaces checked</p><p class="td">PDF, email, manual Figma text, detached artwork.</p></div></li>
+    <li data-s="later" data-id="x5"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Figma reverse audit clean</p><p class="td">Every remaining hit documented and accepted or fixed.</p></div></li>
+    <li data-s="later" data-id="x6"><label><input type="checkbox"><span class="bx"><svg viewBox="0 0 14 14"><polyline points="2,7.5 5.5,11 12,3.5"/></svg></span></label><div class="body"><p class="tt">Scope growth visible in plan</p><p class="td">Logo matrix, brand devices, sidebar re-layout flagged to Product.</p></div></li>
+  </ul>
+
+  <p class="note" style="margin-top:20px">Full three-way audit with evidence, findings, and repo sweep: <a href="asc-to-rsfc-design-rebrand-audit.html">asc-to-rsfc-design-rebrand-audit.html</a></p>
+</section>
+
+</div>
+<script>
+(function(){
+  var KEY='rsfc-design-scope-v3';
+  var items=document.querySelectorAll('.chk li[data-id]');
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+
+  function update(){
+    var done=0,total=items.length;
+    items.forEach(function(li){
+      var id=li.getAttribute('data-id');
+      var cb=li.querySelector('input');
+      if(saved[id]){cb.checked=true;li.classList.add('done')}else{cb.checked=false;li.classList.remove('done')}
+      if(cb.checked)done++;
+    });
+    var ready=0,blocked=0,later=0;
+    items.forEach(function(li){
+      var s=li.getAttribute('data-s');
+      if(s==='ready')ready++;else if(s==='blocked')blocked++;else if(s==='later')later++;
+    });
+    document.getElementById('progtxt').textContent=done+' / '+total+' done · '+ready+' ready · '+blocked+' blocked · '+later+' sequenced';
+    document.getElementById('progbar').style.width=(total?Math.round(done/total*100):0)+'%';
+    document.querySelectorAll('.chk-cnt').forEach(function(el){
+      var g=el.getAttribute('data-g');
+      var lis=document.querySelectorAll('.chk[data-g="'+g+'"] li[data-id]');
+      var d=0;lis.forEach(function(li){if(li.querySelector('input').checked)d++});
+      el.textContent='('+d+'/'+lis.length+')';
+    });
+    document.querySelectorAll('[data-sum]').forEach(function(el){
+      var g=el.getAttribute('data-sum');
+      var lis=document.querySelectorAll('.chk[data-g="'+g+'"] li[data-id]');
+      var d=0;lis.forEach(function(li){if(li.querySelector('input').checked)d++});
+      el.textContent=d+'/'+lis.length;
+    });
+  }
+
+  items.forEach(function(li){
+    var id=li.getAttribute('data-id');
+    var cb=li.querySelector('input');
+    cb.addEventListener('change',function(){
+      if(cb.checked)saved[id]=1;else delete saved[id];
+      try{localStorage.setItem(KEY,JSON.stringify(saved))}catch(e){}
+      update();
+    });
+  });
+
+  document.getElementById('reset').addEventListener('click',function(){
+    if(!confirm('Clear all checkboxes?'))return;
+    saved={};
+    try{localStorage.removeItem(KEY)}catch(e){}
+    update();
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>

@@ -11,28 +11,28 @@ alwaysApply: true
 
 1. **Colors, spacing, radii, motion, and global font metrics** used in app UI must come from **antd `theme.useToken()`**, **`shellLayout`**, **`sidebarSemanticsLight`**, or other exports that trace back to the token modules below — **not** inline `#hex`, `rgb`/`rgba`, or ad-hoc `px` in TSX/CSS for design intent.
 
-2. **Typography (family, role sizes, line heights, weights)** is owned by **Figma** the Ant Design kit. Code mirrors it in **`src/theme/figmaTypography.ts`**. When Figma text styles or variables change, **update that file** (Official Figma MCP: `search_design_system` / `get_design_context` per **[figma-mcp-routing.mdc](./figma-mcp-routing.mdc)**; or Console when explicitly opted in; or variables panel / documented export). **Do not** set `fontSize` / `lineHeight` / `fontWeight` / `fontFamily` ad hoc in screens.
+2. **Typography (family, role sizes, line heights, weights)** is owned by **Figma** the Ant Design kit. Code mirrors it in **`src/theme/hydraTypography.ts`**. When Figma text styles or variables change, **update that file** (Official Figma MCP: `search_design_system` / `get_design_context` per **[figma-mcp-routing.mdc](./figma-mcp-routing.mdc)**; or Console when explicitly opted in; or variables panel / documented export). **Do not** set `fontSize` / `lineHeight` / `fontWeight` / `fontFamily` ad hoc in screens.
 
-3. **Font delivery:** `index.html` may load the webfont (URL only). **Metrics** still live in `figmaTypography.ts` and `theme.token`.
+3. **Font delivery:** `index.html` may load the webfont (URL only). **Metrics** still live in `hydraTypography.ts` and `theme.token`.
 
 ## Only places literal values may live (Figma mirrors)
 
 | Module | Purpose |
 |--------|---------|
-| `src/theme/figmaTypography.ts` | Font family stack, **Base/Normal** and future text-style roles from Figma |
-| `src/theme/figmaSemanticColors.ts` | Neutral / dark-menu chrome literals tied to Figma **Colors** / Customize Theme |
+| `src/theme/hydraTypography.ts` | Font family stack, **Base/Normal** and future text-style roles from Figma |
+| `src/theme/hydraSemanticColors.ts` | Neutral / dark-menu chrome literals tied to Figma **Colors** / Customize Theme |
 | `src/theme/primaryPrimitiveBlue.ts` | `Primary/primary-*` ramps |
-| `src/theme/primaryPrimitiveOrange.ts` | `Volcano/volcano-*` ramps |
+| `src/theme/primaryPrimitiveOrange.ts` | `Hydra Action Orange/hydra-*` ramps (`volcano*` = deprecated aliases) |
 | `src/theme/buttonPrimaryPalette.ts` | Button primary + `buttonPrimaryControlOutline` |
-| `src/theme/sidebarSemantics.ts` | Sidebar semantics (references primitives + `figmaSemanticColors`) |
-| `src/theme/figmaMenuMetrics.ts` | Menu item radius / outer margins (inset uses `hydraLightAlias.padding` in `antdTheme`) |
+| `src/theme/sidebarSemantics.ts` | Sidebar semantics (references primitives + `hydraSemanticColors`) |
+| `src/theme/hydraMenuMetrics.ts` | Menu item radius / outer margins (inset uses `hydraLightAlias.padding` in `antdTheme`) |
 
 Do not add new color/size literals outside these (or an explicit new **figma-** mirror file with the same discipline).
 
 ## In components
 
 - **Colors / layout:** `theme.useToken()`, `shellLayout`, semantic imports from `src/theme/*` as needed.
-- **Typography:** rely on antd `Typography`, `theme.token.fontSize`, and future `figmaTypography` role tokens — not raw style objects for type.
+- **Typography:** rely on antd `Typography`, `theme.token.fontSize`, and future `hydraTypography` role tokens — not raw style objects for type.
 
 ## Narrow exceptions
 

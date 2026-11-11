@@ -104,7 +104,7 @@ export function isEmptyDistinguishingValue(value: string | undefined): boolean {
 }
 
 /**
- * Up to three attributes that differ across the listed variants.
+ * Up to four attributes that differ across the listed variants.
  * Higher weight wins, then more distinct values, then the attribute key.
  */
 export function selectDistinguishingAttributes(
@@ -128,7 +128,7 @@ export function selectDistinguishingAttributes(
     return left.attribute.key.localeCompare(right.attribute.key);
   });
 
-  return ranked.slice(0, 3).map((entry) => entry.attribute);
+  return ranked.slice(0, 4).map((entry) => entry.attribute);
 }
 
 export function distinguishingAttributeByKey(key: string): DistinguishingAttribute | undefined {

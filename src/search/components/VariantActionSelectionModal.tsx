@@ -1,45 +1,43 @@
 import { FilePdfOutlined, PictureOutlined, SearchOutlined } from '@ant-design/icons';
 import type { InputRef } from 'antd';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import type { PartSpecField, PartVariationRow } from '../partDetailDemoData';
 import { variationSpecValue } from '../partDetailDemoData';
-import { buttonPrimaryPalette } from '../../theme/buttonPrimaryPalette';
+import { shellLayout } from '../../theme/hydraAlias';
 import {
   hydraBaseNormal,
   hydraBaseStrong,
+  hydraLargeNormal,
+  hydraLargeMedium,
   hydraLargeStrong,
   hydraSmallNormal,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
 import { catalogBrowseTableHeaderStyles } from '../../shell/content/catalogBrowseTableStyles';
 import {
-  Badge,
-  Breadcrumb,
+  Alert,
   Button,
   Checkbox,
-  Divider,
   Flex,
   Input,
   Modal,
   Table,
+  Tooltip,
   Typography,
   theme,
 } from '../../ui/antd';
 import type { TableColumnsType } from '../../ui/antd';
-import { HydraColorfulTag, HydraTag } from '../../ui/HydraTag';
+
+import { ContentFileTypeTags } from './ContentFileTypeTags';
 
 import {
   isEmptyDistinguishingValue,
   selectDistinguishingAttributes,
-  type DistinguishingAttribute,
 } from './variantDistinguishingAttributes';
 import {
   fileTypeForSelectionAction,
-  isPlaceholderSpecValue,
-  isRedundantPimText,
   isVariationEligibleForAction,
-  partitionVariationSpecs,
   type VariantFigureContext,
   type VariantSelectionAction,
   variationSearchHaystack,
@@ -47,6 +45,8 @@ import {
   variantSelectionModalTitle,
 } from './variantSelectionShared';
 
+const VARIANT_TABLE_CLASS = 'variant-selection-table';
+const VARIANT_EXPANDED_ROW_CLASS = 'variant-selection-expanded-row';
 type Props = {
   open: boolean;
   action: VariantSelectionAction | null;
@@ -60,10 +60,6 @@ type Props = {
   onConfirm: (selectedKeys: string[]) => void;
   onCancel: () => void;
 };
-
-const PAGE_SIZE = 8;
-
-const FIGURE_SPEC_SKIP_KEYS = new Set(['manufacturer', 'figure', 'product-line']);
 
 function VariationThumbnail({ variation, size }: { variation: PartVariationRow; size: number }) {
   const { token } = theme.useToken();
@@ -131,8 +127,13 @@ export function VariantActionSelectionModal({
   const [searchText, setSearchText] = useState('');
   const searchInputRef = useRef<InputRef>(null);
   const wasOpenRef = useRef(false);
+  const [modalPanel, setModalPanel] = useState<HTMLDivElement | null>(null);
+  const layoutRowRef = useRef<HTMLDivElement>(null);
+  const mainColumnRef = useRef<HTMLDivElement>(null);
+  const [fit, setFit] = useState<{ tableBody?: number; row?: number }>({});
   const listThumbnailSize = token.controlHeight;
-  const figureImageSize = token.controlHeightLG * 2;
+  /** Figma figure image is 48px = sizeUnit × 12. */
+  const figureImageSize = token.sizeUnit * 12;
 
   useEffect(() => {
     if (open && !wasOpenRef.current) {
@@ -149,6 +150,42 @@ export function VariantActionSelectionModal({
     return () => window.clearTimeout(timer);
   }, [open]);
 
+  /**
+   * Keeps the whole modal inside the viewport so the footer CTA never scrolls away.
+   * The table body takes whatever height the summary, toolbar and pagination leave.
+   */
+  useLayoutEffect(() => {
+    const row = layoutRowRef.current;
+    const main = mainColumnRef.current;
+    if (!modalPanel || !row || !main) return;
+
+    const measure = () => {
+      const tableBody = main.querySelector<HTMLElement>('.ant-table-body, .ant-table-content');
+      if (!tableBody) return;
+      const viewportCap = window.innerHeight - token.marginXXL * 2;
+      const rowStyle = window.getComputedStyle(row);
+      const rowPadding = parseFloat(rowStyle.paddingTop) + parseFloat(rowStyle.paddingBottom);
+      const rowHeight = row.getBoundingClientRect().height;
+      const rowContentCap = viewportCap - (modalPanel.getBoundingClientRect().height - rowHeight) - rowPadding;
+      const tableBodyHeight = tableBody.getBoundingClientRect().height;
+      const chromeAroundBody = rowHeight - rowPadding - tableBodyHeight;
+      const next = {
+        tableBody: Math.max(Math.floor(rowContentCap - chromeAroundBody), token.controlHeight * 3),
+        row: Math.floor(rowContentCap),
+      };
+      setFit((prev) => (prev.tableBody === next.tableBody && prev.row === next.row ? prev : next));
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    [modalPanel, row, main].forEach((element) => observer.observe(element));
+    window.addEventListener('resize', measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [modalPanel, token.marginXXL, token.controlHeight]);
+
   const sortedVariations = useMemo(
     () => [...variations].sort((a, b) => a.sku.localeCompare(b.sku)),
     [variations],
@@ -160,26 +197,12 @@ export function VariantActionSelectionModal({
     return sortedVariations.filter((variation) => variationSearchHaystack(variation).includes(q));
   }, [sortedVariations, searchText]);
 
-  const { uniform, varying } = useMemo(() => partitionVariationSpecs(variations), [variations]);
   const distinguishing = useMemo(() => selectDistinguishingAttributes(variations), [variations]);
 
-  const uniformKeys = useMemo(() => new Set(uniform.map((spec) => spec.key)), [uniform]);
-  const visibleColumnKeys = useMemo(
+  const columnSpecKeys = useMemo(
     () => new Set(distinguishing.map((attribute) => attribute.key)),
     [distinguishing],
   );
-
-  const headerSpecs = useMemo(() => {
-    const seen = new Set(uniform.map((spec) => spec.key));
-    const varyingKeys = new Set(varying.map((column) => column.key));
-    const fromFigure = (figure?.figureSpecs ?? []).filter((spec) => {
-      if (FIGURE_SPEC_SKIP_KEYS.has(spec.key) || seen.has(spec.key) || varyingKeys.has(spec.key)) {
-        return false;
-      }
-      return !isPlaceholderSpecValue(spec.value);
-    });
-    return [...fromFigure, ...uniform];
-  }, [figure?.figureSpecs, uniform, varying]);
 
   const eligibleKeys = useMemo(() => {
     if (!action) return [];
@@ -208,6 +231,9 @@ export function VariantActionSelectionModal({
   const fileType = action ? fileTypeForSelectionAction(action) : null;
   const hasSubmittalPdf = variations.some((variation) => variation.drawingFileTypes.includes('PDF'));
   const categoryLabel = figure?.breadcrumb?.[figure.breadcrumb.length - 1];
+  const categoryPath = figure?.breadcrumb?.join(' / ');
+  const finishLabel = figure?.figureSpecs.find((spec) => spec.key === 'finish')?.value;
+  const skuCountLabel = `${variations.length} ${variations.length === 1 ? 'SKU' : 'SKUs'}`;
 
   function commitKeys(next: string[]) {
     setPendingKeys(next);
@@ -232,9 +258,27 @@ export function VariantActionSelectionModal({
     commitKeys(pendingKeys.filter((entry) => entry !== key));
   }
 
+  // Figma "Expanded row" panel: colorFillQuaternary surface, colorPrimary accent line on the leading edge.
+  // antd sets the expand button to `vertical-align: sub`, which sits it below the row checkbox; block centering aligns them.
+  const expandedRowStyles = [
+    `.${VARIANT_EXPANDED_ROW_CLASS} > td{padding:0!important;background:${token.colorFillQuaternary}!important;border-inline-start:${token.lineWidth}px ${token.lineType} ${token.colorPrimary}}`,
+    `.${VARIANT_TABLE_CLASS} .ant-table-row-expand-icon-cell .ant-table-row-expand-icon{display:flex;margin-inline:auto}`,
+  ].join('');
+
+  const selectedEligibleCount = eligibleKeys.filter((key) => pendingSet.has(key)).length;
+  const allEligibleSelected = eligibleKeys.length > 0 && selectedEligibleCount === eligibleKeys.length;
+
   const columns: TableColumnsType<PartVariationRow> = [
     {
-      title: '',
+      title: (
+        <Checkbox
+          checked={allEligibleSelected}
+          indeterminate={selectedCount > 0 && !allEligibleSelected}
+          disabled={eligibleKeys.length === 0}
+          onChange={(event) => (event.target.checked ? selectAllEligible() : clearAll())}
+          aria-label="Select all variants"
+        />
+      ),
       key: 'select',
       width: token.controlHeight,
       render: (_, variation) => {
@@ -251,16 +295,22 @@ export function VariantActionSelectionModal({
     {
       title: 'MPN / SKU',
       key: 'sku',
+      // Live picker: 280px for expand + thumbnail + SKU; here the expand button has its own column.
+      width: token.sizeUnit * 70 - token.controlHeight,
       sorter: (a, b) => a.sku.localeCompare(b.sku),
       render: (_, variation) => (
         <Flex align="center" gap={token.marginSM}>
           <VariationThumbnail variation={variation} size={listThumbnailSize} />
-          <Flex vertical gap={0} style={{ minWidth: 0 }}>
+          <Flex vertical gap={0} style={{ flex: 1, minWidth: 0 }}>
             <Typography.Text strong style={hydraTextStyleToReactCss(hydraBaseStrong)}>
               {variation.sku}
             </Typography.Text>
-            <Typography.Text type="secondary" ellipsis style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-              {variation.name}
+            <Typography.Text
+              type="secondary"
+              ellipsis={{ tooltip: variantSubtitle(variation) }}
+              style={hydraTextStyleToReactCss(hydraSmallNormal)}
+            >
+              {variantSubtitle(variation)}
             </Typography.Text>
           </Flex>
         </Flex>
@@ -272,7 +322,7 @@ export function VariantActionSelectionModal({
       sorter: (a: PartVariationRow, b: PartVariationRow) =>
         (variationSpecValue(a, attribute.key) ?? '').localeCompare(variationSpecValue(b, attribute.key) ?? ''),
       render: (_: unknown, variation: PartVariationRow) => (
-        <AttributeValueTag attribute={attribute} value={variationSpecValue(variation, attribute.key)} />
+        <PlainAttributeValue value={variationSpecValue(variation, attribute.key)} />
       ),
     })),
     {
@@ -281,10 +331,8 @@ export function VariantActionSelectionModal({
       render: (_, variation) => {
         const eligible = action ? isVariationEligibleForAction(variation, action) : true;
         return (
-          <Flex vertical gap={0}>
-            <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-              {variation.drawingFileTypes.length > 0 ? variation.drawingFileTypes.join(', ') : 'None'}
-            </Typography.Text>
+          <Flex vertical gap={token.marginXXS}>
+            <ContentFileTypeTags fileTypes={variation.drawingFileTypes} />
             {!eligible && fileType ? (
               <Typography.Text type="danger" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
                 {fileType} unavailable
@@ -301,8 +349,10 @@ export function VariantActionSelectionModal({
       open={open}
       title={title}
       onCancel={onCancel}
-      width={token.screenLG}
+      width={token.screenXL}
+      centered
       destroyOnClose
+      modalRender={(panel) => <div ref={setModalPanel}>{panel}</div>}
       footer={[
         <Button key="cancel" onClick={onCancel}>
           Cancel
@@ -318,161 +368,187 @@ export function VariantActionSelectionModal({
         </Button>,
       ]}
     >
-      <Flex vertical gap={token.marginMD} style={{ paddingBlock: token.paddingXS }}>
-        {figure?.breadcrumb && figure.breadcrumb.length > 0 ? (
-          <Breadcrumb items={figure.breadcrumb.map((label) => ({ title: label }))} />
-        ) : null}
-
+      <Flex ref={layoutRowRef} vertical gap={token.marginSM} style={{ paddingBlock: token.paddingXS }}>
         {figure ? (
-          <Flex gap={token.padding} align="flex-start" wrap="wrap">
-            {figure.imageUrl ? (
-              <img
-                src={figure.imageUrl}
-                alt=""
-                style={{
-                  width: figureImageSize,
-                  height: figureImageSize,
-                  objectFit: 'cover',
-                  borderRadius: token.borderRadius,
-                  flexShrink: 0,
-                  border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-                }}
-              />
-            ) : null}
-            <Flex vertical gap={token.marginXXS} style={{ flex: 1, minWidth: 0 }}>
-              <Typography.Text style={{ color: token.colorText, ...hydraTextStyleToReactCss(hydraLargeStrong) }}>
-                {figure.figureNumber}
-              </Typography.Text>
-              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-                {figure.productName}
-              </Typography.Text>
-              <Flex gap={token.marginSM} wrap="wrap" align="center">
-                {figure.brand ? (
-                  <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-                    Brand: {figure.brand}
-                  </Typography.Text>
-                ) : null}
-                {categoryLabel ? (
-                  <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-                    Category: {categoryLabel}
-                  </Typography.Text>
-                ) : null}
-                {hasSubmittalPdf ? (
-                  <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-                    <FilePdfOutlined /> Submittal sheet: PDF
-                  </Typography.Text>
-                ) : null}
-              </Flex>
-              {headerSpecs.length > 0 ? (
-                <Flex gap={token.marginXS} wrap="wrap" align="baseline" style={{ marginTop: token.marginXS }}>
-                  <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-                    Shared on this figure:
-                  </Typography.Text>
-                  {headerSpecs.map((spec) => (
-                    <SpecChip key={spec.key} spec={spec} />
-                  ))}
-                </Flex>
-              ) : null}
-            </Flex>
-          </Flex>
+          <PartSummaryStrip
+            figure={figure}
+            imageSize={figureImageSize}
+            categoryLabel={categoryLabel}
+            categoryPath={categoryPath}
+            hasSubmittalPdf={hasSubmittalPdf}
+            skuCountLabel={skuCountLabel}
+            finishLabel={finishLabel}
+          />
         ) : null}
 
-        <Divider style={{ margin: 0 }} />
-
-        <Flex align="center" justify="space-between" gap={token.marginSM} wrap="wrap">
-          <Typography.Text strong style={hydraTextStyleToReactCss(hydraBaseStrong)}>
-            Variants ({variations.length} {variations.length === 1 ? 'SKU' : 'SKUs'})
-          </Typography.Text>
-          <Flex gap={token.marginXS} wrap="wrap" align="center">
+        <Flex ref={mainColumnRef} vertical gap={token.marginSM} style={{ flex: 1, minWidth: 0 }}>
+          <Flex align="center" justify="space-between" gap={token.marginSM} wrap="wrap">
             <Input
               ref={searchInputRef}
-              placeholder="Filter by size, finish…"
+              placeholder="Filter by size, finish..."
               prefix={<SearchOutlined style={{ color: token.colorTextQuaternary }} />}
               allowClear
               value={searchText}
               onChange={(event) => setSearchText(event.target.value)}
               aria-label="Search variations"
-              style={{ width: token.sizeUnit * 56 }}
+              style={{ width: token.sizeUnit * 75 }}
             />
+            <Flex align="center" gap={token.marginSM} wrap="wrap">
+              <Typography.Text strong style={hydraTextStyleToReactCss(hydraBaseNormal)}>
+                {selectedCount} selected
+              </Typography.Text>
+              <Flex gap={token.marginXS}>
+                <Button onClick={selectAllEligible} disabled={eligibleKeys.length === 0}>
+                  Select all
+                </Button>
+                <Button onClick={clearAll} disabled={selectedCount === 0}>
+                  Clear all
+                </Button>
+              </Flex>
+            </Flex>
           </Flex>
-        </Flex>
 
-        <Flex align="center" justify="space-between" gap={token.marginSM} wrap="wrap">
-          <Flex align="center" gap={token.marginXS}>
-            <Badge
-              count={selectedCount}
-              showZero
-              overflowCount={999}
-              color={token.colorPrimary}
-              aria-label={`${selectedCount} variants selected`}
+          {unavailableSelectedCount > 0 && fileType ? (
+            <Alert
+              type="error"
+              showIcon
+              title={`${unavailableSelectedCount} selected ${
+                unavailableSelectedCount === 1 ? 'variation does' : 'variations do'
+              } not include ${fileType}. Remove ${unavailableSelectedCount === 1 ? 'it' : 'them'} to continue.`}
             />
-            <Typography.Text strong style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-              {selectedCount} selected
-            </Typography.Text>
-          </Flex>
-          <Flex gap={token.marginXS} wrap="wrap">
-            <Button size="small" onClick={selectAllEligible} disabled={eligibleKeys.length === 0}>
-              Select all
-            </Button>
-            <Button size="small" onClick={clearAll} disabled={selectedCount === 0}>
-              Clear all
-            </Button>
-          </Flex>
+          ) : null}
+
+          <style>{expandedRowStyles}</style>
+          <Table<PartVariationRow>
+            className={VARIANT_TABLE_CLASS}
+            rowKey="key"
+            size="small"
+            tableLayout="fixed"
+            scroll={fit.tableBody ? { y: fit.tableBody } : undefined}
+            columns={columns}
+            dataSource={filteredVariations}
+            styles={catalogBrowseTableHeaderStyles(token)}
+            pagination={{
+              pageSize: shellLayout.tablePageSizeDefault,
+              showSizeChanger: false,
+              showTotal: (total, range) =>
+                total === 0 ? 'No variants' : `Showing ${range[0]}–${range[1]} of ${total} variants`,
+            }}
+            locale={{
+              emptyText: 'No variations match your search. Try a SKU prefix, thread size, or finish.',
+            }}
+            onRow={(variation) => {
+              const isSelected = pendingSet.has(variation.key);
+              const isCarried = isSelected && carriedSet.has(variation.key);
+              return {
+                'data-carried': isCarried ? 'true' : undefined,
+                style: isCarried ? { background: token.colorActionBg } : undefined,
+              };
+            }}
+            expandable={{
+              columnWidth: token.controlHeight,
+              expandedRowClassName: () => VARIANT_EXPANDED_ROW_CLASS,
+              expandedRowRender: (variation) => (
+                <ExpandedVariantDetails variation={variation} columnSpecKeys={columnSpecKeys} />
+              ),
+              rowExpandable: () => true,
+            }}
+          />
         </Flex>
-
-        {unavailableSelectedCount > 0 && fileType ? (
-          <Typography.Text type="danger" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-            {unavailableSelectedCount} selected{' '}
-            {unavailableSelectedCount === 1 ? 'variation does' : 'variations do'} not include {fileType}.
-            Remove {unavailableSelectedCount === 1 ? 'it' : 'them'} to continue.
-          </Typography.Text>
-        ) : null}
-
-        <Table<PartVariationRow>
-          rowKey="key"
-          size="middle"
-          columns={columns}
-          dataSource={filteredVariations}
-          styles={catalogBrowseTableHeaderStyles(token)}
-          pagination={{
-            pageSize: PAGE_SIZE,
-            showSizeChanger: false,
-            showTotal: (total, range) =>
-              total === 0 ? 'No variants' : `Showing ${range[0]}–${range[1]} of ${total} variants`,
-          }}
-          locale={{
-            emptyText: 'No variations match your search. Try a SKU prefix, thread size, or finish.',
-          }}
-          onRow={(variation) => {
-            const isSelected = pendingSet.has(variation.key);
-            const isCarried = isSelected && carriedSet.has(variation.key);
-            return {
-              'data-carried': isCarried ? 'true' : undefined,
-              style: isCarried ? { background: buttonPrimaryPalette.bg } : undefined,
-            };
-          }}
-          expandable={{
-            expandedRowRender: (variation) => (
-              <ExpandedVariantDetails
-                variation={variation}
-                hiddenSpecKeys={new Set([...uniformKeys, ...visibleColumnKeys, 'sku'])}
-              />
-            ),
-            rowExpandable: () => true,
-          }}
-        />
       </Flex>
     </Modal>
   );
 }
 
-function AttributeValueTag({
-  attribute,
-  value,
+/** Horizontal figure strip above the variant table. Matches the Figma modal summary. */
+function PartSummaryStrip({
+  figure,
+  imageSize,
+  categoryLabel,
+  categoryPath,
+  hasSubmittalPdf,
+  skuCountLabel,
+  finishLabel,
 }: {
-  attribute: DistinguishingAttribute;
-  value: string | undefined;
+  figure: VariantFigureContext;
+  imageSize: number;
+  categoryLabel?: string;
+  categoryPath?: string;
+  hasSubmittalPdf: boolean;
+  skuCountLabel: string;
+  finishLabel?: string;
 }) {
+  const { token } = theme.useToken();
+  const metaStyle = hydraTextStyleToReactCss(hydraBaseNormal);
+
+  return (
+    <Flex
+      align="flex-start"
+      gap={token.marginSM}
+      style={{
+        padding: token.paddingSM,
+        borderRadius: token.borderRadius,
+        background: token.colorFillQuaternary,
+        border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+      }}
+    >
+      {figure.imageUrl ? (
+        <img
+          src={figure.imageUrl}
+          alt=""
+          style={{
+            width: imageSize,
+            height: imageSize,
+            objectFit: 'contain',
+            borderRadius: token.borderRadius,
+            flexShrink: 0,
+            background: token.colorBgContainer,
+          }}
+        />
+      ) : null}
+      <Flex vertical gap={token.marginXXS} style={{ flex: 1, minWidth: 0 }}>
+        <Flex align="baseline" gap={token.marginXS} wrap="wrap">
+          <Typography.Text style={{ color: token.colorText, ...hydraTextStyleToReactCss(hydraLargeStrong) }}>
+            {figure.figureNumber}
+          </Typography.Text>
+          <Typography.Text style={{ color: token.colorText, ...hydraTextStyleToReactCss(hydraLargeNormal) }}>
+            {figure.productName}
+          </Typography.Text>
+        </Flex>
+        <Flex align="center" gap={token.padding} wrap="wrap">
+          {figure.brand ? (
+            <Typography.Text type="secondary" style={metaStyle}>
+              Brand: {figure.brand}
+            </Typography.Text>
+          ) : null}
+          {categoryLabel ? (
+            <Tooltip title={categoryPath} trigger={['hover', 'focus']}>
+              <Typography.Text type="secondary" style={metaStyle} tabIndex={0}>
+                Category: {categoryLabel}
+              </Typography.Text>
+            </Tooltip>
+          ) : null}
+          {hasSubmittalPdf ? (
+            <Flex align="center" gap={token.marginXXS}>
+              <FilePdfOutlined style={{ color: token.colorLink, fontSize: token.fontSize }} />
+              <Typography.Text style={{ color: token.colorLink, ...metaStyle }}>Submittal sheet: PDF</Typography.Text>
+            </Flex>
+          ) : null}
+          <Typography.Text type="secondary" style={metaStyle}>
+            Variants: {skuCountLabel}
+          </Typography.Text>
+          {finishLabel ? (
+            <Typography.Text type="secondary" style={metaStyle}>
+              Finish: {finishLabel}
+            </Typography.Text>
+          ) : null}
+        </Flex>
+      </Flex>
+    </Flex>
+  );
+}
+
+function PlainAttributeValue({ value }: { value: string | undefined }) {
   if (isEmptyDistinguishingValue(value)) {
     return (
       <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
@@ -480,58 +556,78 @@ function AttributeValueTag({
       </Typography.Text>
     );
   }
-  if (attribute.tag === 'default') {
-    return <HydraTag>{value}</HydraTag>;
-  }
-  return <HydraColorfulTag preset={attribute.tag}>{value}</HydraColorfulTag>;
+  return (
+    <Typography.Text style={hydraTextStyleToReactCss(hydraBaseNormal)}>{value}</Typography.Text>
+  );
 }
 
-function SpecChip({ spec }: { spec: PartSpecField }) {
+function SpecPair({ spec }: { spec: PartSpecField }) {
   const { token } = theme.useToken();
   return (
-    <Typography.Text style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-      <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
+    <Typography.Text style={{ color: token.colorText, ...hydraTextStyleToReactCss(hydraBaseNormal) }}>
+      <Typography.Text style={{ color: token.colorTextDescription, ...hydraTextStyleToReactCss(hydraBaseNormal) }}>
         {spec.label}:
       </Typography.Text>{' '}
-      <Typography.Text style={{ color: token.colorText, ...hydraTextStyleToReactCss(hydraSmallNormal) }}>
-        {spec.value}
-      </Typography.Text>
+      {spec.value}
     </Typography.Text>
   );
 }
 
+/** Same text under the SKU in the row and in the expanded panel (on-hydra-app `getVariantPickerRowSubtitle`). */
+function variantSubtitle(variation: PartVariationRow): string {
+  return variation.description.trim() || variation.name;
+}
+
+/**
+ * Mirrors the on-hydra-app VariantPicker expanded row: `SKU {sku}` title, the row subtitle in full,
+ * then every attribute that is not a table column (`remainingAttributes`), then Documents.
+ */
 function ExpandedVariantDetails({
   variation,
-  hiddenSpecKeys,
+  columnSpecKeys,
 }: {
   variation: PartVariationRow;
-  hiddenSpecKeys: Set<string>;
+  columnSpecKeys: Set<string>;
 }) {
   const { token } = theme.useToken();
-  const extraSpecs = variation.specifications.filter((spec) => !hiddenSpecKeys.has(spec.key));
-  const showDescription = !isRedundantPimText(variation.name, variation.description);
+  const remainingSpecs = variation.specifications.filter(
+    (spec) =>
+      !columnSpecKeys.has(spec.key) &&
+      spec.key !== 'sku' &&
+      spec.key !== 'configuration' &&
+      !isEmptyDistinguishingValue(spec.value),
+  );
+  const subtitle = variantSubtitle(variation);
+  const labelStyle = { color: token.colorTextDescription, ...hydraTextStyleToReactCss(hydraBaseNormal) };
 
   return (
-    <Flex vertical gap={token.marginXS} style={{ paddingInline: token.paddingSM }}>
-      <Typography.Text strong style={hydraTextStyleToReactCss(hydraBaseStrong)}>
+    <Flex
+      vertical
+      gap={token.marginXXS}
+      style={{
+        paddingBlock: token.paddingSM,
+        paddingInlineEnd: token.paddingSM,
+        // Figma: details start under the SKU column (expand + select columns, minus the accent line).
+        paddingInlineStart: token.controlHeight * 2 - token.lineWidth + token.paddingXS,
+      }}
+    >
+      <Typography.Text style={{ color: token.colorText, ...hydraTextStyleToReactCss(hydraLargeMedium) }}>
         SKU {variation.sku}
       </Typography.Text>
-      {showDescription ? (
-        <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-          {variation.description}
-        </Typography.Text>
+      {subtitle ? <Typography.Text style={labelStyle}>{subtitle}</Typography.Text> : null}
+      {remainingSpecs.length > 0 || variation.drawingFileTypes.length > 0 ? (
+        <Flex wrap="wrap" align="center" gap={token.margin}>
+          {remainingSpecs.map((spec) => (
+            <SpecPair key={spec.key} spec={spec} />
+          ))}
+          {variation.drawingFileTypes.length > 0 ? (
+            <Flex align="center" gap={token.marginXS}>
+              <Typography.Text style={labelStyle}>Documents:</Typography.Text>
+              <ContentFileTypeTags fileTypes={variation.drawingFileTypes} />
+            </Flex>
+          ) : null}
+        </Flex>
       ) : null}
-      <Flex gap={token.marginMD} wrap="wrap">
-        {extraSpecs.map((spec) => (
-          <SpecChip key={spec.key} spec={spec} />
-        ))}
-        <Typography.Text style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-          <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-            Documents:
-          </Typography.Text>{' '}
-          {variation.drawingFileTypes.length > 0 ? variation.drawingFileTypes.join(', ') : 'None'}
-        </Typography.Text>
-      </Flex>
     </Flex>
   );
 }

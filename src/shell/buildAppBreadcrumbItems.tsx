@@ -202,6 +202,11 @@ export function buildAppBreadcrumbItems(a: BuildArgs): BreadcrumbProps['items'] 
       return toItems(segs);
     }
 
+    if (pathname === '/bom/cross-reference') {
+      segs.push({ label: 'Part Cross-Reference' });
+      return toItems(segs);
+    }
+
     if (siteMatch || (pathname === '/bom' && resolvedSiteId)) {
       const siteTitle = projectTitleById(resolvedSiteId ?? '') ?? 'Construction project';
       segs.push({ label: siteTitle, to: siteMatch && !onBomHub ? bomHub : undefined });

@@ -10,9 +10,9 @@
     "deploy": "npm run build && wrangler deploy",
     "tokens:dump": "node scripts/dump-primary-tokens.mjs",
     "test:e2e": "playwright test",
-    "storybook": "storybook dev -p 6006 --no-open",
-    "build-storybook": "storybook build",
-    "test:unit:catalog-bom": "npx --yes tsx -e \"import { runCatalogBomAddTests } from './src/search/catalogBomAdd.test.ts'; console.log('ok', runCatalogBomAddTests());\""
+    "test:unit:catalog-bom": "npx --yes tsx -e \"import { runCatalogBomAddTests } from './src/search/catalogBomAdd.test.ts'; console.log('ok', runCatalogBomAddTests());\"",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.1",
@@ -23,14 +23,22 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
-    "@storybook/react-vite": "10.6.2",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
     "playwright": "^1.61.0",
-    "storybook": "10.6.2",
     "typescript": "~5.7.3",
     "vite": "^6.1.0",
-    "wrangler": "^4.131.0"
+    "wrangler": "^4.131.0",
+    "storybook": "^10.6.2",
+    "@storybook/react-vite": "^10.6.2",
+    "@chromatic-com/storybook": "latest",
+    "@storybook/addon-vitest": "^10.6.2",
+    "@storybook/addon-a11y": "^10.6.2",
+    "@storybook/addon-docs": "^10.6.2",
+    "@storybook/addon-mcp": "^10.6.2",
+    "vitest": "latest",
+    "@vitest/browser-playwright": "latest",
+    "@vitest/coverage-v8": "latest"
   }
 }

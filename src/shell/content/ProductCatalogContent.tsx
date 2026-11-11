@@ -9,7 +9,6 @@ import {
   productCatalogSearchPath,
 } from '../../catalog/productCatalogNavigation';
 import { FeaturedParts } from '../../catalog/FeaturedParts';
-import { hydraFeaturedPartsPanelBgLight } from '../../theme/hydraSemanticColors';
 import { setLastScopedProjectId } from '../lastProjectScope';
 import { shellContentRailStyle } from '../shellContentRail';
 import {
@@ -244,7 +243,7 @@ export function ProductCatalogContent() {
                 style={{
                   width: '100%',
                   padding: token.paddingXL,
-                  background: hydraFeaturedPartsPanelBgLight,
+                  background: token.colorPrimaryBg,
                   borderRadius: token.borderRadiusLG,
                   boxShadow: token.boxShadowTertiary,
                 }}

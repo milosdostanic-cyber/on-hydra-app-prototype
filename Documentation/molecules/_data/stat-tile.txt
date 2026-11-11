@@ -1,0 +1,217 @@
+ Stat Tile 
+ Hydra design system · Molecule report · built 20 Oct 2026
+ Stat Tile
+ Built New molecule 
+ One labelled count with a semantic tone accent, shown alone or in a row of tiles. It summarises outcomes such as accepted / denied / undecided or ready / skipped / needs attention. The component is built in Hydra; the sections below the Built, Checks and Not done cards are the approved plan, kept for reference.
+ 9 occurrences (screens), all verified 
+ 30 tiles in those rows 
+ 3 modules: BOM, SPEC, Admin 
+ 3 properties: tone, ✏️ label, ✏️ value 
+ 5 open questions at plan time (see the last cards) 
+ [#built] Built [#checks] Checks [#replaced] Replaced [#notdone] Not done [#decision] Decision [#component] Proposed component [#harmonization] Harmonization [#admin] Admin recommendation [#occurrences] Where it appears [#rim] Replace in modules [#rejected] Rejected [#questions] Open questions [#checks] BUILD checks 
+ Built
+ The approved plan was built in the Hydra file. The Hydra file was written first; afterwards, 8 hand-built tiles in BOM 2.15.1 and 2.16 were replaced (see "Replaced in modules").
+ What Node Link 
+ Page ❖ Stat Tile (after Empty State Block) 1992:42 [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design-System?node-id=1992-42] Open page → 
+ Component set Stat Tile (5 variants: tone = neutral, success, warning, error, info) 1992:58 [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design-System?node-id=1992-58] Open component → 
+ Section Components 1992:59 [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design-System?node-id=1992-59] Open → 
+ Section Replace in modules (6 cards) 1993:42 [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design-System?node-id=1993-42] Open → 
+ Properties
+ Property Type Default 
+ tone Variant: neutral, success, warning, error, info neutral 
+ ✏️ label Text Accepted 
+ ✏️ value Text 0 
+ Tokens: fill colorBgContainer , 4 px left stroke colorBorderSecondary / colorSuccessBorder / colorWarningBorder / colorErrorBorder / colorInfoBorder , padding paddingSM / paddingMD (12 / 20), gap marginSM , radius borderRadiusLG , effect style boxShadowTertiary (fixed). Text styles: Base/Normal with colorTextDescription for the label, Title/Heading 3 with colorText for the value. Default width 240 px, fixed; height hugs; works at FILL.
+ Components
+ Replace in modules
+ Card Link in the card Status 
+ BOM · 2.14 — Guided matching · Complete [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5574-297524] 5574:297524 → [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design-System?node-id=1993-46] Card 1993:46 → · Verified 
+ BOM · 2.15 — Matching results · Table [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5585-299533] 5585:299533 → [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design-System?node-id=1993-58] Card 1993:58 → · Verified 
+ BOM · 2.15.1 Bulk · 2.16 Skipped filter · 2.17 Import processing [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5913-14446] 5913:14446 → [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design-System?node-id=1993-73] Card 1993:73 → · Inferred (same tiles, read from the node) 
+ SPEC · 07 — Export and create outputs · Overall assessment [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8112-21546] 8112:21546 → [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design-System?node-id=1993-90] Card 1993:90 → · Verified 
+ SPEC · 05C — Export doc ready [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8230-83441] 8230:83441 → [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design-System?node-id=1993-102] Card 1993:102 → · Verified 
+ SPEC · 05B — Submittal Package created · Success [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8429-11676] 8429:11676 → [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design-System?node-id=1993-114] Card 1993:114 → · Inferred (same tiles, read from the node) 
+ Each card shows a row of instances that match the occurrence (3 or 4 tiles), configured only through tone , ✏️ label and ✏️ value , plus one link. Not replaced: Admin · RN Admin · Bulk upload · Success ( [https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2218-11590] 2218:11590 → ) keeps the Statistic atom, as decided.
+ Checks
+ Check Result 
+ Structure: 5 variants, 3 properties, label and value bound to the text properties Pass 
+ Every fill, stroke, gap, padding and radius bound to a Hydra variable; Hydra text styles applied (no hex values) Pass 
+ All 20 instances come from the Stat Tile set, none detached, only properties changed Pass 
+ All 6 links carry a hyperlink to the exact node Pass 
+ Test frame at FILL in a 1000 px container: a long label wraps and the tile grows; nothing overflows Pass (first run failed: the tile had a fixed height and the label overlapped the value; fixed by making the height hug content) 
+ Dark mode (Customize Theme = Dark): fill, label, value and accents switch Pass 
+ Buttons with icons Not applicable: no icons or buttons in this molecule 
+ Shadow: boxShadowTertiary on all 5 variants, inherited by all 20 instances; no frame in Components or Replace in modules clips it (17 frames set to not clip); dark mode re-checked Pass 
+ Temporary test frames removed Pass 
+ Screenshots of Components and Replace in modules at normal scale: no clipped text, no overlap Pass 
+ Replaced in modules (BOM 2.15.1 and 2.16, 8 tiles, 20 Oct 2026) 
+ Hand-built tiles swapped for Stat Tile instances in the BOM file. Each instance is in the same parent at the same child index, fill width (349.5 × 56), and only tone , ✏️ label and ✏️ value are set. Each old frame was deleted only after its instance was checked. Find the old frames in Figma version history by the original ids.
+ Module Screen Row Label · value · tone Original id New instance id Status 
+ BOM 2.15.1 Matching results · Bulk [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5818-48687] 5818:48687 Total parts · 7 · info 5818:48688 7272:62 Replaced 
+ BOM Ready to import · 5 · success 5818:48692 7272:65 
+ BOM Needs attention · 0 · error 5818:48696 7272:68 
+ BOM Skipped · 2 · warning 5818:48700 7272:71 
+ BOM 2.16 Matching results · Skipped rows filter [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5585-301053] 5585:301053 Total parts · 7 · info 5585:301054 7272:74 
+ BOM Ready to import · 5 · success 5585:301058 7272:77 
+ BOM Needs attention · 0 · error 5585:301062 7272:80 
+ BOM Skipped · 2 · warning 5585:301066 7272:83 
+ Already replaced earlier (not touched): BOM 2.14, 2.15, 2.17; SPEC 07, 05B, 05C (see UATL-612 comment 59764). Not replaced: Admin (stays on the Statistic atom); Draft pages (unconfirmed pattern).
+ Checks: read-only check after the write: both rows still 1446 × 56; every tile is a Stat Tile instance carrying boxShadowTertiary . Missing: after screenshots were not taken (the screenshot call was blocked), so a visual check of both rows in Figma is still open.
+ Not done and why
+ Shadow (resolved). The plan premise was wrong: the SPEC canonical and all BOM tiles carry the same shadow. On approval, the Hydra effect style boxShadowTertiary was applied as a fixed style on all 5 variants. There is no shadow property. All 20 instances inherit it, and the sections and cards do not clip it.
+ Admin. RN Admin · Bulk upload · Success stays on the Statistic atom. No card.
+ Info accent colour. BOM used #0958d9 for the total tile; it now uses colorInfoBorder (lighter blue), as planned. BOM warning accent (#faad14) becomes colorWarningBorder (lighter yellow).
+ Library publish. Resolved: the library is published and the component is available in the BOM and SPEC files.
+ Decision: new molecule
+ Canonical sample SPEC 07 — Export and create outputs · [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8112-21546] Open in Figma → 
+ Why new, not an upgrade No Hydra molecule shows a labelled count. The closest Hydra component is the [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=162-345] Statistic atom (162:345) → : a vertical stack (title above number, gap paddingLG) with an optional icon and button. It cannot produce the row layout (label left, value right), the tile container or the tone accent through its properties, and atoms are out of scope. So the Stat Tile is a small new molecule. It uses exactly the Statistic text tokens (Base/Normal colorTextDescription for the label, Title/Heading 3 colorText for the value), so both read as one family.
+ Nested atoms None. No occurrence uses an icon, button or tag inside the tile, so none is nested and no slot is added.
+ Related Statistic (atom): a single highlighted number without a tone. Outcome Summary (audit candidate): a panel with a title and description that nests a row of Stat Tiles. Progress Summary Bar (audit candidate): progress of a running task, not a count.
+ Target in Hydra New page ❖ Stat Tile in the Molecules section, inserted after [https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=1932-42] ❖ Empty State Block → and before "━ General ━". Two sections: Components (the component set) and Replace in modules (9 cards).
+ Proposed component
+ Component set Stat Tile , 4 variants (tone). Preview of the harmonized spec (Light):
+ Accepted 1 
+ Denied 0 
+ Undecided 18 
+ Skipped 2 
+ Properties
+ Property Type Values Default Controls 
+ tone variant success | warning | error | info success Left accent colour: colorSuccessBorder / colorWarningBorder / colorErrorBorder / colorInfoBorder 
+ ✏️ label text — "Accepted" The muted label on the left 
+ ✏️ value text — "0" The count on the right 
+ Tokens, text styles and structure
+ Element Hydra token / style 
+ Fill Color/Neutral/Background/colorBgContainer 
+ Accent stroke (left only) tone → Color/Success/colorSuccessBorder · Color/Warning/colorWarningBorder · Color/Error/colorErrorBorder · Color/Info/colorInfoBorder 
+ Accent width Size/Size/sizeXXS (4) on strokeLeftWeight; top, right and bottom weights 0; stroke inside 
+ Padding top/bottom Size/Padding/paddingSM (12) · left/right Size/Padding/paddingMD (20) 
+ Gap Size/Margin/marginSM (12), primary axis space-between, counter axis centre 
+ Radius Style/borderRadiusLG (8) on all corners 
+ Shadow Effect style boxShadowTertiary 
+ Label text Text style Base/Normal · fill Color/Neutral/Text/colorTextDescription · FILL width, wraps (textAutoResize HEIGHT) 
+ Value text Text style Title/Heading 3 · fill Color/Neutral/Text/colorText · HUG, right-aligned 
+ Size Default width FIXED 240, height HUG (56); works at FILL (all 9 occurrences use FILL) 
+ Layers: Stat Tile (auto-layout, horizontal) → ✏️ label (text) · ✏️ value (text). Every fill, stroke, padding, gap and radius is bound to an existing Customize Theme variable; no variable, mode or style is created or edited. Dark mode works through the Customize Theme Dark mode (for example colorSuccessBorder #237804, colorBgContainer #0c3559).
+ Component description (Hydra format, to paste in BUILD)
+ A Hydra product composition: one labelled count with a semantic tone accent, shown alone or in a row of tiles. It is not an Ant Design component.
+Code: proposed src/ui/StatTile.tsx. It replaces the hand-built cards in src/bom/pages/BomMatchingPage.tsx, src/bom/components/BomGuidedReviewCompletePanel.tsx and src/spec/pages/SpecExportPage.tsx. label → Typography.Text type="secondary"; value → Heading 3 text; tone → border-inline-start colour (token.sizeUnit wide).
+Properties:
+– tone (success | warning | error | info) → left accent colour
+– ✏️ label → the muted label
+– ✏️ value → the count
+Use for: a row of 2–4 outcome counts (accepted / denied / undecided, ready / skipped / needs attention). Put tiles in a horizontal row with gap margin and set each tile to FILL.
+Do not use for: a single highlighted number without a tone (use Statistic), KPI cards with charts or trends, clickable filters, progress (use a Progress Summary Bar). 
+ Code note
+ The prototype draws the same tile three times in code (BomMatchingPage.tsx, BomGuidedReviewCompletePanel.tsx, SpecExportPage.tsx), and the colours drift from Figma there too. Matching results: Total uses a blue primitive, "Needs attention" uses colorWarning (Figma: colorErrorBorder) and Skipped uses colorWarningBorder (Figma: colorWarning). The guided-review panel stacks label over value in code but uses a row in Figma. A future StatTile component would fix all three; no code is changed by this plan.
+ Harmonization: one spec for every module
+ All values below were read from the Figma nodes. Drift becomes one chosen value, not a property. Only the tone is a property, because it carries meaning.
+ Element Values seen (modules) Chosen value Why 
+ Layout Row: label left, value right (SPEC, BOM) · stacked and centred (Admin, Statistic atom) Row, space-between, vertically centred 8 of 9 occurrences 
+ Accent · success colorSuccessBorder (SPEC, BOM) colorSuccessBorder Already the same 
+ Accent · error colorErrorBorder (SPEC, BOM) colorErrorBorder Already the same 
+ Accent · info colorInfoBorder #91caff (SPEC) · colorInfoActive #0958d9 (BOM) colorInfoBorder Same token family as success and error (the …Border family); canonical SPEC value 
+ Accent · warning colorWarning #faad14 (BOM) · not used in SPEC colorWarningBorder Same token family. Paler than today in BOM (see Open questions) 
+ Accent width 4 px raw value (SPEC, BOM); code uses token.sizeUnit (4) 4 px bound to Size/Size/sizeXXS The only 4 px Hydra size token. It has no stroke scope (see Open questions) 
+ Padding top / bottom paddingSM 12 (SPEC, BOM) Size/Padding/paddingSM Already the same 
+ Padding left paddingMD 20 (BOM) · paddingLG 24 (SPEC) Size/Padding/paddingMD 5 of 8 tile rows; matches the code (token.paddingMD) 
+ Padding right paddingMD 20 (SPEC, BOM) Size/Padding/paddingMD Already the same 
+ Gap label ↔ value 0 inside a space-between frame (BOM) · paddingSM 12 (SPEC) Size/Margin/marginSM (12) with space-between Keeps a minimum gap when the label is long 
+ Radius 8 raw (BOM) · borderRadiusLG (SPEC) Style/borderRadiusLG Bind the raw value 
+ Shadow boxShadowTertiary style (BOM) · same values, unlinked (SPEC canonical 8112:21547 and all BOM tiles carry it) boxShadowTertiary (fixed style, no property) Both the SPEC canonical and every BOM tile already carry it, so it is part of the pattern. The approval plan said the canonical had none; that premise was corrected after reading the nodes 
+ Fill colorBgContainer (SPEC, BOM) Color/Neutral/Background/colorBgContainer Already the same 
+ Label Base/Normal 14 Regular, colorTextDescription (all) Text style Base/Normal, colorTextDescription Already the same (same as the Statistic atom title) 
+ Value Title/Heading 3 24 Medium, colorText (SPEC, BOM) · 24 SemiBold, tone-coloured override (Admin) Text style Title/Heading 3, colorText 8 of 9 occurrences; the tone lives in the accent 
+ Value alignment Right-aligned text (BOM) · left text in a hugging wrapper pushed right (SPEC) Right-aligned, hug width Same result with one layer 
+ Layer structure Extra wrapper frames around each text (SPEC "Text", "Heading 3"; BOM "Container") Flat: tile → ✏️ label, ✏️ value Simpler overrides, no detached wrappers 
+ Tile height 56 (all) Hug (56 with a one-line label) Already the same 
+ Row around tiles (not part of the molecule) Gap 16 bound to Size/Padding/padding (BOM, SPEC); tiles FILL Rows use gap Size/Margin/margin (16); tiles set to FILL Documented in the description; the row stays a layout frame 
+ Admin: adopt Stat Tile or keep the Statistic atom (decided: keep the atom) 
+ Admin · RN Admin Release Notes Admin · Bulk upload · Success · [https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2218-11590] Open in Figma → 
+ Recommendation: adopt
+ Same meaning as BOM 2.14: counts of imported vs skipped rows after an import. One meaning should have one pattern across modules.
+ The Admin instances already override the atom: number weight SemiBold (the atom is Medium) and a coloured number. "Rows skipped" uses colorPrimary, which is not a status colour. With Stat Tile, the tone moves to the accent (success, warning) and the overrides disappear.
+ It fits the 480 px modal: two tiles FILL in a row are about 210 px each, the same width as today.
+ The Statistic atom stays in Hydra for a single highlighted number without a tone (its AntD use).
+ Trade-off: the result modal becomes left-aligned tiles under a centred check icon and title. If you prefer the centred look, choose "keep"; then the Admin card is dropped and Admin is unchanged.
+ Where it appears (9 occurrences, 30 tiles, all verified in screenshots) 
+ Found by a structural scan of every linked node (frames with a 3 px+ left-only stroke and a 20 px+ number) plus a search for Statistic instances, then confirmed visually. The 2026-10-20 audit had 7 samples; the 3 BOM matching-result states and SPEC 05B are now confirmed as separate occurrences.
+ BOM Verified ×3 
+ 2.14 — Guided matching · Complete
+ Row of 3 tiles. Padding 12/20, value right-aligned, boxShadowTertiary style linked. Radius 8 is a raw value (not bound). Skipped uses colorWarning, Total uses colorInfoActive.
+ Changes when adopted: Accent colours change: Skipped colorWarning (#faad14) → colorWarningBorder; Total colorInfoActive (#0958d9) → colorInfoBorder. Radius becomes bound to borderRadiusLG.
+ hand-built frames · screen 5574:297135 [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5574-297524] Open in Figma → 
+ BOM Verified ×4 
+ 2.15 — Matching results · Table
+ Row of 4 tiles above the results table. Same build as 2.14.
+ Changes when adopted: Same accent changes as 2.14 (Total, Skipped).
+ hand-built frames · screen 5585:299503 [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5585-299533] Open in Figma → 
+ BOM Verified ×4 
+ 2.15.1 — Matching results · Bulk
+ Identical copy of the 2.15 row on the bulk-selection state.
+ Changes when adopted: Same as 2.15.
+ hand-built frames · screen 5818:48665 [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5818-48687] Open in Figma → 
+ BOM Verified ×4 
+ 2.16 — Matching results · Skipped rows filter
+ Identical copy of the 2.15 row on the skipped-filter state.
+ Changes when adopted: Same as 2.15.
+ hand-built frames · screen 5585:301031 [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5585-301053] Open in Figma → 
+ BOM Verified ×4 
+ 2.17 — Matching results · Import processing
+ Identical copy of the 2.15 row on the processing state.
+ Changes when adopted: Same as 2.15.
+ hand-built frames · screen 5913:14424 [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5913-14446] Open in Figma → 
+ SPEC Verified ×3 
+ 07 — Export and create outputs
+ Canonical. Row of 3 tiles inside the "Overall assessment" panel. Left padding 24 (paddingLG), gap 12 bound to paddingSM, radius bound to borderRadiusLG. Shadow uses the boxShadowTertiary values but is not linked to the style. Each text sits in an extra wrapper frame.
+ Changes when adopted: Left padding 24 → 20 (paddingMD). The shadow becomes the linked boxShadowTertiary style. The wrapper frames go away.
+ hand-built frames · screen 8112:21531 [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8112-21546] Open in Figma → 
+ SPEC Verified ×3 
+ 05B — Submittal Package created · Success
+ Identical copy of the 07 row.
+ Changes when adopted: Same as 07.
+ hand-built frames · screen 8429:11661 [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8429-11676] Open in Figma → 
+ SPEC Verified ×3 
+ 05C — Export doc ready
+ Identical copy of the 07 row (the Undecided tile has no gap binding).
+ Changes when adopted: Same as 07.
+ hand-built frames · screen 8230:83425 [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8230-83441] Open in Figma → 
+ Admin · RN Admin Verified ×2 
+ Release Notes Admin · Bulk upload · Success
+ Two Hydra Statistic atom instances (stacked, centred), no tile container. The number is overridden to SemiBold and tone-coloured: "Imported" uses colorSuccessText, "Rows skipped" uses colorPrimary (renders orange here).
+ Changes when adopted: Only if Admin adopts Stat Tile (recommended). The stacked, centred layout and the coloured SemiBold numbers are not reproduced on purpose: the tone moves to the accent and the number becomes Heading 3 colorText.
+ Hydra Statistic atom instances · screen 2218:11581 [https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2218-11590] Open in Figma → 
+ Replace in modules: plan (as built: 6 cards, Admin not replaced) 
+ A section below Components. One card per occurrence, in module order BOM, SPEC, Content, Part Search, Admin, Release Notes (only BOM, SPEC and Admin have occurrences). A card contains only the Stat Tile instances, configured through properties, and one text link "<Module> · <Screen> →". Card chrome: colorBgContainer fill, colorBorderSecondary stroke, borderRadiusLG, padding paddingLG.
+ # Module Instance config Link text → node Gap (props cannot reproduce) 
+ 1 BOM 3 instances in a row (FILL, gap margin) tone=success · ✏️ label "Ready to import" · ✏️ value "5" tone=warning · ✏️ label "Skipped" · ✏️ value "2" tone=info · ✏️ label "Total in file" · ✏️ value "7" [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5574-297524] BOM · 2.14 — Guided matching · Complete → Accent colours change: Skipped colorWarning (#faad14) → colorWarningBorder; Total colorInfoActive (#0958d9) → colorInfoBorder. Radius becomes bound to borderRadiusLG. 
+ 2 BOM 4 instances in a row (FILL, gap margin) tone=info · ✏️ label "Total parts" · ✏️ value "7" tone=success · ✏️ label "Ready to import" · ✏️ value "5" tone=error · ✏️ label "Needs attention" · ✏️ value "0" tone=warning · ✏️ label "Skipped" · ✏️ value "2" [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5585-299533] BOM · 2.15 — Matching results · Table → Same accent changes as 2.14 (Total, Skipped). 
+ 3 BOM 4 instances in a row (FILL, gap margin) tone=info · ✏️ label "Total parts" · ✏️ value "7" tone=success · ✏️ label "Ready to import" · ✏️ value "5" tone=error · ✏️ label "Needs attention" · ✏️ value "0" tone=warning · ✏️ label "Skipped" · ✏️ value "2" [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5818-48687] BOM · 2.15.1 — Matching results · Bulk → Same as 2.15. 
+ 4 BOM 4 instances in a row (FILL, gap margin) tone=info · ✏️ label "Total parts" · ✏️ value "7" tone=success · ✏️ label "Ready to import" · ✏️ value "5" tone=error · ✏️ label "Needs attention" · ✏️ value "0" tone=warning · ✏️ label "Skipped" · ✏️ value "2" [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5585-301053] BOM · 2.16 — Matching results · Skipped rows filter → Same as 2.15. 
+ 5 BOM 4 instances in a row (FILL, gap margin) tone=info · ✏️ label "Total parts" · ✏️ value "7" tone=success · ✏️ label "Ready to import" · ✏️ value "5" tone=error · ✏️ label "Needs attention" · ✏️ value "0" tone=warning · ✏️ label "Skipped" · ✏️ value "2" [https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-SPEC---ASC-Connected-v2?node-id=5913-14446] BOM · 2.17 — Matching results · Import processing → Same as 2.15. 
+ 6 SPEC 3 instances in a row (FILL, gap margin) tone=success · ✏️ label "Accepted" · ✏️ value "1" tone=error · ✏️ label "Denied" · ✏️ value "0" tone=info · ✏️ label "Undecided" · ✏️ value "18" [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8112-21546] SPEC · 07 — Export and create outputs → Left padding 24 → 20 (paddingMD). The shadow becomes the linked boxShadowTertiary style. The wrapper frames go away. 
+ 7 SPEC 3 instances in a row (FILL, gap margin) tone=success · ✏️ label "Accepted" · ✏️ value "1" tone=error · ✏️ label "Denied" · ✏️ value "0" tone=info · ✏️ label "Undecided" · ✏️ value "18" [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8429-11676] SPEC · 05B — Submittal Package created · Success → Same as 07. 
+ 8 SPEC 3 instances in a row (FILL, gap margin) tone=success · ✏️ label "Accepted" · ✏️ value "1" tone=error · ✏️ label "Denied" · ✏️ value "0" tone=info · ✏️ label "Undecided" · ✏️ value "18" [https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC---ASC-Connected?node-id=8230-83441] SPEC · 05C — Export doc ready → Same as 07. 
+ 9 Admin · RN Admin only if Admin adopts 2 instances in a row (FILL, gap margin) tone=success · ✏️ label "Imported as draft" · ✏️ value "5" tone=warning · ✏️ label "Rows skipped" · ✏️ value "1" [https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin---ASC-Connected?node-id=2218-11590] Admin · Release Notes Admin · Bulk upload · Success → Only if Admin adopts Stat Tile (recommended). The stacked, centred layout and the coloured SemiBold numbers are not reproduced on purpose: the tone moves to the accent and the number becomes Heading 3 colorText. 
+ Gaps summary
+ SPEC left padding 24 → 20 (harmonized, not a property).
+ BOM accents: Skipped colorWarning → colorWarningBorder, Total colorInfoActive → colorInfoBorder (harmonized, not a property).
+ Admin (if adopted): stacked, centred layout and tone-coloured SemiBold numbers are not reproduced; the tone moves to the accent.
+ Card links point to the tile-row frames (all are normal frames, so they link directly).
+ Rejected candidates
+ Candidate Reason 
+ BOM 2.14 "You're done reviewing every line" panel and SPEC "Overall assessment" panel A different molecule (Outcome Summary). It nests a row of Stat Tiles. 
+ BOM 2.11 / 2.12 "0/10 reviewed" progress card Different purpose: task progress (Progress Summary Bar). 
+ SPEC project list "18 of 26 recommendations reviewed", "Analysis 65%" Table cell text, not a tile. 
+ BOM 2.1–2.4 "7 of 13 columns linked" A heading in the mapping summary, not a tile. 
+ Hydra Statistic atom used on its own An atom. It stays for single highlighted numbers; it is not changed. 
+ Content, Part Search, Release Notes, CFM Structural scan of the linked nodes found no accent tiles, no Statistic instances and no numeric text of 20 px or more. 
+ "Can't be matched" tile (code only, src/bom/pages/BomMatchingPage.tsx) Not drawn in Figma, so no Replace-in-modules card. It maps to tone = error when the code adopts the molecule. 
+ Open questions at plan time
+ Decided at approval: Admin keeps the Statistic atom (no Admin card), and the shadow is a fixed boxShadowTertiary style.
+ Admin: adopt Stat Tile or keep the Statistic atom? Recommendation: adopt Stat Tile (tone success / warning) in the Release Notes bulk-upload result. Reasons: it shows the same kind of data as BOM 2.14 (imported vs skipped), the Admin instances already override the atom (SemiBold weight, coloured numbers, and colorPrimary used as a warning colour), and one pattern per meaning is easier for users and developers. Keep the Statistic atom for a single highlighted number without a tone. If you choose "keep", the Admin card is dropped from Replace in modules and nothing changes in Admin.
+ Warning and info accent: the pale …Border family or the solid colours? The plan uses colorWarningBorder (#ffe58f) and colorInfoBorder (#91caff) so all four tones come from one token family, as SPEC does. BOM today uses the stronger colorWarning (#faad14) and colorInfoActive (#0958d9). If you prefer stronger accents, use colorSuccess / colorWarning / colorError / colorInfo for all four tones instead; mixing families is not recommended.
+ Accent width token. Bind the 4 px left stroke to Size/Size/sizeXXS (the only 4 px Hydra token, matching token.sizeUnit in code). That variable has no stroke scope, so it does not appear in the stroke picker; the binding still works by script. The alternative is a fixed 4 px value. No variable will be created or edited either way.
+ No "neutral" tone. No occurrence has a tile without a tone, so none is planned. Say if you want one (accent colorBorderSecondary) for future use.
+ Replace-in-modules cards: full rows. Each card will hold the whole row of tiles (2–4 instances side by side, FILL) so it looks like the module screen. The alternative is one instance per card (27 cards). The plan uses full rows (9 cards).
+ Updated 20 Oct 2026 · built · screenshots from Figma 
+ 

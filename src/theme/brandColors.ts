@@ -3,7 +3,7 @@ import { hydraDarkAlias, hydraLightAlias } from './hydraAlias';
 import {
   brandFontFamily,
   hydraBaseNormal,
-  hydraLargeStrong,
+  hydraLargeMedium,
   hydraTextStyleToReactCss,
 } from './hydraTypography';
 import {
@@ -52,12 +52,12 @@ export function applyHydraTagCssVars(root: HTMLElement): void {
 }
 
 /**
- * Alert headline (`title` / legacy `message`) — Figma `Large/Strong` + `Color/Neutral/Text/colorText`.
+ * Alert headline (`title` / legacy `message`) — Figma `Large/Medium` + `Color/Neutral/Text/colorText`.
  * antd `Alert` has no component token for title typography; vars are consumed in `index.css`.
  */
 export function applyHydraAlertTitleCssVars(root: HTMLElement, mode: HydraColorMode): void {
   const alias = mode === 'light' ? hydraLightAlias : hydraDarkAlias;
-  const titleStyle = hydraTextStyleToReactCss(hydraLargeStrong);
+  const titleStyle = hydraTextStyleToReactCss(hydraLargeMedium);
   root.style.setProperty('--hydra-alert-title-font-size', `${titleStyle.fontSize}px`);
   root.style.setProperty('--hydra-alert-title-line-height', titleStyle.lineHeight as string);
   root.style.setProperty('--hydra-alert-title-font-weight', String(titleStyle.fontWeight));

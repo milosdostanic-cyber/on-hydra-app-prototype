@@ -24,7 +24,7 @@ Do not invent colors, spacing, typography metrics, or radii outside the sources 
 ### Typography
 
 - Use only:
-  - Named text styles from [`src/theme/figmaTypography.ts`](../src/theme/figmaTypography.ts) (all Figma-local styles mirrored there), via `figmaTextStyleToReactCss(...)` or explicit fields from those objects, **and/or**
+  - Named text styles from [`src/theme/hydraTypography.ts`](../src/theme/hydraTypography.ts) (all Figma-local styles mirrored there), via `figmaTextStyleToReactCss(...)` or explicit fields from those objects, **and/or**
   - Ant Design **`Typography`** plus **`theme.useToken()`** font keys (`fontSize`, `fontSizeSM`, `fontSizeLG`, `fontSizeXL`, `fontSizeHeading1`–`fontSizeHeading5`, matching `lineHeight*`), which are wired from Figma in [`src/theme/hydraAntdTypography.ts`](../src/theme/hydraAntdTypography.ts).
 - Do **not** set `fontSize`, `lineHeight`, `fontWeight`, or `fontFamily` ad hoc in JSX for design intent.
 
@@ -43,9 +43,9 @@ Do not invent colors, spacing, typography metrics, or radii outside the sources 
 2. **Inspect the repo** before coding:
    - Prefer imports from [`src/ui/antd.ts`](../src/ui/antd.ts) (curated barrel).
    - Reuse existing layout/shell patterns under [`src/shell/`](../src/shell/) when they fit.
-3. **Map each text role** to the **closest Figma text style** in `figmaTypography.ts` (e.g. `figmaBaseNormal`, `figmaBaseStrong`, `figmaTitleHeading3`, `figmaSmallNormal`), or to antd `Typography` with **`level`** / props such that resolved styles still come from theme tokens tied to Figma.
+3. **Map each text role** to the **closest Figma text style** in `hydraTypography.ts` (e.g. `figmaBaseNormal`, `figmaBaseStrong`, `figmaTitleHeading3`, `figmaSmallNormal`), or to antd `Typography` with **`level`** / props such that resolved styles still come from theme tokens tied to Figma.
 4. **Map each color** to the **closest semantic** token (e.g. `colorText`, `colorTextSecondary`, `colorTextDescription`, `colorPrimary`, `colorBgContainer`, `colorBorder`, sidebar/menu tokens from theme + `sidebarSemanticsLight` / Menu dark tokens). Prefer **meaning** (primary text, secondary, border, surface) over pixel-perfect hex match.
-5. **Map spacing and radius** to `token.padding*`, `token.margin*`, `token.borderRadius*`, `shellLayout`, and menu metrics from [`src/theme/figmaMenuMetrics.ts`](../src/theme/figmaMenuMetrics.ts) where applicable.
+5. **Map spacing and radius** to `token.padding*`, `token.margin*`, `token.borderRadius*`, `shellLayout`, and menu metrics from [`src/theme/hydraMenuMetrics.ts`](../src/theme/hydraMenuMetrics.ts) where applicable.
 
 ## Figma URLs
 
@@ -67,7 +67,7 @@ Before treating the task as complete:
 
 - [ ] No new raw design literals in TSX/CSS for intent; any new literals live only in allowed **figma-** mirror modules per **hydra-ui-tokens.mdc** (and user-approved token work).
 - [ ] Imports favor **`src/ui/antd`** over deep `antd` paths unless the user approved extending the barrel.
-- [ ] Typography uses **`figmaTypography`** and/or **`theme.useToken()`** font keys only.
+- [ ] Typography uses **`hydraTypography`** and/or **`theme.useToken()`** font keys only.
 - [ ] Run **`npm run build`** after theme, token, or TypeScript changes.
 - [ ] Briefly state any **intentional approximation** (e.g. “used `colorTextSecondary` for muted label”) if a perfect semantic match was missing but you did **not** add a new token.
 
@@ -85,7 +85,7 @@ flowchart TD
   start[Design input URL or screenshot]
   decompose[Decompose layout and UI blocks]
   mapComp[Map blocks to ui/antd and shell patterns]
-  mapType[Map text to figmaTypography or token typography]
+  mapType[Map text to hydraTypography or token typography]
   mapColor[Map colors to semantic tokens]
   gapComp{Gap component not in barrel or unclear}
   gapTok{Gap no semantic token}
