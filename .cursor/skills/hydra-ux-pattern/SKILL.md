@@ -23,6 +23,20 @@ under `rules/` so the set stays easy to extend.
 - The **Design System is never modified**. Missing tokens or components go to
   "Needs review" as DS gaps; never create or edit them without explicit approval.
 
+## Code mode (prototype repo)
+
+When the target is the prototype code (`src/...`) and not a Figma file, **read and follow
+[code-audit.md](code-audit.md) first**. It adds the mandatory steps that stop rules, rule rows,
+screen states or inner screens from being skipped:
+
+- read every rule file in full each time and turn each Spec-table row into a check;
+- inventory every route, state and inner screen, and read the real value of shared constants;
+- measure the live screen against the rule's numbers (not against other controls);
+- fill a screen × rule coverage matrix with no empty cell, re-measure after fixing, run a second sweep;
+- phrases like "fix everything" / "apply the rules" are fix approval: audit, then fix in the same turn.
+
+The read-only default below still applies to pure audit requests.
+
 ## Approved rules
 
 Only rules in this table are enforceable. Do not invent, infer or enforce others.
@@ -35,6 +49,12 @@ Only rules in this table are enforceable. Do not invent, infer or enforce others
 | UX-004 | Table patterns / Alignment | Actions column is last, as wide as its widest action set + padding; header label and cell actions right-aligned to one edge, ⋯ last, never centered | [rules/UX-004.md](rules/UX-004.md) |
 | UX-005 | Filters / Search controls | Page search = DS `Input` (search icon left) + primary `Button` "Search", same size, 8px gap (`paddingXS`) in `Input and Button Container`; never `Input__Search` | [rules/UX-005.md](rules/UX-005.md) |
 | UX-006 | Layout / Screen frames | Top-level screen frames have `minHeight` 970; shell (Sidebar, work area) fills the height | [rules/UX-006.md](rules/UX-006.md) |
+| UX-007 | Tables / Layout | Table card padding 0, table edge to edge; search, category and filters in a toolbar inside the card (16/20); count inside the card; footer 16/20 with Pagination right | [rules/UX-007.md](rules/UX-007.md) |
+| UX-008 | Tables / Column order | Status column right after the name column: `☐ \| # \| Name \| Status \| ... \| Actions` | [rules/UX-008.md](rules/UX-008.md) |
+| UX-009 | Layout / States | A card that shows a start, loading, empty, no-results or error state is H → FILL down to the page padding; no empty background below it | [rules/UX-009.md](rules/UX-009.md) |
+| UX-010 | Tables / Actions | Row actions are `Button` small default (`danger` last), ≤2 visible + ⋯; no links or primary in rows; one trigger per action | [rules/UX-010.md](rules/UX-010.md) |
+| UX-011 | Tables / Tags | Counts are plain text, never tags; match quality uses `Tag__Status`; `Tag__Colorful` only for Type and file type | [rules/UX-011.md](rules/UX-011.md) |
+| UX-012 | Navigation / Page header | Sub-pages opened from another page in the module start with a back button: DS `Button` default, medium, left arrow, "Back to" plus the parent page name, first in `Content`, 24px above the title | [rules/UX-012.md](rules/UX-012.md) |
 
 ## Sources of truth
 
@@ -114,6 +134,28 @@ one-line note. Group identical repeats on one screen (×N). Print per-module cou
 gaps and open questions. Write the report to `Documentation/ux-pattern-audit-<YYYY-MM-DD>.md` only
 when asked; otherwise reply in chat.
 
+## Writing style (all output)
+
+Applies to everything this skill writes for people: audit and fix reports, rule files, status
+logs, Figma annotations and chat replies.
+
+- Write like a person explaining to a teammate. Plain words, short sentences, one idea per sentence.
+- No long or short dashes (— –) in sentences. Use a comma, a full stop, a colon, or a new
+  sentence. Write ranges as "1.3 to 1.6", "2 to 4 words".
+- No AI-style symbols or decoration in sentences: no · separators, no arrows (→), no emoji, no
+  ✅ ❌ ⚠️, no … (write "..."), no curly quotes. Use plain status words: "Already correct",
+  "Fixed", "Needs review".
+- Use straight quotes " " for UI labels: the "Search" button. Curly quotes and HTML entities
+  (&quot;) are not allowed.
+- No filler or stock phrases: "Please note", "It's worth noting", "In summary", "Overall",
+  "seamless", "robust", "leverage", "delve", "ensure that".
+- Bold only for the status word or one key term per item, never scattered through a sentence.
+- Use a table only when it compares items side by side; otherwise short bullets.
+- Keep Figma names exactly as they are, even if they contain a dash (frame "01 — Project SPEC
+  list"). Quote them as names; do not copy their symbols into your own sentences.
+- Final check before sending: search the text for — – → · … and emoji, and rewrite any
+  that are not part of a quoted Figma name.
+
 ## Adding a new rule
 
 Only after the user explicitly approves the rule. Then:
@@ -132,6 +174,8 @@ consistency.
 ## Implementation handoff
 
 Fixes start only on a later explicit instruction ("Fix approved", "apply UX-001 to X", "go ahead").
+In code mode the phrases listed in [code-audit.md](code-audit.md) §0 ("fix everything", "apply the
+rules", ...) are that instruction for all approved rules on the named screens; do not downgrade them to an audit.
 Scope strictly to what the audit presented unless the user names something else; re-surface any
 scope change before acting. For code (not Figma) changes follow `AGENTS.md` and `@hydra-ux-audit`.
 

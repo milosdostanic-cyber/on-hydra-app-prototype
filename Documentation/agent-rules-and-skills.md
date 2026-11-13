@@ -206,10 +206,16 @@ Skills are folders with `SKILL.md`. Cursor loads them when attached or registere
 
 ---
 
+## figma-annotate
+
+- **Location:** `.cursor/skills/figma-annotate/SKILL.md`
+- **Purpose:** Adds categorised native Figma annotations to a linked frame, explaining only what is not obvious and important; plain, human wording; draft first, write only after approval; no design changes.
+- **How to invoke:** `@figma-annotate <figma link with node-id>`; reply `go` to write the drafted notes
+
 ## hydra-ux-pattern
 
 - **Location:** `.cursor/skills/hydra-ux-pattern/SKILL.md` (rules in `rules/`)
-- **Purpose:** Registry of approved Hydra/RSFC UX pattern rules (currently **UX-001**: 20px horizontal gap between independent form controls; **UX-002**: table links use `colorLink`, not `colorLinkActive`; **UX-003**: module entry page title = `Title/Heading 2` + `Large/Normal` description, `colorText` / `colorTextDescription`, `paddingXXS` gap; **UX-004**: table Actions column is last, header and cell actions right-aligned, never centered; **UX-005**: page search = `Input` (search icon) + primary `Button` "Search", same size, `paddingXS` gap, never `Input__Search`; **UX-006**: screen frames min height 970) with a read-only audit and approval-gated fix workflow across the 7 RSFC Figma files. DS is read-only.
+- **Purpose:** Registry of approved Hydra/RSFC UX pattern rules (currently **UX-001**: 20px horizontal gap between independent form controls; **UX-002**: table links use `colorLink`, not `colorLinkActive`; **UX-003**: module entry page title = `Title/Heading 2` + `Large/Normal` description, `colorText` / `colorTextDescription`, `paddingXXS` gap; **UX-004**: table Actions column is last, header and cell actions right-aligned, never centered; **UX-005**: page search = `Input` (search icon) + primary `Button` "Search", same size, `paddingXS` gap, never `Input__Search`; **UX-006**: screen frames min height 970; **UX-007**: table card padding 0, table edge to edge, search/category/filters in a toolbar inside the card; **UX-008**: Status column right after the name column; **UX-009**: state cards fill the height; **UX-010**: row actions are small default buttons; **UX-011**: counts are plain text, match quality uses `Tag__Status`; **UX-012**: sub-pages start with a "Back to" button above the title) with a read-only audit and approval-gated fix workflow across the 7 RSFC Figma files. DS is read-only.
 - **How to invoke:** `@hydra-ux-pattern` + `audit UX-001 in <module>`; fixes only with `Fix approved UX-001 <scope>`
 
 ---
