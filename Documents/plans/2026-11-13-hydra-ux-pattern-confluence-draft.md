@@ -17,6 +17,8 @@ Add a section after "How the rules are used":
 > - **Developers (Cursor, Claude Code, Codex):** pull `develop`. The skill is in `.agents/skills/` with
 >   the other team skills. Ask the agent "check this screen against the Hydra UX rules" or call
 >   `/hydra-ux-pattern`. An audit changes nothing. Say "fix" with the rule and screen to apply changes.
+> - **Prototype (`on-hydra-app-prototype`):** the same skill is in `.cursor/skills/hydra-ux-pattern/`
+>   for Cursor and linked at `.claude/skills/hydra-ux-pattern` for Claude Code. It checks `src/...`.
 > - **When building a new screen:** the agent applies the rules from the start.
 > - **Rule changes:** design approves a rule first. The change goes into the repo folder and this page
 >   in the same step.
