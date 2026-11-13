@@ -1,6 +1,7 @@
 # Hydra UX pattern skill: Confluence updates (draft)
 
-Nothing here is published yet. Two pages change once the PR to `on-hydra-app` is merged.
+Status 2026-11-13: sections 1 and 3 are published on "Hydra UX pattern rules" (version 3), with a
+"How to use it" section for both repos. Section 2 (Skills Glossary) is still open and needs Matt.
 
 ## 1. Page "Hydra UX pattern rules" (Hydra space, page 2411331589)
 
