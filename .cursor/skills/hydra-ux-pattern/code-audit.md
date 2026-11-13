@@ -19,7 +19,7 @@ for **all approved rules**: "fix everything", "change everything according to th
 
 ## 1. Read before checking (mandatory)
 
-1. Open **every** file in `rules/UX-001.md` … `UX-009.md` in full, every time, even if you read
+1. Open **every** file in `rules/UX-001.md` to `UX-012.md` in full, every time, even if you read
    them earlier in the conversation. Rule files change (see each Status log, dated entries).
    Never work from a remembered or summarised version of a rule.
 2. From each rule's **Spec table**, make one checklist item **per row** (Size, Gap, Padding,
@@ -62,6 +62,9 @@ not a pass.
 | UX-007 | Table card | Card body padding 0; table edge to edge; toolbar inside the card (`padding` / `paddingMD`, bottom border `colorBorderSecondary`); **every toolbar control `medium`**; count/summary inside the card as plain text; footer `padding` / `paddingMD`, top border, Pagination right (native antd pager hidden with `position: ['none']`); **toolbar kept on every state** (start, loading, empty, no results, error) |
 | UX-008 | Column order | Status directly after the identity column; `#` and checkbox before it |
 | UX-009 | State card | Page root and card are flex column with `flex: 1`; gap between card bottom and content bottom = `paddingLG` (24) |
+| UX-010 | Row actions | `Button` `size="small"` default, `danger` last; at most 2 visible plus ⋯; no links, plain text or `primary` as row actions; one trigger per action |
+| UX-011 | Counts and tags | Counts are plain text, never a `Tag`; match quality uses the status tag; colourful tags only for Type and file type |
+| UX-012 | Sub-page header | Default `Button` with `ArrowLeftOutlined`, label "Back to" plus the parent page name, first in the content, 24 (`paddingLG`) above the title. Entry pages and pages opened from the sidebar: N/A |
 
 Gotchas already hit in this repo:
 
@@ -97,7 +100,7 @@ Also take a screenshot of each state and look at it. Numbers can pass while the 
 
 ## 5. Coverage matrix (required in the report)
 
-Build one table: rows = screens/states/inner screens, columns = UX-001 … UX-009. **No empty cell.**
+Build one table: rows = screens/states/inner screens, columns = UX-001 to UX-012. **No empty cell.**
 Each cell is one of: `OK`, `Fixed`, `N/A (reason)`, `Needs review (reason)`.
 
 Close the pass only when:

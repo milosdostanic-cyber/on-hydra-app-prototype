@@ -9,7 +9,11 @@ dist
 # Large local BOM reference exports (keep markdown in repo)
 Documents/Bom/*.pdf
 Documents/Bom/*.zip
-.claude/
+# Claude Code: keep local files private, share only team skills
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/hydra-ux-pattern
 .vercel
 
 # Playwright

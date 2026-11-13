@@ -1,190 +1,95 @@
 ---
 name: hydra-ux-pattern
-description: >-
-  Single source of truth for approved Hydra/RSFC UX pattern rules (rule IDs like UX-001),
-  with a read-only audit and an approval-gated fix workflow across the Hydra Figma module
-  files. Use when the user asks to audit, check, enforce or fix a UX pattern, form control
-  spacing, horizontal input/select gaps, UX consistency across modules, or to add a new
-  UX pattern rule. Never edits Figma unless explicitly asked.
+description: Approved Hydra/RSFC UX pattern rules (UX-001 to UX-012) for frontend screens, with a read-only audit and an approval-gated fix workflow for code in the on-hydra-app-prototype repo. Use when building or reviewing a screen, or when asked to audit, check or fix a UX pattern such as form control spacing, table card layout, the actions column, the status column, row actions, tags, page search, page title, back button or state cards.
 ---
 
 # Hydra UX Pattern
 
-Registry of **approved** UX pattern rules for Hydra/RSFC, plus the workflow to audit and
-(only on request) fix them across the module Figma files. Each rule lives in its own file
-under `rules/` so the set stays easy to extend.
+This skill holds the **approved** UX pattern rules for Hydra/RSFC screens and the workflow to check
+them in the prototype code (`src/...`). Each rule lives in its own file under `rules/`. Design
+applies the same rules in the module Figma files, so a screen built to these rules matches the design.
 
 ## Default mode: read-only
 
-- Creating, reading or editing this skill **never** triggers Figma changes.
-- An **audit** is read-only: no Figma writes, no repo edits besides an optional report file.
-- A **fix** runs only when the user explicitly says so (e.g. "Fix approved UX-001 in BOM",
-  "apply UX-001 to Content") and names the rule and scope.
-- The **Design System is never modified**. Missing tokens or components go to
-  "Needs review" as DS gaps; never create or edit them without explicit approval.
+- An **audit** is read-only and changes no code.
+- A **fix** runs only when the user explicitly asks for it and names the rule and the scope (for
+  example "fix UX-007 on the BOM Hub"). The trigger words are listed in
+  [code-audit.md](code-audit.md).
+- When building a new screen, apply the rules from the start. That needs no separate approval.
+- The **design system is never modified**. A missing token or component is reported as a DS gap under
+  "Needs review" and is never added without approval.
 
-## Code mode (prototype repo)
+## How to use it
 
-When the target is the prototype code (`src/...`) and not a Figma file, **read and follow
-[code-audit.md](code-audit.md) first**. It adds the mandatory steps that stop rules, rule rows,
-screen states or inner screens from being skipped:
-
-- read every rule file in full each time and turn each Spec-table row into a check;
-- inventory every route, state and inner screen, and read the real value of shared constants;
-- measure the live screen against the rule's numbers (not against other controls);
-- fill a screen × rule coverage matrix with no empty cell, re-measure after fixing, run a second sweep;
-- phrases like "fix everything" / "apply the rules" are fix approval: audit, then fix in the same turn.
-
-The read-only default below still applies to pure audit requests.
+1. Read [code-audit.md](code-audit.md). It maps every rule to code, lists the checks
+   to run in the browser, and lists the shared pieces that are known to disagree with a rule.
+2. Read each rule file in `rules/` in full before checking it. Use the **Standard**, **Spec**, **Applies
+   when** and **Does not apply** sections. The **Implementation** and **Fix** sections describe Figma
+   layers for the design team and do not apply to code.
 
 ## Approved rules
 
-Only rules in this table are enforceable. Do not invent, infer or enforce others.
+Only rules in this table are enforceable. Do not invent, infer or enforce other rules.
 
-| ID | Category | Standard | File |
-|----|----------|----------|------|
-| UX-001 | Layout / Form Controls | 20px horizontal gap between independent form controls in one row, via DS spacing token | [rules/UX-001.md](rules/UX-001.md) |
-| UX-002 | Table patterns / Colour | Link text in tables uses `colorLink`, never `colorLinkActive` | [rules/UX-002.md](rules/UX-002.md) |
-| UX-003 | Typography / Page header | Module entry page title: `Title/Heading 2` + `colorText`, description `Large/Normal` + `colorTextDescription`, 4px gap (`paddingXXS`) | [rules/UX-003.md](rules/UX-003.md) |
-| UX-004 | Table patterns / Alignment | Actions column is last, as wide as its widest action set + padding; header label and cell actions right-aligned to one edge, ⋯ last, never centered | [rules/UX-004.md](rules/UX-004.md) |
-| UX-005 | Filters / Search controls | Page search = DS `Input` (search icon left) + primary `Button` "Search", same size, 8px gap (`paddingXS`) in `Input and Button Container`; never `Input__Search` | [rules/UX-005.md](rules/UX-005.md) |
-| UX-006 | Layout / Screen frames | Top-level screen frames have `minHeight` 970; shell (Sidebar, work area) fills the height | [rules/UX-006.md](rules/UX-006.md) |
-| UX-007 | Tables / Layout | Table card padding 0, table edge to edge; search, category and filters in a toolbar inside the card (16/20); count inside the card; footer 16/20 with Pagination right | [rules/UX-007.md](rules/UX-007.md) |
-| UX-008 | Tables / Column order | Status column right after the name column: `☐ \| # \| Name \| Status \| ... \| Actions` | [rules/UX-008.md](rules/UX-008.md) |
-| UX-009 | Layout / States | A card that shows a start, loading, empty, no-results or error state is H → FILL down to the page padding; no empty background below it | [rules/UX-009.md](rules/UX-009.md) |
-| UX-010 | Tables / Actions | Row actions are `Button` small default (`danger` last), ≤2 visible + ⋯; no links or primary in rows; one trigger per action | [rules/UX-010.md](rules/UX-010.md) |
-| UX-011 | Tables / Tags | Counts are plain text, never tags; match quality uses `Tag__Status`; `Tag__Colorful` only for Type and file type | [rules/UX-011.md](rules/UX-011.md) |
-| UX-012 | Navigation / Page header | Sub-pages opened from another page in the module start with a back button: DS `Button` default, medium, left arrow, "Back to" plus the parent page name, first in `Content`, 24px above the title | [rules/UX-012.md](rules/UX-012.md) |
+| ID     | Category                   | Standard                                                                                                                                                                  | File                               |
+| ------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| UX-001 | Layout / Form Controls     | Independent form controls in one row are 20px apart, using the DS spacing token.                                                                                          | [rules/UX-001.md](rules/UX-001.md) |
+| UX-002 | Table patterns / Colour    | Link text in tables uses `colorLink` and never `colorLinkActive`.                                                                                                         | [rules/UX-002.md](rules/UX-002.md) |
+| UX-003 | Typography / Page header   | A module entry page title uses Heading 2 with `colorText`, and its description uses Large text with `colorTextDescription`, 4px apart.                                    | [rules/UX-003.md](rules/UX-003.md) |
+| UX-004 | Table patterns / Alignment | The Actions column is last and as wide as its widest action set plus padding. Header and actions are right-aligned to one edge, with the kebab menu last.                 | [rules/UX-004.md](rules/UX-004.md) |
+| UX-005 | Filters / Search controls  | Page search is an `Input` with a left search icon plus a primary "Search" `Button` of the same size, 8px apart. `Input.Search` is never used.                             | [rules/UX-005.md](rules/UX-005.md) |
+| UX-006 | Layout / Screen frames     | Figma screen frames are at least 970px tall. In code this means the shell fills the viewport height.                                                                      | [rules/UX-006.md](rules/UX-006.md) |
+| UX-007 | Tables / Layout            | A table card has padding 0 and the table runs edge to edge. Search, filters and the count sit in a toolbar inside the card, and the footer holds pagination on the right. | [rules/UX-007.md](rules/UX-007.md) |
+| UX-008 | Tables / Column order      | The Status column comes right after the name column.                                                                                                                      | [rules/UX-008.md](rules/UX-008.md) |
+| UX-009 | Layout / States            | A card that shows a start, loading, empty, no-results or error state fills the height down to the page padding.                                                           | [rules/UX-009.md](rules/UX-009.md) |
+| UX-010 | Tables / Actions           | Row actions are small default buttons with `danger` last. At most 2 are visible and the rest go into the kebab menu. Rows have no links or primary buttons as actions.    | [rules/UX-010.md](rules/UX-010.md) |
+| UX-011 | Tables / Tags              | Counts are plain text and never tags. Match quality uses the status tag. Colourful tags are only for Type and file type.                                                  | [rules/UX-011.md](rules/UX-011.md) |
+| UX-012 | Navigation / Page header   | A sub-page opened from another page in the module starts with a default "Back to" button with a left arrow, 24px above the title.                                         | [rules/UX-012.md](rules/UX-012.md) |
 
 ## Sources of truth
 
-- **Design System (read-only):** Hydra Ant Design - DS, file key `3ghYBXR6XVUEaeBo3D5E4q`
-  (referred to as "Hydra App Design - DS"). Components, variables and text styles come only from here.
-- **Token inventory:** `Documentation/ds-inventory.json` (cached DS variables). Resolve tokens by
-  name from it, never by guessing the value.
-- **Related docs:** `Documentation/hydra-ux-patterns.md` (observed patterns, descriptive only; a
-  rule here is normative only if it is in the table above).
-
-## Target files
-
-| Module | File key | Figma link |
-|---|---|---|
-| Admin - RSFC | `rONB8aMPanOjS3GC1uN16d` | https://www.figma.com/design/rONB8aMPanOjS3GC1uN16d/Admin-RSFC?node-id=2009-5319 |
-| Content - RSFC | `pGzqSs0fMmuQ2BtjbMNVjP` | https://www.figma.com/design/pGzqSs0fMmuQ2BtjbMNVjP/Content-RSFC?node-id=5603-308790 |
-| Release Notes - RSFC | `a4gviD5oViRhasSCN6cC8Z` | https://www.figma.com/design/a4gviD5oViRhasSCN6cC8Z/Release-Notes-RSFC?node-id=1-5012 |
-| Part Search - RSFC | `fyhH2NtH20puYbGLDChPwn` | https://www.figma.com/design/fyhH2NtH20puYbGLDChPwn/Part-Search-RSFC?node-id=11024-16994 |
-| Unified Search - RSFC | `usBJj4PPK8naOgJdi31Lgt` | https://www.figma.com/design/usBJj4PPK8naOgJdi31Lgt/Unified-Search-RSFC |
-| BOM - RSFC | `Ht3Up5MlRAKjK7eCuAy05L` | https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM-RSFC?node-id=673-23362 |
-| SPEC - RSFC | `KmU1mTvL7D1fLZvJ8SIGTN` | https://www.figma.com/design/KmU1mTvL7D1fLZvJ8SIGTN/SPEC-RSFC?node-id=8075-133874 |
-
-Links open each file's known entry node (Unified Search has none: open the file and find the screen pages). Links or node IDs in the prompt win. Skip Cover, Archive, Old, WIP, Exploration, Deprecated and
-hidden pages/frames, and say which pages were covered. During BOM work do not touch Content File
-Manager (`AGENTS.md`).
-
-## Tools
-
-- **figma-console Desktop Bridge (first choice):** `figma_list_open_files`, `figma_navigate` with
-  `lock: true`, `figma_execute` for reads/writes, `figma_take_screenshot` for evidence.
-- **Official Figma MCP (fallback):** `get_metadata`, `get_screenshot`, `use_figma` (load
-  `figma:figma-use` first; call `create_session` first if offered).
-- Large `get_metadata` results go to a file: parse with a script, never read raw.
-- Writes are strictly sequential. Keep a ledger JSON in the scratchpad (frames done, node IDs,
-  before/after values) so a run can resume and be reverted.
-
-## Workflow
-
-```text
-Hydra UX Pattern:
-- [ ] 1. Confirm rule ID(s) and scope (files/pages/frames) and mode (audit vs fix)
-- [ ] 2. Confirm access to target files; load DS token inventory
-- [ ] 3. Inspect screens (screenshot first, then node data)
-- [ ] 4. Compare against the rule's "Applies / Does not apply" and classify each case
-- [ ] 5. Audit: emit report, then STOP.  Fix: apply only safe corrections (rule file)
-- [ ] 6. Verify (re-read nodes, screenshot before/after)
-- [ ] 7. Emit report
-```
-
-1. **Scope:** no rule or scope given for an audit → all approved rules, all target files, read-only.
-   A fix without a named rule and scope → ask; do not assume.
-2. **Inspect:** screenshots to understand the logical rows, then node data. Never count a finding
-   you have not looked at. Audit Light mode only.
-3. **Classify** every candidate (see Reporting). When unsure whether elements are independent
-   controls or one composite control, it is **Needs review**, not a fix.
-4. **Fix safety (all rules):** preserve component instances and properties; never detach; no
-   unnecessary overrides; keep visual hierarchy, responsiveness, constraints and Auto Layout
-   behaviour; change nothing unrelated; bind to DS variables, never raw values.
-5. **Verify:** re-read the changed nodes (value is the bound token, instance intact, layout not
-   broken), screenshot before/after, list anything that moved.
-6. **Audit ends the turn.** After an audit report, stop and end with: "Reply 'Fix approved' with the
-   rule ID and scope (or finding IDs) to apply fixes." Never fix in the same turn as an audit.
+- **Rules:** this folder. The Confluence page "Hydra UX pattern rules" in the Hydra space is the
+  readable summary, and this folder wins when the two differ.
+- **Tokens and components:** the antd theme in `src/theme/` (`hydraAlias.ts`, `antdTheme.ts`,
+  `hydraTypography.ts`). Rule files name Figma variables such as `Size/Padding/paddingMD`, which is
+  `token.paddingMD` in code. Read values from `src/theme/`, never from memory.
+- **Design system in Figma (read-only):** Hydra Ant Design - DS, file key `3ghYBXR6XVUEaeBo3D5E4q`.
 
 ## Reporting
 
-Classify every finding as one of:
+Classify every finding as one of these:
 
-| Status | Meaning |
-|---|---|
-| **Already correct** | Matches the rule; no action |
-| **Fixed** | Corrected in this run (fix mode only); include before → after |
-| **Needs review** | Uncertain, exception-adjacent, DS gap, or would need a design decision; not changed |
+| Status              | Meaning                                                                                             |
+| ------------------- | --------------------------------------------------------------------------------------------------- |
+| **Already correct** | The case matches the rule and needs no action.                                                      |
+| **Fixed**           | The case was corrected in this run (fix mode only), with the before and after values.               |
+| **Needs review**    | The case is uncertain, close to an exception, a DS gap or a design decision, so it was not changed. |
 
-Each finding: `<MODULE>-<RULE>-<NNN>` (e.g. `BOM-UX001-003`), rule ID, file, page, frame name,
-node ID, Figma link (`https://www.figma.com/design/<fileKey>/?node-id=<id with : as ->`), status,
-one-line note. Group identical repeats on one screen (×N). Print per-module counts per status, DS
-gaps and open questions. Write the report to `Documentation/ux-pattern-audit-<YYYY-MM-DD>.md` only
-when asked; otherwise reply in chat.
+Each finding has an ID in the form `<MODULE>-<RULE>-<NNN>` (for example `BOM-UX001-003`), the rule ID,
+the app, route, file path, status and a one-line note. Group identical repeats on one screen as "xN".
+Reply in chat unless the user asks for a ticket comment or a PR description.
 
-## Writing style (all output)
+## Writing style
 
-Applies to everything this skill writes for people: audit and fix reports, rule files, status
-logs, Figma annotations and chat replies.
+- Write like a person explaining to a teammate. Use plain words and short sentences, one idea each.
+- Do not use long or short dashes, arrows, middle dots, ellipsis characters or emoji in sentences.
+- Use straight quotes for UI labels, as in the "Search" button.
+- Use the plain status words "Already correct", "Fixed" and "Needs review".
 
-- Write like a person explaining to a teammate. Plain words, short sentences, one idea per sentence.
-- No long or short dashes (— –) in sentences. Use a comma, a full stop, a colon, or a new
-  sentence. Write ranges as "1.3 to 1.6", "2 to 4 words".
-- No AI-style symbols or decoration in sentences: no · separators, no arrows (→), no emoji, no
-  ✅ ❌ ⚠️, no … (write "..."), no curly quotes. Use plain status words: "Already correct",
-  "Fixed", "Needs review".
-- Use straight quotes " " for UI labels: the "Search" button. Curly quotes and HTML entities
-  (&quot;) are not allowed.
-- No filler or stock phrases: "Please note", "It's worth noting", "In summary", "Overall",
-  "seamless", "robust", "leverage", "delve", "ensure that".
-- Bold only for the status word or one key term per item, never scattered through a sentence.
-- Use a table only when it compares items side by side; otherwise short bullets.
-- Keep Figma names exactly as they are, even if they contain a dash (frame "01 — Project SPEC
-  list"). Quote them as names; do not copy their symbols into your own sentences.
-- Final check before sending: search the text for — – → · … and emoji, and rewrite any
-  that are not part of a quoted Figma name.
+## Changing the rules
 
-## Adding a new rule
-
-Only after the user explicitly approves the rule. Then:
-
-1. Copy [rules/_template.md](rules/_template.md) to `rules/UX-NNN.md` (next free number).
-2. Fill every section (applies, does not apply, implementation, validation, fix safety).
-3. Add one row to the Approved rules table above, and nothing else in this file.
-4. Update the skill entries in `Documentation/agent-rules-and-skills.md` and
-   `Documentation/skills-and-rules-catalog.md` if the rule list there changes.
-
-Planned categories (**not approved, not enforceable**): form layouts and alignment, table
-patterns, filters and search controls, modal and drawer behavior, navigation and breadcrumbs,
-actions and button placement, empty/loading/error states, responsive behavior, cross-module
-consistency.
+Rules are owned by design. Do not add, remove or change a rule's Standard or Spec in this repo without
+design approval. When design approves a change, it is made in this folder, in `on-hydra-app`
+(`.agents/skills/hydra-ux-pattern/`) and on the Confluence page in the same step. After a code fix, a dated line may be added to the rule's **Status log**.
 
 ## Implementation handoff
 
-Fixes start only on a later explicit instruction ("Fix approved", "apply UX-001 to X", "go ahead").
-In code mode the phrases listed in [code-audit.md](code-audit.md) §0 ("fix everything", "apply the
-rules", ...) are that instruction for all approved rules on the named screens; do not downgrade them to an audit.
-Scope strictly to what the audit presented unless the user names something else; re-surface any
-scope change before acting. For code (not Figma) changes follow `AGENTS.md` and `@hydra-ux-audit`.
+Keep fixes to the scope the user named, and raise any scope change before acting. For code changes,
+follow `AGENTS.md` (including the BOM rules there) and `@hydra-ux-audit`.
 
-## Explicit non-goals
+## Out of scope
 
-- No modifications to the Design System file; no new tokens, variables, styles or components.
-- No Figma edits on skill creation, on audit, or without an explicit fix request.
-- No enforcing or inventing rules that are not in the Approved rules table.
-- No detaching instances, no raw px/hex values, no restructuring of unrelated layers.
-- No fixing uncertain cases: flag them as Needs review.
-- No overlap with `@hydra-ux-audit` (code/UI quality gate) or `hydra-ds-compliance` (token/component
-  drift); this skill only checks its own approved rule IDs.
+- Figma edits. This skill checks code only. The Figma workflow is kept by design outside the repo.
+- New tokens, variables, styles or components.
+- Rules that are not in the Approved rules table.
+- Uncertain cases. Report them as Needs review.
