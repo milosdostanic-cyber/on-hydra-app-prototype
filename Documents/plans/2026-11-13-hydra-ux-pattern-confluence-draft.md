@@ -29,8 +29,14 @@ Ask Matt before editing. Proposed new group after "Engineering standards":
 
 > ## Design and UX
 >
-> - `/hydra-ux-pattern` — Approved Hydra/RSFC UX rules (UX-001 to UX-012) for frontend screens:
+> - `/hydra-ux-pattern` — Approved Hydra/RSFC UX rules (UX-001 to UX-013) for frontend screens:
 >   spacing, table cards, actions and status columns, row actions, tags, search, page titles, back
->   buttons and state cards. Audits are read-only, and fixes run only when asked.
+>   buttons, state cards, status badges and tag colours. Audits are read-only, and fixes run only when asked.
 
 The skill count at the top of that page goes up by one.
+
+## 3. New row on "Hydra UX pattern rules"
+
+> | UX-013 | Tags, badges and colours | A record status is a dot badge. Match quality is a status tag. Only Type columns and file types get coloured tags, and each value keeps one colour everywhere (tables in the rule file). Everything else is a neutral tag or plain text. | Dashboard numbers, notification badges. |
+
+Open question to list under the table: the Content file manager in `on-hydra-app` uses different file type colours (PDF red, STEP green, TXT purple, plus ITM and VRML). Design decides which map wins.

@@ -6,11 +6,11 @@ alwaysApply: false
 
 # Content file type tags
 
-**Language:** English.
+**Language:** English. Team registry entry: rule **UX-013** in `.cursor/skills/hydra-ux-pattern/rules/UX-013.md` (also in `on-hydra-app`). Keep both in sync.
 
 Use this when a screen shows downloadable content file types as tags (Drawings column, file pickers, tooltips).
 
-**Figma:** Part Search – RSFC, frame **Content file type tags** (`11341:6250`). Component is DS `Tag__Colorful` with **border on**. Source list: [Content File Types](https://ooden.atlassian.net/wiki/spaces/Hydra/pages/1751580673/Content+File+Types).
+**Figma:** Hydra Ant Design – DS, Tag page → section **Patterns** → **File type tags** ([`2463:177`](https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q/Hydra-Ant-Design---DS?node-id=2463-177)). Moved there from Part Search – RSFC on 2026-11-13. Component is DS `Tag__Colorful` with **border on**. Source list: [Content File Types](https://ooden.atlassian.net/wiki/spaces/Hydra/pages/1751580673/Content+File+Types).
 
 ## Color by file type
 

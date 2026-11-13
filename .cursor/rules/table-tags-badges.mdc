@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Table columns: badge, tag, or plain text
 
-**Language:** English. User rule, 2026-11-09. Applies to every module (Admin, Content, BOM, SPEC, Part Search, Unified Search, Release Notes), in Figma and in code.
+**Language:** English. Team registry entry: rule **UX-013** in `.cursor/skills/hydra-ux-pattern/rules/UX-013.md` (also in `on-hydra-app`). Keep both in sync. User rule, 2026-11-09. Applies to every module (Admin, Content, BOM, SPEC, Part Search, Unified Search, Release Notes), in Figma and in code.
 
 **One idea:** a "Type" column is the one place where different values get different colours (plus file types). Everything else is a badge, a tone tag, a neutral tag or plain text.
 

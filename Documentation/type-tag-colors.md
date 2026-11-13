@@ -1,6 +1,6 @@
 # Type tag colours (Hydra)
 
-Single lookup for which `Tag__Colorful` colour each Type value uses. Read this before adding or changing a Type column, in Figma or in code. Rule behind it: `.cursor/rules/table-tags-badges.mdc`. Updated 2026-11-09.
+Single lookup for which `Tag__Colorful` colour each Type value uses. Read this before adding or changing a Type column, in Figma or in code. Rule behind it: `.cursor/rules/table-tags-badges.mdc` and UX-013 in `.cursor/skills/hydra-ux-pattern/rules/UX-013.md` (keep in sync). Updated 2026-11-09.
 
 **Rule:** a value keeps one colour on every screen. Colours may repeat across different columns (only 10 presets) but never inside one column. A new value takes a free preset and is added here first.
 

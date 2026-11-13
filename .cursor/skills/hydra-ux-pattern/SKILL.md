@@ -1,6 +1,6 @@
 ---
 name: hydra-ux-pattern
-description: Approved Hydra/RSFC UX pattern rules (UX-001 to UX-012) for frontend screens, with a read-only audit and an approval-gated fix workflow for code in the on-hydra-app-prototype repo. Use when building or reviewing a screen, or when asked to audit, check or fix a UX pattern such as form control spacing, table card layout, the actions column, the status column, row actions, tags, page search, page title, back button or state cards.
+description: Approved Hydra/RSFC UX pattern rules (UX-001 to UX-013) for frontend screens, with a read-only audit and an approval-gated fix workflow for code in the on-hydra-app-prototype repo. Use when building or reviewing a screen, or when asked to audit, check or fix a UX pattern such as form control spacing, table card layout, the actions column, the status column, row actions, tags, page search, page title, back button, state cards, status badges or file type colours.
 ---
 
 # Hydra UX Pattern
@@ -45,6 +45,7 @@ Only rules in this table are enforceable. Do not invent, infer or enforce other 
 | UX-010 | Tables / Actions           | Row actions are small default buttons with `danger` last. At most 2 are visible and the rest go into the kebab menu. Rows have no links or primary buttons as actions.    | [rules/UX-010.md](rules/UX-010.md) |
 | UX-011 | Tables / Tags              | Counts are plain text and never tags. Match quality uses the status tag. Colourful tags are only for Type and file type.                                                  | [rules/UX-011.md](rules/UX-011.md) |
 | UX-012 | Navigation / Page header   | A sub-page opened from another page in the module starts with a default "Back to" button with a left arrow, 24px above the title.                                         | [rules/UX-012.md](rules/UX-012.md) |
+| UX-013 | Tables / Tags              | A record status is a dot badge, match quality is a status tag, and only Type columns and file types get colourful tags, with one fixed colour per value.                  | [rules/UX-013.md](rules/UX-013.md) |
 
 ## Sources of truth
 
