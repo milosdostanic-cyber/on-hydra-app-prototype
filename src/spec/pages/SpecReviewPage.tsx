@@ -39,6 +39,7 @@ import type { SpecAlignmentDelta, SpecBaseline, SpecDeltaCategory, SpecWorkingCo
 import { useSpecDocument } from '../hooks/useSpecDocument';
 import { trackSpecEvent } from '../specAnalytics';
 import { specAnalyzePath, specEditPath, specHomePath } from '../specNavigation';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 /**
  * Supplemental baseline comparison retained by direct route only.
@@ -203,7 +204,7 @@ export function SpecReviewPage() {
 
       <Flex vertical gap={token.marginMD} style={{ width: '100%' }}>
         <Flex gap={token.marginMD} wrap="wrap" align="center">
-          <Typography.Text strong>Compare with</Typography.Text>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Compare with</Typography.Text>
           <Select
             style={{ minWidth: token.controlHeight * 10 }}
             placeholder="Select a baseline"

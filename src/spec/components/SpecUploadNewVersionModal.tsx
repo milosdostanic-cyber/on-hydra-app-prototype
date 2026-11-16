@@ -13,6 +13,7 @@ import {
 } from '../constants/specUploadLimits';
 import { trackSpecEvent } from '../specAnalytics';
 import { Alert, App, Button, Flex, Modal, Radio, Steps, Tag, Typography, theme } from '../../ui/antd';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type Props = {
   open: boolean;
@@ -168,11 +169,11 @@ export function SpecUploadNewVersionModal({ open, document, projectTitle, onCanc
           <Flex vertical gap={token.marginMD}>
             <Flex vertical gap={token.marginXXS}>
               <Typography.Text type="secondary">Project</Typography.Text>
-              <Typography.Text strong>{projectTitle}</Typography.Text>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{projectTitle}</Typography.Text>
             </Flex>
             <Flex vertical gap={token.marginXXS}>
               <Typography.Text type="secondary">SPEC</Typography.Text>
-              <Typography.Text strong>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>
                 {document.title} · Current version {document.versionLabel}
               </Typography.Text>
             </Flex>
@@ -257,7 +258,7 @@ export function SpecUploadNewVersionModal({ open, document, projectTitle, onCanc
 
             <Flex vertical gap={token.marginXS}>
               <Flex vertical>
-                <Typography.Text strong>Division</Typography.Text>
+                <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Division</Typography.Text>
                 <Typography.Text type="secondary">
                   Change it only if the document belongs to another supported division.
                 </Typography.Text>
@@ -314,7 +315,7 @@ export function SpecUploadNewVersionModal({ open, document, projectTitle, onCanc
             </Flex>
 
             <Flex vertical gap={token.marginXXS}>
-              <Typography.Text strong>Master SPEC version</Typography.Text>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Master SPEC version</Typography.Text>
               <Flex
                 align="center"
                 style={{

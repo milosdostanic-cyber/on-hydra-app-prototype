@@ -14,6 +14,7 @@ import {
   Typography,
   theme,
 } from '../../ui/antd';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 export function BomRecommendPage() {
   const { token } = theme.useToken();
@@ -127,7 +128,7 @@ export function BomRecommendPage() {
           >
             <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
               <div>
-                <Typography.Text strong>Matched attributes</Typography.Text>
+                <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Matched attributes</Typography.Text>
                 <List
                   size="small"
                   dataSource={top.matchedAttributes}

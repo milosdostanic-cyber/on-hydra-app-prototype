@@ -17,9 +17,14 @@ import {
   hydraBoxShadow,
   hydraBoxShadowSecondary,
   hydraBoxShadowTertiary,
+  hydraColorBgMaskLight,
+  hydraColorIconLight,
+  hydraErrorSemanticsLight,
   hydraMenuDarkChrome,
   hydraNeutralGray3Dark,
   hydraNeutralGray3Light,
+  hydraSuccessSemanticsLight,
+  hydraWarningSemanticsLight,
 } from './hydraSemanticColors';
 import {
   getHydraAntdTypographyToken,
@@ -27,7 +32,7 @@ import {
   type HydraTypographyMode,
 } from './hydraAntdTypography';
 import type { HydraColorMode } from './hydraColorMode';
-import { hydraDarkAlias, hydraLightAlias, shellLayout } from './hydraAlias';
+import { hydraDarkAlias, hydraLightAlias, hydraLineWidthFocus, shellLayout } from './hydraAlias';
 import { bluePrimarySemantics, bluePrimarySemanticsDark, blueInfoSemantics, blueInfoSemanticsDark } from './primaryPrimitiveBlue';
 import { sidebarSemanticsFor } from './sidebarSemantics';
 
@@ -83,17 +88,41 @@ function buildHydraShellComponents(mode: HydraColorMode): NonNullable<ThemeConfi
 }
 
 /**
+ * Figma **Customize Theme** `Light` values that antd's dark algorithm must not inherit.
+ * `createHydraAntdThemeDark` strips these keys until the Dark pass (audit D-01).
+ */
+const hydraLightOnlyToken = {
+  /** `Color/Neutral/Text/colorIcon` / `colorIconHover` → `Opacity/opacity-100`. */
+  colorIcon: hydraColorIconLight,
+  colorIconHover: hydraColorIconLight,
+  /** `Color/Neutral/Background/colorBgMask` → `Opacity/opacity-65`. */
+  colorBgMask: hydraColorBgMaskLight,
+  /** `Color/Control/controlOutline` → `Color/Primary/colorPrimaryBorder`. */
+  controlOutline: bluePrimarySemantics.colorPrimaryBorder,
+  ...hydraSuccessSemanticsLight,
+  ...hydraWarningSemanticsLight,
+  ...hydraErrorSemanticsLight,
+} as const;
+
+/**
  * Global primary = `bluePrimarySemantics` ↔ Figma **Colors** `Primary/primary-*` + **Customize Theme** `Color/Primary/*`.
- * Info / Alert = `blueInfoSemantics` ↔ **Colors** `Daybreak Blue/blue-*` (repo `colorInfo*`; Figma Alert component bindings).
- * Orange solid Button = `buttonPrimaryPalette` ↔ **Colors** `Volcano/volcano-*` + `Color/ButtonPrimary/*`.
+ * Info / Alert = `blueInfoSemantics` ↔ **Colors** `Daybreak Blue/blue-*` + `Color/Info/*`.
+ * Success / Warning / Error ↔ `Polar Green` / `Calendula Gold` / `Dust Red` + `Color/Success|Warning|Error/*`.
+ * Orange solid Button = `buttonPrimaryPalette` ↔ **Colors** `Hydra Action Orange/hydra-*` + `Color/Action/*`.
  */
 export function createHydraAntdTheme(typographyMode: HydraTypographyMode = 'default'): ThemeConfig {
   const typographyToken = getHydraAntdTypographyToken(typographyMode);
   return {
     token: {
       ...typographyToken,
+      ...hydraLightOnlyToken,
       /** Figma **Customize Theme** `Color/Neutral/Background/colorBgLayout` → **Colors** `Neutral/gray-3`. */
       colorBgLayout: hydraNeutralGray3Light,
+      /** Figma `Style/lineWidthFocus`. */
+      lineWidthFocus: hydraLineWidthFocus,
+      /** Figma `Color/Action/colorActionBg` / `colorActionBorder` (non-Button orange tints). */
+      colorActionBg: buttonPrimaryPalette.bg,
+      colorActionBorder: buttonPrimaryPalette.border,
       colorLink: bluePrimarySemantics.colorLink,
       colorLinkHover: bluePrimarySemantics.colorLinkHover,
       colorLinkActive: bluePrimarySemantics.colorLinkActive,
@@ -148,14 +177,19 @@ export function createHydraAntdTheme(typographyMode: HydraTypographyMode = 'defa
 
 export function createHydraAntdThemeDark(typographyMode: HydraTypographyMode = 'default'): ThemeConfig {
   const baseTheme = createHydraAntdTheme(typographyMode);
+  const baseToken = Object.fromEntries(
+    Object.entries(baseTheme.token ?? {}).filter(([key]) => !(key in hydraLightOnlyToken)),
+  );
   return {
     ...baseTheme,
     algorithm: theme.darkAlgorithm,
     token: {
-      ...baseTheme.token,
+      ...baseToken,
       ...bluePrimarySemanticsDark,
       ...blueInfoSemanticsDark,
       colorBgLayout: hydraNeutralGray3Dark,
+      colorActionBg: buttonPrimaryPaletteDark.bg,
+      colorActionBorder: buttonPrimaryPaletteDark.border,
     },
     components: {
       ...baseTheme.components,

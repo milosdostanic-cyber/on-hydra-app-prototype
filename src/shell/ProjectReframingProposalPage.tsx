@@ -19,6 +19,7 @@ import { CloseOutlined, UploadOutlined } from '@ant-design/icons';
 import { PageBackButton } from './PageBackButton';
 import { shellLayout } from '../theme/hydraAlias';
 import { Alert, Button, Card, Col, Divider, Flex, Input, List, Menu, Progress, Row, Select, Space, Table, Tag, Typography, theme } from '../ui/antd';
+import { hydraBaseStrong, hydraSubtitleLarge, hydraTextStyleToReactCss } from '../theme/hydraTypography';
 
 type StepStatus = 'EXPLORE' | 'SOFT' | 'TRIGGER' | 'PROJECT';
 
@@ -363,7 +364,7 @@ export function ProjectReframingProposalPage() {
                     type="success"
                     showIcon={false}
                     message={
-                      <Typography.Text strong style={{ fontSize: token.fontSizeLG }}>
+                      <Typography.Text style={hydraTextStyleToReactCss(hydraSubtitleLarge)}>
                         Catalog
                       </Typography.Text>
                     }
@@ -374,7 +375,7 @@ export function ProjectReframingProposalPage() {
                     type="info"
                     showIcon={false}
                     message={
-                      <Typography.Text strong style={{ fontSize: token.fontSizeLG }}>
+                      <Typography.Text style={hydraTextStyleToReactCss(hydraSubtitleLarge)}>
                         BOM
                       </Typography.Text>
                     }
@@ -389,7 +390,7 @@ export function ProjectReframingProposalPage() {
                 <Card size="small">
                   <Flex justify="space-between" align="center">
                     <Space size={token.marginSM}>
-                      <Typography.Text strong>Hospital Renovation A</Typography.Text>
+                      <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Hospital Renovation A</Typography.Text>
                       <Typography.Text type="secondary">
                         12 items · updated 2d ago · Commercial
                       </Typography.Text>
@@ -476,7 +477,7 @@ export function ProjectReframingProposalPage() {
                             />
                           </Flex>
                           <Space direction="vertical" size={0}>
-                            <Typography.Text strong style={{ fontSize: token.fontSize }}>
+                            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>
                               {item.code}
                             </Typography.Text>
                             <Typography.Text type="secondary" style={{ fontSize: token.fontSize }}>
@@ -548,7 +549,7 @@ export function ProjectReframingProposalPage() {
                   style={{ width: '30%', minWidth: token.controlHeight * 3, borderColor: token.colorWarning }}
                 >
                   <Space direction="vertical" size={token.marginXS} style={{ width: '100%' }}>
-                    <Typography.Text strong>Comparison</Typography.Text>
+                    <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Comparison</Typography.Text>
                     <Typography.Text type="secondary" style={{ fontSize: token.fontSize }}>
                       3 items
                     </Typography.Text>
@@ -655,7 +656,7 @@ export function ProjectReframingProposalPage() {
                   borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
                 }}
               >
-                <Typography.Text strong>This needs a project</Typography.Text>
+                <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>This needs a project</Typography.Text>
                 <Button type="text" icon={<CloseOutlined />} />
               </Flex>
 
@@ -705,7 +706,7 @@ export function ProjectReframingProposalPage() {
               </Flex>
 
               <Flex vertical gap={token.marginMD} style={{ paddingInline: token.paddingLG }}>
-                <Typography.Text strong>Choose a project</Typography.Text>
+                <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Choose a project</Typography.Text>
                 <Flex justify="space-between" gap={token.marginSM}>
                   <Input size="small" prefix={<SearchOutlined />} placeholder="Search recent projects..." />
                   <Button size="small" type="primary">
@@ -745,7 +746,7 @@ export function ProjectReframingProposalPage() {
           <Flex align="center" justify="center" style={{ minHeight: previewHeight }}>
             <Card size="small" style={{ width: '45%', minWidth: token.controlHeight * 4 }}>
               <Space direction="vertical" size={token.marginSM} style={{ width: '100%' }}>
-                <Typography.Text strong>New project</Typography.Text>
+                <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>New project</Typography.Text>
                 <Typography.Text type="secondary" style={{ fontSize: token.fontSize }}>
                   PROJECT NAME
                 </Typography.Text>
@@ -785,13 +786,13 @@ export function ProjectReframingProposalPage() {
             >
               <CheckCircleOutlined style={{ color: token.colorSuccess, fontSize: token.fontSizeXL }} />
             </Flex>
-            <Typography.Text strong style={{ fontSize: token.fontSizeLG, color: token.colorTextHeading }}>
+            <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraSubtitleLarge), color: token.colorTextHeading }}>
               Setting things up...
             </Typography.Text>
             <Typography.Text type="secondary" style={{ fontSize: token.fontSize }}>
               Your selected items and context are being added to
             </Typography.Text>
-            <Typography.Text strong style={{ fontSize: token.fontSizeLG }}>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraSubtitleLarge)}>
               Downtown Office Tower
             </Typography.Text>
             <Progress percent={70} showInfo={false} style={{ width: '45%' }} />
@@ -831,7 +832,7 @@ export function ProjectReframingProposalPage() {
                   </Flex>
                 </Card>
                 <Flex justify="space-between" style={{ marginBottom: token.marginXS }}>
-                  <Typography.Text strong>BOM</Typography.Text>
+                  <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>BOM</Typography.Text>
                   <Typography.Text type="secondary">3 items · auto-saved</Typography.Text>
                   <Button size="small" type="primary">
                     + Add items
@@ -894,21 +895,21 @@ export function ProjectReframingProposalPage() {
                 }}
               >
                 <Space direction="vertical" size={0}>
-                  <Typography.Text strong>BOM</Typography.Text>
+                  <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>BOM</Typography.Text>
                   <Typography.Text type="secondary">Line items</Typography.Text>
                 </Space>
               </Card>
               <Typography.Text type="secondary">→</Typography.Text>
               <Card size="small" style={{ width: token.controlHeightLG * 4.4, textAlign: 'center' }}>
                 <Space direction="vertical" size={0}>
-                  <Typography.Text strong>Submittals</Typography.Text>
+                  <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Submittals</Typography.Text>
                   <Typography.Text type="secondary">Packages</Typography.Text>
                 </Space>
               </Card>
               <Typography.Text type="secondary">→</Typography.Text>
               <Card size="small" style={{ width: token.controlHeightLG * 4.4, textAlign: 'center' }}>
                 <Space direction="vertical" size={0}>
-                  <Typography.Text strong>Approvals</Typography.Text>
+                  <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Approvals</Typography.Text>
                   <Typography.Text type="secondary">Workflow</Typography.Text>
                 </Space>
               </Card>
@@ -960,7 +961,7 @@ export function ProjectReframingProposalPage() {
                       renderItem={(item) => (
                         <List.Item style={{ paddingInline: token.paddingSM, paddingBlock: token.paddingXXS }}>
                           <Flex justify="space-between" align="center" style={{ width: '100%' }}>
-                            <Typography.Text strong={item.current} style={{ fontSize: token.fontSize }}>
+                            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>
                               {item.name}
                             </Typography.Text>
                             {item.current ? (
@@ -1014,7 +1015,7 @@ export function ProjectReframingProposalPage() {
             </Flex>
             <Flex vertical gap={token.marginMD} style={{ paddingInline: token.paddingLG }}>
               <Space direction="vertical" size={token.marginXXS}>
-                <Typography.Text strong style={{ fontSize: token.fontSizeLG }}>
+                <Typography.Text style={hydraTextStyleToReactCss(hydraSubtitleLarge)}>
                   Explore mode
                 </Typography.Text>
                 <Typography.Text type="secondary">User cleared the project from the switcher.</Typography.Text>
@@ -1074,6 +1075,7 @@ export function ProjectReframingProposalPage() {
           <Space orientation="vertical" size={token.margin} style={{ width: '100%' }}>
             {phases.map((phase) => (
               <Card
+                variant="borderless"
                 key={phase.id}
                 style={{
                   background: phaseSurface,
@@ -1093,7 +1095,7 @@ export function ProjectReframingProposalPage() {
                       label: (
                         <Flex align="center" gap={token.marginSM}>
                           <Tag color="processing">{phase.id}</Tag>
-                          <Typography.Text strong style={{ fontSize: token.fontSizeLG, color: token.colorTextHeading }}>
+                          <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraSubtitleLarge), color: token.colorTextHeading }}>
                             {phase.title}
                           </Typography.Text>
                         </Flex>
@@ -1108,7 +1110,7 @@ export function ProjectReframingProposalPage() {
                               style={{ background: token.colorBgContainer }}
                               title={
                                 <Space size={token.marginSM}>
-                                  <Typography.Text strong>{step.id}</Typography.Text>
+                                  <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{step.id}</Typography.Text>
                                   <Typography.Text>{step.title}</Typography.Text>
                                 </Space>
                               }
@@ -1144,7 +1146,7 @@ export function ProjectReframingProposalPage() {
           <Card
             style={{ background: token.colorBgContainer }}
             title={
-              <Typography.Text strong>Principles for this proposal</Typography.Text>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Principles for this proposal</Typography.Text>
             }
           >
             <List
@@ -1152,7 +1154,7 @@ export function ProjectReframingProposalPage() {
               renderItem={(item, index) => (
                 <List.Item>
                   <Space>
-                    <Typography.Text strong>{String(index + 1).padStart(2, '0')}</Typography.Text>
+                    <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{String(index + 1).padStart(2, '0')}</Typography.Text>
                     <Typography.Text>{item}</Typography.Text>
                   </Space>
                 </List.Item>

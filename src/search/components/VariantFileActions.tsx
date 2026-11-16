@@ -22,10 +22,9 @@ type Props = {
 /** Variant-level pill CTAs and file-type icon row (greyed when unavailable). */
 export function VariantFileActions({ partKey, variation }: Props) {
   const { token } = theme.useToken();
-  const { requestAction, queueSingleFileType, modals, pillActions } = useVariantActionFlows(
-    partKey,
+  const { requestBomAdd, queueSingleFileType, modals, pillActions } = useVariantActionFlows(partKey, [
     variation,
-  );
+  ]);
 
   return (
     <>
@@ -38,7 +37,9 @@ export function VariantFileActions({ partKey, variation }: Props) {
               shape="round"
               size="small"
               style={{ fontWeight: token.fontWeightStrong }}
-              onClick={() => requestAction(id)}
+              onClick={() => {
+                if (id === 'bom') requestBomAdd([variation]);
+              }}
             >
               {label}
             </Button>
@@ -66,7 +67,7 @@ export function VariantFileActions({ partKey, variation }: Props) {
                   disabled={!available}
                   icon={<Icon style={{ fontSize: token.fontSizeHeading4 }} />}
                   aria-label={`${fileType} file for ${variation.sku}`}
-                  onClick={() => available && queueSingleFileType(fileType)}
+                  onClick={() => available && queueSingleFileType(fileType, variation)}
                   style={{
                     color: available ? token.colorPrimary : token.colorTextQuaternary,
                     cursor: available ? 'pointer' : 'not-allowed',
@@ -75,7 +76,7 @@ export function VariantFileActions({ partKey, variation }: Props) {
                 />
               );
               return (
-                <Flex key={fileType} vertical align="center" gap={2}>
+                <Flex key={fileType} vertical align="center" gap={token.marginXXS}>
                   {available ? (
                     iconBtn
                   ) : (

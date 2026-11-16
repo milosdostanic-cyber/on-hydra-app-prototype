@@ -16,6 +16,7 @@ import { shellLayout } from '../theme/hydraAlias';
 import { setLastScopedProjectId } from './lastProjectScope';
 import { pageDescriptionStyle } from './pageDescriptionStyle';
 import { projectTitleById } from './projectSeed';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../theme/hydraTypography';
 
 const { Sider, Content } = Layout;
 
@@ -70,6 +71,14 @@ export function ProjectWorkspaceLayout() {
     [submittalCount, token.colorPrimary, token.marginXS],
   );
 
+  /**
+   * Content Downloads uses the app sidebar (Spec / Submittal manager / Content) for navigation.
+   * This in-project rail would just duplicate that menu and steal width from the history table.
+   */
+  if (selected === 'content') {
+    return <Outlet />;
+  }
+
   return (
     <Layout style={{ minHeight: '100%', background: 'transparent' }}>
       <Sider
@@ -90,7 +99,7 @@ export function ProjectWorkspaceLayout() {
           >
             Home
           </Button>
-          <Typography.Text strong>{title}</Typography.Text>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{title}</Typography.Text>
           <Typography.Paragraph style={{ ...pageDescriptionStyle(token), marginTop: token.marginXXS }}>
             Modules for this project
           </Typography.Paragraph>

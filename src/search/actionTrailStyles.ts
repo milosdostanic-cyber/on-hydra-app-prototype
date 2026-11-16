@@ -1,18 +1,16 @@
 import type { GlobalToken } from 'antd/es/theme/interface';
 import type { CSSProperties } from 'react';
 
-import { volcanoStep } from '../theme/primaryPrimitiveOrange';
-
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined') return false;
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-/** Subtle volcano tint + border for Action Trail emphasis. */
+/** Subtle `Color/Action` tint + border for Action Trail emphasis. */
 export function actionTrailHighlightStyle(token: GlobalToken, active: boolean): CSSProperties {
   if (!active) return {};
-  const bg = volcanoStep(1);
-  const border = volcanoStep(3);
+  const bg = token.colorActionBg;
+  const border = token.colorActionBorder;
   const base: CSSProperties = {
     ['--action-trail-highlight-bg' as string]: bg,
     ['--action-trail-highlight-border' as string]: border,

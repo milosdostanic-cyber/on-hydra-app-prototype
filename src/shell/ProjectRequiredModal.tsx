@@ -11,6 +11,7 @@ import { useBomDestinationFields } from './components/useBomDestinationFields';
 import { useSubmittalDestinationFields } from './components/useSubmittalDestinationFields';
 import { ProjectFormFields, formValuesToProjectFields } from './ProjectFormFields';
 import type { ProjectFormValues } from './projectSeed';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../theme/hydraTypography';
 
 export type ProjectDestinationRequirement = 'bom' | 'submittal';
 
@@ -232,7 +233,7 @@ export function ProjectRequiredModal({
                 }}
               >
                 <Typography.Text type="secondary">Selected project</Typography.Text>
-                <Typography.Text strong>{destinationProject?.name ?? destinationProjectId}</Typography.Text>
+                <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{destinationProject?.name ?? destinationProjectId}</Typography.Text>
                 <Typography.Text type="secondary">
                   Choose the exact {destinationLabel.toLowerCase()} inside this project before continuing.
                 </Typography.Text>

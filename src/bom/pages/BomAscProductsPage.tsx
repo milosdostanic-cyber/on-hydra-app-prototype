@@ -17,6 +17,7 @@ import {
   Drawer,
   Flex,
   InputNumber,
+  Pagination,
   Space,
   Table,
   Tabs,
@@ -25,7 +26,7 @@ import {
   theme,
 } from '../../ui/antd';
 import type { TableColumnsType, TabsProps } from '../../ui/antd';
-import { hydraLargeNormal, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
+import { hydraLargeNormal, hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type AscProduct = AscBrowserProductRow;
 type BrowserTab = AscProduct['browserCategory'];
@@ -33,6 +34,7 @@ type BrowserTab = AscProduct['browserCategory'];
 const MFR_OPTIONS = ['Victaulic', 'ASC', 'Tyco', 'Viking'];
 const INSTALL_TYPE_OPTIONS = ['Ceiling', 'Wall', 'Overhead', 'Floor'];
 const SIZE_OPTIONS = ['1/2 inch', '2 inch', '2.5 inch', '3 inch', '4 inch', '6 inch'];
+const ASC_PRODUCTS_PAGE_SIZE = 12;
 
 type LocationState = {
   swapRowId?: string;
@@ -108,6 +110,13 @@ export function BomAscProductsPage() {
         (selectedSize.length === 0 || selectedSize.includes(p.size)),
     );
   }, [catalogForTab, search, selectedMfr, selectedInstall, selectedSize]);
+
+  const [tablePage, setTablePage] = useState(1);
+  useEffect(() => {
+    setTablePage(1);
+  }, [tab, search, selectedMfr, selectedInstall, selectedSize]);
+  const pageStart = (tablePage - 1) * ASC_PRODUCTS_PAGE_SIZE;
+  const pageEnd = Math.min(pageStart + ASC_PRODUCTS_PAGE_SIZE, filtered.length);
 
   function openMatchingPartDetail(product: AscProduct) {
     if (!matchingPick) return;
@@ -238,12 +247,14 @@ export function BomAscProductsPage() {
       ),
     },
     {
+      title: 'Action',
       key: 'action',
+      align: 'right',
       width: 100,
       render: (_, row) => (
         <Button
           size="small"
-          type="primary"
+          type="default"
           onClick={() => handleSelectProduct(row)}
         >
           {isMatchingPickMode
@@ -316,13 +327,14 @@ export function BomAscProductsPage() {
       )}
 
       <Card
-        style={{ borderRadius: token.borderRadiusLG, boxShadow: token.boxShadowTertiary }}
+        variant="borderless"
+        style={{ borderRadius: token.borderRadiusLG, border: 'none', boxShadow: token.boxShadowTertiary }}
         styles={{ body: { padding: 0 } }}
       >
         <div
           style={{
             paddingInline: token.paddingMD,
-            paddingBlock: token.paddingSM,
+            paddingBlock: token.padding,
             borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
           }}
         >
@@ -357,17 +369,37 @@ export function BomAscProductsPage() {
           dataSource={filtered}
           size="small"
           scroll={{ x: 'max-content' }}
-          pagination={{
-            pageSize: 12,
-            showSizeChanger: false,
-            showTotal: (total) => `${total} product${total === 1 ? '' : 's'}`,
-            position: ['bottomRight'],
-          }}
+          pagination={{ current: tablePage, pageSize: ASC_PRODUCTS_PAGE_SIZE, position: ['none'] }}
           styles={{
-            header: { cell: { background: token.colorFillAlter, borderBottomColor: token.colorBorderSecondary, fontWeight: token.fontWeightStrong } },
+            header: { cell: { background: token.colorFillAlter, borderBottomColor: token.colorBorderSecondary, ...hydraTextStyleToReactCss(hydraBaseStrong) } },
             body: { cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM } },
           }}
         />
+        {filtered.length > 0 ? (
+          <Flex
+            align="center"
+            justify="space-between"
+            wrap="wrap"
+            gap={token.paddingSM}
+            style={{
+              paddingInline: token.paddingMD,
+              paddingBlock: token.padding,
+              borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+            }}
+          >
+            <Typography.Text type="secondary">
+              Showing {pageStart + 1}–{pageEnd} of {filtered.length}
+            </Typography.Text>
+            <Pagination
+              current={tablePage}
+              pageSize={ASC_PRODUCTS_PAGE_SIZE}
+              total={filtered.length}
+              showSizeChanger={false}
+              hideOnSinglePage
+              onChange={setTablePage}
+            />
+          </Flex>
+        ) : null}
       </Card>
 
       <Drawer

@@ -9,7 +9,7 @@ export const bomWorkspaceTableColumnWidths = {
   quantity: 120,
   match: 120,
   status: 110,
-  actions: 88,
+  actions: 112,
 } as const;
 
 /** Demo workspace rows with varied part, figure, SKU, and quantity values. */

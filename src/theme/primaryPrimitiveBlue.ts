@@ -1,44 +1,48 @@
 import type { HydraColorMode } from './hydraColorMode';
 
 /**
- * Blue primitives `Primary/primary-1` … `primary-10` in Figma **Colors**.
+ * Blue primitives `Primary/primary-1` … `primary-10` in Figma **Colors** (single `Value` mode).
+ * `Primary/primary-0` is {@link bluePrimaryBgSubtleLight}.
  *
- * **Light** (`5:0`): mirrors **Figma Colors** `Primary/primary-*` (linked community file is source of truth).
- * **Dark** (`5:4`): from `@ant-design/colors` `generate('#0073A5', { theme: 'dark', backgroundColor: '#141414' })`
- * — same model as antd preset dark palettes (e.g. `blueDark`).
+ * Steps 1–6 from `generate('#2576BB')` (RSFC brand Light Blue); steps 7–10 are the brand Navy end
+ * (`#004173` … `#0A2238`) that `Color/Sidebar/*` and Dark surfaces resolve to.
+ *
+ * **Dark ramp below is repo-only:** Figma has no dark primitives — its **Customize Theme** `Dark` mode
+ * re-aliases these same steps (see `Documentation/hydra-figma-parity-audit.md` D-01).
  *
  * Used by global primary / links / top bar (`Color/Primary/*`) and Sidebar.
  */
 export const bluePrimaryPrimitiveLight = [
-  '#B8EAFF',
-  '#8BCCD9',
-  '#62B7CC',
-  '#00B9F0',
-  '#1D8BB3',
-  '#0073A5',
+  '#EBF5FA',
+  '#C7E1ED',
+  '#99C6E0',
+  '#6EABD4',
+  '#4890C7',
+  '#2576BB',
   '#004173',
-  '#00365F',
-  '#002A4A',
-  '#001D35',
+  '#0C3559',
+  '#0C2B47',
+  '#0A2238',
 ] as const;
 
 export const bluePrimaryPrimitiveDark = [
-  '#111A1E',
-  '#0F242F',
-  '#0E3140',
-  '#0B3F55',
-  '#075272',
-  '#03658F',
-  '#1C7FA3',
-  '#3B9AB6',
-  '#60B2C6',
-  '#89C8D5',
+  '#131A22',
+  '#152434',
+  '#193146',
+  '#1C405F',
+  '#1F5481',
+  '#2267A2',
+  '#4384B5',
+  '#6AA3CA',
+  '#95C1DA',
+  '#C3DDE9',
 ] as const;
 
 /**
  * Ant Design Daybreak Blue `Daybreak Blue/blue-1` … `blue-10` in Figma **Colors**.
- * Repo: antd `colorInfo*` (Alert `type="info"`). Figma Customize Theme `Color/Info/*` stays on `Primary/primary-*`;
- * info Alert variants bind directly to these Daybreak primitives.
+ * Repo: antd `colorInfo*` (Alert `type="info"`) ↔ Customize Theme `Color/Info/*`; also
+ * `Color/Sidebar/colorSidebarItemSelectedBg` (`blue-2`).
+ * Steps 8–10 hold the antd **dark** palette values (Figma uses them for dark Bg/Border and Light `TextActive`).
  */
 export const daybreakBluePrimitiveLight = [
   '#E6F4FF',
@@ -48,9 +52,9 @@ export const daybreakBluePrimitiveLight = [
   '#4096FF',
   '#1677FF',
   '#0958D9',
-  '#003EB3',
-  '#002C8C',
-  '#001D66',
+  '#15325B',
+  '#112545',
+  '#111A2C',
 ] as const;
 
 export const daybreakBluePrimitiveDark = [
@@ -96,15 +100,19 @@ export function daybreakBlueStep(
 }
 
 /**
- * Softer primary fill for chips / mapped-column highlights — lighter than `primary-1` (`colorPrimaryBg`).
- * Light: ~6% `primary-6` on white; border uses `primary-1`.
+ * `Primary/primary-0` ↔ `Color/Primary/colorPrimaryBgSubtle` — softer than `primary-1` (`colorPrimaryBg`)
+ * for chips / mapped-column highlights; `colorPrimaryBorderSubtle` uses `primary-1`.
  */
-export const bluePrimaryBgSubtleLight = '#E6F4F8' as const;
+export const bluePrimaryBgSubtleLight = '#F6FAFC' as const;
 export const bluePrimaryBorderSubtleLight = bluePrimaryPrimitiveLight[0];
 
 export const bluePrimaryBgSubtleDark = bluePrimaryPrimitiveDark[1];
 export const bluePrimaryBorderSubtleDark = bluePrimaryPrimitiveDark[2];
 
+/**
+ * Fills lighten on hover (antd convention, step 5), but **text and links darken** (steps 7 → 8).
+ * Lightening text hover put it below WCAG AA on white, so the brand Navy end of the ramp is used instead.
+ */
 function semanticsFromRamp(
   ramp: readonly string[],
   bgSubtle: string,
@@ -137,20 +145,24 @@ function semanticsFromRamp(
     colorPrimaryHover: s(5),
     colorPrimary: s(6),
     colorPrimaryActive: s(7),
-    colorPrimaryTextHover: s(4),
+    colorPrimaryTextHover: s(7),
     colorPrimaryText: s(6),
-    colorPrimaryTextActive: s(7),
+    colorPrimaryTextActive: s(8),
     colorLink: s(6),
-    colorLinkHover: s(4),
-    colorLinkActive: s(7),
+    colorLinkHover: s(7),
+    colorLinkActive: s(8),
   };
 }
 
 /**
  * Figma `Color/Info/*` → `Daybreak Blue/blue-*` (Alert `type="info"`).
- * Hover/text-hover use step 5 (Figma Info mapping).
+ * Hover/text-hover use step 5. Light text / text-active are steps 7 / 8 (Figma);
+ * the repo-only dark ramp keeps 6 / 7 until the Dark pass.
  */
-function infoSemanticsFromRamp(ramp: readonly string[]): {
+function infoSemanticsFromRamp(
+  ramp: readonly string[],
+  textSteps: { text: number; textActive: number },
+): {
   colorInfo: string;
   colorInfoBg: string;
   colorInfoBgHover: string;
@@ -172,8 +184,8 @@ function infoSemanticsFromRamp(ramp: readonly string[]): {
     colorInfo: s(6),
     colorInfoActive: s(7),
     colorInfoTextHover: s(5),
-    colorInfoText: s(6),
-    colorInfoTextActive: s(7),
+    colorInfoText: s(textSteps.text),
+    colorInfoTextActive: s(textSteps.textActive),
   };
 }
 
@@ -192,5 +204,5 @@ export const bluePrimarySemanticsDark = semanticsFromRamp(
 );
 
 /** Info / Alert only — Figma `Color/Info/*` → `Daybreak Blue/blue-*`. */
-export const blueInfoSemantics = infoSemanticsFromRamp(daybreakBluePrimitiveLight);
-export const blueInfoSemanticsDark = infoSemanticsFromRamp(daybreakBluePrimitiveDark);
+export const blueInfoSemantics = infoSemanticsFromRamp(daybreakBluePrimitiveLight, { text: 7, textActive: 8 });
+export const blueInfoSemanticsDark = infoSemanticsFromRamp(daybreakBluePrimitiveDark, { text: 6, textActive: 7 });

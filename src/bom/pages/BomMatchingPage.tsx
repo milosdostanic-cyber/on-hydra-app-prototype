@@ -4,9 +4,9 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useBomHubPath } from '../../context/ActiveProjectContext';
 import { shellLayout } from '../../theme/hydraAlias';
-import { bluePrimaryPrimitiveLight } from '../../theme/primaryPrimitiveBlue';
 import {
   hydraBaseNormal,
+  hydraBaseStrong,
   hydraTextStyleToReactCss,
   hydraTitleHeading3,
 } from '../../theme/hydraTypography';
@@ -101,7 +101,7 @@ function BomMatchingStatsStrip({
 
   return (
     <Flex gap={token.margin} align="stretch" wrap="wrap" style={{ width: '100%' }}>
-      <Flex align="center" style={cardShellStyle(bluePrimaryPrimitiveLight[6])}>
+      <Flex align="center" style={cardShellStyle(token.colorPrimaryActive)}>
         {statInner('Total parts', summary.total)}
       </Flex>
       <Flex align="center" style={cardShellStyle(token.colorSuccessBorder)}>
@@ -449,12 +449,13 @@ export function BomMatchingPage() {
           wrap="wrap"
           style={{
             paddingInline: token.paddingMD,
-            paddingBlock: token.paddingSM,
+            paddingBlock: token.padding,
             borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
             background: token.colorFillAlter,
           }}
         >
-          <Flex align="center" gap={token.marginXS} wrap="wrap">
+          {/* UX-001: 20px (`paddingMD`) between independent filter controls. */}
+          <Flex align="center" gap={token.paddingMD} wrap="wrap">
             <Select<ConfidenceFilter>
               value={confidenceFilter}
               onChange={(v) => {
@@ -517,7 +518,7 @@ export function BomMatchingPage() {
               cell: {
                 background: token.colorFillAlter,
                 borderBottomColor: token.colorBorderSecondary,
-                fontWeight: token.fontWeightStrong,
+                ...hydraTextStyleToReactCss(hydraBaseStrong),
               },
             },
             body: { cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM } },
@@ -528,7 +529,7 @@ export function BomMatchingPage() {
           align="center"
           style={{
             paddingInline: token.paddingMD,
-            paddingBlock: token.paddingSM,
+            paddingBlock: token.padding,
             borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
           }}
         >

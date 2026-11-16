@@ -2,6 +2,7 @@ import { DownloadOutlined, FilePdfOutlined } from '@ant-design/icons';
 
 import { App, Button, Empty, Modal, Space, Typography, theme } from '../../ui/antd';
 import type { SubmittalPackage } from '../types';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type Props = {
   open: boolean;
@@ -56,7 +57,7 @@ export function PdfPreviewModal({ open, pkg, onCancel }: Props) {
           <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
             <Space size={token.marginXS} align="center">
               <FilePdfOutlined style={{ color: token.colorError, fontSize: token.fontSizeHeading4 }} />
-              <Typography.Text strong>{pkg.name}</Typography.Text>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{pkg.name}</Typography.Text>
             </Space>
             <Typography.Text type="secondary">
               {pkg.parts.length} cut sheet{pkg.parts.length === 1 ? '' : 's'} · generated preview (stub)

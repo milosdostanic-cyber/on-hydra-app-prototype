@@ -7,6 +7,7 @@ import { PackageCreateEditModal } from '../../submittal/components/PackageCreate
 import {
   Alert,
   App,
+  Badge,
   Button,
   Card,
   Empty,
@@ -33,7 +34,7 @@ import { useSpecDocument } from '../hooks/useSpecDocument';
 import { trackSpecEvent } from '../specAnalytics';
 import { specHomePath } from '../specNavigation';
 import { navigateSpecWorkspaceTab, specWorkspaceTabItems } from '../specWorkspaceTabs';
-import { HydraTag } from '../../ui/HydraTag';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 /**
  * I3 — Submittal obligations register + package builder (reuses PackageCreateEditModal).
@@ -91,7 +92,7 @@ export function SpecSubmittalsPage() {
       dataIndex: 'title',
       render: (_, row) => (
         <Flex vertical gap={token.marginXXS}>
-          <Typography.Text strong>{row.title}</Typography.Text>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{row.title}</Typography.Text>
           <Typography.Text type="secondary">{row.description}</Typography.Text>
         </Flex>
       ),
@@ -107,9 +108,10 @@ export function SpecSubmittalsPage() {
       dataIndex: 'status',
       width: 140,
       render: (status: SpecSubmittalObligation['status']) => (
-        <HydraTag tone={status === 'open' ? 'warning' : status === 'in-package' ? 'success' : 'default'}>
-          {submittalObligationStatusLabel[status]}
-        </HydraTag>
+        <Badge
+          status={status === 'open' ? 'warning' : status === 'in-package' ? 'success' : 'default'}
+          text={submittalObligationStatusLabel[status]}
+        />
       ),
     },
     {
@@ -118,9 +120,9 @@ export function SpecSubmittalsPage() {
       width: 120,
       render: (_, row) =>
         row.missingDocuments ? (
-          <HydraTag tone="warning">Missing</HydraTag>
+          <Badge status="warning" text="Missing" />
         ) : (
-          <HydraTag tone="success">Ready</HydraTag>
+          <Badge status="success" text="Ready" />
         ),
     },
     {
@@ -130,7 +132,7 @@ export function SpecSubmittalsPage() {
       render: (_, row) =>
         editable && row.status === 'open' ? (
           <Button
-            type="link"
+            type="default"
             size="small"
             onClick={() => {
               if (packages.length === 0) {

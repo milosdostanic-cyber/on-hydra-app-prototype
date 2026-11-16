@@ -4,7 +4,8 @@ import { getSkuVariantsForFigure } from '../data/ascSkuVariants';
 import type { AscBrowserProductRow } from '../data/ascBrowserProducts';
 import {
   hydraBaseNormal,
-  hydraLargeStrong,
+  hydraBaseStrong,
+  hydraSubtitleLarge,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
 import { Button, Flex, Modal, Space, Typography, theme } from '../../ui/antd';
@@ -66,7 +67,7 @@ export function BomCatalogSkuPickModal({
           <Flex vertical align="flex-end" gap={token.marginXXS} style={{ flex: 1, minWidth: 200 }}>
             {pendingVariant ? (
               <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-                Selected SKU: <Typography.Text strong>{pendingVariant.sku}</Typography.Text>
+                Selected SKU: <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{pendingVariant.sku}</Typography.Text>
                 {' — '}
                 {pendingVariant.description}
               </Typography.Text>
@@ -96,7 +97,7 @@ export function BomCatalogSkuPickModal({
           <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
             {product.figureNumber}
           </Typography.Text>
-          <Typography.Text strong style={hydraTextStyleToReactCss(hydraLargeStrong)}>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraSubtitleLarge)}>
             {product.description}
           </Typography.Text>
         </Flex>

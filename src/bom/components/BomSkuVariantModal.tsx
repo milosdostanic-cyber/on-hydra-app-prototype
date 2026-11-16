@@ -9,7 +9,8 @@ import { getSkuVariantsForFigure } from '../data/ascSkuVariants';
 import type { BomMatchResult } from '../data/types';
 import {
   hydraBaseNormal,
-  hydraLargeStrong,
+  hydraBaseStrong,
+  hydraSubtitleLarge,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
 import { Button, Flex, Modal, Space, Typography, theme } from '../../ui/antd';
@@ -67,7 +68,7 @@ export function BomSkuVariantModal({ open, matchRow, onClose, onApply }: BomSkuV
           <Flex vertical align="flex-end" gap={token.marginXXS} style={{ flex: 1, minWidth: 200 }}>
             {pendingVariant ? (
               <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-                Selected SKU: <Typography.Text strong>{pendingVariant.sku}</Typography.Text>
+                Selected SKU: <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{pendingVariant.sku}</Typography.Text>
                 {' — '}
                 {pendingVariant.description}
               </Typography.Text>
@@ -97,7 +98,7 @@ export function BomSkuVariantModal({ open, matchRow, onClose, onApply }: BomSkuV
           <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
             Figure-level match — choose the sellable SKU
           </Typography.Text>
-          <Typography.Text strong style={hydraTextStyleToReactCss(hydraLargeStrong)}>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraSubtitleLarge)}>
             {matchRow.originalRequest}
           </Typography.Text>
           {matchRow.topMatch ? (

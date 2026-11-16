@@ -21,8 +21,9 @@ import { BomStatusBadge } from '../components/BomTags';
 import { HydraTag } from '../../ui/HydraTag';
 import type { AscCatalogPart, BomItem } from '../data/types';
 import {
+  hydraBaseStrong,
   hydraLargeNormal,
-  hydraLargeStrong,
+  hydraSubtitleLarge,
   hydraTextStyleToReactCss,
   hydraTitleHeading1,
   hydraTitleHeading3,
@@ -49,7 +50,7 @@ function FieldRow({ label, value }: { label: string; value: string | number | un
       >
         {label}
       </Typography.Text>
-      <Typography.Text strong>{value ?? '—'}</Typography.Text>
+      <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{value ?? '—'}</Typography.Text>
     </div>
   );
 }
@@ -191,7 +192,7 @@ export function BomTranslatePage() {
       <Card styles={{ body: { padding: `${token.paddingSM}px ${token.paddingMD}px` } }}>
         <Flex align="center" gap={token.marginMD}>
           <Flex vertical gap={token.marginXXS} style={{ flexShrink: 0 }}>
-            <Typography.Text strong style={{ ...hydraTextStyleToReactCss(hydraLargeStrong), lineHeight: 1 }}>
+            <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraSubtitleLarge), lineHeight: 1 }}>
               {currentIndex + 1}{' '}
               <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
                 / {total}
@@ -225,7 +226,7 @@ export function BomTranslatePage() {
           }}
         >
           <Flex align="center" gap={token.marginSM}>
-            <Typography.Text strong>Item {currentIndex + 1}</Typography.Text>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Item {currentIndex + 1}</Typography.Text>
             <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraLargeNormal)}>
               {currentItem.parsedDescription}
             </Typography.Text>
@@ -275,9 +276,8 @@ export function BomTranslatePage() {
             }}
           >
             <Typography.Text
-              strong
               style={{
-                ...hydraTextStyleToReactCss(hydraLargeStrong),
+                ...hydraTextStyleToReactCss(hydraSubtitleLarge),
                 display: 'block',
                 marginBottom: token.marginSM,
                 color: token.colorTextSecondary,
@@ -323,9 +323,8 @@ export function BomTranslatePage() {
             }}
           >
             <Typography.Text
-              strong
               style={{
-                ...hydraTextStyleToReactCss(hydraLargeStrong),
+                ...hydraTextStyleToReactCss(hydraSubtitleLarge),
                 display: 'block',
                 marginBottom: token.marginSM,
                 color: currentAscPart ? token.colorPrimary : token.colorTextTertiary,

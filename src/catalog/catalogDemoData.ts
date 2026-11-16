@@ -26,10 +26,11 @@ export const FEATURED_PARTS_FALLBACK_IMAGE_URL =
 export const CATALOG_DEMO_PARTS: CatalogPartRow[] = [
   {
     key: 'p-100',
-    sku: '100-A',
-    description: 'Demo fixture — open part page',
-    featuredCardSubtitle: 'Elbows, bushings, and threaded fittings for industrial runs.',
-    featuredImageUrl: '/assets/catalog/featured-tiles/pipe-fittings-group.png',
+    sku: 'C9-CL',
+    description: 'C9-CL CenterLOK™ Coupling with Sabertooth',
+    featuredCardSubtitle: 'Ready-for-installation rigid coupling for fire protection systems.',
+    featuredImageUrl:
+      'https://asc-es.canto.com/direct/image/aju84ne50d6k75n4q4k4676a1a/vVZWAG82HYgtUZ18v4BszJ8ekSI/m3000/600',
   },
   {
     key: 'p-200',

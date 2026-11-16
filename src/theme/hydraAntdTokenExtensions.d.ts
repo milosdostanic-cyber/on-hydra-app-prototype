@@ -6,5 +6,9 @@ declare module 'antd/es/theme/interface' {
     colorPrimaryBgSubtle: string;
     /** Softer primary outline paired with `colorPrimaryBgSubtle`. */
     colorPrimaryBorderSubtle: string;
+    /** Figma `Color/Action/colorActionBg` — orange action tint (`buttonPrimaryPalette.bg`). */
+    colorActionBg: string;
+    /** Figma `Color/Action/colorActionBorder` — paired with `colorActionBg`. */
+    colorActionBorder: string;
   }
 }

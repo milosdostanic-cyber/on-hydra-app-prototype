@@ -92,7 +92,7 @@ type SeisBraceContextValue = {
   createBrace: (seismicDesignId: string, input: NewBraceInput) => string;
   updateBrace: (id: string, input: Partial<NewBraceInput>) => void;
   deleteBraces: (ids: string[]) => void;
-  copyBrace: (id: string) => void;
+  copyBrace: (id: string, targetDesignId?: string) => string | undefined;
   moveBrace: (seismicDesignId: string, braceId: string, direction: 'up' | 'down') => void;
 
   addFile: (projectId: string, filename: string) => void;
@@ -234,16 +234,27 @@ export function SeisBraceProvider({ children }: { children: ReactNode }) {
     bracesStore.set((prev) => prev.filter((b) => !set.has(b.id)));
   }, []);
 
-  const copyBrace = useCallback((id: string) => {
+  const copyBrace = useCallback((id: string, targetDesignId?: string) => {
     const source = bracesStore.getSnapshot().find((b) => b.id === id);
-    if (!source) return;
+    if (!source) return undefined;
+    const seismicDesignId = targetDesignId ?? source.seismicDesignId;
+    const target = designsStore.getSnapshot().find((d) => d.id === seismicDesignId);
+    if (!target) return undefined;
     const newId = `br-${Date.now()}`;
-    const order = bracesStore.getSnapshot().filter((b) => b.seismicDesignId === source.seismicDesignId).length;
+    const order = bracesStore.getSnapshot().filter((b) => b.seismicDesignId === seismicDesignId).length;
     const copyName = `${source.name} (copy)`;
     bracesStore.set((prev) => [
       ...prev,
-      { ...source, id: newId, name: copyName, displayName: copyName, order },
+      {
+        ...source,
+        id: newId,
+        seismicDesignId,
+        name: copyName,
+        displayName: copyName,
+        order,
+      },
     ]);
+    return newId;
   }, []);
 
   const moveBrace = useCallback(

@@ -2,6 +2,7 @@ import { DeleteOutlined, DownloadOutlined, FilePdfOutlined } from '@ant-design/i
 
 import { App, Button, Flex, List, Space, Typography, theme } from '../../ui/antd';
 import type { SeisBraceFile } from '../types';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type Props = {
   title: string;
@@ -29,7 +30,7 @@ export function FileListSection({ title, files, onDownload, onDelete }: Props) {
 
   return (
     <Space orientation="vertical" size={token.marginXS} style={{ width: '100%' }}>
-      <Typography.Text strong>{title}</Typography.Text>
+      <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{title}</Typography.Text>
       <List
         bordered
         dataSource={files}

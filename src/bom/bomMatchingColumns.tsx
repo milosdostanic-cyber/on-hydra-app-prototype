@@ -9,8 +9,9 @@ import type { BomMatchResult } from './data/types';
 import { BomAscFigureLink } from './components/BomAscFigureLink';
 import { BomTableRowActions, type BomTableRowAction } from './components/BomTableRowActions';
 import { BomConfidenceTag, BomManualTag, BomMatchLevelTag, BomReviewDisplayStatusTag } from './components/BomTags';
-import { Button, Dropdown, Flex, Space, Typography } from '../ui/antd';
+import { Button, Dropdown, Flex, Space, Typography, theme } from '../ui/antd';
 import type { MenuProps, TableColumnsType } from '../ui/antd';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../theme/hydraTypography';
 
 /** Figma `5026:21449` — Matching results table column widths. */
 export const MATCHING_RESULTS_COLUMN_WIDTHS = {
@@ -56,7 +57,7 @@ function OurPartCell({ row, bomProjectId }: { row: BomMatchResult; bomProjectId:
       {sku ? (
         <Typography.Text>
           <Typography.Text type="secondary">SKU </Typography.Text>
-          <Typography.Text strong>{sku}</Typography.Text>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{sku}</Typography.Text>
         </Typography.Text>
       ) : null}
       {row.topMatch?.description ? (
@@ -91,6 +92,17 @@ export function buildMatchingResultsColumns(
       width: MATCHING_RESULTS_COLUMN_WIDTHS.originalPart,
       ellipsis: true,
     },
+    // UX-008: Status directly after the identity (original part) column.
+    {
+      title: 'Status',
+      key: 'status',
+      width: MATCHING_RESULTS_COLUMN_WIDTHS.status,
+      render: (_, row) => (
+        <span style={{ whiteSpace: 'nowrap' }}>
+          <BomReviewDisplayStatusTag row={row} />
+        </span>
+      ),
+    },
     {
       title: 'Our Part',
       key: 'ourPart',
@@ -120,18 +132,9 @@ export function buildMatchingResultsColumns(
       },
     },
     {
-      title: 'Status',
-      key: 'status',
-      width: MATCHING_RESULTS_COLUMN_WIDTHS.status,
-      render: (_, row) => (
-        <span style={{ whiteSpace: 'nowrap' }}>
-          <BomReviewDisplayStatusTag row={row} />
-        </span>
-      ),
-    },
-    {
       title: 'Action',
       key: 'actions',
+      align: 'right',
       width: MATCHING_RESULTS_COLUMN_WIDTHS.actions,
       render: (_, row) => (
         <MatchActionsCell row={row} actions={actions} guidedReviewComplete={guidedReviewComplete} />
@@ -149,6 +152,7 @@ function MatchActionsCell({
   actions: MatchRowActions;
   guidedReviewComplete: boolean;
 }) {
+  const { token } = theme.useToken();
   const submittalUrl = actions.resolveSubmittalUrl?.(row);
   const isAcceptedAfterGuided = guidedReviewComplete && row.lineStatus === 'accepted';
 
@@ -170,8 +174,9 @@ function MatchActionsCell({
     </Dropdown>
   ) : null;
 
+  // UX-004: right-aligned cell, text action first, ⋯ menu last, 8px (`paddingXS`) between.
   const inlineAction = (action: BomTableRowAction) => (
-    <Flex gap={4} align="center">
+    <Flex gap={token.paddingXS} align="center" justify="flex-end">
       <BomTableRowActions nowrap maxVisible={1} actions={[action]} />
       {moreButton}
     </Flex>
@@ -183,7 +188,13 @@ function MatchActionsCell({
   }
 
   const label = summaryTableRowActionLabel(row);
-  if (!label) return moreButton;
+  if (!label) {
+    return moreButton ? (
+      <Flex justify="flex-end" align="center">
+        {moreButton}
+      </Flex>
+    ) : null;
+  }
 
   let action: BomTableRowAction;
   if (row.lineStatus === 'skipped') {

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import type { PartVariationRow } from '../partDetailDemoData';
 import { Button, Checkbox, Flex, Modal, Space, Typography, theme } from '../../ui/antd';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type Props = {
   open: boolean;
@@ -48,7 +49,7 @@ export function DrawingFileTypesModal({ open, variation, onConfirm, onCancel }: 
             }}
           >
             <Typography.Text type="secondary">Adding to download queue</Typography.Text>
-            <Typography.Text strong>{variation.name}</Typography.Text>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{variation.name}</Typography.Text>
             <Typography.Text type="secondary">SKU {variation.sku}</Typography.Text>
             <Typography.Text type="secondary">
               Choose file types — selected files are queued, not downloaded immediately.

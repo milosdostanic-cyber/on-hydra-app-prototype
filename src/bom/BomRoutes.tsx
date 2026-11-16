@@ -14,6 +14,7 @@ import { BomProgressiveMatchingPage } from './pages/BomProgressiveMatchingPage';
 import { BomReplacementPickerPage } from './pages/BomReplacementPickerPage';
 import { BomNarrowPage } from './pages/BomNarrowPage';
 import { BomParsingReviewPage } from './pages/BomParsingReviewPage';
+import { BomPartCrossReferencePage } from './pages/BomPartCrossReferencePage';
 import { BomRecommendPage } from './pages/BomRecommendPage';
 import { BomCompetitorSearchResultsPage } from './pages/BomCompetitorSearchResultsPage';
 import { BomSearchPage } from './pages/BomSearchPage';
@@ -32,6 +33,9 @@ export function BomRoutes() {
         <Route path="site/:constructionProjectId" element={<BomSiteProjectsPage />} />
         <Route path="search" element={<BomSearchPage />} />
         <Route path="search/results" element={<BomCompetitorSearchResultsPage />} />
+        <Route path="cross-reference" element={<BomPartCrossReferencePage />} />
+        {/* Live app URL for the same screen. */}
+        <Route path="projects/:bomProjectId/static-matches" element={<Navigate to="/bom/cross-reference" replace />} />
         <Route path="projects/:bomProjectId/parsing-review" element={<BomParsingReviewPage />} />
         <Route path="projects/:bomProjectId/matching" element={<BomMatchingIndexRedirect />} />
         <Route path="projects/:bomProjectId/matching/review" element={<BomProgressiveMatchingPage />} />

@@ -24,6 +24,7 @@ import {
   Typography,
   theme,
 } from '../../ui/antd';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type Props = {
   open: boolean;
@@ -219,7 +220,7 @@ export function SpecAddDocumentWizardModal({ open, projectId, projectTitle, onCa
         <Flex vertical gap={token.marginLG}>
           <Flex vertical gap={token.marginMD}>
             <Typography.Text type="secondary">
-              Add a customer PDF or DOCX to <Typography.Text strong>{projectTitle}</Typography.Text>.
+              Add a customer PDF or DOCX to <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{projectTitle}</Typography.Text>.
             </Typography.Text>
             <Steps current={step} items={STEP_ITEMS} />
           </Flex>
@@ -295,7 +296,7 @@ export function SpecAddDocumentWizardModal({ open, projectId, projectTitle, onCa
               showIcon={false}
               message={
                 <Flex align="center" justify="center" gap={token.marginXXS} wrap="wrap">
-                  <Typography.Text strong>Uploaded file:</Typography.Text>
+                  <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Uploaded file:</Typography.Text>
                   <Typography.Text>{file.name}</Typography.Text>
                 </Flex>
               }
@@ -307,7 +308,7 @@ export function SpecAddDocumentWizardModal({ open, projectId, projectTitle, onCa
 
           <Flex vertical gap={token.marginXS}>
             <Flex vertical>
-              <Typography.Text strong>Division</Typography.Text>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Division</Typography.Text>
               <Typography.Text type="secondary">
                 Change it only if the document belongs to another supported division.
               </Typography.Text>

@@ -41,7 +41,7 @@ import { bomItemById, bomProjectTitleById } from '../data/mockData';
 import type { BomMatchResult } from '../data/types';
 import {
   hydraBaseNormal,
-  hydraLargeStrong,
+  hydraSubtitleLarge,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
 import {
@@ -404,7 +404,7 @@ export function BomProgressiveMatchingPage() {
             >
               <Flex align="center" gap={token.marginMD} wrap="wrap">
                 <Flex vertical gap={token.marginXXS} style={{ flexShrink: 0 }}>
-                  <Typography.Text strong style={hydraTextStyleToReactCss(hydraLargeStrong)}>
+                  <Typography.Text style={hydraTextStyleToReactCss(hydraSubtitleLarge)}>
                     {reviewedCount}/{totalParts} reviewed
                   </Typography.Text>
                   <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>

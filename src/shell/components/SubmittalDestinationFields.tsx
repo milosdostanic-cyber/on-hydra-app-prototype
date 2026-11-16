@@ -2,6 +2,7 @@ import { PlusOutlined } from '@ant-design/icons';
 
 import type { SubmittalPackage } from '../../submittal/types';
 import { Divider, Flex, Form, Input, Radio, Space, Tag, Typography, theme } from '../../ui/antd';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 export type SubmittalDestinationMode = 'existing' | 'new';
 
@@ -41,7 +42,7 @@ export function SubmittalDestinationFields({
     <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
       {mode === 'existing' && packages.length > 0 ? (
         <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
-          <Typography.Text strong>Select Submittal Package</Typography.Text>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Select Submittal Package</Typography.Text>
           <div
             style={{
               maxHeight: token.controlHeightLG * 8,
@@ -79,7 +80,7 @@ export function SubmittalDestinationFields({
                       <Flex align="center" justify="space-between" gap={token.marginMD} style={{ width: '100%' }}>
                         <Flex vertical gap={token.marginXXS} style={{ minWidth: 0 }}>
                           <Space size={token.marginXS} wrap>
-                            <Typography.Text strong ellipsis>
+                            <Typography.Text ellipsis style={hydraTextStyleToReactCss(hydraBaseStrong)}>
                               {pkg.name}
                             </Typography.Text>
                             {availability?.label ? <Tag color="warning">{availability.label}</Tag> : null}

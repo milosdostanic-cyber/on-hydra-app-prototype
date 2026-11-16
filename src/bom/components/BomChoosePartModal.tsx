@@ -13,7 +13,7 @@ import { HydraTag } from '../../ui/HydraTag';
 import {
   hydraBaseNormal,
   hydraBaseStrong,
-  hydraLargeStrong,
+  hydraSubtitleLarge,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
 import {
@@ -72,7 +72,7 @@ function ChoosePartCard({
       style={{
         borderColor: selected ? token.colorPrimary : token.colorBorderSecondary,
         background: selected ? token.colorPrimaryBgSubtle : token.colorBgContainer,
-        boxShadow: selected ? token.boxShadowSecondary : token.boxShadowTertiary,
+        boxShadow: token.boxShadowTertiary,
         cursor: 'pointer',
       }}
     >
@@ -83,7 +83,7 @@ function ChoosePartCard({
             Fig. {product.figureNumber}
           </Typography.Text>
         </Flex>
-        <Typography.Text strong style={hydraTextStyleToReactCss(hydraLargeStrong)}>
+        <Typography.Text style={hydraTextStyleToReactCss(hydraSubtitleLarge)}>
           {product.ascNumber}
         </Typography.Text>
         <Typography.Text
@@ -146,7 +146,7 @@ function FeaturedCategoryCard({
         <PictureOutlined style={{ fontSize: token.fontSizeHeading3, color: token.colorTextQuaternary }} />
       </Flex>
       <Flex vertical gap={token.marginXXS}>
-        <Typography.Text strong style={hydraTextStyleToReactCss(hydraBaseStrong)}>
+        <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>
           {categoryLabel}
         </Typography.Text>
         <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
@@ -257,7 +257,7 @@ export function BomChoosePartModal({
           <Flex vertical align="flex-end" gap={token.marginXXS} style={{ flex: 1, minWidth: 200 }}>
             {selectedProduct ? (
               <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
-                Selected: <Typography.Text strong>{selectedProduct.ascNumber}</Typography.Text>
+                Selected: <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{selectedProduct.ascNumber}</Typography.Text>
                 {' — '}
                 {selectedProduct.description}
               </Typography.Text>
@@ -289,7 +289,7 @@ export function BomChoosePartModal({
             <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraBaseNormal)}>
               {hasSuggestion ? 'Replace the match for this imported line' : 'No automatic match for this line'}
             </Typography.Text>
-            <Typography.Text strong style={hydraTextStyleToReactCss(hydraLargeStrong)}>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraSubtitleLarge)}>
               {matchRow.originalRequest}
             </Typography.Text>
           </Flex>
@@ -297,7 +297,7 @@ export function BomChoosePartModal({
 
         {showAlternativeProposals ? (
           <div style={{ flexShrink: 0 }}>
-            <Typography.Text strong style={hydraTextStyleToReactCss(hydraBaseStrong)}>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>
               Other options
             </Typography.Text>
             <Typography.Paragraph
@@ -323,7 +323,7 @@ export function BomChoosePartModal({
         {showFeatured ? (
           <>
             <div style={{ flexShrink: 0 }}>
-              <Typography.Text strong style={hydraTextStyleToReactCss(hydraBaseStrong)}>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>
                 Popular starting points
               </Typography.Text>
               <Typography.Paragraph
@@ -349,7 +349,7 @@ export function BomChoosePartModal({
         ) : null}
 
         <div style={{ flexShrink: 0 }}>
-          <Typography.Text strong style={hydraTextStyleToReactCss(hydraBaseStrong)}>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>
             {showSearchResults ? 'Search results' : 'Search the catalog'}
           </Typography.Text>
           <AppSearchInput

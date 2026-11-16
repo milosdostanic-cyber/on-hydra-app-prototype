@@ -2,6 +2,7 @@ import { useSubmittalPackages } from '../../context/SubmittalPackagesContext';
 import { SubmittalDestinationFields } from '../../shell/components/SubmittalDestinationFields';
 import { useSubmittalDestinationFields } from '../../shell/components/useSubmittalDestinationFields';
 import { Flex, Modal, Space, Typography, theme } from '../../ui/antd';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 export type AddToPackagePart = {
   partKey: string;
@@ -72,7 +73,7 @@ export function AddToPackageModal({
             }}
           >
             <Typography.Text type="secondary">Adding</Typography.Text>
-            <Typography.Text strong>{part.displayName}</Typography.Text>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{part.displayName}</Typography.Text>
             <Typography.Text type="secondary">Figure {part.figureNumber}</Typography.Text>
           </Flex>
         )}

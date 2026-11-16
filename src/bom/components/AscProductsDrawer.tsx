@@ -19,6 +19,7 @@ import {
 } from '../../ui/antd';
 import type { TableColumnsType, TabsProps } from '../../ui/antd';
 import {
+  hydraBaseStrong,
   hydraLargeNormal,
   hydraLargeStrong,
   hydraTextStyleToReactCss,
@@ -300,7 +301,7 @@ export function AscProductsDrawer({ open, onClose, onAddProduct, mode = 'browse'
           }}
         >
           <Flex align="center" justify="space-between" style={{ marginBottom: token.marginSM }}>
-            <Typography.Text strong>Filters</Typography.Text>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Filters</Typography.Text>
             {hasActiveFilters && (
               <Typography.Link onClick={clearAllFilters} style={hydraTextStyleToReactCss(hydraLargeNormal)}>
                 Clear All Filters

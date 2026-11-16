@@ -7,6 +7,7 @@ import { SpecCitationLink } from './SpecCitationLink';
 import { SpecSeverityBadge } from './SpecSeverityBadge';
 import { Badge, Card, Flex, Typography, theme } from '../../ui/antd';
 import { HydraTag } from '../../ui/HydraTag';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 export function SpecRedFlagCard({
   flag,
@@ -36,7 +37,7 @@ export function SpecRedFlagCard({
     >
       <Flex vertical gap={token.marginSM}>
         <Flex justify="space-between" gap={token.marginSM} wrap="wrap">
-          <Typography.Text strong>{flag.title}</Typography.Text>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{flag.title}</Typography.Text>
           <SpecSeverityBadge severity={flag.severity} />
         </Flex>
         <Flex gap={token.marginXXS} wrap="wrap">

@@ -41,7 +41,7 @@ export function WizardPage() {
     <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
       <PageBackButton to="/seisbrace">Back to SeisBrace</PageBackButton>
 
-      <Card styles={{ body: { padding: 0 } }} style={{ overflow: 'hidden', boxShadow: token.boxShadowTertiary }}>
+      <Card variant="borderless" styles={{ body: { padding: 0 } }} style={{ overflow: 'hidden', border: 'none', boxShadow: token.boxShadowTertiary }}>
         <Flex align="stretch" style={{ width: '100%', overflow: 'hidden' }}>
           <div
             style={{

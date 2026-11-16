@@ -1,0 +1,7 @@
+{
+  "project": "hydra",
+  "include": ["Components/"],
+  "maxVariantsPerComponent": 256,
+  "modes": { "global": "theme", "values": ["light", "dark"] },
+  "presets": ["antd"]
+}

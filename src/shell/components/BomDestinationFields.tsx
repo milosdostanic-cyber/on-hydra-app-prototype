@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 
 import { AppSearchInput, Divider, Flex, Radio, Space, Tag, Typography, theme } from '../../ui/antd';
 import type { BomProject } from '../../bom/data/types';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 export type BomDestinationValue = {
   bomProjectId: string;
@@ -48,7 +49,7 @@ export function BomDestinationFields({
     <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
       {boms.length > 0 ? (
         <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
-          <Typography.Text strong>Select BOM</Typography.Text>
+          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Select BOM</Typography.Text>
 
           {showSearch ? (
             <AppSearchInput
@@ -104,7 +105,7 @@ export function BomDestinationFields({
                         <Flex align="center" justify="space-between" gap={token.marginMD} style={{ width: '100%' }}>
                           <Flex vertical gap={token.marginXXS} style={{ minWidth: 0 }}>
                             <Space size={token.marginXS} wrap>
-                              <Typography.Text strong ellipsis>
+                              <Typography.Text ellipsis style={hydraTextStyleToReactCss(hydraBaseStrong)}>
                                 {bom.name}
                               </Typography.Text>
                               {availability?.label ? <Tag color="warning">{availability.label}</Tag> : null}

@@ -9,7 +9,6 @@ import {
   productCatalogSearchPath,
 } from '../../catalog/productCatalogNavigation';
 import { FeaturedParts } from '../../catalog/FeaturedParts';
-import { hydraFeaturedPartsPanelBgLight } from '../../theme/hydraSemanticColors';
 import { setLastScopedProjectId } from '../lastProjectScope';
 import { shellContentRailStyle } from '../shellContentRail';
 import {
@@ -49,7 +48,7 @@ function CategoryCard({ token, projectId, categoryId, title, totalParts, subcate
   const navigate = useNavigate();
   return (
     <Card
-      bordered={false}
+      variant="borderless"
       style={{
         borderRadius: token.borderRadiusLG,
         boxShadow: token.boxShadowTertiary,
@@ -244,10 +243,9 @@ export function ProductCatalogContent() {
                 style={{
                   width: '100%',
                   padding: token.paddingXL,
-                  background: hydraFeaturedPartsPanelBgLight,
+                  background: token.colorPrimaryBg,
                   borderRadius: token.borderRadiusLG,
                   boxShadow: token.boxShadowTertiary,
-                  border: `${token.lineWidth}px ${token.lineType} ${token.colorInfoBorder}`,
                 }}
               >
                 <FeaturedParts emphasized />

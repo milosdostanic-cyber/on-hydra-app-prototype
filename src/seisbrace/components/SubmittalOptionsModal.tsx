@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 import { Checkbox, Flex, Modal, Space, Typography, theme } from '../../ui/antd';
 import type { SeisBraceFile } from '../types';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type GenerateOption = 'generate-report' | 'generate-report-and-submittal';
 
@@ -90,7 +91,7 @@ export function SubmittalOptionsModal({ open, selectedBraceCount, projectFiles, 
                 ) : null}
                 <Space orientation="vertical" size={token.marginXXS}>
                   <Typography.Text style={{ fontSize: token.fontSizeHeading4 }}>{opt.icon}</Typography.Text>
-                  <Typography.Text strong>{opt.title}</Typography.Text>
+                  <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{opt.title}</Typography.Text>
                   <Typography.Text type="secondary">{opt.description}</Typography.Text>
                 </Space>
               </div>
@@ -100,7 +101,7 @@ export function SubmittalOptionsModal({ open, selectedBraceCount, projectFiles, 
 
         {projectFiles.length > 0 ? (
           <Space orientation="vertical" size={token.marginXS} style={{ width: '100%' }}>
-            <Typography.Text strong>Attach project files</Typography.Text>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Attach project files</Typography.Text>
             <Checkbox.Group
               value={fileIds}
               onChange={(vals) => setFileIds(vals as string[])}

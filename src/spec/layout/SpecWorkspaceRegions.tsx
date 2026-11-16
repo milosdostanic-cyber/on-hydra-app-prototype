@@ -79,7 +79,6 @@ export function SpecWorkspaceRegions({
     borderRadius: token.borderRadiusLG,
     boxShadow: token.boxShadowTertiary,
     background: token.colorBgContainer,
-    border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
     overflow: 'hidden',
   });
 

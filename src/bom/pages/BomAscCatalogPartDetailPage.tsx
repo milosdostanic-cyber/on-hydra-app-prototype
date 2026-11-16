@@ -118,7 +118,8 @@ export function BomAscCatalogPartDetailPage() {
       align: 'center',
       render: (_, row) => (
         <Button
-          type="text"
+          type="default"
+          size="small"
           icon={<SwapOutlined />}
           aria-label={`Use ${row.sku} as replacement`}
           onClick={() => handleRowReplacement(row.variantId)}
@@ -184,7 +185,6 @@ export function BomAscCatalogPartDetailPage() {
             minHeight: token.controlHeight * 10,
             borderRadius: token.borderRadiusLG,
             background: token.colorBgContainer,
-            border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
             boxShadow: token.boxShadowTertiary,
             overflow: 'hidden',
           }}

@@ -12,6 +12,7 @@ import {
   theme,
 } from '../../ui/antd';
 import { HydraTag } from '../../ui/HydraTag';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 /**
  * G8 — range-anchored comment threads in the right rail.
@@ -42,7 +43,7 @@ export function SpecCommentThreads({
 
   return (
     <Flex vertical gap={token.marginMD}>
-      <Typography.Text strong>Comments</Typography.Text>
+      <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Comments</Typography.Text>
 
       {canComment && selectedBlockId ? (
         <Flex vertical gap={token.marginXS}>
@@ -171,7 +172,7 @@ function ThreadCard({
           <Flex key={msg.id} gap={token.marginSM} align="flex-start">
             <Avatar size="small">{msg.author.slice(0, 1).toUpperCase()}</Avatar>
             <Flex vertical gap={token.marginXXS} style={{ minWidth: 0, flex: 1 }}>
-              <Typography.Text strong>{msg.author}</Typography.Text>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{msg.author}</Typography.Text>
               <Typography.Paragraph style={{ marginBottom: 0 }}>{msg.body}</Typography.Paragraph>
               <Typography.Text type="secondary">{new Date(msg.createdAt).toLocaleString()}</Typography.Text>
             </Flex>

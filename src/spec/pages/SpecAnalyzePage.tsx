@@ -657,8 +657,10 @@ export function SpecAnalyzePage() {
             </Flex>
 
             <Card
+              variant="borderless"
               style={{
                 borderRadius: token.borderRadiusLG,
+                border: 'none',
                 boxShadow: token.boxShadowTertiary,
               }}
               styles={{ body: { padding: token.padding } }}

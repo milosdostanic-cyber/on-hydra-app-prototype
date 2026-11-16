@@ -57,6 +57,7 @@ import {
   Flex,
   Input,
   Modal,
+  Pagination,
   Space,
   Table,
   Tooltip,
@@ -67,6 +68,7 @@ import {
 import { shellLayout } from '../../theme/hydraAlias';
 import {
   hydraBaseNormal,
+  hydraBaseStrong,
   hydraTextStyleToReactCss,
 } from '../../theme/hydraTypography';
 
@@ -150,6 +152,7 @@ export function BomWorkspacePage() {
   const { pendingForProject, setActiveUploadId } = useBomImportFlow();
   const pendingUploadSessions = pendingForProject(bomProjectId);
   const [query, setQuery] = useState('');
+  const [tablePage, setTablePage] = useState(1);
 
   const [isTranslating, setIsTranslating] = useState(false);
   const [actionError, setActionError] = useState<{ type: WorkspaceActionErrorType; message: string } | null>(null);
@@ -192,6 +195,16 @@ export function BomWorkspacePage() {
         .includes(q);
     });
   }, [tableRows, query]);
+
+  // UX-007: footer row (16/20) owns pagination, so slice here instead of using the table's own pager.
+  const pagedRows = useMemo(() => {
+    const start = (tablePage - 1) * shellLayout.tablePageSizeDefault;
+    return filteredRows.slice(start, start + shellLayout.tablePageSizeDefault);
+  }, [filteredRows, tablePage]);
+
+  useEffect(() => {
+    setTablePage(1);
+  }, [query, bomProjectId]);
 
   const hasWorkspaceRows = rows.length > 0;
   const hasTableRows = tableRows.length > 0;
@@ -530,7 +543,7 @@ export function BomWorkspacePage() {
         <Empty
           description={
             <Space orientation="vertical" size={token.marginXXS}>
-              <Typography.Text strong>No BOM items yet</Typography.Text>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No BOM items yet</Typography.Text>
               <Typography.Text type="secondary">
                 Add a line manually or upload a file to create a new BOM run.
               </Typography.Text>
@@ -543,7 +556,7 @@ export function BomWorkspacePage() {
       <Empty
         description={
           <Space orientation="vertical" size={token.marginXXS}>
-            <Typography.Text strong>No matching rows</Typography.Text>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No matching rows</Typography.Text>
             <Typography.Text type="secondary">
               No confirmed BOM lines match your search.
             </Typography.Text>
@@ -609,7 +622,7 @@ export function BomWorkspacePage() {
             <Empty
               description={
                 <Space orientation="vertical" size={token.marginXS}>
-                  <Typography.Text strong>No BOM items yet</Typography.Text>
+                  <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No BOM items yet</Typography.Text>
                   <Typography.Text type="secondary">
                     Upload a BOM file to import parts, browse the ASC catalog, or add items one by one.
                   </Typography.Text>
@@ -753,7 +766,8 @@ export function BomWorkspacePage() {
       )}
 
       <Card
-        style={{ borderRadius: token.borderRadiusLG, boxShadow: token.boxShadowTertiary }}
+        variant="borderless"
+        style={{ borderRadius: token.borderRadiusLG, border: 'none', boxShadow: token.boxShadowTertiary }}
         styles={{ body: { padding: 0 } }}
       >
         <Flex
@@ -828,7 +842,7 @@ export function BomWorkspacePage() {
         <Table<BomItem>
           rowKey="id"
           columns={columns}
-          dataSource={filteredRows}
+          dataSource={pagedRows}
           scroll={{ x: 'max-content' }}
           onRow={(record) => actionTrailTableRowProps(token, isTrailRow(record))}
           rowSelection={{
@@ -839,16 +853,31 @@ export function BomWorkspacePage() {
           locale={{
             emptyText: renderTableEmptyState(),
           }}
-          pagination={{
-            pageSize: shellLayout.tablePageSizeDefault,
-            showSizeChanger: false,
-            position: ['bottomRight'],
-          }}
+          pagination={false}
           styles={{
-            header: { cell: { background: token.colorFillAlter, borderBottomColor: token.colorBorderSecondary, fontWeight: token.fontWeightStrong } },
+            header: { cell: { background: token.colorFillAlter, borderBottomColor: token.colorBorderSecondary, ...hydraTextStyleToReactCss(hydraBaseStrong) } },
             body: { cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM } },
           }}
         />
+        {filteredRows.length > 0 ? (
+          <Flex
+            justify="flex-end"
+            align="center"
+            style={{
+              paddingInline: token.paddingMD,
+              paddingBlock: token.padding,
+              borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+            }}
+          >
+            <Pagination
+              current={tablePage}
+              pageSize={shellLayout.tablePageSizeDefault}
+              total={filteredRows.length}
+              onChange={setTablePage}
+              showSizeChanger={false}
+            />
+          </Flex>
+        ) : null}
       </Card>
 
       <BomChoosePartModal

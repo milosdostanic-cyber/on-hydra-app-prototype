@@ -17,6 +17,7 @@ import {
   Typography,
   theme,
 } from '../../ui/antd';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 /**
  * G9 — Ask an Engineer: thread list + conversation + locked context snapshot (AC-030).
@@ -98,7 +99,7 @@ export function SpecEngineerThread({
                 }}
               >
                 <Flex vertical gap={token.marginXXS} style={{ width: '100%' }}>
-                  <Typography.Text strong ellipsis>
+                  <Typography.Text ellipsis style={hydraTextStyleToReactCss(hydraBaseStrong)}>
                     {thread.subject}
                   </Typography.Text>
                   <Badge status={askThreadBadgeStatus(thread.status)} text={askThreadStatusLabel[thread.status]} />
@@ -115,7 +116,7 @@ export function SpecEngineerThread({
             size="small"
             title={
               <Flex gap={token.marginSM} align="center" wrap="wrap">
-                <Typography.Text strong>{selected.subject}</Typography.Text>
+                <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{selected.subject}</Typography.Text>
                 <Badge
                   status={askThreadBadgeStatus(selected.status)}
                   text={askThreadStatusLabel[selected.status]}
@@ -162,7 +163,7 @@ export function SpecEngineerThread({
                     <Avatar>{msg.author.slice(0, 1)}</Avatar>
                     <Flex vertical gap={token.marginSM} style={{ flex: 1, minWidth: 0 }}>
                       <Flex gap={token.marginXS} align="center" wrap="wrap">
-                        <Typography.Text strong>{msg.author}</Typography.Text>
+                        <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{msg.author}</Typography.Text>
                         <HydraTag>
                           {msg.role === 'engineer'
                             ? 'Engineer'

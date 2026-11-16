@@ -32,6 +32,7 @@ import {
   type TableColumnsType,
 } from '../../ui/antd';
 import type { SubmittalPackage, SubmittalPackagePart } from '../types';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type Props = {
   pkg: SubmittalPackage;
@@ -179,7 +180,7 @@ export function PackageCard({ pkg, onDownload, onEdit }: Props) {
             aria-label={expanded ? 'Collapse package' : 'Expand package'}
           />
           <Flex vertical>
-            <Typography.Text strong>{pkg.name}</Typography.Text>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{pkg.name}</Typography.Text>
             <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
               {pkg.parts.length} part{pkg.parts.length === 1 ? '' : 's'} · Updated{' '}
               {dateFormatter.format(new Date(pkg.updatedAt))}

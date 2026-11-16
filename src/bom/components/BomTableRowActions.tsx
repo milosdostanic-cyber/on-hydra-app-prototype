@@ -11,8 +11,6 @@ export type BomTableRowAction = {
   disabled?: boolean;
 };
 
-const linkButtonStyle = { padding: 0, height: 'auto' } as const;
-
 /** Up to three single-word inline actions; additional actions go in ⋮. */
 const DEFAULT_MAX_VISIBLE = 3;
 
@@ -63,11 +61,10 @@ export function BomTableRowActions({
         {actions.map((action) => (
           <Button
             key={action.key}
-            type="link"
+            type="default"
             size="small"
             danger={action.danger}
             disabled={action.disabled}
-            style={linkButtonStyle}
             onClick={(event) => {
               event.stopPropagation();
               action.onClick();
@@ -89,11 +86,10 @@ export function BomTableRowActions({
       {visible.map((action) => (
         <Button
           key={action.key}
-          type="link"
+          type="default"
           size="small"
           danger={action.danger}
           disabled={action.disabled}
-          style={linkButtonStyle}
           onClick={(event) => {
             event.stopPropagation();
             action.onClick();
@@ -104,11 +100,10 @@ export function BomTableRowActions({
       ))}
       <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
         <Button
-          type="text"
+          type="default"
           size="small"
           icon={<MoreOutlined />}
           aria-label="More actions"
-          style={{ paddingInline: token.paddingXXS }}
           onClick={(event) => event.stopPropagation()}
         />
       </Dropdown>

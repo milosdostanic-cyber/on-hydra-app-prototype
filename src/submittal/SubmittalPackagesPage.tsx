@@ -11,6 +11,7 @@ import { PackageCard } from './components/PackageCard';
 import { PackageCreateEditModal } from './components/PackageCreateEditModal';
 import { PdfPreviewModal } from './components/PdfPreviewModal';
 import type { SubmittalPackage } from './types';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../theme/hydraTypography';
 
 /**
  * Submittal packages list for the active construction project — replaces the old `SubmittalModule`
@@ -62,7 +63,7 @@ export function SubmittalPackagesPage() {
         <Empty
           description={
             <Space orientation="vertical" size={token.marginXS}>
-              <Typography.Text strong>No submittal packages yet.</Typography.Text>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No submittal packages yet.</Typography.Text>
               <Typography.Text type="secondary">
                 Create a package, then add cut sheets from search.
               </Typography.Text>

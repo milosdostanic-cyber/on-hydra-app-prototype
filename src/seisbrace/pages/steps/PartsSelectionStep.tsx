@@ -19,6 +19,7 @@ import {
   type TableColumnsType,
 } from '../../../ui/antd';
 import type { PipeAttachment, StructuralAttachment, SwivelType } from '../../types';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../../theme/hydraTypography';
 
 export function PartsSelectionStep() {
   const { token } = theme.useToken();
@@ -57,7 +58,7 @@ export function PartsSelectionStep() {
           style={{ position: 'absolute', top: token.paddingXS, right: token.paddingXS, color: token.colorPrimary }}
         />
       ) : null}
-      <Typography.Text strong style={{ display: 'block' }}>
+      <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraBaseStrong), display: 'block' }}>
         {title}
       </Typography.Text>
       {lines.map((line) => (

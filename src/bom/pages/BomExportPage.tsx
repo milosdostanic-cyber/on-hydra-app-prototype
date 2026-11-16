@@ -30,7 +30,7 @@ import {
   message,
 } from '../../ui/antd';
 import type { TableColumnsType } from '../../ui/antd';
-import { hydraLargeNormal, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
+import { hydraBaseStrong, hydraLargeNormal, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type ExportMode = 'excel-csv' | 'package' | 'distributor' | 'service';
 
@@ -260,7 +260,7 @@ export function BomExportPage() {
       >
         <div style={{ paddingInline: token.paddingMD, paddingTop: token.paddingSM }}>
           <Typography.Paragraph type="secondary">
-            Preview how your BOM appears for <strong>{EXPORT_MODE_META[mode].title}</strong>.{' '}
+            Preview how your BOM appears for <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{EXPORT_MODE_META[mode].title}</Typography.Text>.{' '}
             {rows.length} confirmed row{rows.length !== 1 ? 's' : ''}.
           </Typography.Paragraph>
           <Flex gap={token.marginSM} wrap="wrap" style={{ marginBottom: token.marginSM }}>
@@ -281,7 +281,7 @@ export function BomExportPage() {
               cell: {
                 background: token.colorFillAlter,
                 borderBottomColor: token.colorBorderSecondary,
-                fontWeight: token.fontWeightStrong,
+                ...hydraTextStyleToReactCss(hydraBaseStrong),
               },
             },
             body: { cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM } },

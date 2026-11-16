@@ -12,6 +12,7 @@ import {
 import { Button, Empty, Flex, Result, Skeleton, Space, Tag, Typography, theme } from '../../ui/antd';
 
 import { GlobalSearchResultRow } from './GlobalSearchResultRow';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 type Props = {
   scope: SearchScope;
@@ -83,7 +84,7 @@ export function GlobalSearchPanel({
         <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
           {recentSearches.length > 0 ? (
             <div>
-              <Typography.Text strong>Recent searches</Typography.Text>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Recent searches</Typography.Text>
               <Flex gap={token.marginXS} wrap="wrap" style={{ marginTop: token.marginXS }}>
                 {recentSearches.map((recent) => (
                   <Button
@@ -101,7 +102,7 @@ export function GlobalSearchPanel({
           ) : null}
 
           <div>
-            <Typography.Text strong>Try a lookup</Typography.Text>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>Try a lookup</Typography.Text>
             <Flex gap={token.marginXS} wrap="wrap" style={{ marginTop: token.marginXS }}>
               {EXAMPLES[scope].map((example) => (
                 <Button
@@ -153,7 +154,7 @@ export function GlobalSearchPanel({
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={
             <Space orientation="vertical" size={token.marginXXS}>
-              <Typography.Text strong>No results for “{trimmedQuery}”</Typography.Text>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No results for “{trimmedQuery}”</Typography.Text>
               <Typography.Text type="secondary">{domainCopy}</Typography.Text>
             </Space>
           }
@@ -171,7 +172,7 @@ export function GlobalSearchPanel({
         {SEARCH_ENTITY_ORDER.filter((entityType) => grouped[entityType]?.length).map((entityType) => (
           <div key={entityType}>
             <Flex align="center" gap={token.marginXS} style={{ marginBottom: token.marginXS }}>
-              <Typography.Text strong>{SEARCH_ENTITY_LABELS[entityType]}</Typography.Text>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{SEARCH_ENTITY_LABELS[entityType]}</Typography.Text>
               <Tag style={{ margin: 0 }}>{grouped[entityType]?.length ?? 0}</Tag>
             </Flex>
             <Space orientation="vertical" size={token.marginXXS} style={{ width: '100%' }}>

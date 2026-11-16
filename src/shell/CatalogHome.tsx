@@ -68,8 +68,8 @@ export function CatalogHome() {
       align: 'right',
       render: (_, row) => (
         <Button
-          type="link"
-          style={shellTableLinkButtonStyle}
+          type="default"
+          size="small"
           onClick={() =>
             navigate(`/catalog/parts/${encodeURIComponent(row.key)}`, { state: partReturnState })
           }
@@ -92,10 +92,12 @@ export function CatalogHome() {
       />
 
       <Card
+        variant="borderless"
         styles={{ body: { padding: token.paddingMD } }}
         style={{
           background: token.colorBgContainer,
           borderRadius: token.borderRadiusLG,
+          border: 'none',
           boxShadow: token.boxShadowTertiary,
         }}
       >
@@ -130,7 +132,7 @@ export function CatalogHome() {
             use the same data as search.
           </PageDescription>
         </Space>
-        <Card styles={{ body: { padding: 0 } }} style={tableShellStyle}>
+        <Card variant="borderless" styles={{ body: { padding: 0 } }} style={tableShellStyle}>
           <Table<CatalogPartRow>
             rowKey="key"
             pagination={false}

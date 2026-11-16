@@ -239,7 +239,7 @@ export function AppShellSidebar() {
           borderEndStartRadius: token.borderRadiusSM,
           borderStartEndRadius: 0,
           borderEndEndRadius: 0,
-          boxShadow: token.boxShadow,
+          boxShadow: token.boxShadowTertiary,
         }}
       />
     </Sider>

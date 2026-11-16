@@ -1,5 +1,6 @@
 import { Button, Flex, Input, Modal, Radio, Select, Typography, theme } from '../../ui/antd';
 import type { SpecProjectOutputKind, SpecProjectOutputMode } from '../data/types';
+import { hydraBaseStrong, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 
 export function SpecProjectOutputModal({
   kind,
@@ -118,7 +119,7 @@ export function SpecProjectOutputModal({
             >
               <Radio value="create">
                 <Flex vertical gap={token.marginXXS}>
-                  <Typography.Text strong>{createLabel}</Typography.Text>
+                  <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{createLabel}</Typography.Text>
                   {mode === 'create' ? (
                     <Typography.Text type="secondary">{createCopy}</Typography.Text>
                   ) : null}
@@ -131,7 +132,7 @@ export function SpecProjectOutputModal({
             >
               <Radio value="update">
                 <Flex vertical gap={token.marginXXS}>
-                  <Typography.Text strong>{updateLabel}</Typography.Text>
+                  <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{updateLabel}</Typography.Text>
                   {mode === 'update' ? (
                     <Typography.Text type="secondary">{updateCopy}</Typography.Text>
                   ) : null}
@@ -142,12 +143,12 @@ export function SpecProjectOutputModal({
         </Radio.Group>
         {mode === 'create' ? (
           <Flex vertical gap={token.marginXXS}>
-            <Typography.Text strong>{isBom ? 'BOM name' : 'Package name'}</Typography.Text>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{isBom ? 'BOM name' : 'Package name'}</Typography.Text>
             <Input size="large" value={name} onChange={(event) => onNameChange(event.target.value)} />
           </Flex>
         ) : (
           <Flex vertical gap={token.marginXXS}>
-            <Typography.Text strong>{isBom ? 'Existing BOM' : 'Existing package'}</Typography.Text>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>{isBom ? 'Existing BOM' : 'Existing package'}</Typography.Text>
             <Select
               size="large"
               value={selectedExistingId}
