@@ -247,9 +247,9 @@ export async function withSpecDelay<T>(result: T): Promise<T> {
   return result;
 }
 
-let processingTimer: ReturnType<typeof window.setTimeout> | null = null;
-let reanalysisTimer: ReturnType<typeof window.setTimeout> | null = null;
-let exportTimer: ReturnType<typeof window.setTimeout> | null = null;
+let processingTimer: number | null = null;
+let reanalysisTimer: number | null = null;
+let exportTimer: number | null = null;
 
 function isActivelyProcessing(document: SpecDocument): boolean {
   return document.processingState === 'queued' || document.processingState === 'processing';
