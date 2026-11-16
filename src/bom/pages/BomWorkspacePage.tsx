@@ -57,6 +57,7 @@ import {
   Flex,
   Input,
   Modal,
+  Pagination,
   Space,
   Table,
   Tooltip,
@@ -151,6 +152,7 @@ export function BomWorkspacePage() {
   const { pendingForProject, setActiveUploadId } = useBomImportFlow();
   const pendingUploadSessions = pendingForProject(bomProjectId);
   const [query, setQuery] = useState('');
+  const [tablePage, setTablePage] = useState(1);
 
   const [isTranslating, setIsTranslating] = useState(false);
   const [actionError, setActionError] = useState<{ type: WorkspaceActionErrorType; message: string } | null>(null);
@@ -193,6 +195,16 @@ export function BomWorkspacePage() {
         .includes(q);
     });
   }, [tableRows, query]);
+
+  // UX-007: footer row (16/20) owns pagination, so slice here instead of using the table's own pager.
+  const pagedRows = useMemo(() => {
+    const start = (tablePage - 1) * shellLayout.tablePageSizeDefault;
+    return filteredRows.slice(start, start + shellLayout.tablePageSizeDefault);
+  }, [filteredRows, tablePage]);
+
+  useEffect(() => {
+    setTablePage(1);
+  }, [query, bomProjectId]);
 
   const hasWorkspaceRows = rows.length > 0;
   const hasTableRows = tableRows.length > 0;
@@ -830,7 +842,7 @@ export function BomWorkspacePage() {
         <Table<BomItem>
           rowKey="id"
           columns={columns}
-          dataSource={filteredRows}
+          dataSource={pagedRows}
           scroll={{ x: 'max-content' }}
           onRow={(record) => actionTrailTableRowProps(token, isTrailRow(record))}
           rowSelection={{
@@ -841,16 +853,31 @@ export function BomWorkspacePage() {
           locale={{
             emptyText: renderTableEmptyState(),
           }}
-          pagination={{
-            pageSize: shellLayout.tablePageSizeDefault,
-            showSizeChanger: false,
-            position: ['bottomRight'],
-          }}
+          pagination={false}
           styles={{
             header: { cell: { background: token.colorFillAlter, borderBottomColor: token.colorBorderSecondary, ...hydraTextStyleToReactCss(hydraBaseStrong) } },
             body: { cell: { borderBottomColor: token.colorBorderSecondary, paddingBlock: token.paddingSM } },
           }}
         />
+        {filteredRows.length > 0 ? (
+          <Flex
+            justify="flex-end"
+            align="center"
+            style={{
+              paddingInline: token.paddingMD,
+              paddingBlock: token.padding,
+              borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+            }}
+          >
+            <Pagination
+              current={tablePage}
+              pageSize={shellLayout.tablePageSizeDefault}
+              total={filteredRows.length}
+              onChange={setTablePage}
+              showSizeChanger={false}
+            />
+          </Flex>
+        ) : null}
       </Card>
 
       <BomChoosePartModal

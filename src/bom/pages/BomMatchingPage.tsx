@@ -449,12 +449,13 @@ export function BomMatchingPage() {
           wrap="wrap"
           style={{
             paddingInline: token.paddingMD,
-            paddingBlock: token.paddingSM,
+            paddingBlock: token.padding,
             borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
             background: token.colorFillAlter,
           }}
         >
-          <Flex align="center" gap={token.marginXS} wrap="wrap">
+          {/* UX-001: 20px (`paddingMD`) between independent filter controls. */}
+          <Flex align="center" gap={token.paddingMD} wrap="wrap">
             <Select<ConfidenceFilter>
               value={confidenceFilter}
               onChange={(v) => {
@@ -528,7 +529,7 @@ export function BomMatchingPage() {
           align="center"
           style={{
             paddingInline: token.paddingMD,
-            paddingBlock: token.paddingSM,
+            paddingBlock: token.padding,
             borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
           }}
         >

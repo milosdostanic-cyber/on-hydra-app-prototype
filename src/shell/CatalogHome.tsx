@@ -68,8 +68,8 @@ export function CatalogHome() {
       align: 'right',
       render: (_, row) => (
         <Button
-          type="link"
-          style={shellTableLinkButtonStyle}
+          type="default"
+          size="small"
           onClick={() =>
             navigate(`/catalog/parts/${encodeURIComponent(row.key)}`, { state: partReturnState })
           }

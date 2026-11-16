@@ -203,15 +203,17 @@ function actionsColumn(
   onEditRow: (row: BomItem) => void,
 ): TableColumnsType<BomItem>[number] {
   return {
-    title: '',
+    // UX-004: labelled "Action" (one action per row), header and button right-aligned.
+    title: 'Action',
     key: 'actions',
+    align: 'right',
     width: 112,
     render: (_, record) => {
       const unusable = isParsingReviewUnusableRow(record, profile);
       const needsInfo = isParsingReviewLowConfidenceRow(record, profile);
       const label = unusable ? 'Fix to match' : needsInfo ? 'Add info' : 'Edit';
       return (
-        <Button type={needsInfo ? 'primary' : 'default'} size="small" onClick={() => onEditRow(record)}>
+        <Button type="default" size="small" onClick={() => onEditRow(record)}>
           {label}
         </Button>
       );

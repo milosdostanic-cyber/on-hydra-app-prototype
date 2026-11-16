@@ -44,7 +44,7 @@ import {
 import type { TableColumnsType, TabsProps } from '../ui/antd';
 
 import { hydraBaseNormal, hydraBaseStrong, hydraTextStyleToReactCss, hydraTitleHeading4, hydraTitleHeading5 } from '../theme/hydraTypography';
-import { shellTableCardStyle, shellTableLinkButtonStyle, shellTableStyles } from './shellTablePatterns';
+import { shellTableCardStyle, shellTableStyles } from './shellTablePatterns';
 import { lastDeliverableForProject } from './projectLastDeliverable';
 import {
   ProjectFormFields,
@@ -444,8 +444,8 @@ export function HomeHubPage() {
       align: 'right',
       width: 150,
       render: (_, record) => (
-        <Space size={token.marginSM} onClick={(e) => e.stopPropagation()}>
-          <Button type="link" style={shellTableLinkButtonStyle} onClick={() => openEdit(record.key)}>
+        <Space size={token.paddingXS} onClick={(e) => e.stopPropagation()}>
+          <Button type="default" size="small" onClick={() => openEdit(record.key)}>
             Edit
           </Button>
           <Popconfirm
@@ -455,7 +455,7 @@ export function HomeHubPage() {
             okButtonProps={{ danger: true }}
             onConfirm={() => handleDeleteProject(record.key)}
           >
-            <Button type="link" danger style={shellTableLinkButtonStyle}>
+            <Button type="default" size="small" danger>
               Delete
             </Button>
           </Popconfirm>

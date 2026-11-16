@@ -374,7 +374,7 @@ export function BomParsingReviewPage() {
             wrap="wrap"
             style={{
               paddingInline: token.paddingMD,
-              paddingBlock: token.paddingSM,
+              paddingBlock: token.padding,
               borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
               background: token.colorFillAlter,
             }}
@@ -450,7 +450,7 @@ export function BomParsingReviewPage() {
             align="center"
             style={{
               paddingInline: token.paddingMD,
-              paddingBlock: token.paddingSM,
+              paddingBlock: token.padding,
               borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
             }}
           >

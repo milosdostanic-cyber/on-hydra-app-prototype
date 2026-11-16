@@ -7,7 +7,7 @@ import type { HydraColorfulPreset } from '../ui/HydraTag';
 export const CONTENT_FILE_TYPE_TAG_VISIBLE_COUNT = 3;
 
 /**
- * `Tag__Colorful` presets from Part Search – RSFC, frame "Content file type tags" (11341:6250).
+ * `Tag__Colorful` presets from Hydra Ant Design – DS, Tag page → Patterns → "File type tags" (2463:177).
  * DWG uses `orange` because that component has no `red` variant.
  */
 export const CONTENT_FILE_TYPE_TAG_PRESET: Record<string, HydraColorfulPreset> = {

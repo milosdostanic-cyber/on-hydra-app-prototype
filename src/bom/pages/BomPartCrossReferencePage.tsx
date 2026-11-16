@@ -18,7 +18,7 @@ import {
   EmptyStateBlock,
   Empty,
   Flex,
-  INLINE_SEARCH_CONTROL_SIZE,
+  Pagination,
   Result,
   Select,
   Spin,
@@ -153,9 +153,11 @@ export function BomPartCrossReferencePage() {
       title: 'Action',
       key: 'action',
       align: 'right',
-      width: 140,
+      // UX-004: "View matches" link (≈85px, measured) + 16/16 cell padding; Description is the FILL column.
+      width: 124,
       render: (_, row) => (
         <Typography.Link
+          style={{ whiteSpace: 'nowrap' }}
           onClick={(event) => {
             event.stopPropagation();
             setOpenPart(row);
@@ -166,6 +168,12 @@ export function BomPartCrossReferencePage() {
       ),
     },
   ];
+
+  const showResults = phase === 'results' && submitted != null && results.length > 0;
+  /** UX-009: every non-data phase is a state card. */
+  const fillsHeight = !showResults;
+  const pageFrom = (page - 1) * PAGE_SIZE + 1;
+  const pageTo = Math.min(page * PAGE_SIZE, results.length);
 
   const renderBody = () => {
     if (phase === 'loading') {
@@ -219,31 +227,19 @@ export function BomPartCrossReferencePage() {
         );
       }
 
+      // UX-007: table edge to edge; the count lives in the toolbar and paging in the footer (below).
       return (
-        <Flex vertical gap={token.margin}>
-          <Flex justify="space-between" align="center" wrap="wrap" gap={token.marginXS}>
-            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseMedium)}>
-              {results.length} competitor part{results.length === 1 ? '' : 's'} match “{submitted.q}”
-              {submitted.category === ALL_CATEGORIES ? '' : ` in ${submitted.category}`}
-            </Typography.Text>
-            <Typography.Text type="secondary">Select a part to see its RSFC equivalents</Typography.Text>
-          </Flex>
-          <Table<CompetitorPart>
-            rowKey="sku"
-            size="large"
-            columns={columns}
-            dataSource={results}
-            onRow={(row) => ({ onClick: () => setOpenPart(row), style: { cursor: 'pointer' } })}
-            pagination={{
-              current: page,
-              pageSize: PAGE_SIZE,
-              onChange: setPage,
-              showSizeChanger: false,
-              hideOnSinglePage: true,
-              showTotal: (total, [from, to]) => `Showing ${from}–${to} of ${total}`,
-            }}
-          />
-        </Flex>
+        <Table<CompetitorPart>
+          rowKey="sku"
+          size="large"
+          columns={columns}
+          dataSource={results}
+          onRow={(row) => ({ onClick: () => setOpenPart(row), style: { cursor: 'pointer' } })}
+          onChange={(_pagination, _filters, _sorter, extra) => {
+            if (extra.action === 'sort') setPage(1);
+          }}
+          pagination={{ current: page, pageSize: PAGE_SIZE, position: ['none'] }}
+        />
       );
     }
 
@@ -266,23 +262,41 @@ export function BomPartCrossReferencePage() {
   };
 
   return (
-    <Flex vertical gap={token.marginLG} style={{ width: '100%' }}>
+    <Flex vertical gap={token.marginLG} style={{ width: '100%', flex: 1 }}>
       <BomPageHeader
         title="Part Cross-Reference"
         description="Find the RSFC equivalent for a competitor part. Search by figure number, SKU, description or keyword."
       />
 
+      {/* UX-007: card padding 0; toolbar (16/20) and footer (16/20) carry the spacing.
+          UX-009: while the card shows a state (start, loading, empty, error) it fills down to the page padding. */}
       <Card
         variant="borderless"
-        styles={{ body: { padding: token.paddingLG } }}
-        style={{ borderRadius: token.borderRadiusLG, boxShadow: token.boxShadowTertiary }}
+        styles={{
+          body: { padding: 0, ...(fillsHeight ? { flex: 1, display: 'flex', flexDirection: 'column' as const } : {}) },
+        }}
+        style={{
+          borderRadius: token.borderRadiusLG,
+          boxShadow: token.boxShadowTertiary,
+          overflow: 'hidden',
+          ...(fillsHeight ? { flex: 1, display: 'flex', flexDirection: 'column' as const } : {}),
+        }}
       >
-        <Flex vertical gap={token.marginMD}>
+        <Flex vertical style={fillsHeight ? { flex: 1 } : undefined}>
+          <Flex
+            vertical
+            gap={token.paddingSM}
+            style={{
+              paddingInline: token.paddingMD,
+              paddingBlock: token.padding,
+              borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+            }}
+          >
           {/* UX-001: 20px between independent controls; UX-005: Input + Search button, 8px gap. */}
-          <Flex gap={token.marginMD} align="center" wrap="wrap">
+          <Flex gap={token.paddingMD} align="center" wrap="wrap">
             <Select
               aria-label="Category"
-              size={INLINE_SEARCH_CONTROL_SIZE}
+              size="middle"
               value={category}
               onChange={onCategoryChange}
               options={CATEGORY_OPTIONS}
@@ -295,7 +309,7 @@ export function BomPartCrossReferencePage() {
             <Flex gap={token.paddingXS} align="center" style={{ flex: `1 1 ${token.controlHeight * 10}px`, minWidth: 0 }}>
               <AppSearchInput
                 aria-label="Search competitor parts"
-                size={INLINE_SEARCH_CONTROL_SIZE}
+                size="middle"
                 allowClear
                 placeholder="Search by figure number, SKU, description or keyword"
                 value={query}
@@ -303,13 +317,55 @@ export function BomPartCrossReferencePage() {
                 onPressEnter={() => runSearch(query, category)}
                 style={{ flex: 1 }}
               />
-              <Button type="primary" size={INLINE_SEARCH_CONTROL_SIZE} onClick={() => runSearch(query, category)}>
+              <Button type="primary" size="middle" onClick={() => runSearch(query, category)}>
                 Search
               </Button>
             </Flex>
           </Flex>
 
-          {renderBody()}
+          {showResults && submitted ? (
+            <Flex justify="space-between" align="center" wrap="wrap" gap={token.marginXS}>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseMedium)}>
+                {results.length} competitor part{results.length === 1 ? '' : 's'} match “{submitted.q}”
+                {submitted.category === ALL_CATEGORIES ? '' : ` in ${submitted.category}`}
+              </Typography.Text>
+              <Typography.Text type="secondary">Select a part to see its RSFC equivalents</Typography.Text>
+            </Flex>
+          ) : null}
+          </Flex>
+
+          {showResults ? (
+            <>
+              {renderBody()}
+              <Flex
+                justify="space-between"
+                align="center"
+                wrap="wrap"
+                gap={token.marginSM}
+                style={{
+                  paddingInline: token.paddingMD,
+                  paddingBlock: token.padding,
+                  borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+                }}
+              >
+                <Typography.Text type="secondary">
+                  Showing {pageFrom}–{pageTo} of {results.length}
+                </Typography.Text>
+                <Pagination
+                  current={page}
+                  pageSize={PAGE_SIZE}
+                  total={results.length}
+                  onChange={setPage}
+                  showSizeChanger={false}
+                  hideOnSinglePage
+                />
+              </Flex>
+            </>
+          ) : (
+            <Flex vertical justify="center" style={{ flex: 1, padding: token.paddingLG }}>
+              {renderBody()}
+            </Flex>
+          )}
         </Flex>
       </Card>
 

@@ -2,6 +2,7 @@ import {
   DeleteOutlined,
   ExclamationCircleOutlined,
   FileSearchOutlined,
+  MoreOutlined,
   PlusOutlined,
   SwapOutlined,
   UploadOutlined,
@@ -38,6 +39,7 @@ import {
   Card,
   Col,
   Descriptions,
+  Dropdown,
   Empty,
   Flex,
   Pagination,
@@ -61,6 +63,9 @@ const SORT_OPTIONS = [
   { value: 'desc', label: 'Last edited' },
   { value: 'asc', label: 'Last edited: oldest' },
 ];
+
+/** UX-004: "Edit" button + 8px gap + ⋯ button + 16/16 cell padding. */
+const BOM_PROJECTS_ACTIONS_COLUMN_WIDTH = 112;
 
 export function BomSiteProjectsPage() {
   const { token } = theme.useToken();
@@ -242,6 +247,16 @@ export function BomSiteProjectsPage() {
           </Flex>
         ),
       },
+      // UX-008: Status directly after the identity (name) column.
+      {
+        title: 'Status',
+        dataIndex: 'status',
+        key: 'status',
+        align: 'left',
+        render: (_status: BomProject['status'], row: BomProject) => (
+          <BomProjectStatusTag status={resolveBomProjectStatus(row.id)} />
+        ),
+      },
       {
         title: 'Last edited',
         dataIndex: 'lastEdited',
@@ -255,15 +270,6 @@ export function BomSiteProjectsPage() {
         align: 'center',
         sorter: (a, b) => a.items - b.items,
       },
-      {
-        title: 'Status',
-        dataIndex: 'status',
-        key: 'status',
-        align: 'left',
-        render: (_status: BomProject['status'], row: BomProject) => (
-          <BomProjectStatusTag status={resolveBomProjectStatus(row.id)} />
-        ),
-      },
     ];
 
     if (hasSelection) return base;
@@ -273,12 +279,15 @@ export function BomSiteProjectsPage() {
       {
         title: 'Actions',
         key: 'actions',
-        width: 150,
+        // UX-004: last column, header and cell right-aligned, 8px (`paddingXS`) between actions.
+        align: 'right',
+        width: BOM_PROJECTS_ACTIONS_COLUMN_WIDTH,
+        // Edit stays visible; Delete (destructive) goes into the ⋯ menu, which is always last.
         render: (_: unknown, row: BomProject) => (
-          <Space size={token.marginSM}>
+          <Flex gap={token.paddingXS} align="center" justify="flex-end">
             <Button
-              type="link"
-              style={tableLinkButtonStyle}
+              type="default"
+              size="small"
               onClick={(e) => {
                 e.stopPropagation();
                 navigate(`/bom/projects/${row.id}/workspace`);
@@ -286,23 +295,32 @@ export function BomSiteProjectsPage() {
             >
               Edit
             </Button>
-            <Button
-              type="link"
-              danger
-              style={tableLinkButtonStyle}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                openDeleteProjectModal(row);
+            <Dropdown
+              trigger={['click']}
+              placement="bottomRight"
+              menu={{
+                items: [
+                  {
+                    key: 'delete',
+                    label: 'Delete',
+                    danger: true,
+                    onClick: () => openDeleteProjectModal(row),
+                  },
+                ],
               }}
             >
-              Delete
-            </Button>
-          </Space>
+              <Button
+                size="small"
+                icon={<MoreOutlined />}
+                aria-label="More actions"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </Dropdown>
+          </Flex>
         ),
       },
     ];
-  }, [hasSelection, navigate, token.marginSM]);
+  }, [hasSelection, navigate, token.paddingXS]);
 
   const triggerUpload = () => fileInputRef.current?.click();
 
@@ -375,16 +393,17 @@ export function BomSiteProjectsPage() {
 
   const hasNoProjects = projectBoms.length === 0;
   const hasNoResults = !hasNoProjects && filteredProjects.length === 0;
+  const fillsHeight = hasNoProjects || hasNoResults;
 
   return (
     <>
       {/* Figma Content: gap 24; Container: gap 20; Projects Container: gap 12 */}
-      <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
+      <Flex vertical gap={token.marginLG} style={{ width: '100%', flex: 1 }}>
         <Space orientation="vertical" size={token.marginMD} style={{ width: '100%' }}>
           <BomPageHeader
             title="Get started"
             description="Upload files, search parts, or start from scratch to create your BOM"
-            descriptionVariant="large-strong"
+            entry
             actions={
               <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setCreateModalOpen(true)}>
                 New BOM Project
@@ -499,17 +518,27 @@ export function BomSiteProjectsPage() {
           </Row>
         </Space>
 
-        <Space orientation="vertical" size={token.marginSM} style={{ width: '100%' }}>
+        <Flex vertical gap={token.marginSM} style={{ width: '100%', flex: 1 }}>
           <BomPageHeader title="Your BOM Projects" />
 
-          <Card variant="borderless" styles={{ body: { padding: 0 } }} style={tableShellStyle}>
+          {/* UX-009: while the card shows a state (empty / no results) it fills down to the page padding. */}
+          <Card
+            variant="borderless"
+            styles={{
+              body: { padding: 0, ...(fillsHeight ? { flex: 1, display: 'flex', flexDirection: 'column' as const } : {}) },
+            }}
+            style={{
+              ...tableShellStyle,
+              ...(fillsHeight ? { flex: 1, display: 'flex', flexDirection: 'column' as const } : {}),
+            }}
+          >
             {hasNoProjects ? (
               /* ── Empty state: no BOMs in this project ── */
               <Flex
                 vertical
                 align="center"
                 justify="center"
-                style={{ padding: `${token.paddingLG * 3}px ${token.paddingLG}px` }}
+                style={{ flex: 1, padding: `${token.paddingLG * 3}px ${token.paddingLG}px` }}
               >
                 <Empty
                   description={
@@ -530,41 +559,12 @@ export function BomSiteProjectsPage() {
                   </Button>
                 </Empty>
               </Flex>
-            ) : hasNoResults ? (
-              /* ── Empty state: filter/search returned nothing ── */
-              <Flex
-                vertical
-                align="center"
-                justify="center"
-                style={{ padding: `${token.paddingLG * 3}px ${token.paddingLG}px` }}
-              >
-                <Empty
-                  description={
-                    <Space orientation="vertical" size={token.marginXS}>
-                      <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No projects match your filters</Typography.Text>
-                      <Typography.Text type="secondary">
-                        Try adjusting the search term or status filter.
-                      </Typography.Text>
-                    </Space>
-                  }
-                >
-                  <Button
-                    onClick={() => {
-                      setSearchText('');
-                      setStatusFilter('all');
-                      setProjectsPage(1);
-                    }}
-                  >
-                    Clear filters
-                  </Button>
-                </Empty>
-              </Flex>
             ) : (
-              <div>
+              <div style={fillsHeight ? { flex: 1, display: 'flex', flexDirection: 'column' } : undefined}>
                 <Flex
                   align="center"
                   justify="space-between"
-                  gap={token.marginSM}
+                  gap={token.paddingMD}
                   wrap="wrap"
                   style={{
                     paddingInline: token.paddingMD,
@@ -585,7 +585,8 @@ export function BomSiteProjectsPage() {
                       </Space>
                     </Flex>
                   ) : (
-                    <>
+                    // UX-001 / UX-007: search and filters in one left group, 20px (`paddingMD`) between independent controls.
+                    <Flex align="center" gap={token.paddingMD} wrap="wrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                       <AppSearchInput
                         size="middle"
                         placeholder="Search Items..."
@@ -597,7 +598,7 @@ export function BomSiteProjectsPage() {
                         allowClear
                         style={{ flex: '1 1 220px', maxWidth: 360, background: token.colorBgContainer }}
                       />
-                      <Flex gap={token.marginSM} wrap="wrap">
+                      <Flex gap={token.paddingMD} wrap="wrap">
                         <Select
                           value={statusFilter}
                           onChange={(v) => {
@@ -617,9 +618,40 @@ export function BomSiteProjectsPage() {
                           style={{ width: 200, background: token.colorBgContainer }}
                         />
                       </Flex>
-                    </>
+                    </Flex>
                   )}
                 </Flex>
+                {hasNoResults ? (
+                  /* UX-007: no-results keeps the same card and toolbar; only the table area becomes the state block. */
+                  <Flex
+                    vertical
+                    align="center"
+                    justify="center"
+                    style={{ flex: 1, padding: `${token.paddingLG * 3}px ${token.paddingLG}px` }}
+                  >
+                    <Empty
+                      description={
+                        <Space orientation="vertical" size={token.marginXS}>
+                          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseStrong)}>No projects match your filters</Typography.Text>
+                          <Typography.Text type="secondary">
+                            Try adjusting the search term or status filter.
+                          </Typography.Text>
+                        </Space>
+                      }
+                    >
+                      <Button
+                        onClick={() => {
+                          setSearchText('');
+                          setStatusFilter('all');
+                          setProjectsPage(1);
+                        }}
+                      >
+                        Clear filters
+                      </Button>
+                    </Empty>
+                  </Flex>
+                ) : (
+                <>
                 <Table<BomProject>
                   rowKey="id"
                   columns={columns}
@@ -643,7 +675,7 @@ export function BomSiteProjectsPage() {
                   align="center"
                   style={{
                     paddingInline: token.paddingMD,
-                    paddingBlock: token.paddingSM,
+                    paddingBlock: token.padding,
                     borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
                   }}
                 >
@@ -655,11 +687,13 @@ export function BomSiteProjectsPage() {
                     showSizeChanger={false}
                   />
                 </Flex>
+                </>
+                )}
               </div>
             )}
           </Card>
-        </Space>
-      </Space>
+        </Flex>
+      </Flex>
 
       <input
         ref={fileInputRef}

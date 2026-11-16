@@ -118,7 +118,8 @@ export function BomAscCatalogPartDetailPage() {
       align: 'center',
       render: (_, row) => (
         <Button
-          type="text"
+          type="default"
+          size="small"
           icon={<SwapOutlined />}
           aria-label={`Use ${row.sku} as replacement`}
           onClick={() => handleRowReplacement(row.variantId)}

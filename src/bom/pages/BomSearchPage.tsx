@@ -1,4 +1,3 @@
-import { SearchOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -55,15 +54,7 @@ export function BomSearchPage() {
   return (
     <Space orientation="vertical" size={token.marginLG} style={{ width: '100%' }}>
       <PageBackButton to={bomHubPath}>Back to BOM</PageBackButton>
-      <BomPageHeader
-        title={pageTitle}
-        description={pageDescription}
-        actions={
-          <Button type="primary" size="large" icon={<SearchOutlined />} onClick={runSearch}>
-            {mode === 'asc' ? 'Search catalog' : 'Find ASC match'}
-          </Button>
-        }
-      />
+      <BomPageHeader title={pageTitle} description={pageDescription} />
 
       <Card style={{ borderColor: token.colorBorderSecondary }}>
         <Space orientation="vertical" size={token.margin} style={{ width: '100%' }}>
@@ -80,19 +71,25 @@ export function BomSearchPage() {
             </Radio.Group>
           </Flex>
 
-          <AppSearchInput
-            allowClear
-            size={INLINE_SEARCH_CONTROL_SIZE}
-            placeholder={
-              mode === 'asc'
-                ? 'Example: FP7450 or standard response sprinkler'
-                : 'Example: 005 FireLock coupling 4 inch grooved'
-            }
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            onPressEnter={runSearch}
-            style={{ width: '100%', maxWidth: token.screenLG }}
-          />
+          {/* UX-005: Input + primary "Search" button, same size, 8px (`paddingXS`) gap. */}
+          <Flex align="center" gap={token.paddingXS} style={{ width: '100%', maxWidth: token.screenLG }}>
+            <AppSearchInput
+              allowClear
+              size={INLINE_SEARCH_CONTROL_SIZE}
+              placeholder={
+                mode === 'asc'
+                  ? 'Example: FP7450 or standard response sprinkler'
+                  : 'Example: 005 FireLock coupling 4 inch grooved'
+              }
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              onPressEnter={runSearch}
+              style={{ flex: 1 }}
+            />
+            <Button type="primary" size={INLINE_SEARCH_CONTROL_SIZE} onClick={runSearch}>
+              Search
+            </Button>
+          </Flex>
 
           <Typography.Text type="secondary">
             {mode === 'asc'

@@ -56,6 +56,9 @@ export function AppShell() {
 
   const showBreadcrumbHeader = true;
   const productCatalogFullBleed = isProjectProductCatalogPath(location.pathname);
+  // UX-009: BOM pages may stretch a state card to the bottom of the work area. Opt-in for `/bom` only,
+  // so every other module keeps the existing block layout.
+  const fillContentHeight = location.pathname === '/bom' || location.pathname.startsWith('/bom/');
 
   return (
     <Layout
@@ -110,12 +113,19 @@ export function AppShell() {
             borderRadius: 0,
             border: 'none',
             boxShadow: 'none',
+            ...(fillContentHeight ? { display: 'flex', flexDirection: 'column' as const } : {}),
           }}
         >
           {productCatalogFullBleed ? (
             <Outlet />
           ) : (
-            <div style={shellContentRailStyle}>
+            <div
+              style={
+                fillContentHeight
+                  ? { ...shellContentRailStyle, display: 'flex', flexDirection: 'column', flex: '1 0 auto' }
+                  : shellContentRailStyle
+              }
+            >
               <Outlet />
             </div>
           )}

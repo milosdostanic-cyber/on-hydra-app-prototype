@@ -113,11 +113,11 @@ export function BraceConfigurationStep() {
     {
       title: '',
       key: 'actions',
-      width: 110,
+      width: 120,
       render: (_, row, index) => (
         <Space size={token.marginXXS}>
           <Button
-            type="text"
+            type="default"
             size="small"
             icon={<ArrowUpOutlined />}
             disabled={index === 0}
@@ -125,7 +125,7 @@ export function BraceConfigurationStep() {
             onClick={() => moveSegment(row.id, 'up')}
           />
           <Button
-            type="text"
+            type="default"
             size="small"
             icon={<ArrowDownOutlined />}
             disabled={index === draft.segments.length - 1}
@@ -133,7 +133,7 @@ export function BraceConfigurationStep() {
             onClick={() => moveSegment(row.id, 'down')}
           />
           <Button
-            type="text"
+            type="default"
             size="small"
             danger
             icon={<DeleteOutlined />}

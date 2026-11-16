@@ -96,15 +96,15 @@ export function buildBomWorkspaceColumns(actions: BomWorkspaceRowActions): Table
     columns.push({
       title: 'Actions',
       key: 'actions',
+      align: 'right',
       width: bomWorkspaceTableColumnWidths.actions,
       render: (_, row) => (
         <Button
-          type="link"
+          type="default"
           danger
           size="small"
           icon={<DeleteOutlined />}
           onClick={() => actions.onDelete(row)}
-          style={{ padding: 0 }}
         >
           Delete
         </Button>

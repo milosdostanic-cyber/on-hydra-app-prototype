@@ -178,20 +178,20 @@ export function BraceTable({
       width: 150,
       render: (_, row) => (
         <Space size={token.marginXS}>
-          <Button type="link" style={{ padding: 0, height: 'auto' }} onClick={() => onEditBrace(row)}>
+          <Button type="default" size="small" onClick={() => onEditBrace(row)}>
             Edit
           </Button>
           <Button
-            type="link"
-            style={{ padding: 0, height: 'auto' }}
+            type="default"
+            size="small"
             icon={<CopyOutlined />}
             aria-label="Copy brace"
             onClick={() => setBraceToCopy(row)}
           />
           <Button
-            type="link"
+            type="default"
+            size="small"
             danger
-            style={{ padding: 0, height: 'auto' }}
             icon={<DeleteOutlined />}
             aria-label="Delete brace"
             onClick={() => confirmDelete(row)}

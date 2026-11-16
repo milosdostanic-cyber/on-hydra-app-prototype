@@ -10,7 +10,8 @@ export function BomLayout() {
 
   return (
     <BomImportFlowProvider>
-      <div style={{ width: '100%' }}>
+      {/* UX-009: flex column that grows with the work area, so a page can stretch a state card. */}
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', flex: '1 0 auto' }}>
         <Outlet />
       </div>
     </BomImportFlowProvider>

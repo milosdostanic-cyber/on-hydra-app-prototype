@@ -1,6 +1,12 @@
 import type { ReactNode } from 'react';
 
-import { hydraTextStyleToReactCss, hydraTitleHeading3, hydraTitleHeading4 } from '../../theme/hydraTypography';
+import {
+  hydraLargeNormal,
+  hydraTextStyleToReactCss,
+  hydraTitleHeading2,
+  hydraTitleHeading3,
+  hydraTitleHeading4,
+} from '../../theme/hydraTypography';
 import { pageDescriptionStyle } from '../../shell/pageDescriptionStyle';
 import { Flex, Space, Typography, theme } from '../../ui/antd';
 
@@ -20,6 +26,11 @@ type Props = {
   actions?: ReactNode;
   /** Inline control beside the title (e.g. workspace edit icon — Figma `5080:16558`). */
   titleAddon?: ReactNode;
+  /**
+   * UX-003 module entry page title: `Title/Heading 2` in `colorText`, description `Large/Normal` in
+   * `colorTextDescription`, `paddingXXS` gap. Overrides `titleVariant` and `descriptionVariant`.
+   */
+  entry?: boolean;
 };
 
 /** Page-level BOM headlines — Figma `Title/Heading 3` (24/32) on every screen of equal importance. */
@@ -31,13 +42,25 @@ export function BomPageHeader({
   titleVariant = 'heading3',
   actions,
   titleAddon,
+  entry = false,
 }: Props) {
   const { token } = theme.useToken();
-  const titleTypography = titleVariant === 'heading3' ? hydraTitleHeading3 : hydraTitleHeading4;
-  const titleLevel = titleVariant === 'heading3' ? 3 : 4;
+  const titleTypography = entry
+    ? hydraTitleHeading2
+    : titleVariant === 'heading3'
+      ? hydraTitleHeading3
+      : hydraTitleHeading4;
+  const titleLevel = entry ? 2 : titleVariant === 'heading3' ? 3 : 4;
+  const descriptionStyle = entry
+    ? { margin: 0, color: token.colorTextDescription, ...hydraTextStyleToReactCss(hydraLargeNormal) }
+    : pageDescriptionStyle(token, descriptionVariant);
 
   const titleStack = (
-    <Space orientation="vertical" size={token.marginXS} style={{ minWidth: 0, width: actions ? undefined : '100%' }}>
+    <Space
+      orientation="vertical"
+      size={entry ? token.paddingXXS : token.marginXS}
+      style={{ minWidth: 0, width: actions ? undefined : '100%' }}
+    >
       {eyebrow ? (
         <Typography.Text style={{ display: 'block', ...pageDescriptionStyle(token) }}>{eyebrow}</Typography.Text>
       ) : null}
@@ -46,6 +69,7 @@ export function BomPageHeader({
           level={titleLevel}
           style={{
             margin: 0,
+            ...(entry ? { color: token.colorText } : {}),
             ...hydraTextStyleToReactCss(titleTypography),
           }}
         >
@@ -54,7 +78,7 @@ export function BomPageHeader({
         {titleAddon}
       </Flex>
       {description ? (
-        <Typography.Text style={{ display: 'block', ...pageDescriptionStyle(token, descriptionVariant) }}>
+        <Typography.Text style={{ display: 'block', ...descriptionStyle }}>
           {description}
         </Typography.Text>
       ) : null}

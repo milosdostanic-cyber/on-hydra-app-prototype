@@ -132,7 +132,7 @@ export function SpecSubmittalsPage() {
       render: (_, row) =>
         editable && row.status === 'open' ? (
           <Button
-            type="link"
+            type="default"
             size="small"
             onClick={() => {
               if (packages.length === 0) {
