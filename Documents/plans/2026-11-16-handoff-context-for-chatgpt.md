@@ -801,3 +801,11 @@ Milos asked to fix the three repo bugs and to add "Back to BOM" to Variation A a
 - Verified with the browser (DOM measurements and screenshot) and Figma screenshots of A2, A3, A4. Type check passes. Not committed.
 - Still open: Variation B still shows "Feature Access Limit" in the sidebar and is not aligned to the repo otherwise.
 
+
+### 15.32 Local main merged into the branch (17 Nov 2026)
+
+Milos asked to merge `main` into `feat/variant-modal-sidebar-layout` locally.
+- Local WIP committed first (`bdd1607`), then `main` merged (`b5b2bfe`). `main` is now an ancestor of the branch; nothing from `main` is missing.
+- Five add/add conflicts (`SKILL.md`, `code-audit.md`, `PartCrossReferenceMatchModal.tsx`, `partCrossReferenceData.ts`, `BomPartCrossReferencePage.tsx`). Resolved by keeping the branch version: `main` (PR #14 UX skill, PR #15 demo sync) held older snapshots, identical to earlier commits of this branch (`5db4b42`, `a977f94`).
+- The merge changes no file content against the branch, so nothing needed re-testing. Not pushed.
+- Still open: push is not done, and PR #16 to the team repo was not re-checked after this merge.
