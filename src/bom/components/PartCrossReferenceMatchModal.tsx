@@ -1,33 +1,23 @@
-import { CopyOutlined, FilePdfOutlined, LinkOutlined, PictureOutlined } from '@ant-design/icons';
+import { CopyOutlined, FilePdfOutlined, LinkOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { MatchTypeTag, OriginTag, PartPhoto } from './PartCrossReferenceCard';
 import {
+  rsfcPimAttributes,
   sortEquivalents,
   type CompetitorPart,
   type RsfcEquivalent,
   type RsfcOrigin,
 } from '../data/partCrossReferenceData';
+import { sizeLabel } from '../data/pimDisplayMapping';
 import {
   hydraBaseMedium,
-  hydraBaseNormal,
+  hydraSmallNormal,
   hydraTextStyleToReactCss,
   hydraTitleHeading5,
 } from '../../theme/hydraTypography';
-import { HydraColorfulTag } from '../../ui/HydraTag';
-import {
-  Alert,
-  Avatar,
-  Button,
-  Card,
-  Descriptions,
-  Flex,
-  Modal,
-  Segmented,
-  Typography,
-  message,
-  theme,
-} from '../../ui/antd';
+import { Alert, Button, Flex, Modal, Segmented, Typography, message, theme } from '../../ui/antd';
 
 type OriginFilter = 'all' | RsfcOrigin;
 
@@ -36,7 +26,21 @@ type Props = {
   onClose: () => void;
 };
 
-/** Figma BOM - RSFC 1.4–1.6 — competitor part on the left, RSFC equivalents (best match first) on the right. */
+/** Modal width: 232 px competitor panel + the match list. Narrowed from 880 px on 17 Nov 2026 (Milos). */
+const MODAL_WIDTH = 760;
+const COMPETITOR_PANEL = 232;
+const PHOTO = 72;
+
+function meta(...parts: Array<string | undefined>): string {
+  return parts.filter(Boolean).join(' · ');
+}
+
+/**
+ * Match details, version 1 (chosen 17 Nov 2026): today's two-column layout in the part card language.
+ * Content and functions unchanged, as Matt asked (BOM-431): competitor part on the left; RSFC parts best first on the
+ * right with origin filter, copy SKU, View product, Submittal PDF and warnings. Adds real photos, bordered tags and
+ * the card meta line. Empty values are hidden (PIM display mapping), so no "Not specified".
+ */
 export function PartCrossReferenceMatchModal({ part, onClose }: Props) {
   const { token } = theme.useToken();
   const [origin, setOrigin] = useState<OriginFilter>('all');
@@ -48,15 +52,23 @@ export function PartCrossReferenceMatchModal({ part, onClose }: Props) {
   const equivalents = useMemo(() => (part ? sortEquivalents(part.equivalents) : []), [part]);
   const visible = origin === 'all' ? equivalents : equivalents.filter((e) => e.origin === origin);
   const countFor = (o: RsfcOrigin) => equivalents.filter((e) => e.origin === o).length;
+  const small = hydraTextStyleToReactCss(hydraSmallNormal);
 
-  const labelStyle = { color: token.colorTextDescription, ...hydraTextStyleToReactCss(hydraBaseNormal) };
+  const attributes = part
+    ? ([
+        ['Brand', part.brand],
+        ['Figure', part.figure],
+        ['Size', part.size ? sizeLabel(part.size) : undefined],
+        ['Material', part.material],
+      ].filter(([, value]) => Boolean(value)) as Array<[string, string]>)
+    : [];
 
   return (
     <Modal
       open={part !== null}
       onCancel={onClose}
       title={part ? `Match details · ${part.sku}` : undefined}
-      width={token.screenLG}
+      width={MODAL_WIDTH}
       destroyOnHidden
       footer={
         <Button type="primary" onClick={onClose}>
@@ -65,52 +77,70 @@ export function PartCrossReferenceMatchModal({ part, onClose }: Props) {
       }
     >
       {part ? (
-        <Flex gap={token.marginLG} align="flex-start" wrap="wrap" style={{ paddingBlock: token.paddingXS }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: `${COMPETITOR_PANEL}px minmax(0, 1fr)`,
+            gap: token.marginLG,
+            alignItems: 'start',
+            paddingBlock: token.paddingXS,
+          }}
+        >
+          {/* Competitor part: label → identity (SKU + name) → hairline → attributes */}
           <Flex
             vertical
             gap={token.marginXS}
+            aria-label="Competitor part"
             style={{
-              flex: `0 0 ${token.controlHeight * 9}px`,
-              padding: token.padding,
-              background: token.colorFillQuaternary,
+              padding: token.paddingSM,
+              background: token.colorFillAlter,
+              border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
               borderRadius: token.borderRadiusLG,
             }}
           >
-            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseMedium)}>Competitor part</Typography.Text>
-            <Descriptions
-              column={1}
-              size="small"
-              colon={false}
-              styles={{ label: { ...labelStyle, width: token.controlHeight * 3 }, content: hydraTextStyleToReactCss(hydraBaseNormal) }}
-              items={[
-                { key: 'description', label: 'Description', children: part.description },
-                { key: 'brand', label: 'Brand', children: part.brand },
-                { key: 'sku', label: 'SKU', children: part.sku },
-                { key: 'figure', label: 'Figure No.', children: part.figure },
-                { key: 'size', label: 'Size', children: part.size },
-                {
-                  key: 'material',
-                  label: 'Material',
-                  children: part.material ?? <Typography.Text type="secondary">Not specified</Typography.Text>,
-                },
-              ]}
-            />
+            <Typography.Text type="secondary" style={small}>
+              Competitor part
+            </Typography.Text>
+            <Flex
+              vertical
+              gap={token.marginXXS}
+              style={{
+                paddingBottom: token.padding,
+                borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+              }}
+            >
+              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseMedium)}>{part.sku}</Typography.Text>
+              <Typography.Text type="secondary" style={{ overflowWrap: 'anywhere' }}>
+                {part.description}
+              </Typography.Text>
+            </Flex>
+            <dl
+              style={{
+                display: 'grid',
+                gridTemplateColumns: `${token.controlHeight * 2}px minmax(0, 1fr)`,
+                gap: `${token.marginXS}px ${token.marginSM}px`,
+                margin: 0,
+                paddingTop: token.marginXS,
+              }}
+            >
+              {attributes.map(([label, value]) => (
+                <div key={label} style={{ display: 'contents' }}>
+                  <dt style={{ color: token.colorTextTertiary }}>{label}</dt>
+                  <dd style={{ margin: 0, minWidth: 0, overflowWrap: 'anywhere' }}>{value}</dd>
+                </div>
+              ))}
+            </dl>
           </Flex>
 
-          <Flex vertical gap={token.margin} style={{ flex: '1 1 0', minWidth: token.screenXS }}>
+          {/* RSFC parts, best first */}
+          <Flex vertical gap={token.margin} style={{ minWidth: 0 }}>
             <Flex justify="space-between" align="center" gap={token.marginSM} wrap="wrap">
-              <Flex vertical gap={token.marginXXS}>
-                <Typography.Title level={5} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading5) }}>
-                  {equivalents.length} RSFC equivalent{equivalents.length === 1 ? '' : 's'}
-                </Typography.Title>
-                <Typography.Text type="secondary">
-                  {equivalents.length > 1
-                    ? 'Best match first. Filter by product origin.'
-                    : 'Only one equivalent is available for this part.'}
-                </Typography.Text>
-              </Flex>
+              <Typography.Title level={5} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading5) }}>
+                {equivalents.length} RSFC match{equivalents.length === 1 ? '' : 'es'}
+              </Typography.Title>
               {equivalents.length > 1 ? (
                 <Segmented<OriginFilter>
+                  aria-label="Origin"
                   value={origin}
                   onChange={setOrigin}
                   options={[
@@ -123,68 +153,72 @@ export function PartCrossReferenceMatchModal({ part, onClose }: Props) {
             </Flex>
 
             <Flex vertical gap={token.marginSM}>
-              {visible.map((equivalent) => (
-                <EquivalentCard key={equivalent.sku} equivalent={equivalent} onNavigate={onClose} />
+              {visible.map((equivalent, index) => (
+                <MatchRow
+                  key={equivalent.sku}
+                  part={part}
+                  equivalent={equivalent}
+                  best={index === 0 && origin === 'all' && equivalents.length > 1}
+                  onNavigate={onClose}
+                />
               ))}
             </Flex>
           </Flex>
-        </Flex>
+        </div>
       ) : null}
     </Modal>
   );
 }
 
-function EquivalentCard({ equivalent, onNavigate }: { equivalent: RsfcEquivalent; onNavigate: () => void }) {
+/** One RSFC part, card language: 72 px photo beside tags / name / meta, then SKU with copy and the links. */
+function MatchRow({
+  part,
+  equivalent,
+  best,
+  onNavigate,
+}: {
+  part: CompetitorPart;
+  equivalent: RsfcEquivalent;
+  best: boolean;
+  onNavigate: () => void;
+}) {
   const { token } = theme.useToken();
   const navigate = useNavigate();
+  const small = hydraTextStyleToReactCss(hydraSmallNormal);
+  const material = rsfcPimAttributes(part, equivalent).material;
 
   return (
-    <Card size="small" styles={{ body: { padding: token.padding } }} style={{ borderColor: token.colorBorderSecondary }}>
-      <Flex gap={token.margin} align="flex-start">
-        <Avatar shape="square" size={token.controlHeightLG * 1.6} icon={<PictureOutlined />} alt="" />
-        <Flex vertical gap={token.marginXS} style={{ flex: 1, minWidth: 0 }}>
-          <Flex gap={token.marginXS} wrap="wrap">
-            <HydraColorfulTag preset={equivalent.matchType === 'Exact match' ? 'green' : 'gold'}>
-              {equivalent.matchType}
-            </HydraColorfulTag>
-            <HydraColorfulTag preset={equivalent.origin === 'Domestic' ? 'blue' : 'purple'}>
-              {equivalent.origin}
-            </HydraColorfulTag>
+    <Flex
+      vertical
+      gap={token.marginSM}
+      style={{
+        padding: token.paddingSM,
+        background: token.colorBgContainer,
+        border: `${token.lineWidth}px ${token.lineType} ${best ? token.colorPrimaryBorder : token.colorBorderSecondary}`,
+        borderRadius: token.borderRadiusLG,
+        boxShadow: token.boxShadowTertiary,
+      }}
+    >
+      <Flex gap={token.marginSM} align="center" style={{ minWidth: 0 }}>
+        <PartPhoto name={equivalent.name} size={PHOTO} />
+        <Flex vertical justify="space-between" style={{ flex: 1, minWidth: 0, height: PHOTO }}>
+          <Flex gap={token.marginXXS} wrap="wrap">
+            <MatchTypeTag type={equivalent.matchType} />
+            <OriginTag origin={equivalent.origin} />
           </Flex>
-          <Flex vertical gap={token.marginXXS}>
-            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseMedium)}>{equivalent.name}</Typography.Text>
-            <Typography.Text type="secondary">
-              {equivalent.brand} · Fig. {equivalent.figure} · Size {equivalent.size}
-            </Typography.Text>
-          </Flex>
-          <Flex gap={token.margin} wrap="wrap">
-            <Button
-              type="link"
-              size="small"
-              icon={<LinkOutlined />}
-              style={{ paddingInline: 0 }}
-              onClick={() => {
-                onNavigate();
-                navigate(`/search/results?q=${encodeURIComponent(equivalent.sku)}`);
-              }}
-            >
-              View product
-            </Button>
-            {equivalent.hasSubmittalPdf ? (
-              <Button
-                type="link"
-                size="small"
-                icon={<FilePdfOutlined />}
-                style={{ paddingInline: 0 }}
-                onClick={() => message.info('Submittal PDFs open from the product page in the live app.')}
-              >
-                Submittal PDF
-              </Button>
-            ) : null}
-          </Flex>
-          {equivalent.note ? <Alert type="warning" showIcon title={equivalent.note} /> : null}
+          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseMedium)} ellipsis={{ tooltip: equivalent.name }}>
+            {equivalent.name}
+          </Typography.Text>
+          <Typography.Text type="secondary" ellipsis style={small}>
+            {meta(equivalent.brand, `Fig. ${equivalent.figure}`, `Size ${sizeLabel(equivalent.size)}`, material)}
+          </Typography.Text>
         </Flex>
-        <Flex align="center" gap={token.marginXXS} style={{ flexShrink: 0 }}>
+      </Flex>
+
+      {equivalent.note ? <Alert type="warning" showIcon title={equivalent.note} /> : null}
+
+      <Flex justify="space-between" align="center" gap={token.marginSM} wrap="wrap">
+        <Flex align="center" gap={token.marginXXS}>
           <Typography.Text type="secondary">SKU</Typography.Text>
           <Typography.Text
             style={hydraTextStyleToReactCss(hydraBaseMedium)}
@@ -198,7 +232,32 @@ function EquivalentCard({ equivalent, onNavigate }: { equivalent: RsfcEquivalent
             {equivalent.sku}
           </Typography.Text>
         </Flex>
+        <Flex gap={token.margin} wrap="wrap">
+          <Button
+            type="link"
+            size="small"
+            icon={<LinkOutlined />}
+            style={{ paddingInline: 0 }}
+            onClick={() => {
+              onNavigate();
+              navigate(`/search/results?q=${encodeURIComponent(equivalent.sku)}`);
+            }}
+          >
+            View product
+          </Button>
+          {equivalent.hasSubmittalPdf ? (
+            <Button
+              type="link"
+              size="small"
+              icon={<FilePdfOutlined />}
+              style={{ paddingInline: 0 }}
+              onClick={() => message.info('Submittal PDFs open from the product page in the live app.')}
+            >
+              Submittal PDF
+            </Button>
+          ) : null}
+        </Flex>
       </Flex>
-    </Card>
+    </Flex>
   );
 }

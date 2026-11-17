@@ -19,7 +19,7 @@ for **all approved rules**: "fix everything", "change everything according to th
 
 ## 1. Read before checking (mandatory)
 
-1. Open **every** file in `rules/UX-001.md` to `UX-013.md` in full, every time, even if you read
+1. Open **every** file in `rules/UX-001.md` to `UX-014.md` in full, every time, even if you read
    them earlier in the conversation. Rule files change (see each Status log, dated entries).
    Never work from a remembered or summarised version of a rule.
 2. From each rule's **Spec table**, make one checklist item **per row** (Size, Gap, Padding,
@@ -66,6 +66,7 @@ not a pass.
 | UX-011 | Counts and tags | Counts are plain text, never a `Tag`; match quality uses the status tag; colourful tags only for Type and file type |
 | UX-012 | Sub-page header | Default `Button` with `ArrowLeftOutlined`, label "Back to" plus the parent page name, first in the content, 24 (`paddingLG`) above the title. Entry pages and pages opened from the sidebar: N/A |
 | UX-013 | Tags, badges, colours | Record status = antd `<Badge status text />`, left aligned, never a `Tag`; match quality = status tag; Type and file type = `HydraColorfulTag` with the preset from the rule's tables (file types only through `ContentFileTypeTags` / `contentFileTypeTagPreset`); roles = neutral `HydraTag`; everything else plain text; file type cells max 3 tags plus `+X` with a light `Tooltip` |
+| UX-014 | Modals | antd `Modal` from `src/ui/antd`, body in its own component (for example `PartCrossReferenceMatchModal`); width from the body; no hand-built overlay or fixed-position dialog |
 
 Gotchas already hit in this repo:
 
@@ -101,7 +102,7 @@ Also take a screenshot of each state and look at it. Numbers can pass while the 
 
 ## 5. Coverage matrix (required in the report)
 
-Build one table: rows = screens/states/inner screens, columns = UX-001 to UX-013. **No empty cell.**
+Build one table: rows = screens/states/inner screens, columns = UX-001 to UX-014. **No empty cell.**
 Each cell is one of: `OK`, `Fixed`, `N/A (reason)`, `Needs review (reason)`.
 
 Close the pass only when:

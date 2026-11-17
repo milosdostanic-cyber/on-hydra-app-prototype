@@ -19,6 +19,7 @@ import {
 } from '../data/partCrossReferenceData';
 import { PIM_FILTER_LABELS, endConnectionLabel, sizeLabel } from '../data/pimDisplayMapping';
 import { BomPageHeader } from '../layout/BomPageHeader';
+import { PageBackButton } from '../../shell/PageBackButton';
 import {
   AppSearchInput,
   Button,
@@ -111,10 +112,19 @@ export function BomPartCrossReferencePage() {
       setFitHeight(Math.max(area.clientHeight - offset - bottom, token.controlHeight * 15));
     };
     fit();
+    // The header above can still change height after the first paint (fonts, breadcrumb), which moves this page
+    // down without resizing `main`. Measure again once fonts are ready and on the next frames.
+    let frame = requestAnimationFrame(() => {
+      fit();
+      frame = requestAnimationFrame(fit);
+    });
+    void document.fonts?.ready.then(fit);
     const observer = new ResizeObserver(fit);
     if (area) observer.observe(area);
+    if (root?.parentElement) observer.observe(root.parentElement);
     window.addEventListener('resize', fit);
     return () => {
+      cancelAnimationFrame(frame);
       observer.disconnect();
       window.removeEventListener('resize', fit);
     };
@@ -217,6 +227,17 @@ export function BomPartCrossReferencePage() {
   const from = (page - 1) * PAGE_SIZE;
   const to = Math.min(page * PAGE_SIZE, total);
   const showResults = phase === 'results' && submitted != null && total > 0;
+  // The "no parts match these filters" message is only right when the filters are the cause. If the search or category
+  // alone finds nothing, the search message below is the honest one (filter values with 0 results are disabled, so the
+  // filters alone can only empty the list after the search or category changed).
+  const filtersCauseEmpty = useMemo(() => {
+    if (!submitted || filterCount === 0) return false;
+    const unfiltered =
+      submitted.direction === 'rsfc'
+        ? listRsfcParts(submitted.q, submitted.category, EMPTY_CROSS_REFERENCE_FILTERS)
+        : listCompetitorParts(submitted.q, submitted.category, EMPTY_CROSS_REFERENCE_FILTERS);
+    return unfiltered.length > 0;
+  }, [filterCount, submitted]);
   const noun = submitted?.direction === 'rsfc' ? 'RSFC part' : 'competitor part';
 
   const removeFilter = (key: keyof CrossReferenceFilters, value: string) => {
@@ -281,7 +302,7 @@ export function BomPartCrossReferencePage() {
     }
 
     if (phase === 'results' && submitted) {
-      if (filterCount > 0) {
+      if (filtersCauseEmpty) {
         return (
           <EmptyStateBlock
             title="No parts match these filters"
@@ -333,6 +354,9 @@ export function BomPartCrossReferencePage() {
 
   return (
     <Flex ref={rootRef} vertical gap={token.marginLG} style={{ width: '100%', ...(fitHeight ? { flex: '0 0 auto', height: fitHeight } : { flex: 1 }), minHeight: 0 }}>
+      {/* UX-012: sub-page of the BOM hub, so it starts with the back button, 24 px above the title. */}
+      <PageBackButton to="/bom">Back to BOM</PageBackButton>
+
       <BomPageHeader
         title="Part Cross-Reference"
         description="Find RSFC equivalents for a competitor part, or see which competitor parts match an RSFC part."
@@ -343,6 +367,7 @@ export function BomPartCrossReferencePage() {
           value={filters}
           onChange={changeFilters}
           onClear={clearFilters}
+          fitHeight={fitHeight}
           countFor={
             submitted
               ? (key, value) => countForFilterValue(submitted.direction, submitted.q, submitted.category, filters, key, value)

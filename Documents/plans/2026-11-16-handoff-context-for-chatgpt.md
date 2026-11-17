@@ -430,9 +430,11 @@ Why these three topics: priorities are the shared meeting action; the service bl
 - [ ] Get PR #16 reviewed and merged; run the `hydra-ux-audit` pass on the new page.
 - [ ] Share the concepts with Matt by Wed 18 Nov and ask which concept to take forward; comment on BOM-431 with the Figma link and a short summary.
 - [x] Prototype filters now follow Sofija's mapping (section 15.9). Values are still samples.
-- [ ] Update the Figma filter panels to the mapping: remove "Pressure rating" (no PIM data), use Product type, Size, End connection, Material, Certifications, Brand (section 15.9).
+- [x] Update the Figma filter panels to the mapping (Variation A done 17 Nov, section 15.27): Product type, Size, End connection, Material, Certifications, Brand.
 - [ ] If the removable grey filter tag is kept, add it to the Hydra DS Figma file (section 15.16).
 - [ ] Decide whether the Figma concepts should be updated to the distilled card and filter version 2 from the repo (sections 15.11 and 15.15).
+- [x] Figma Variation A matches localhost 1:1 (17 Nov, section 15.27).
+- [ ] Fix or accept the repo issues found in the 1:1 check (section 15.27): flyout jumps after a value is checked, open panel can flash on load, "No parts match these filters" can't be reached.
 - [ ] Create the Jira tickets for the agreed priorities (Wednesday).
 - [ ] Then: CRM iframe version; James's review; e-commerce discovery; service blueprint today → working session with James → future state; prototypes.
 - [ ] Optional: copy Matt's Discord feedback into BOM-431.
@@ -644,3 +646,158 @@ Still open: `hydra-ux-audit` pass, PR to the team repo, Figma filter panels and 
 ### 15.18 Pull request to the team repo (17 Nov 2026)
 
 [PR #16](https://github.com/ooden-tech/on-hydra-app-prototype/pull/16) into `ooden-tech/on-hydra-app-prototype` `main`. The fork branch could not be used directly: its history differs from team `main` (PR #15 was a synced copy), so a direct PR would show 3,680 changed files and conflicts in the two Part Cross-Reference files. Instead a clean branch `feat/part-cross-reference-v2` was cut from team `main` (`ce699c6`) with only `BomPartCrossReferencePage.tsx`, `partCrossReferenceData.ts`, `PartCrossReferenceCard.tsx`, `PartCrossReferenceFilters.tsx`, `AppliedFilterTag.tsx`, `pimDisplayMapping.ts` and the PIM mapping doc. All other files the page uses were already identical in team `main`. `tsc` and `vite build` pass on that branch. The handoff, plans and messages stay on Milos's fork only. SSH to the team repo failed (host key); HTTPS with `gh` credentials works.
+
+### 15.19 Cards reverted to the soft block, modal options (17 Nov 2026)
+
+- **Cards (Milos):** the distilled cards (15.15) were reverted to the earlier design with the grey "Best RSFC match" block and the footer button, keeping one improvement: no "+1 more match" text; the button carries the count ("View 2 matches" / "View match"). Label "Best RSFC match" (or "RSFC match" when there is one). RSFC → competitor card keeps the 80 px photo row and uses "Best competitor match" / "Competitor match". Competitor card height 226 px at 1750 px. Built and checked in the browser; **not committed**. PR #16 still contains the distilled cards, so it needs this change too if it stays.
+- **Match details modal, three options (Impeccable "shape"):** artifact https://claude.ai/artifact/UXsefMdBo2eEv6a9kjFEfp (private until shared). All keep today's content and functions, because Matt asked to keep the modal: competitor part, RSFC parts best first, origin filter, copy SKU, View product, Submittal PDF, warnings. Each adds real product photos, bordered tags and the card meta line; empty values are hidden.
+  1. Two columns, card language (880 px wide): today's layout, RSFC parts as photo rows.
+  2. Best match first (720 px): competitor in a slim strip, best RSFC part large with details and buttons, others as short rows.
+  3. Side-by-side comparison (width grows with the number of matches, up to 1080 px): attributes in rows, "same" / "differs" marked.
+  Three sample parts in the artifact: 2 matches, 1 match with the pressure warning, a coupling. Logic checked with Node for all 9 combinations. No option picked yet.
+- **Modal version 1, competitor panel polished (Impeccable "polish"):** removed the meta line under the SKU (it repeated Brand, Figure and Size from the list). SKU and description now form one tight identity group (4 px apart), a hairline separates it from the attributes, attribute rows are 8 px apart with a 64 px label column. Republished to the same artifact link.
+- **Modal version 1 built in the repo (Milos, 17 Nov), not committed:** `src/bom/components/PartCrossReferenceMatchModal.tsx` rewritten. Same content and functions (origin filter, copy SKU, View product, Submittal PDF, warnings). Two columns: 232 px competitor panel (label, SKU + name, hairline, Brand / Figure / Size / Material; empty values hidden), RSFC parts as card-language rows with a 72 px photo, bordered tags and a meta line, the best one with a primary border when there are several. Modal is 760 px wide (narrowed from 880 px at Milos's request). `PartPhoto` is exported from `PartCrossReferenceCard.tsx` and reused. Verified in the browser: photo and text edges aligned (0 px), nothing cut off; `npm run build` passes.
+- **Rule from Milos (17 Nov): do not use the 12 px spacing token** (`marginSM` / `paddingSM`). Use 4, 8, 16 or 20 px steps. Applied in the modal. The cards, filter panel and artifacts still use 12 px in places; to be changed if Milos wants it everywhere.
+- **12 px token, correction (Milos, 17 Nov):** the 12 px spacing token was briefly removed from the cards, filter panel and page, then put back exactly where it was (`marginSM` / `paddingSM`: card padding and gaps, grey block padding, photo gaps, skeleton cards, filter size-column gap and flyout padding, footer gap). The match details modal stays without 12 px (it uses 4, 8, 16 and 20 px). So the rule is: no 12 px in the modal; elsewhere keep what was already there.
+- **Padding inside backgrounds (Milos, 17 Nov): must be the same everywhere in the cards.** Measured in the browser: part cards use 12 px on all four sides for both the card body and the grey "Best RSFC match" block (consistent). The match details modal uses 16 px for the competitor panel and for every RSFC match row (consistent inside the modal, but different from the part cards, because 12 px is not used in the modal). Open question for Milos: make the modal 12 px like the cards, or move the cards to 16 px.
+- **Page height fix:** the page height could stay stale on first load (528 px instead of 784 px) when the header above changed size after the first paint. It is now measured again after fonts load and on the next frames; verified three times at 1750 × 970: the page does not scroll and the footer sits at 925 px.
+- **Padding decision (Milos, 17 Nov): 12 px in the modal too.** The modal backgrounds (competitor panel and RSFC match rows) now use 12 px on all sides, the same as the part cards, and the 12 px gaps are back. The "no 12 px in the modal" rule is cancelled. Rule now: padding inside any background is 12 px in the cards and in the modal.
+- **Question from Milos: is the "View matches" button on the cards redundant?** The whole card already opens the modal, so for mouse users the button adds nothing except the count and a visible hint. Option: remove the button, put the count in the grey block label ("Best of 2 RSFC matches"), make the card focusable (role button, Enter/Space) for keyboard users; saves about 32 px of height per card. Not decided.
+
+### 15.20 "View matches" button removed from the cards (17 Nov 2026)
+
+Milos chose to remove the footer button. The whole card is now the one action: `role="button"`, focusable (`tabIndex` 0), Enter or Space opens the match details, and hover and focus show the primary border. The match count moved into the grey block label: "Best of 2 matches", or "Only match" when there is one (same wording in the RSFC → competitor card). A longer label ("Best of 2 RSFC matches") wrapped onto its own line and cost the saved height, so it was shortened. Card height 226 → 190 px at 1750 px, all 12 cards equal. Verified in the browser: Enter opens the modal, no label wraps, no card has a button, the footer stays at 925 px. Not verifiable in the headless pane: the visual focus border (the pane window had no keyboard focus). Not committed; PR #16 still has older cards and the older modal.
+
+### 15.21 Requirement check against the sources (17 Nov 2026)
+
+Checked against the meeting (00:26:55), the BOM-431 comment of 13 Nov (no newer comments in Jira on 17 Nov) and the meeting next steps.
+
+| Asked for (source) | Status |
+|---|---|
+| Show all parts, don't force a part number, search stays (Matt, meeting + Discord) | Built: all parts by default, search kept. Still needs Matt/James OK because it changes BOM-360 (message 10.2 not sent). |
+| Toggle: competitor part or ASC part (Matt, meeting) | Built in Figma (all concepts) and repo. |
+| "How many matches do I actually have" (Matt, meeting) | Built: count on each card ("Best of 2 matches") and in the modal. |
+| Filters by category and attributes (Matt, meeting) | Built: category select plus PIM attributes from Sofija's mapping. Values are samples. Matt's example ("a half-inch stainless steel valve") cannot be shown with the sample data: no 1/2 in sizes and no stainless valves. |
+| E-commerce-like, not just a list (Matt, Discord) | Built: part cards (concept B). |
+| Keep the match details modal as it is (Matt, Discord) | **Deviation:** the modal was redesigned (version 1). Content and functions are the same, the look is new. Present it to Matt as an optional visual update, not as a change he asked for. |
+| Attribute list from engineering (BOM-431 next step) | Done: Sofija's PIM mapping (CON-347). |
+| Explore about 3 ways to show matches (BOM-431 next step) | Done in Figma (A table, B cards, C side by side). The repo builds only B. |
+| Review with Matt by midweek, then James (meeting) | **Not done:** concepts not shared with Matt yet (deadline Wed 18 Nov). |
+| CRM iframe variant (Loza, BOM-431) | **Not done.** |
+| Meeting next steps for Milos: priorities with Lucas, Jira tickets on Wednesday, UX rules link in Discord, UX skills on GitHub (PR #965) | **Not done** as far as this file records. |
+
+Also open: the latest card and modal work is not committed, and PR #16 still has older cards and the older modal.
+
+FigJam board check (zone 6 and "Your next 3 days", 17 Nov):
+- Zone 6 "Done when": about 3 concepts with both directions (done, Figma); filters on real data or marked as assumptions (done, PIM mapping, sample values); loading, empty, no results, error (done); confirm scope with Matt and James (**not done**).
+- Zone 6 "After Matt picks a concept": full screens, then CRM iframe, then James. The repo already builds concept B before Matt has picked one; present it as one concept, not as the decision.
+- Zone 6 sketch note "View matches opens the existing modal, it does not change": both changed since (button removed on 17 Nov, modal restyled). Both are Milos's decisions, not Matt's asks.
+- Monday list: Loza asked (done); Matt asked about "show all parts" (**not sent**); UX rules link in Discord (**not done**); review request for PR #965 (**not done**); priorities with Lucas and the sheet (**not recorded as done**); first concept (done).
+- Wednesday list: states (done); BOM-431 comment with Figma link and 3-line summary (**not done**); send Matt the link and the question which concept to take forward (**not done**); Jira tickets for the agreed priorities (**not done**).
+- The board itself is now behind: zone 7 still lists the attribute list as missing, and zone 6 still shows the old filter set. Updating the board is optional (my suggestion).
+
+### 15.22 Review frame for Matt in Figma (17 Nov 2026)
+
+Milos asked to prepare in Figma what Matt asked for, without changing his designs or the repo. Added one new frame only, nothing existing was edited: [For Matt · Part Cross-Reference review](https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM---RSFC?node-id=7720-7129) (node 7720:7129), on the Concepts page above the concepts frame (y 10298). It uses the file's Hydra text styles (Title/Heading 2 and 5, Large/Normal, Base/Normal) and colour variables; the surface copies the concept card's fill, border and radius.
+- **What you asked for:** the five asks with their sources (meeting 13 Nov; Discord 12 Nov), including "keep the modal as it is", noted as unchanged in these screens.
+- **Where to look:** links to A1, A2, A3, B1, B2, C1, C2, the match details modal and the state screens (A4 to A9).
+- **Two questions:** which concept to take forward; whether Matt and James are OK to show all parts before a search (changes BOM-360; one letter returns 4,853 parts on dev).
+- **Good to know:** filter values are examples, the attribute list comes from the PIM mapping (CON-347) and PIM has no pressure data; the RSFC part view is new work; after the pick: full screens, CRM iframe, James's review.
+Still to do by Milos: send Matt the link, and the BOM-431 comment.
+
+### 15.23 Figma Concepts page organized, prototype screens added (17 Nov 2026)
+
+Milos asked to organize the versions by sections and show the new design as built in the repo (filters, cards, modal), with an explanation of the filter panel and a click example. Original concept frames and components were not edited; they were only moved into sections at the same positions. New work uses copies.
+
+Sections on the Concepts page (BOM - RSFC):
+- **For Matt · review** (7728:9367): the review frame 7720:7129, now also linking P1 to P4.
+- **Concept A · Table + filter panel** (7728:9368), **Concept B · Part cards** (7728:9369), **Concept C · Side by side** (7728:9370), **Filter and search states** (7728:9371), **Concept components** (7728:9372; the loose approved card 7703:15774 moved in here). Sections B to components were shifted down 150 to 545 px so they do not overlap. The old wrapper frame 7651:4917 now only holds the two intro texts (moved to y 10930, 2200 × 200).
+- **Prototype · as built in the repo (17 Nov)** (7728:9373), left of the concepts:
+  - P1 7723:7179: competitor → RSFC, compact filter panel with counts, 12 new cards ("Best of 2 matches", no button), clipped card area with scrollbar, footer "Showing 1–12 of 23 competitor parts".
+  - P2 7723:8166: RSFC → competitor, new RSFC cards, single page (pagination hidden).
+  - P3 7727:9438 + note 7727:9821 "How the filter panel works": Size flyout open (search, values with counts, Show all 10), markers 1 and 2, six numbered steps (open vs compact mode, click a row, pick a value, grey tag, close with click outside or Esc).
+  - P4 7724:8349: match details modal version 1 over P1 (detached copy of the overlay; 760 px; competitor panel; photo rows; SKU and links below; Done).
+  - Components (copies) 7722:7129: `Prototype / Part card · competitor → RSFC` 7722:7130, `Prototype / Part card · RSFC → competitor` 7722:7158, `Prototype / Filters · v2 compact` 7722:7181.
+- Verified with screenshots of P1 to P4 and the page. Not drawn: the open (non-compact) filter panel at a tall screen height, and the applied-filter tag state.
+- **Added 17 Nov (Milos: "add both"):**
+  - P5 7729:9547: tall screen (1360 px) where the whole filter panel fits, so it uses the new component `Prototype / Filters · v2 open` (7729:9367): every group open with values and counts (Product type, Size with search, two columns and "Show all 10", End connection, Material, Certifications, Brand). The copy's 560 px max height was removed only in P5.
+  - P6 7730:10050 + note 7730:10876 "After picking a value": Size 3 in applied. "Filters (1)" with "Clear all", "Size (1)", counts recalculated (3 each), grey tag "Size: 3 in" with close icon and "Clear all" above the cards, 3 cards (V030716PE0, V030717PHR, L030007PT0 with the fittings photo), footer "Showing 1–3 of 3 competitor parts", pagination hidden. The filter panel in P6 is a detached copy (the component stays untouched).
+  - The review frame for Matt links P5 and P6 too. Verified with screenshots.
+
+### 15.24 Concepts page rebuilt around two variations (17 Nov 2026)
+
+Milos found the previous organisation unclear and asked for: clear sections; Variation A = everything in the repo (new filter, cards, modal, explanations, previous vs new modal and why, all states); Variation B = same pattern but filters as a slide-in (version 3 from the filter artifact), no left panel; empty state and edge cases for each; archive what is not needed (no variation with the long expandable left filter); a coloured components section; notes with an empty line between points and numbers styled like the markers on the screens.
+
+Page "Concepts" in BOM - RSFC, top to bottom at x 12000:
+- **0 · Start here · for Matt** (7732:10352): review frame 7720:7129 rewritten. Where to look links every A and B screen, Components and Archive. Questions: A or B; OK to show all parts before a search (BOM-360); keep the previous match details or take the updated one (A11 vs A12).
+- **Variation A · Filters on the left (as built in the prototype)** (7732:10353): A1 7723:7179, A2 7723:8166, A3 tall screen 7729:9547; A4 flyout 7727:9438 + note "How the filter panel works" (markers 1 to 5); A5 after picking 7730:10050 + note (1 to 5); A11 previous modal 7655:5281, A12 new modal 7724:8349 + note "What changed in match details, and why" (1 to 5); states A6 searching 7732:10362, A7 no results after filters 7732:10742, A8 no matches 7732:11131, A9 search failed 7732:11507, A10 search-first 7732:11883.
+- **Variation B · Filter bar and slide-in drawer** (7733:11739): copies of the A screens with the left panel hidden, a filter bar (Match type, RSFC origin, Product type, Size, Material, All filters) and three full-width card columns. B1 7733:11742, B2 7733:12345; B3 Size dropdown 7733:12835 + note (1 to 4); B4 All filters drawer 7733:13437 (mask, open filter groups, Clear all, Show 23 parts) + note (1 to 3); B5 after picking 7733:14039 + note (1 to 4); states B6 to B10 (7733:14491, 14837, 15248, 15596, 15947).
+- **Components** (7735:15388, warm background): prototype components (cards, compact and open filter panels) and the earlier concept components.
+- **Archive** (7735:15392, grey): the earlier Concept A table, Concept B cards, Concept C side by side, the long expandable left filter states, and the old intro frame.
+- Notes: each point is a row with the same orange numbered circle used on the screen, 24 px between rows. Verified with screenshots of A and B; no overlapping sections.
+- A7/B7 fixed (17 Nov): with the impossible combination every Match type and Origin count is 0 and the checkboxes are disabled (verified on the node and in a fresh screenshot). B has no tall-screen variant (the drawer covers it).
+
+### 15.25 Subsections, Admin colours, equal card heights, checked example (17 Nov 2026)
+
+- Cards in every row are the same height (tallest card in the row; the grey match block grows). The prototype card components now let "Part content" and the grey block fill the card height.
+- Subsections inside Variation A (01 Main screens, 02 How the filter panel works, 03 Match details: previous and new, 04 States and edge cases) and Variation B (01 Main screens, 02 How the filters work, 03 States and edge cases). Each starts with a solid blue header bar (Hydra blue, white text) instead of the faint title.
+- Colours follow the Admin - RSFC file: page background #787A7E; top-level sections navy #0C3559 at 10%; nested sections white at 10%; numbered subsection names like "01 · Search" in Admin. Components keep a warm tint (12%), Archive white at 5%.
+- Checked example: A5 shows the Size flyout open with "3 in" checked next to the tag, "Size (1)" and the 3 results; B5 shows the same in the Size dropdown.
+- Annotation draft (31 notes, figma-annotate skill) is waiting for Milos's "go". On approval the numbered markers and note cards are removed.
+
+### 15.26 Native annotations instead of numbered markers (17 Nov 2026)
+
+Milos approved the draft ("go"), then asked to keep only what is not obvious and only what explains how things work for a designer or PM.
+- Written with the figma-annotate skill, then trimmed: 25 annotations remain on A and B screens (Interaction 13, State Change 4, Content 3, Data / API 2, Edge Case 2, Error Handling 1). Removed as obvious: card label count, Esc closes the flyout, "Filters (1)", "Size (1)", photo row, copy SKU, "filters are dropdowns", count in the dropdown label.
+- Fixed versus scrolling is annotated on A1 card grid, B1 card grid and B4 drawer body (category Interaction, not Dev Notes).
+- All 26 numbered markers and the 6 note cards were removed; A5 and B4 moved left to close the gaps.
+- UI labels in annotations are bold (labelMarkdown) because the Figma API stored straight quotes as &quot;.
+- One older annotation on A11 (Table cell 7695:7055) was left untouched.
+
+### 15.27 Variation A made 1:1 with localhost (17 Nov 2026)
+
+Milos asked for Variation A to be identical to `http://localhost:5173/bom/cross-reference`, not similar. Measured the running prototype (DOM sizes, texts, colours) at 1750x970 and 1750x1360 and changed only the Figma Concepts page (no repo changes).
+- Shell on A1 to A12: no "Back to BOM"; topbar "Build or convert a Bill of Materials" and "Select project"; sidebar without "Feature Access Limit", "SeisBrace" spelling; title Heading 3 (24/500); description Base 14; content padding 24 top and bottom, 27 left and right; panel 238 and results 1186 with a 16 gap; toolbar 16/20 padding, segmented 346, category 192, search fills, placeholder empty.
+- Card components: competitor card 366x190, RSFC card 366x194, 13 px inner padding, 48 and 80 px photos with the repo photos (angle-hose-valve.png, pipe-fittings-group.png uploaded), bordered Tag__Colorful for match type (green or gold) and origin (blue or purple), names in capitals, one line with ellipsis.
+- Filter components: compact (198 wide, 32 px attribute rows, "Clear all" property) and open (983 tall like the repo). Flyout 256x168 at the Size row, "Show all 10" as a link.
+- Screens: A1 and A12 background use the exact page 1 data (23 parts, pages "1 2"); A2 is the RSFC default (41 parts, 12 cards, pages 1 to 4); A3 1750x1360 with the open panel (cards 371 wide, no scrollbar); A4 flyout; A5 Size 3 in (3 cards, chip, "Filters (1)", "Clear all"); A6 12 skeleton cards, no footer; A7 copy from the repo with disabled 0 counts; A8 "No parts match “V999XYZ”" with "Clear search"; A9 Hydra DS Result error with "Try again"; A10 search-first copy, no counts (empty block detached because the DS block caps text at 560 px); A12 modal 760x460 at top 100 with repo spacing, tags and links.
+- Verified with Figma screenshots next to browser screenshots and measurements.
+- Repo issues found (not fixed, ask Milos first): after checking a value the Size flyout jumps away from its row; the open panel can show for a moment before compact mode; "No parts match these filters" can't be reached because 0-count values are disabled.
+
+### 15.28 Concepts page cleaned up (17 Nov 2026)
+
+Milos asked: a project selected on the screens, no tall-screen A3, only the current match details modal, the Archive section off the page, and a Components section with what A and B use.
+- All A screens show "Riverside Office Park" in the topbar (B already did).
+- Moved to the "🗄 Archive" page, section "Moved from Concepts · 17 Nov 2026 (not in use)" (7749:15229): old A3 tall screen, A11 previous modal, the whole Archive section (7735:15392), the concept sketch components and the concept filter set. Nothing deleted.
+- Variation A renumbered: A1, A2 main; A3 flyout; A4 after picking Size 3 in; A5 match details (subsection "03 · Match details"); A6 to A10 states. The "For Matt" frame text updated to match (modal question is now "Is A5 OK?").
+- Components section (7735:15388) holds only the 5 local components used by A and B, each with a label and where it is used: competitor card, RSFC card, Product image, Filters compact, Filters open. Tags, inputs and buttons come from the Hydra DS library.
+- Sections re-stacked: Start here, Variation A, Variation B, Components, all 6210 wide at x 12000.
+
+### 15.29 A5 modal rebuilt with the DS modal pattern (17 Nov 2026)
+
+Milos pointed to the BOM Flows screen 2.6 (5570:200450) as the way modals are placed. A5 now follows it:
+- Hydra DS `Modal__Overlay` instance (7750:8238), absolute, last child of the screen, with the DS `Modal` inside. Title "Match details · V024716PE0", close on, only the primary button ("Done").
+- The content is a new local component `Prototype / Match details content` (7750:8202, in the Components section), placed in the modal's `.slot__component`, like `BOM / Parsed Line Editor` in 2.6.
+- Repo sizes kept: modal 760x460, 100 px from the top (overlay aligned to the top), head 20 px top padding, content 8/8, footer 12/20.
+- The old hand-built overlay frame was removed.
+
+### 15.30 New UX rule UX-014: modal placement (17 Nov 2026)
+
+Milos asked to add the modal pattern to the UX rules.
+- New file `.cursor/skills/hydra-ux-pattern/rules/UX-014.md` (category Modals): open modal = DS `Modal__Overlay` as the last child of the screen, DS `Modal` inside, body as a local component in `.slot__component`, Modal and slot hug the content, Content Wrapper 8px top and bottom. References: BOM Flows 2.6 (5570:200450) and Concepts A5 (7750:8238).
+- Added to the Figma skill table (`~/.claude/skills/hydra-ux-pattern-figma`), the repo code skill (`SKILL.md`, `code-audit.md`) and both catalogs in `Documentation/`.
+- Confluence page "Hydra UX pattern rules" updated on 17 Nov 2026 with Milos's OK: UX-014 row added under UX-013 in the Rules table (version 5). Verified by reading the published page back; nothing else on the page changed.
+- Not done yet: the `on-hydra-app` repo copy of the code skill (repo not on this machine). Not committed.
+- UX-012 conflict is resolved in section 15.31: the back button was added.
+
+### 15.31 Repo bugs fixed and "Back to BOM" added (17 Nov 2026)
+
+Milos asked to fix the three repo bugs and to add "Back to BOM" to Variation A and B.
+- Filter panel stayed open and was cut off (not compact): the panel now measures again whenever the page height changes, and stays hidden until that height is known, so it does not flash open. Checked at 900 and 700 px high: compact, fits the row. File: `PartCrossReferenceFilters.tsx`, new prop `fitHeight`.
+- Size flyout moving away from its row: flyouts now use `autoAdjustOverflow={false}`, so each is always level with its own row. Checked for Brand, Size and Product type, before and after checking a value: same position.
+- "No parts match these filters": shown only when the filters cause the empty list. If the search or category alone finds nothing, the search message shows ("No parts match "V999XYZ"") even with filters on. Filter values with 0 results stay disabled on purpose, so the filter message can only appear after the search or category changes.
+- "Back to BOM" added to the prototype (`PageBackButton` to `/bom`, first item, 24 px above the title), as UX-012 asks.
+- Figma Variation A: the same DS Button instance added as the first item in Content on A1 to A10. A3 and A4 flyouts moved down 56 px to follow the Size row. Variation B already had the button on B1 to B10, nothing changed there.
+- Verified with the browser (DOM measurements and screenshot) and Figma screenshots of A2, A3, A4. Type check passes. Not committed.
+- Still open: Variation B still shows "Feature Access Limit" in the sidebar and is not aligned to the repo otherwise.
+

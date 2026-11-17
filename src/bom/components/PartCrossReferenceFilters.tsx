@@ -24,6 +24,12 @@ type Props = {
   onClear: () => void;
   /** Results if this value were the only one picked in its group. Omit to hide counts (no search yet). */
   countFor?: (key: keyof CrossReferenceFilters, value: string) => number;
+  /**
+   * Height the page fits into. The panel measures itself again whenever it changes: the row it sits in only gets its
+   * final height after the first paint, and a ResizeObserver alone can miss that change (the panel then stays open
+   * and is cut off). Until the page height is known the panel stays hidden, so it never flashes open before compact.
+   */
+  fitHeight?: number;
 };
 
 /** 208 px (controlHeight x 6.5) + 30 px, widened on 17 Nov 2026 so long PIM values fit. */
@@ -176,7 +182,7 @@ function FilterGroup({
  * values in a flyout to the right, so every group stays reachable without scrolling the panel. It switches back when
  * there is room again.
  */
-export function PartCrossReferenceFilters({ value, onChange, onClear, countFor }: Props) {
+export function PartCrossReferenceFilters({ value, onChange, onClear, countFor, fitHeight }: Props) {
   const { token } = theme.useToken();
   const active = countActiveFilters(value);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -203,6 +209,11 @@ export function PartCrossReferenceFilters({ value, onChange, onClear, countFor }
     return () => observer.disconnect();
   }, [measure]);
 
+  // The page height changed: measure again once the row has its final height.
+  useLayoutEffect(() => {
+    measure();
+  }, [fitHeight, measure]);
+
   const toggleValue = (key: keyof CrossReferenceFilters) => (option: string) =>
     onChange({ ...value, [key]: toggle(value[key] as string[], option) });
 
@@ -227,6 +238,7 @@ export function PartCrossReferenceFilters({ value, onChange, onClear, countFor }
         borderRadius: token.borderRadiusLG,
         boxShadow: token.boxShadowTertiary,
         alignSelf: 'flex-start',
+        visibility: fitHeight === undefined ? 'hidden' : 'visible',
       }}
       styles={{ body: { padding: token.paddingMD } }}
     >
@@ -259,6 +271,9 @@ export function PartCrossReferenceFilters({ value, onChange, onClear, countFor }
                   key={group.key}
                   trigger="click"
                   placement="rightTop"
+                  // Always level with its own row. The default overflow adjustment moved the flyout to another row
+                  // when its content changed (for example after a value was checked).
+                  autoAdjustOverflow={false}
                   arrow={false}
                   open={openKey === group.key}
                   onOpenChange={(next) => setOpenKey(next ? group.key : undefined)}
