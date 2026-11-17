@@ -20,7 +20,7 @@ Read this first. Details and history are in section 15.
 **Part Cross-Reference v2 (BOM-431)**
 - **Figma:** concepts A (table), B (part cards) and C (side by side) plus edge-case and state screens are in BOM - RSFC, frame 7651:4917 (section 15.1). Milos preferred the A1 filter placement (filters in a left column). The Figma filter panels still show the older sample attributes, including "Pressure rating".
 - **PIM attributes:** Sofija sent the display mapping by product type (CON-347), saved as `Documents/pim/2026-11-16-pim-column-mapping-by-product-type.md`. Key facts: no pressure or temperature data in PIM; Size is per end (Valve Size on Reliable valves); Material is `Body`; Brand is `Product Brand`; 16 separate certification columns; empty values are hidden (section 15.9).
-- **Prototype repo:** concept B is built at `/bom/cross-reference` on branch `feat/variant-modal-sidebar-layout` and committed locally (`a627a8b` code, `05e36ea` docs). Not pushed. What it does:
+- **Prototype repo:** concept B is built at `/bom/cross-reference` on branch `feat/variant-modal-sidebar-layout` and committed (`a627a8b` code, `05e36ea` and `a87c041` docs) and pushed on 17 Nov to Milos's fork `milosdostanic-cyber/on-hydra-app-prototype`. Not in the team repo `ooden-tech/on-hydra-app-prototype` yet, so the Cloudflare demo does not show it. What it does:
   - Both directions via the toggle "Competitor part → RSFC | RSFC part → competitor"; 12 cards per page; the existing match details modal opens from a card.
   - Distilled cards: the whole card is the action; the best match sits under a section rule with the count ("Best of 2 RSFC matches"); 72 px product photo aligned with three text lines. Card height 186 px (competitor → RSFC) and 162 px (RSFC → competitor).
   - Filter panel "version 2" (chosen from the artifact below): 238 px wide, every group open, a count per value, 0-count values disabled. Groups: Match type, RSFC origin, then RSFC attributes from the PIM mapping (Product type, Size, End connection, Material, Certifications, Brand). If the panel does not fit the visible height it switches to compact rows that open flyouts, so it never scrolls.
@@ -30,7 +30,7 @@ Read this first. Details and history are in section 15.
 - **Decisions by Milos on 17 Nov:** UX-006 (min screen height 970) is not applied in the repo; card hover matches the catalog cards; tags on cards have a border; filter version 2; applied filter tags grey, Hydra DS and Ant Design only.
 
 **Next steps**
-1. Run the `hydra-ux-audit` pass on `/bom/cross-reference`, then push the branch (only when Milos asks).
+1. Run the `hydra-ux-audit` pass on `/bom/cross-reference`. To get it on the demo, open a PR from the fork branch into the team repo's `main` (only when Milos asks).
 2. Share the concepts with Matt by Wed 18 Nov, ask which concept to take forward and whether showing all parts before a search is OK (message 10.2); comment on BOM-431 with the links.
 3. Update the Figma filter panels to the PIM mapping (remove Pressure rating) and add a removable tag to the Hydra DS Figma file if the pattern is kept.
 4. Still open from the meeting: priorities with Lucas and the sheet, Jira tickets on Wednesday, UX rules link in Discord, PR #965, then the CRM iframe version, James's review, e-commerce discovery and the service blueprint.
@@ -425,8 +425,8 @@ Why these three topics: priorities are the shared meeting action; the service bl
 - [x] Sketch about 3 Part Cross-Reference concepts in the BOM - RSFC Figma file (done 16 Nov, frame 7651:4917, see section 15).
 - [x] Add loading, error with Retry, search with no hits, and an optional search-first starting state in Figma (A6–A9, sections 15.1 and 15.7).
 - [x] Build concept B (cards, filters, both directions, states) in the prototype repo (17 Nov, sections 15.8 to 15.16).
-- [x] Committed locally on `feat/variant-modal-sidebar-layout`: code `a627a8b`, docs `05e36ea` (17 Nov). Not pushed.
-- [ ] Run the `hydra-ux-audit` pass on the new page; push when Milos asks.
+- [x] Committed and pushed `feat/variant-modal-sidebar-layout` to Milos's fork (17 Nov): code `a627a8b`, docs `05e36ea`, `a87c041`. Not in the team repo yet.
+- [ ] Run the `hydra-ux-audit` pass on the new page; PR to the team repo when Milos asks.
 - [ ] Share the concepts with Matt by Wed 18 Nov and ask which concept to take forward; comment on BOM-431 with the Figma link and a short summary.
 - [x] Prototype filters now follow Sofija's mapping (section 15.9). Values are still samples.
 - [ ] Update the Figma filter panels to the mapping: remove "Pressure rating" (no PIM data), use Product type, Size, End connection, Material, Certifications, Brand (section 15.9).
@@ -635,7 +635,7 @@ The grey closable chips were hard to see and only the small × removed them. New
 
 ### 15.17 Committed (17 Nov 2026)
 
-On branch `feat/variant-modal-sidebar-layout`, local only, not pushed:
+On branch `feat/variant-modal-sidebar-layout`, pushed to Milos's fork on 17 Nov:
 - `a627a8b` feat(bom): Part Cross-Reference v2 with part cards and PIM filters (code plus `Documents/pim/2026-11-16-pim-column-mapping-by-product-type.md`).
 - `05e36ea` docs(plans): handoff, plans, messages, UX audit notes, card reference image and the `figma-annotate` Cursor skill.
-Still open: `hydra-ux-audit` pass, push, Figma filter panels and the removable tag in the Hydra DS file.
+Still open: `hydra-ux-audit` pass, PR to the team repo, Figma filter panels and the removable tag in the Hydra DS file.
