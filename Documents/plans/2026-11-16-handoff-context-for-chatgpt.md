@@ -13,6 +13,30 @@ Prepared by Milos Dostanic on 16 Nov 2026. This document is self-contained: back
 
 ---
 
+## 0.1 Where we are now (updated 17 Nov 2026)
+
+Read this first. Details and history are in section 15.
+
+**Part Cross-Reference v2 (BOM-431)**
+- **Figma:** concepts A (table), B (part cards) and C (side by side) plus edge-case and state screens are in BOM - RSFC, frame 7651:4917 (section 15.1). Milos preferred the A1 filter placement (filters in a left column). The Figma filter panels still show the older sample attributes, including "Pressure rating".
+- **PIM attributes:** Sofija sent the display mapping by product type (CON-347), saved as `Documents/pim/2026-11-16-pim-column-mapping-by-product-type.md`. Key facts: no pressure or temperature data in PIM; Size is per end (Valve Size on Reliable valves); Material is `Body`; Brand is `Product Brand`; 16 separate certification columns; empty values are hidden (section 15.9).
+- **Prototype repo:** concept B is built at `/bom/cross-reference` on branch `feat/variant-modal-sidebar-layout` and committed locally (`a627a8b` code, `05e36ea` docs). Not pushed. What it does:
+  - Both directions via the toggle "Competitor part → RSFC | RSFC part → competitor"; 12 cards per page; the existing match details modal opens from a card.
+  - Distilled cards: the whole card is the action; the best match sits under a section rule with the count ("Best of 2 RSFC matches"); 72 px product photo aligned with three text lines. Card height 186 px (competitor → RSFC) and 162 px (RSFC → competitor).
+  - Filter panel "version 2" (chosen from the artifact below): 238 px wide, every group open, a count per value, 0-count values disabled. Groups: Match type, RSFC origin, then RSFC attributes from the PIM mapping (Product type, Size, End connection, Material, Certifications, Brand). If the panel does not fit the visible height it switches to compact rows that open flyouts, so it never scrolls.
+  - Only the card area scrolls; the toolbar and the pagination footer stay in view. The footer carries the count ("Showing 1–12 of 23 competitor parts"). Applied filters show as grey Hydra `Tag / Default` tags above the cards; the whole tag removes the filter.
+  - States: loading skeletons, error with retry (`?simulateError=1`), no results for filters, no results for a search term. "Show all parts before a search" is still an open decision (BOM-360); `?start=search` switches to search-first.
+- **Artifact with three filter versions** (for discussion): https://claude.ai/artifact/C53RuNMSFTMwarQTaEnrK5 (private until shared). Version 2 is the one in the repo.
+- **Decisions by Milos on 17 Nov:** UX-006 (min screen height 970) is not applied in the repo; card hover matches the catalog cards; tags on cards have a border; filter version 2; applied filter tags grey, Hydra DS and Ant Design only.
+
+**Next steps**
+1. Run the `hydra-ux-audit` pass on `/bom/cross-reference`, then push the branch (only when Milos asks).
+2. Share the concepts with Matt by Wed 18 Nov, ask which concept to take forward and whether showing all parts before a search is OK (message 10.2); comment on BOM-431 with the links.
+3. Update the Figma filter panels to the PIM mapping (remove Pressure rating) and add a removable tag to the Hydra DS Figma file if the pattern is kept.
+4. Still open from the meeting: priorities with Lucas and the sheet, Jira tickets on Wednesday, UX rules link in Discord, PR #965, then the CRM iframe version, James's review, e-commerce discovery and the service blueprint.
+
+---
+
 ## 1. Summary
 
 At the Product/Design weekly on **13 Nov 2026**, the team agreed that the client wants ConnectED to feel like an online store ("e-commerce"). James (client) is leaning toward shutting down **Connect Portal**, a separate BigCommerce site for part search and quotes, and moving its functionality into ConnectED.
@@ -109,6 +133,7 @@ At the Product/Design weekly on **13 Nov 2026**, the team agreed that the client
 ### Figma
 - Part Cross-Reference flow (BOM - RSFC file, section 7560:210686): https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM---RSFC?node-id=7560-210686
 - Part Cross-Reference v2 concepts (BOM - RSFC file, page "Cheat Sheet · Part Cross-Reference", frame 7651:4917, see section 15): https://www.figma.com/design/Ht3Up5MlRAKjK7eCuAy05L/BOM---RSFC?node-id=7651-4917
+- Artifact "Cross-Reference Filter Options", three interactive filter versions (private until shared): https://claude.ai/artifact/C53RuNMSFTMwarQTaEnrK5
 - Hydra Ant Design - DS (design system file key 3ghYBXR6XVUEaeBo3D5E4q): https://www.figma.com/design/3ghYBXR6XVUEaeBo3D5E4q
 
 ### Code
@@ -123,6 +148,9 @@ At the Product/Design weekly on **13 Nov 2026**, the team agreed that the client
 - Match details modal: https://github.com/ooden-tech/on-hydra-app/blob/develop/apps/on-hydra-frontend-bom/src/modules/business/bom/components/StaticMatchesPartMatchModal/index.tsx
 - Prototype repo (team): https://github.com/ooden-tech/on-hydra-app-prototype
 - Prototype Part Cross-Reference page (Milos's fork, branch `feat/variant-modal-sidebar-layout`, route `/bom/cross-reference`): https://github.com/milosdostanic-cyber/on-hydra-app-prototype/blob/feat/variant-modal-sidebar-layout/src/bom/pages/BomPartCrossReferencePage.tsx
+- Prototype Part Cross-Reference v2 files (local branch `feat/variant-modal-sidebar-layout`, commit `a627a8b`, not pushed yet): `src/bom/pages/BomPartCrossReferencePage.tsx`, `src/bom/components/PartCrossReferenceCard.tsx`, `src/bom/components/PartCrossReferenceFilters.tsx`, `src/bom/components/AppliedFilterTag.tsx`, `src/bom/data/partCrossReferenceData.ts`, `src/bom/data/pimDisplayMapping.ts`
+- PIM display mapping by product type from Sofija (CON-347): `Documents/pim/2026-11-16-pim-column-mapping-by-product-type.md`
+- Concept B implementation plan: `Documents/plans/2026-11-17-part-cross-reference-concept-b-plan.md`
 - Prototype demo data (42 categories, sample parts): https://github.com/milosdostanic-cyber/on-hydra-app-prototype/blob/feat/variant-modal-sidebar-layout/src/bom/data/partCrossReferenceData.ts
 
 ### Environments
@@ -386,7 +414,7 @@ Why these three topics: priorities are the shared meeting action; the service bl
 
 ---
 
-## 13. Open items (as of 16 Nov)
+## 13. Open items (as of 17 Nov)
 
 - [x] Send Loza the attribute-list question (10.1).
 - [x] Follow up with Sofija about PIM attributes (CON-347). She sent the display mapping by product type on 17 Nov (section 15.9).
@@ -396,12 +424,14 @@ Why these three topics: priorities are the shared meeting action; the service bl
 - [ ] Get PR #965 reviewed and merged.
 - [x] Sketch about 3 Part Cross-Reference concepts in the BOM - RSFC Figma file (done 16 Nov, frame 7651:4917, see section 15).
 - [x] Add loading, error with Retry, search with no hits, and an optional search-first starting state in Figma (A6–A9, sections 15.1 and 15.7).
-- [x] Build concept B (cards, filters, both directions, states) in the prototype repo (17 Nov, section 15.8). Not committed yet.
-- [x] Committed locally on `feat/variant-modal-sidebar-layout`: code in `a627a8b` (17 Nov). Not pushed.
+- [x] Build concept B (cards, filters, both directions, states) in the prototype repo (17 Nov, sections 15.8 to 15.16).
+- [x] Committed locally on `feat/variant-modal-sidebar-layout`: code `a627a8b`, docs `05e36ea` (17 Nov). Not pushed.
 - [ ] Run the `hydra-ux-audit` pass on the new page; push when Milos asks.
 - [ ] Share the concepts with Matt by Wed 18 Nov and ask which concept to take forward; comment on BOM-431 with the Figma link and a short summary.
 - [x] Prototype filters now follow Sofija's mapping (section 15.9). Values are still samples.
 - [ ] Update the Figma filter panels to the mapping: remove "Pressure rating" (no PIM data), use Product type, Size, End connection, Material, Certifications, Brand (section 15.9).
+- [ ] If the removable grey filter tag is kept, add it to the Hydra DS Figma file (section 15.16).
+- [ ] Decide whether the Figma concepts should be updated to the distilled card and filter version 2 from the repo (sections 15.11 and 15.15).
 - [ ] Create the Jira tickets for the agreed priorities (Wednesday).
 - [ ] Then: CRM iframe version; James's review; e-commerce discovery; service blueprint today → working session with James → future state; prototypes.
 - [ ] Optional: copy Matt's Discord feedback into BOM-431.
@@ -501,6 +531,9 @@ Earlier iterations
 - Tag__Status texts set to "Exact match" and "Substitute" (DS default texts were "success" and "warning").
 
 ### 15.6 Known gaps (what is still missing)
+
+Status 17 Nov: states, PIM attributes and the repo build are done (sections 15.8 to 15.16). The list below is the 16 Nov view; still true: CRM iframe variant, sample values, Matt's choice.
+
 - **Prototype behavior:** the search states are static Figma examples. Live filtering and result counts still need validation during implementation.
 - **CRM iframe variant** is not drawn (open item since the 11 Nov comment by Loza).
 - **Filter values are samples.** "Connection type", "Finish" and "Pressure rating" are example attributes, not confirmed. Real attributes come from Sofija (CON-347). Filters available on real data today: category, Domestic/Import, match type, ASC brand, ASC size, ASC material.
@@ -604,5 +637,5 @@ The grey closable chips were hard to see and only the small × removed them. New
 
 On branch `feat/variant-modal-sidebar-layout`, local only, not pushed:
 - `a627a8b` feat(bom): Part Cross-Reference v2 with part cards and PIM filters (code plus `Documents/pim/2026-11-16-pim-column-mapping-by-product-type.md`).
-- Next commit: handoff, plans, messages, UX audit notes, card reference image and the `figma-annotate` Cursor skill.
+- `05e36ea` docs(plans): handoff, plans, messages, UX audit notes, card reference image and the `figma-annotate` Cursor skill.
 Still open: `hydra-ux-audit` pass, push, Figma filter panels and the removable tag in the Hydra DS file.
