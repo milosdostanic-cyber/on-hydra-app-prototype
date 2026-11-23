@@ -3,7 +3,7 @@
 ## Meta
 - **Date:** 2026-11-23
 - **Request type:** ui-change (BOM)
-- **User request summary:** Make the white content section’s top and bottom spacing equal, using the larger token-based spacing shown around the title and competitor/SKU text.
+- **User request summary:** Make the white content section’s top and bottom spacing equal at the base `token.padding` value (16px).
 - **Status:** approved by direct implementation request
 - **Plan file:** `Documents/Bom/2026-11-23-cross-reference-card-footer-spacing-plan.md`
 
@@ -47,12 +47,12 @@
 Align the top and bottom padding of the cross-reference card’s upper content block. Do not alter its horizontal padding or the gap between its description and competitor/SKU lines.
 
 ## Current flow audit
-`PartCrossReferenceCard` uses a white upper content block followed by a bordered gray status footer. Its top padding still comes from `token.paddingSM`, while its bottom padding is `token.paddingLG`, so the two highlighted spaces do not match.
+`PartCrossReferenceCard` uses a white upper content block followed by a bordered gray status footer. Its top and bottom padding currently match at `token.paddingLG`; the requested value is the smaller base `token.padding`.
 
 ## Requirements / gap table
 | Requirement | Current | Gap | UX risk | Area |
 |-------------|---------|-----|---------|------|
-| Equal top and bottom space in the white content section | Top uses `token.paddingSM`; bottom uses `token.paddingLG` | Vertical padding is asymmetric | Content appears vertically unbalanced | Cross-reference result card |
+| Equal 16px top and bottom space in the white content section | Both use `token.paddingLG` (24px) | Vertical padding is larger than requested | Card is taller than intended | Cross-reference result card |
 | Preserve spacing between the two text lines | `token.marginXXS` | None | Changing it would put space in the wrong place | Upper content block |
 
 ## Proposed UX flow
@@ -63,7 +63,7 @@ No flow or interaction changes. The card remains fully clickable and retains the
 ### Phase 1 — Balance vertical content padding
 - **Goal:** Make the white section’s top and bottom spacing equal.
 - **Files:** `src/bom/components/PartCrossReferenceCard.tsx`
-- **UI changes:** Use `paddingBlock: token.paddingLG` for equal vertical spacing and retain `paddingInline: token.paddingSM`.
+- **UI changes:** Use `paddingBlock: token.padding` (16px) for equal vertical spacing and retain `paddingInline: token.paddingSM`.
 - **Data/state:** None.
 - **Acceptance criteria:** The title’s top spacing matches the competitor/SKU line’s bottom spacing; horizontal and internal text spacing remain unchanged.
 - **Must not change:** Footer padding, typography, colors, card interaction, shared components, or tokens.
@@ -95,14 +95,14 @@ Do not change shared components, theme tokens, or the internal text-line gap.
 ## Guardrails
 - **Allowed:** One local style normalization using existing spacing tokens.
 - **Forbidden:** Raw pixel values, token changes, shared component edits, unrelated BOM changes.
-- **Assumptions:** The screenshot’s two callouts indicate that the existing larger bottom spacing should also be applied above the title.
+- **Assumptions:** The user’s “16 token padding” means Ant Design’s base `token.padding`, whose resolved value is 16px.
 - **Open questions:** None.
 
 ## Risks
 Minimal; card height increases by one existing token step without changing behavior.
 
 ## Acceptance checklist
-- [ ] Top and bottom spacing in the white section both use `token.paddingLG`.
+- [ ] Top and bottom spacing in the white section both use `token.padding` (16px).
 - [ ] Horizontal padding and the gap between text lines remain unchanged.
 - [ ] Gray footer and card interactions are unchanged.
 - [ ] Hydra UX self-audit finds no P0/P1 issues.

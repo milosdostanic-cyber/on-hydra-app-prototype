@@ -97,7 +97,7 @@ export function PartCrossReferenceCard({ result, onOpen }: { result: CrossRefere
       <Flex
         vertical
         gap={token.marginXXS}
-        style={{ paddingBlock: token.paddingLG, paddingInline: token.paddingSM, minWidth: 0 }}
+        style={{ paddingBlock: token.padding, paddingInline: token.paddingSM, minWidth: 0 }}
       >
         <Typography.Text
           style={hydraTextStyleToReactCss(hydraLargeMedium)}
