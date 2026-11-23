@@ -1,15 +1,15 @@
 import { useState, type ReactNode } from 'react';
+import { RightOutlined } from '@ant-design/icons';
 
 import type {
   CompetitorPartResult,
-  RsfcEquivalent,
   RsfcMatchType,
   RsfcOrigin,
   RsfcPartResult,
 } from '../data/partCrossReferenceData';
-import { hydraBaseMedium, hydraSmallNormal, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
-import { HydraColorfulTag } from '../../ui/HydraTag';
-import { Card, Flex, Typography, theme } from '../../ui/antd';
+import { hydraBaseMedium, hydraSmallMedium, hydraSmallNormal, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
+import { HydraColorfulTag, HydraTag } from '../../ui/HydraTag';
+import { Card, Flex, Tooltip, Typography, theme } from '../../ui/antd';
 
 /** Sample product photos from the prototype catalog (real PIM images come with the attribute work). */
 function productImage(name: string): string {
@@ -18,15 +18,16 @@ function productImage(name: string): string {
     : '/assets/catalog/featured-tiles/pipe-fittings-group.png';
 }
 
-export function MatchTypeTag({ type }: { type: RsfcMatchType }) {
-  return <HydraColorfulTag bordered preset={type === 'Exact match' ? 'green' : 'gold'}>{type}</HydraColorfulTag>;
+/** Match quality is a status tag (`Tag__Status`), never a colourful tag or a dot badge (UX-011, UX-013). */
+export function MatchTypeTag({ type, label }: { type: RsfcMatchType; label?: string }) {
+  return <HydraTag tone={type === 'Exact match' ? 'success' : 'warning'}>{label ?? type}</HydraTag>;
 }
 
 export function OriginTag({ origin }: { origin: RsfcOrigin }) {
   return <HydraColorfulTag bordered preset={origin === 'Domestic' ? 'blue' : 'purple'}>{origin}</HydraColorfulTag>;
 }
 
-/** Figma photo frame pattern: container fill, secondary border, radius, image set to Fit. */
+/** Figma photo frame pattern: container fill, secondary border, radius, image set to Fit. Used by the match details modal. */
 export function PartPhoto({ name, size }: { name: string; size: number }) {
   const { token } = theme.useToken();
   return (
@@ -51,7 +52,7 @@ export function PartPhoto({ name, size }: { name: string; size: number }) {
 /**
  * Same hover as the catalog part cards (FeaturedPartCard): primary 1 px border, tertiary shadow, mid-speed transition.
  * The whole card is the one action (opens the match details): mouse click, or Enter / Space when focused. Focus shows
- * the same border as hover. There is no separate button; the match count is in the block label ("Best of 2 matches").
+ * the same border as hover.
  */
 function CardShell({ children, onOpen, label }: { children: ReactNode; onOpen: () => void; label: string }) {
   const { token } = theme.useToken();
@@ -74,10 +75,11 @@ function CardShell({ children, onOpen, label }: { children: ReactNode; onOpen: (
       onMouseLeave={() => setHighlighted(false)}
       onFocus={() => setHighlighted(true)}
       onBlur={() => setHighlighted(false)}
-      styles={{ body: { padding: token.paddingSM, display: 'flex', flexDirection: 'column', gap: token.paddingSM, height: '100%' } }}
+      styles={{ body: { padding: 0, display: 'flex', flexDirection: 'column', height: '100%' } }}
       style={{
         height: '100%',
         cursor: 'pointer',
+        overflow: 'hidden',
         borderRadius: token.borderRadiusLG,
         background: token.colorBgContainer,
         boxShadow: token.boxShadowTertiary,
@@ -91,107 +93,128 @@ function CardShell({ children, onOpen, label }: { children: ReactNode; onOpen: (
   );
 }
 
-function meta(...parts: Array<string | undefined>): string {
-  return parts.filter(Boolean).join(' · ');
-}
-
-/** Soft surface that holds the best match inside the card (Figma B1 "Best RSFC match" block). */
-function MatchBlock({ children }: { children: ReactNode }) {
+/**
+ * Design canvas "T2 · Status on photo": photo on top with the match quality as a status tag (UX-013) in the
+ * top-left corner, then two lines: the part name, and one secondary line with the option count as plain text
+ * on the right (UX-011). A substitute's caveat is on the tag ("Substitute · check", full text in a tooltip and
+ * in the match details), so the secondary line always stays.
+ */
+function PartTile({
+  photoName,
+  matchType,
+  count,
+  countNoun,
+  name,
+  secondary,
+  note,
+}: {
+  photoName: string;
+  matchType: RsfcMatchType;
+  count: number;
+  /** "option" on competitor part → RSFC (RSFC replacements), "match" on RSFC part → competitor. */
+  countNoun: { one: string; plural: string };
+  name: string;
+  secondary: ReactNode;
+  note?: string;
+}) {
   const { token } = theme.useToken();
+  const small = hydraTextStyleToReactCss(hydraSmallNormal);
+  const photoHeight = token.controlHeightLG * 3;
+
   return (
-    <Flex
-      vertical
-      gap={token.marginXS}
-      style={{ padding: token.paddingSM, background: token.colorFillAlter, borderRadius: token.borderRadius, flex: 1 }}
-    >
-      {children}
-    </Flex>
+    <>
+      <Flex
+        align="center"
+        justify="center"
+        style={{
+          position: 'relative',
+          height: photoHeight,
+          flex: 'none',
+          padding: `${token.paddingSM}px ${token.paddingLG}px`,
+          borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+        }}
+      >
+        <img
+          src={productImage(photoName)}
+          alt=""
+          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+        />
+        <span style={{ position: 'absolute', top: token.paddingXS, left: token.paddingXS, display: 'inline-flex' }}>
+          <Tooltip title={note}>
+            <span>
+              <MatchTypeTag type={matchType} label={note ? `${matchType} · check` : undefined} />
+            </span>
+          </Tooltip>
+        </span>
+      </Flex>
+      <Flex vertical gap={token.marginXXS} style={{ padding: `${token.paddingXS}px ${token.paddingSM}px ${token.paddingSM}px`, minWidth: 0 }}>
+        <Typography.Text style={hydraTextStyleToReactCss(hydraBaseMedium)} ellipsis={{ tooltip: name }}>
+          {name}
+        </Typography.Text>
+        <Flex justify="space-between" align="baseline" gap={token.marginXS} style={{ minWidth: 0 }}>
+          <Typography.Text type="secondary" ellipsis style={{ ...small, flex: 1, minWidth: 0 }}>
+            {secondary}
+          </Typography.Text>
+          {count > 1 ? (
+            <Typography.Text
+              style={{
+                ...hydraTextStyleToReactCss(hydraSmallMedium),
+                flex: 'none',
+                color: token.colorLink,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: token.marginXXS,
+              }}
+            >
+              {`${count} ${countNoun.plural}`}
+              <RightOutlined aria-hidden style={{ fontSize: token.fontSizeSM }} />
+            </Typography.Text>
+          ) : (
+            <Typography.Text type="secondary" style={{ ...small, flex: 'none' }}>
+              {`1 ${countNoun.one}`}
+            </Typography.Text>
+          )}
+        </Flex>
+      </Flex>
+    </>
   );
 }
 
-/** Figma B1 (7655:5453) card: competitor part on top, best RSFC match on a soft surface, footer action with the count. */
+/** Competitor part → RSFC: the tile shows the best RSFC match, with the competitor part it replaces as the second line. */
 export function CompetitorPartCard({ result, onOpen }: { result: CompetitorPartResult; onOpen: () => void }) {
-  const { token } = theme.useToken();
   const { part, equivalents } = result;
-  const best: RsfcEquivalent = equivalents[0];
-  const small = hydraTextStyleToReactCss(hydraSmallNormal);
+  const best = equivalents[0];
 
   return (
     <CardShell onOpen={onOpen} label={`View matches for ${part.sku}`}>
-      <Flex vertical gap={token.marginXXS}>
-        <Flex justify="space-between" align="baseline" gap={token.marginXS}>
-          <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraBaseMedium), flex: 'none' }}>{part.sku}</Typography.Text>
-          <Typography.Text type="secondary" ellipsis style={small}>
-            {meta(part.brand, `Fig. ${part.figure}`, `Size ${part.size}`)}
-          </Typography.Text>
-        </Flex>
-        <Typography.Text ellipsis={{ tooltip: part.description }}>{part.description}</Typography.Text>
-      </Flex>
-
-      <MatchBlock>
-        <Flex justify="space-between" align="center" gap={token.marginXS} wrap="wrap">
-          <Typography.Text type="secondary" style={small}>
-            {equivalents.length > 1 ? `Best of ${equivalents.length} matches` : 'Only match'}
-          </Typography.Text>
-          <Flex gap={token.marginXXS}>
-            <MatchTypeTag type={best.matchType} />
-            <OriginTag origin={best.origin} />
-          </Flex>
-        </Flex>
-        <Flex gap={token.marginSM} align="center">
-          <PartPhoto name={best.name} size={token.controlHeightLG + token.marginXS} />
-          <Flex vertical gap={token.marginXXS} style={{ minWidth: 0 }}>
-            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseMedium)} ellipsis={{ tooltip: best.name }}>
-              {best.name}
-            </Typography.Text>
-            <Typography.Text type="secondary" ellipsis style={small}>
-              {meta(best.brand, `Fig. ${best.figure}`, `SKU ${best.sku}`)}
-            </Typography.Text>
-          </Flex>
-        </Flex>
-      </MatchBlock>
-
+      <PartTile
+        photoName={best.name}
+        matchType={best.matchType}
+        count={equivalents.length}
+        countNoun={{ one: 'option', plural: 'options' }}
+        name={best.name}
+        secondary={`For ${part.brand} ${part.sku}`}
+        note={best.note}
+      />
     </CardShell>
   );
 }
 
-/** Figma B2 (7655:5560) card: RSFC part on top (80 px photo aligned with its text), best competitor match below. */
+/** RSFC part → competitor: the tile shows the RSFC part, with its first competitor match as the second line. */
 export function RsfcPartCard({ result, onOpen }: { result: RsfcPartResult; onOpen: () => void }) {
-  const { token } = theme.useToken();
   const { part, competitors } = result;
   const first = competitors[0];
-  const small = hydraTextStyleToReactCss(hydraSmallNormal);
-  const photo = token.controlHeightLG * 2;
 
   return (
     <CardShell onOpen={onOpen} label={`View matches for ${part.sku}`}>
-      <Flex gap={token.marginSM} align="center">
-        <PartPhoto name={part.name} size={photo} />
-        <Flex vertical justify="space-between" gap={token.marginXXS} style={{ minWidth: 0, flex: 1, height: photo }}>
-          <Flex>
-            <OriginTag origin={part.origin} />
-          </Flex>
-          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseMedium)} ellipsis={{ tooltip: part.name }}>
-            {part.name}
-          </Typography.Text>
-          <Typography.Text type="secondary" ellipsis style={small}>
-            {meta(part.brand, `Fig. ${part.figure}`, `SKU ${part.sku}`)}
-          </Typography.Text>
-        </Flex>
-      </Flex>
-
-      <MatchBlock>
-        <Typography.Text type="secondary" style={small}>
-          {competitors.length > 1 ? `Best of ${competitors.length} matches` : 'Only match'}
-        </Typography.Text>
-        <Flex gap={token.marginXS} align="center" style={{ minWidth: 0 }}>
-          <MatchTypeTag type={first.matchType} />
-          <Typography.Text ellipsis style={{ flex: 1, minWidth: 0 }}>
-            {meta(first.part.brand, `Fig. ${first.part.figure}`, first.part.sku)}
-          </Typography.Text>
-        </Flex>
-      </MatchBlock>
-
+      <PartTile
+        photoName={part.name}
+        matchType={first.matchType}
+        count={competitors.length}
+        countNoun={{ one: 'match', plural: 'matches' }}
+        name={part.name}
+        secondary={`Matches ${first.part.brand} ${first.part.sku}`}
+      />
     </CardShell>
   );
 }

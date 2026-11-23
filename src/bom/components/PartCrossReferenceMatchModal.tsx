@@ -1,263 +1,315 @@
-import { CopyOutlined, FilePdfOutlined, LinkOutlined } from '@ant-design/icons';
+import { ArrowRightOutlined, CheckCircleFilled, ExclamationCircleFilled, ExportOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
-import { MatchTypeTag, OriginTag, PartPhoto } from './PartCrossReferenceCard';
+import { MatchTypeTag, PartPhoto } from './PartCrossReferenceCard';
+import { HydraTag } from '../../ui/HydraTag';
 import {
+  RSFC_PARTS,
+  competitorDescriptionAttributes,
   rsfcPimAttributes,
   sortEquivalents,
   type CompetitorPart,
-  type RsfcEquivalent,
-  type RsfcOrigin,
 } from '../data/partCrossReferenceData';
 import { sizeLabel } from '../data/pimDisplayMapping';
 import {
   hydraBaseMedium,
   hydraSmallNormal,
   hydraTextStyleToReactCss,
-  hydraTitleHeading5,
 } from '../../theme/hydraTypography';
-import { Alert, Button, Flex, Modal, Segmented, Typography, message, theme } from '../../ui/antd';
-
-type OriginFilter = 'all' | RsfcOrigin;
+import { Alert, Button, Flex, Modal, Segmented, Table, Typography, message, theme } from '../../ui/antd';
 
 type Props = {
   part: CompetitorPart | null;
+  /** Set on the RSFC part → competitor tab: the RSFC SKU of the card that was opened. */
+  openedSku?: string;
   onClose: () => void;
 };
 
-/** Modal width: 232 px competitor panel + the match list. Narrowed from 880 px on 17 Nov 2026 (Milos). */
-const MODAL_WIDTH = 760;
-const COMPETITOR_PANEL = 232;
-const PHOTO = 72;
+type SpecRow = { key: string; label: string; short: string; competitor: string; rsfc: string; same: boolean };
 
-function meta(...parts: Array<string | undefined>): string {
-  return parts.filter(Boolean).join(' · ');
+/** Modal width (design canvas M9 / M10). */
+const MODAL_WIDTH = 760;
+
+function joinWords(words: string[]): string {
+  if (words.length <= 1) return words.join('');
+  return `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`;
+}
+
+function sentence(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 /**
- * Match details, version 1 (chosen 17 Nov 2026): today's two-column layout in the part card language.
- * Content and functions unchanged, as Matt asked (BOM-431): competitor part on the left; RSFC parts best first on the
- * right with origin filter, copy SKU, View product, Submittal PDF and warnings. Adds real photos, bordered tags and
- * the card meta line. Empty values are hidden (PIM display mapping), so no "Not specified".
+ * Match details, compare layout (design canvas M9 / M10, 23 Nov 2026). The competitor part is always on the left and
+ * the RSFC part always on the right, with the specs both sides have in one small table. One RSFC option (competitor
+ * part → RSFC) or one competitor part (RSFC part → competitor) is shown at a time. Empty values are hidden, so there
+ * is no "Not specified". Built from DS parts and tokens only.
  */
-export function PartCrossReferenceMatchModal({ part, onClose }: Props) {
+export function PartCrossReferenceMatchModal({ part, openedSku, onClose }: Props) {
   const { token } = theme.useToken();
-  const [origin, setOrigin] = useState<OriginFilter>('all');
+  const small = hydraTextStyleToReactCss(hydraSmallNormal);
+  const medium = hydraTextStyleToReactCss(hydraBaseMedium);
+  const rsfcMode = Boolean(openedSku);
+
+  const [index, setIndex] = useState(0);
+  const [sku, setSku] = useState<string | undefined>(openedSku);
 
   useEffect(() => {
-    setOrigin('all');
-  }, [part?.sku]);
+    setIndex(0);
+    setSku(openedSku);
+  }, [part?.sku, openedSku]);
 
-  const equivalents = useMemo(() => (part ? sortEquivalents(part.equivalents) : []), [part]);
-  const visible = origin === 'all' ? equivalents : equivalents.filter((e) => e.origin === origin);
-  const countFor = (o: RsfcOrigin) => equivalents.filter((e) => e.origin === o).length;
-  const small = hydraTextStyleToReactCss(hydraSmallNormal);
+  const competitors = useMemo(() => {
+    if (!part) return [];
+    const rsfcPart = openedSku ? RSFC_PARTS.find((p) => p.sku === openedSku) : undefined;
+    return rsfcPart ? rsfcPart.competitors.map((c) => c.part) : [part];
+  }, [part, openedSku]);
 
-  const attributes = part
-    ? ([
-        ['Brand', part.brand],
-        ['Figure', part.figure],
-        ['Size', part.size ? sizeLabel(part.size) : undefined],
-        ['Material', part.material],
-      ].filter(([, value]) => Boolean(value)) as Array<[string, string]>)
-    : [];
+  const competitor = rsfcMode ? competitors[index] : part;
+  const equivalents = useMemo(() => (competitor ? sortEquivalents(competitor.equivalents) : []), [competitor]);
+  const equivalent = rsfcMode ? (equivalents.find((e) => e.sku === sku) ?? equivalents[0]) : equivalents[index];
 
-  return (
-    <Modal
-      open={part !== null}
-      onCancel={onClose}
-      title={part ? `Match details · ${part.sku}` : undefined}
-      width={MODAL_WIDTH}
-      destroyOnHidden
-      footer={
-        <Button type="primary" onClick={onClose}>
-          Done
-        </Button>
-      }
-    >
-      {part ? (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: `${COMPETITOR_PANEL}px minmax(0, 1fr)`,
-            gap: token.marginLG,
-            alignItems: 'start',
-            paddingBlock: token.paddingXS,
-          }}
-        >
-          {/* Competitor part: label → identity (SKU + name) → hairline → attributes */}
+  const ready = Boolean(competitor && equivalent);
+
+  const copySku = async () => {
+    if (!equivalent) return;
+    try {
+      await navigator.clipboard.writeText(equivalent.sku);
+      message.success(`SKU ${equivalent.sku} copied`);
+    } catch {
+      message.error('Could not copy the SKU. Select it and copy it by hand.');
+    }
+  };
+
+  let body = null;
+  if (competitor && equivalent) {
+    const pim = rsfcPimAttributes(competitor, equivalent);
+    const fromDescription = competitorDescriptionAttributes(competitor);
+    const candidates: Array<Omit<SpecRow, 'same'> & { competitor?: string; rsfc?: string }> = [
+      { key: 'type', label: 'Product type', short: 'type', competitor: fromDescription.productType, rsfc: pim.productType },
+      {
+        key: 'size',
+        label: 'Size',
+        short: 'size',
+        competitor: competitor.size ? sizeLabel(competitor.size) : undefined,
+        rsfc: sizeLabel(equivalent.size),
+      },
+      {
+        key: 'connection',
+        label: 'End connection',
+        short: 'connection',
+        competitor: fromDescription.endConnection,
+        rsfc: pim.endConnection,
+      },
+    ];
+    const rows: SpecRow[] = candidates
+      .filter((row): row is SpecRow => Boolean(row.competitor && row.rsfc))
+      .map((row) => ({ ...row, same: row.competitor.toLowerCase() === row.rsfc.toLowerCase() }));
+    const differing = rows.filter((row) => !row.same);
+    const verdict =
+      differing.length === 0
+        ? sentence(`${joinWords(rows.map((row) => row.short))} match`)
+        : `Check before using: ${joinWords(differing.map((row) => row.short))} differ`;
+
+    const exactOther =
+      rsfcMode && equivalent.matchType === 'Substitute'
+        ? equivalents.find((e) => e.matchType === 'Exact match' && e.sku !== equivalent.sku)
+        : undefined;
+    const opened = rsfcMode && equivalent.sku === openedSku;
+    const rsfcMeta = [pim.material, equivalent.origin, ...pim.certifications].filter(Boolean).join(' · ');
+
+    const switchOptions = rsfcMode
+      ? competitors.map((c, i) => ({ value: i, label: `${c.brand} ${c.sku}` }))
+      : equivalents.map((_, i) => ({ value: i, label: `Option ${i + 1}` }));
+    const count = rsfcMode ? competitors.length : equivalents.length;
+    const countText = rsfcMode
+      ? `Replaces ${count} competitor part${count === 1 ? '' : 's'}`
+      : `${count} equivalent${count === 1 ? '' : 's'}`;
+
+    body = (
+      <Flex vertical gap={token.margin} style={{ paddingBlock: token.paddingXS }}>
+        <Flex justify="space-between" align="center" gap={token.marginSM} wrap="wrap">
+          <Typography.Text type="secondary">{countText}</Typography.Text>
+          {switchOptions.length > 1 ? (
+            <Segmented
+              aria-label={rsfcMode ? 'Competitor part' : 'RSFC option'}
+              value={index}
+              options={switchOptions}
+              onChange={(value) => {
+                setIndex(value);
+                setSku(openedSku);
+              }}
+            />
+          ) : null}
+        </Flex>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)', alignItems: 'center', gap: token.marginXS }}>
           <Flex
             vertical
-            gap={token.marginXS}
+            gap={token.marginXXS}
             aria-label="Competitor part"
             style={{
+              alignSelf: 'stretch',
               padding: token.paddingSM,
               background: token.colorFillAlter,
               border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
               borderRadius: token.borderRadiusLG,
             }}
           >
-            <Typography.Text type="secondary" style={small}>
-              Competitor part
-            </Typography.Text>
-            <Flex
-              vertical
-              gap={token.marginXXS}
-              style={{
-                paddingBottom: token.padding,
-                borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-              }}
-            >
-              <Typography.Text style={hydraTextStyleToReactCss(hydraBaseMedium)}>{part.sku}</Typography.Text>
-              <Typography.Text type="secondary" style={{ overflowWrap: 'anywhere' }}>
-                {part.description}
-              </Typography.Text>
+            <Flex>
+              <HydraTag>Competitor</HydraTag>
             </Flex>
-            <dl
-              style={{
-                display: 'grid',
-                gridTemplateColumns: `${token.controlHeight * 2}px minmax(0, 1fr)`,
-                gap: `${token.marginXS}px ${token.marginSM}px`,
-                margin: 0,
-                paddingTop: token.marginXS,
-              }}
-            >
-              {attributes.map(([label, value]) => (
-                <div key={label} style={{ display: 'contents' }}>
-                  <dt style={{ color: token.colorTextTertiary }}>{label}</dt>
-                  <dd style={{ margin: 0, minWidth: 0, overflowWrap: 'anywhere' }}>{value}</dd>
-                </div>
-              ))}
-            </dl>
+            <Typography.Text style={medium}>{competitor.sku}</Typography.Text>
+            <Typography.Text>{`${competitor.brand} · Fig. ${competitor.figure}`}</Typography.Text>
+            <Typography.Text type="secondary" style={{ ...small, overflowWrap: 'anywhere' }}>
+              {competitor.description}
+            </Typography.Text>
           </Flex>
 
-          {/* RSFC parts, best first */}
-          <Flex vertical gap={token.margin} style={{ minWidth: 0 }}>
-            <Flex justify="space-between" align="center" gap={token.marginSM} wrap="wrap">
-              <Typography.Title level={5} style={{ margin: 0, ...hydraTextStyleToReactCss(hydraTitleHeading5) }}>
-                {equivalents.length} RSFC match{equivalents.length === 1 ? '' : 'es'}
-              </Typography.Title>
-              {equivalents.length > 1 ? (
-                <Segmented<OriginFilter>
-                  aria-label="Origin"
-                  value={origin}
-                  onChange={setOrigin}
-                  options={[
-                    { value: 'all', label: `All (${equivalents.length})` },
-                    { value: 'Domestic', label: `Domestic (${countFor('Domestic')})`, disabled: countFor('Domestic') === 0 },
-                    { value: 'Import', label: `Import (${countFor('Import')})`, disabled: countFor('Import') === 0 },
-                  ]}
-                />
-              ) : null}
-            </Flex>
+          <ArrowRightOutlined aria-hidden style={{ color: token.colorTextTertiary }} />
 
-            <Flex vertical gap={token.marginSM}>
-              {visible.map((equivalent, index) => (
-                <MatchRow
-                  key={equivalent.sku}
-                  part={part}
-                  equivalent={equivalent}
-                  best={index === 0 && origin === 'all' && equivalents.length > 1}
-                  onNavigate={onClose}
-                />
-              ))}
+          <Flex
+            gap={token.marginSM}
+            align="center"
+            aria-label="RSFC part"
+            style={{
+              alignSelf: 'stretch',
+              padding: token.paddingSM,
+              background: token.colorPrimaryBg,
+              border: `${token.lineWidth}px ${token.lineType} ${token.colorPrimaryBorder}`,
+              borderRadius: token.borderRadiusLG,
+            }}
+          >
+            {/* The photo fills the block: the same paddingSM from the top, bottom and left edges. */}
+            <PartPhoto name={equivalent.name} size={token.controlHeightLG * 3 + token.marginXXS} />
+            <Flex vertical gap={token.marginXXS} style={{ minWidth: 0 }}>
+              <Flex gap={token.marginXS} align="center" wrap="wrap">
+                <HydraTag>RSFC</HydraTag>
+                <MatchTypeTag type={equivalent.matchType} />
+              </Flex>
+              {opened ? (
+                <Typography.Text style={{ ...small, color: token.colorPrimaryText }}>You opened this</Typography.Text>
+              ) : null}
+              <Typography.Text style={medium}>{equivalent.sku}</Typography.Text>
+              <Typography.Text>{`${equivalent.brand} · Fig. ${equivalent.figure}`}</Typography.Text>
+              <Typography.Text type="secondary" style={{ ...small, overflowWrap: 'anywhere' }}>
+                {rsfcMeta}
+              </Typography.Text>
             </Flex>
           </Flex>
         </div>
-      ) : null}
-    </Modal>
-  );
-}
 
-/** One RSFC part, card language: 72 px photo beside tags / name / meta, then SKU with copy and the links. */
-function MatchRow({
-  part,
-  equivalent,
-  best,
-  onNavigate,
-}: {
-  part: CompetitorPart;
-  equivalent: RsfcEquivalent;
-  best: boolean;
-  onNavigate: () => void;
-}) {
-  const { token } = theme.useToken();
-  const navigate = useNavigate();
-  const small = hydraTextStyleToReactCss(hydraSmallNormal);
-  const material = rsfcPimAttributes(part, equivalent).material;
+        {rows.length > 0 ? (
+          <Flex vertical gap={token.marginXS}>
+            <Flex gap={token.marginXS} align="center">
+              {differing.length === 0 ? (
+                <CheckCircleFilled aria-hidden style={{ color: token.colorSuccess }} />
+              ) : (
+                <ExclamationCircleFilled aria-hidden style={{ color: token.colorWarning }} />
+              )}
+              <Typography.Text style={medium}>{verdict}</Typography.Text>
+            </Flex>
+            <Table<SpecRow>
+              size="small"
+              pagination={false}
+              showHeader={false}
+              rowKey="key"
+              dataSource={rows}
+              columns={[
+                {
+                  dataIndex: 'label',
+                  width: token.controlHeight * 4,
+                  render: (value: string) => <Typography.Text type="secondary">{value}</Typography.Text>,
+                },
+                { dataIndex: 'competitor' },
+                {
+                  key: 'match',
+                  width: token.controlHeightLG,
+                  align: 'center',
+                  render: (_: unknown, row: SpecRow) =>
+                    row.same ? (
+                      <CheckCircleFilled aria-label="Same" style={{ color: token.colorSuccess }} />
+                    ) : (
+                      <ExclamationCircleFilled aria-label="Differs" style={{ color: token.colorWarning }} />
+                    ),
+                },
+                {
+                  dataIndex: 'rsfc',
+                  render: (value: string) => <Typography.Text style={medium}>{value}</Typography.Text>,
+                },
+              ]}
+            />
+            <Typography.Text type="secondary" style={small}>
+              Competitor values are read from its description. Material and origin are known for RSFC parts only.
+            </Typography.Text>
+          </Flex>
+        ) : null}
+
+        {exactOther ? (
+          <Alert
+            type="warning"
+            showIcon
+            title={`Substitute. The exact match for this part is ${exactOther.brand} Fig. ${exactOther.figure} (${exactOther.sku}).`}
+            action={
+              <Button type="link" size="small" onClick={() => setSku(exactOther.sku)}>
+                Compare it
+              </Button>
+            }
+          />
+        ) : null}
+        {equivalent.note ? <Alert type="warning" showIcon title={equivalent.note} /> : null}
+      </Flex>
+    );
+  }
 
   return (
-    <Flex
-      vertical
-      gap={token.marginSM}
-      style={{
-        padding: token.paddingSM,
-        background: token.colorBgContainer,
-        border: `${token.lineWidth}px ${token.lineType} ${best ? token.colorPrimaryBorder : token.colorBorderSecondary}`,
-        borderRadius: token.borderRadiusLG,
-        boxShadow: token.boxShadowTertiary,
-      }}
-    >
-      <Flex gap={token.marginSM} align="center" style={{ minWidth: 0 }}>
-        <PartPhoto name={equivalent.name} size={PHOTO} />
-        <Flex vertical justify="space-between" style={{ flex: 1, minWidth: 0, height: PHOTO }}>
-          <Flex gap={token.marginXXS} wrap="wrap">
-            <MatchTypeTag type={equivalent.matchType} />
-            <OriginTag origin={equivalent.origin} />
+    <Modal
+      open={part !== null && ready}
+      onCancel={onClose}
+      title={
+        competitor && equivalent
+          ? rsfcMode
+            ? `Competitor part for ${equivalent.brand} ${equivalent.sku}`
+            : `RSFC replacement for ${competitor.sku}`
+          : undefined
+      }
+      width={MODAL_WIDTH}
+      destroyOnHidden
+      footer={
+        equivalent ? (
+          <Flex justify="space-between" align="center" gap={token.marginSM}>
+            <Flex gap={token.margin}>
+              <Typography.Link
+                href={`/search/results?q=${encodeURIComponent(equivalent.sku)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Opens in a new tab"
+              >
+                View product <ExportOutlined aria-hidden />
+              </Typography.Link>
+              {equivalent.hasSubmittalPdf ? (
+                <Button
+                  type="link"
+                  size="small"
+                  title="Opens in a new tab"
+                  style={{ paddingInline: 0, height: 'auto' }}
+                  onClick={() => message.info('Submittal PDFs open from the product page in the live app.')}
+                >
+                  Submittal PDF <ExportOutlined aria-hidden />
+                </Button>
+              ) : null}
+            </Flex>
+            <Flex gap={token.marginXS}>
+              <Button onClick={onClose}>Close</Button>
+              <Button type="primary" onClick={copySku}>
+                Copy SKU
+              </Button>
+            </Flex>
           </Flex>
-          <Typography.Text style={hydraTextStyleToReactCss(hydraBaseMedium)} ellipsis={{ tooltip: equivalent.name }}>
-            {equivalent.name}
-          </Typography.Text>
-          <Typography.Text type="secondary" ellipsis style={small}>
-            {meta(equivalent.brand, `Fig. ${equivalent.figure}`, `Size ${sizeLabel(equivalent.size)}`, material)}
-          </Typography.Text>
-        </Flex>
-      </Flex>
-
-      {equivalent.note ? <Alert type="warning" showIcon title={equivalent.note} /> : null}
-
-      <Flex justify="space-between" align="center" gap={token.marginSM} wrap="wrap">
-        <Flex align="center" gap={token.marginXXS}>
-          <Typography.Text type="secondary">SKU</Typography.Text>
-          <Typography.Text
-            style={hydraTextStyleToReactCss(hydraBaseMedium)}
-            copyable={{
-              text: equivalent.sku,
-              icon: <CopyOutlined aria-label={`Copy SKU ${equivalent.sku}`} />,
-              tooltips: ['Copy SKU', 'Copied'],
-              onCopy: () => message.success(`SKU ${equivalent.sku} copied`),
-            }}
-          >
-            {equivalent.sku}
-          </Typography.Text>
-        </Flex>
-        <Flex gap={token.margin} wrap="wrap">
-          <Button
-            type="link"
-            size="small"
-            icon={<LinkOutlined />}
-            style={{ paddingInline: 0 }}
-            onClick={() => {
-              onNavigate();
-              navigate(`/search/results?q=${encodeURIComponent(equivalent.sku)}`);
-            }}
-          >
-            View product
-          </Button>
-          {equivalent.hasSubmittalPdf ? (
-            <Button
-              type="link"
-              size="small"
-              icon={<FilePdfOutlined />}
-              style={{ paddingInline: 0 }}
-              onClick={() => message.info('Submittal PDFs open from the product page in the live app.')}
-            >
-              Submittal PDF
-            </Button>
-          ) : null}
-        </Flex>
-      </Flex>
-    </Flex>
+        ) : null
+      }
+    >
+      {body}
+    </Modal>
   );
 }

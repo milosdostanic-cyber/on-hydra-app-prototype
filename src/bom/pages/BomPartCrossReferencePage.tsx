@@ -92,7 +92,8 @@ export function BomPartCrossReferencePage() {
   const [filters, setFilters] = useState<CrossReferenceFilters>(EMPTY_CROSS_REFERENCE_FILTERS);
   const [phase, setPhase] = useState<Phase>(searchFirst && !params.get('q') ? 'idle' : 'results');
   const [page, setPage] = useState(1);
-  const [openPart, setOpenPart] = useState<CompetitorPart | null>(null);
+  /** The match details modal. `openedSku` is set on the RSFC part → competitor tab (the RSFC card that was clicked). */
+  const [openMatch, setOpenMatch] = useState<{ part: CompetitorPart; openedSku?: string } | null>(null);
   const timer = useRef<number | undefined>(undefined);
   const rootRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -248,7 +249,7 @@ export function BomPartCrossReferencePage() {
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: `repeat(auto-fill, minmax(${token.controlHeight * 9}px, 1fr))`,
+        gridTemplateColumns: `repeat(auto-fill, minmax(${token.controlHeight * 8}px, 1fr))`,
         gap: token.padding,
         padding: token.paddingMD,
         alignItems: 'stretch',
@@ -256,10 +257,14 @@ export function BomPartCrossReferencePage() {
     >
       {submitted?.direction === 'rsfc'
         ? rsfcResults.slice(from, to).map((result) => (
-            <RsfcPartCard key={result.part.sku} result={result} onOpen={() => setOpenPart(result.competitors[0].part)} />
+            <RsfcPartCard
+              key={result.part.sku}
+              result={result}
+              onOpen={() => setOpenMatch({ part: result.competitors[0].part, openedSku: result.part.sku })}
+            />
           ))
         : competitorResults.slice(from, to).map((result) => (
-            <CompetitorPartCard key={result.part.sku} result={result} onOpen={() => setOpenPart(result.part)} />
+            <CompetitorPartCard key={result.part.sku} result={result} onOpen={() => setOpenMatch({ part: result.part })} />
           ))}
     </div>
   );
@@ -272,7 +277,7 @@ export function BomPartCrossReferencePage() {
           aria-label="Searching parts"
           style={{
             display: 'grid',
-            gridTemplateColumns: `repeat(auto-fill, minmax(${token.controlHeight * 9}px, 1fr))`,
+            gridTemplateColumns: `repeat(auto-fill, minmax(${token.controlHeight * 8}px, 1fr))`,
             gap: token.padding,
             padding: token.paddingMD,
           }}
@@ -505,7 +510,11 @@ export function BomPartCrossReferencePage() {
         </Card>
       </Flex>
 
-      <PartCrossReferenceMatchModal part={openPart} onClose={() => setOpenPart(null)} />
+      <PartCrossReferenceMatchModal
+        part={openMatch?.part ?? null}
+        openedSku={openMatch?.openedSku}
+        onClose={() => setOpenMatch(null)}
+      />
     </Flex>
   );
 }

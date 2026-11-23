@@ -368,6 +368,18 @@ export function rsfcPimAttributes(part: CompetitorPart, equivalent: RsfcEquivale
   };
 }
 
+/**
+ * Competitor parts have no PIM data. Product type and end connection are read from the description with the same
+ * patterns as `rsfcPimAttributes`, so the match modal can compare them. Undefined = cannot tell.
+ */
+export function competitorDescriptionAttributes(part: CompetitorPart): { productType?: string; endConnection?: string } {
+  const text = part.description.toUpperCase();
+  return {
+    productType: /CHK|CKV|CHECK/.test(text) ? 'Check Valve' : /CPLG|COUP/.test(text) ? 'Rigid Coupling' : undefined,
+    endConnection: /GROOVED|GRV|RIGIDLOK|GSKT/.test(text) ? 'Grooved' : undefined,
+  };
+}
+
 function pimPasses(pim: RsfcPimAttributes, size: string, brand: string, filters: CrossReferenceFilters): boolean {
   const has = (selected: string[], value: string | undefined) =>
     selected.length === 0 || (value !== undefined && selected.includes(value));
