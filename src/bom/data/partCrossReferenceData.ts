@@ -1,11 +1,4 @@
-/**
- * Part Cross-Reference (live: `/bom/projects/:id/static-matches`) — demo data.
- * Categories mirror the 42 live tabs (plus "All categories"), grouped for the dropdown
- * (Figma BOM - RSFC · "Category dropdown · all 42 categories"). Parts and equivalents are
- * prototype samples modelled on the live results for "valve".
- */
-
-import { PIM_PRODUCT_TYPE_GROUP, type PimProductGroup } from './pimDisplayMapping';
+/** Prototype fixtures for competitor parts and their mapped RSFC replacements. */
 
 export const ALL_CATEGORIES = 'all' as const;
 
@@ -133,7 +126,7 @@ export type RsfcEquivalent = {
   matchType: RsfcMatchType;
   origin: RsfcOrigin;
   productUrl?: string;
-  hasSubmittalPdf: boolean;
+  productType: string;
   /** Caveat the user must check before using this equivalent (e.g. pressure rating). */
   note?: {
     title: string;
@@ -161,7 +154,7 @@ const check716 = (size: string, sku: string, sciSku: string): RsfcEquivalent[] =
     size,
     matchType: 'Exact match',
     origin: 'Domestic',
-    hasSubmittalPdf: true,
+    productType: 'Check Valve',
   },
   {
     sku: sciSku,
@@ -171,7 +164,7 @@ const check716 = (size: string, sku: string, sciSku: string): RsfcEquivalent[] =
     size,
     matchType: 'Substitute',
     origin: 'Import',
-    hasSubmittalPdf: false,
+    productType: 'Check Valve',
   },
 ];
 
@@ -230,7 +223,7 @@ export const COMPETITOR_PARTS: CompetitorPart[] = [
         size: '2',
         matchType: 'Substitute',
         origin: 'Domestic',
-        hasSubmittalPdf: true,
+        productType: 'Check Valve',
         note: {
           title: 'Check the working pressure',
           description: 'Gruvlok max. working pressure is 300 psi. Confirm it meets the job spec.',
@@ -257,7 +250,7 @@ export const COMPETITOR_PARTS: CompetitorPart[] = [
         matchType: 'Exact match',
         origin: 'Domestic',
         productUrl: 'https://www.asc-es.com/products/7401-rigidlok-coupling',
-        hasSubmittalPdf: false,
+        productType: 'Rigid Coupling',
       },
     ],
   },
@@ -279,7 +272,7 @@ export const COMPETITOR_PARTS: CompetitorPart[] = [
         matchType: 'Exact match',
         origin: 'Import',
         productUrl: 'https://www.asc-es.com/products/7401ss-stainless-steel-rigid-coupling',
-        hasSubmittalPdf: false,
+        productType: 'Rigid Coupling',
       },
     ],
   },
@@ -300,7 +293,7 @@ export const COMPETITOR_PARTS: CompetitorPart[] = [
         matchType: 'Exact match',
         origin: 'Domestic',
         productUrl: 'https://www.asc-es.com/products/78fp-check-valve',
-        hasSubmittalPdf: false,
+        productType: 'Check Valve',
       },
     ],
   },
@@ -325,7 +318,7 @@ export const COMPETITOR_PARTS: CompetitorPart[] = [
         size,
         matchType: 'Exact match' as const,
         origin: 'Domestic' as const,
-        hasSubmittalPdf: true,
+        productType: 'Check Valve',
       },
       {
         sku: `43230${gruvlokSku.slice(5)}`,
@@ -335,7 +328,7 @@ export const COMPETITOR_PARTS: CompetitorPart[] = [
         size,
         matchType: 'Substitute' as const,
         origin: 'Import' as const,
-        hasSubmittalPdf: false,
+        productType: 'Check Valve',
       },
     ],
   })),
@@ -355,10 +348,35 @@ export const COMPETITOR_PARTS: CompetitorPart[] = [
         size,
         matchType: 'Exact match' as const,
         origin: 'Domestic' as const,
-        hasSubmittalPdf: true,
+        productType: 'Check Valve',
       },
     ],
   })),
+  {
+    sku: 'L020109PE2',
+    figure: '109',
+    description: '2 CPL 109 E TYPE A ORG ND',
+    brand: 'Victaulic',
+    size: '2',
+    category: 'Pipe Connections',
+    equivalents: [
+      {
+        sku: '0890020606',
+        name: 'SPF C9-CL Centerlok 2 in rigid coupling',
+        brand: 'SPF Anvil',
+        figure: 'C9-CL',
+        size: '2',
+        matchType: 'Exact match',
+        origin: 'Import',
+        productType: 'Rigid Coupling',
+        productUrl: 'https://www.asc-es.com/products/c9-cl-sl-rigid-coupling',
+        note: {
+          title: 'Verify availability',
+          description: 'Uses two bolts instead of one.',
+        },
+      },
+    ],
+  },
   ...couplings.map(([sku, description, figure, size, material]) => ({
     sku,
     figure,
@@ -376,7 +394,7 @@ export const COMPETITOR_PARTS: CompetitorPart[] = [
         size,
         matchType: 'Exact match' as const,
         origin: 'Domestic' as const,
-        hasSubmittalPdf: true,
+        productType: 'Rigid Coupling',
       },
       {
         sku: `0416${sku.slice(1, 7)}`,
@@ -386,7 +404,7 @@ export const COMPETITOR_PARTS: CompetitorPart[] = [
         size,
         matchType: 'Substitute' as const,
         origin: 'Import' as const,
-        hasSubmittalPdf: false,
+        productType: 'Rigid Coupling',
       },
     ],
   })),
@@ -423,221 +441,31 @@ export function searchCompetitorParts(query: string, category: string = ALL_CATE
  * Filter attributes follow the PIM display mapping (CON-347, `pimDisplayMapping.ts`); values are samples.
  * ----------------------------------------------------------------------------------------------- */
 
-export type CrossReferenceDirection = 'competitor' | 'rsfc';
-
-/** Match type, origin and RSFC attributes (see `pimDisplayMapping.ts`). */
 export type CrossReferenceFilters = {
   matchTypes: CrossReferenceMatchType[];
+  brands: string[];
   origins: RsfcOrigin[];
   productTypes: string[];
   sizes: string[];
-  endConnections: string[];
-  materials: string[];
-  certifications: string[];
-  brands: string[];
 };
 
 export const EMPTY_CROSS_REFERENCE_FILTERS: CrossReferenceFilters = {
   matchTypes: [],
+  brands: [],
   origins: [],
   productTypes: [],
   sizes: [],
-  endConnections: [],
-  materials: [],
-  certifications: [],
-  brands: [],
 };
 
 export function countActiveFilters(filters: CrossReferenceFilters): number {
   return Object.values(filters).reduce((sum, values) => sum + values.length, 0);
 }
 
-/** RSFC PIM fields for one equivalent. Undefined = empty cell = hidden. */
-export type RsfcPimAttributes = {
-  productType: string;
-  group: PimProductGroup;
-  /** Body */
-  material?: string;
-  /** End Connection 1 (both ends the same in the sample data) */
-  endConnection?: string;
-  /** Certification columns with a value, e.g. UL Listed, FM Approved */
-  certifications: string[];
-};
-
-/**
- * Sample PIM values derived from the demo part names. Product types follow Sofija's mapping:
- * Gruvlok and SCI check valves are `Check Valve` (Commercial and industrial valves), couplings are `Rigid Coupling`.
- */
-export function rsfcPimAttributes(part: CompetitorPart, equivalent: RsfcEquivalent): RsfcPimAttributes {
-  const name = equivalent.name.toUpperCase();
-  const productType = /CPLG|COUP/.test(name) ? 'Rigid Coupling' : 'Check Valve';
-  const certifications = [
-    ...(/\bUL\b|UL\//.test(name) ? ['UL Listed'] : []),
-    ...(/\bFM\b|\/FM/.test(name) ? ['FM Approved'] : []),
-  ];
-  return {
-    productType,
-    group: PIM_PRODUCT_TYPE_GROUP[productType],
-    material: equivalent.brand === 'SCI' ? 'Cast Iron' : (part.material ?? 'Ductile Iron'),
-    endConnection: /GROOVED|GRV|RIGIDLOK|GSKT/.test(name) ? 'Grooved' : undefined,
-    certifications,
-  };
-}
-
-/**
- * Competitor parts have no PIM data. Product type and end connection are read from the description with the same
- * patterns as `rsfcPimAttributes`, so the match modal can compare them. Undefined = cannot tell.
- */
-export function competitorDescriptionAttributes(part: CompetitorPart): { productType?: string; endConnection?: string } {
-  const text = part.description.toUpperCase();
-  return {
-    productType: /CHK|CKV|CHECK/.test(text) ? 'Check Valve' : /CPLG|COUP/.test(text) ? 'Rigid Coupling' : undefined,
-    endConnection: /GROOVED|GRV|RIGIDLOK|GSKT/.test(text) ? 'Grooved' : undefined,
-  };
-}
-
-function pimPasses(pim: RsfcPimAttributes, size: string, brand: string, filters: CrossReferenceFilters): boolean {
-  const has = (selected: string[], value: string | undefined) =>
-    selected.length === 0 || (value !== undefined && selected.includes(value));
-  return (
-    has(filters.productTypes, pim.productType) &&
-    has(filters.sizes, size) &&
-    has(filters.endConnections, pim.endConnection) &&
-    has(filters.materials, pim.material) &&
-    has(filters.brands, brand) &&
-    (filters.certifications.length === 0 || filters.certifications.some((c) => pim.certifications.includes(c)))
-  );
-}
-
-function equivalentPasses(part: CompetitorPart, equivalent: RsfcEquivalent, filters: CrossReferenceFilters): boolean {
-  return (
-    (filters.matchTypes.length === 0 || filters.matchTypes.includes(equivalent.matchType)) &&
-    (filters.origins.length === 0 || filters.origins.includes(equivalent.origin)) &&
-    pimPasses(rsfcPimAttributes(part, equivalent), equivalent.size, equivalent.brand, filters)
-  );
-}
-
-function queryWords(query: string): string[] {
-  return query.trim().toLowerCase().split(/\s+/).filter(Boolean);
-}
-
 export type CompetitorPartResult = {
   kind: 'competitor-sku';
   part: CompetitorPart;
-  /** Equivalents that pass the filters, best match first. */
   equivalents: RsfcEquivalent[];
 };
-
-/** Empty query = browse all parts (open decision, BOM-360). */
-export function listCompetitorParts(
-  query: string,
-  category: string,
-  filters: CrossReferenceFilters,
-): CompetitorPartResult[] {
-  const words = queryWords(query);
-  return COMPETITOR_PARTS.filter(
-    (part) =>
-      (category === ALL_CATEGORIES || part.category === category) &&
-      words.every((word) => haystack(part).includes(word)),
-  )
-    .map<CompetitorPartResult>((part) => ({
-      kind: 'competitor-sku',
-      part,
-      equivalents: sortEquivalents(part.equivalents.filter((e) => equivalentPasses(part, e, filters))),
-    }))
-    .filter((result) => result.equivalents.length > 0);
-}
-
-export type RsfcCompetitorMatch = {
-  part: CompetitorPart;
-  matchType: RsfcMatchType;
-  origin: RsfcOrigin;
-};
-
-export type RsfcPart = {
-  sku: string;
-  name: string;
-  brand: string;
-  figure: string;
-  size: string;
-  origin: RsfcOrigin;
-  hasSubmittalPdf: boolean;
-  pim: RsfcPimAttributes;
-  categories: string[];
-  /** Competitor parts that match this RSFC part, exact matches first. */
-  competitors: RsfcCompetitorMatch[];
-};
-
-function buildRsfcParts(): RsfcPart[] {
-  const bySku = new Map<string, RsfcPart>();
-  for (const part of COMPETITOR_PARTS) {
-    for (const e of part.equivalents) {
-      const existing = bySku.get(e.sku);
-      const match: RsfcCompetitorMatch = { part, matchType: e.matchType, origin: e.origin };
-      if (existing) {
-        existing.competitors.push(match);
-        if (!existing.categories.includes(part.category)) existing.categories.push(part.category);
-      } else {
-        bySku.set(e.sku, {
-          sku: e.sku,
-          name: e.name,
-          brand: e.brand,
-          figure: e.figure,
-          size: e.size,
-          origin: e.origin,
-          hasSubmittalPdf: e.hasSubmittalPdf,
-          pim: rsfcPimAttributes(part, e),
-          categories: [part.category],
-          competitors: [match],
-        });
-      }
-    }
-  }
-  const parts = [...bySku.values()];
-  for (const p of parts) p.competitors.sort((a, b) => (a.matchType === b.matchType ? 0 : a.matchType === 'Exact match' ? -1 : 1));
-  return parts;
-}
-
-export const RSFC_PARTS: RsfcPart[] = buildRsfcParts();
-
-function rsfcHaystack(part: RsfcPart): string {
-  return [
-    part.figure,
-    part.sku,
-    part.name,
-    part.brand,
-    part.pim.productType,
-    ...part.competitors.map((c) => `${c.part.figure} ${c.part.sku} ${c.part.description} ${c.part.brand}`),
-  ]
-    .join(' ')
-    .toLowerCase();
-}
-
-export type RsfcPartResult = {
-  kind: 'rsfc-sku';
-  part: RsfcPart;
-  /** Competitor matches that pass the match type filter. */
-  competitors: RsfcCompetitorMatch[];
-};
-
-export function listRsfcParts(query: string, category: string, filters: CrossReferenceFilters): RsfcPartResult[] {
-  const words = queryWords(query);
-  return RSFC_PARTS.filter(
-    (part) =>
-      (category === ALL_CATEGORIES || part.categories.includes(category)) &&
-      (filters.origins.length === 0 || filters.origins.includes(part.origin)) &&
-      pimPasses(part.pim, part.size, part.brand, filters) &&
-      words.every((word) => rsfcHaystack(part).includes(word)),
-  )
-    .map<RsfcPartResult>((part) => ({
-      kind: 'rsfc-sku',
-      part,
-      competitors: part.competitors.filter(
-        (c) => filters.matchTypes.length === 0 || filters.matchTypes.includes(c.matchType),
-      ),
-    }))
-    .filter((result) => result.competitors.length > 0);
-}
 
 export type CrossReferenceFigure = {
   brand: string;
@@ -649,31 +477,32 @@ export type CrossReferenceFigure = {
 export type FigureMatchResult = {
   kind: 'figure';
   key: string;
-  direction: CrossReferenceDirection;
   source: CrossReferenceFigure;
   targets: CrossReferenceFigure[];
+  productType: string;
 };
 
-export type SkuMatchResult = CompetitorPartResult | RsfcPartResult;
+export type CrossReferenceResult = CompetitorPartResult | FigureMatchResult;
 
-export type UnmatchedCompetitorResult = {
-  kind: 'unmatched-competitor';
-  part: Pick<CompetitorPart, 'brand' | 'sku' | 'figure' | 'description' | 'category'>;
-};
-
-export type CrossReferenceResult = SkuMatchResult | FigureMatchResult | UnmatchedCompetitorResult;
-
-/** Example competitor SKU with an empty target in the committed Hydra cheat-sheet source. */
-const UNMATCHED_COMPETITOR: UnmatchedCompetitorResult = {
-  kind: 'unmatched-competitor',
-  part: {
-    brand: 'Victaulic',
-    sku: 'L020441XE0',
-    figure: '441',
-    description: '2 in. stainless steel flange adapter',
-    category: 'Fittings',
-  },
-};
+export function summarizeCrossReferenceResult(result: CrossReferenceResult) {
+  const isFigure = result.kind === 'figure';
+  const part = isFigure ? result.source : result.part;
+  const count = isFigure ? result.targets.length : result.equivalents.length;
+  const countNoun = isFigure ? 'figure' : 'option';
+  const identifierLabel = isFigure ? 'Fig.' : 'SKU';
+  const identifierValue = isFigure ? result.source.figure : result.part.sku;
+  const matchType: CrossReferenceMatchType = isFigure ? FIGURE_MATCH : result.equivalents[0].matchType;
+  return {
+    key: isFigure ? `figure:${result.key}` : result.part.sku,
+    description: part.description,
+    brand: part.brand,
+    identifier: `${identifierLabel} ${identifierValue}`,
+    identifierLabel,
+    identifierValue,
+    matchType,
+    countLabel: `${count} ${countNoun}${count === 1 ? '' : 's'}`,
+  };
+}
 
 type FigureMapping = {
   competitor: CrossReferenceFigure;
@@ -722,142 +551,124 @@ export function crossReferenceFigureLabel(part: CrossReferenceFigure): string {
   return `${part.brand} Fig. ${part.figure}`;
 }
 
-export function listPrototypeVariantsForFigure(figure: CrossReferenceFigure): RsfcPart[] {
-  return RSFC_PARTS.filter((part) => figureKey(part) === figureKey(figure));
-}
-
-function listFigureMatches(
-  direction: CrossReferenceDirection,
-  query: string,
-  category: string,
-  filters: CrossReferenceFilters,
-): FigureMatchResult[] {
-  // These attributes describe a SKU or its match. Figure-only records do not have those values.
-  if (
-    (filters.matchTypes.length > 0 && !filters.matchTypes.includes(FIGURE_MATCH)) ||
-    filters.origins.length || filters.sizes.length || filters.endConnections.length ||
-    filters.materials.length || filters.certifications.length
-  ) return [];
-
-  const words = queryWords(query);
-  const results = new Map<string, FigureMatchResult>();
-  for (const mapping of FIGURE_MAPPINGS) {
-    if (category !== ALL_CATEGORIES && category !== mapping.category) continue;
-    if (filters.productTypes.length && !filters.productTypes.includes(mapping.productType)) continue;
-
-    for (const rsfc of mapping.rsfcFigures) {
-      if (filters.brands.length && !filters.brands.includes(rsfc.brand)) continue;
-      const [source, target] = direction === 'rsfc' ? [rsfc, mapping.competitor] : [mapping.competitor, rsfc];
-      const text = `${source.brand} ${source.figure} ${source.description}`.toLowerCase();
-      if (!words.every((word) => text.includes(word))) continue;
-
-      const key = figureKey(source);
-      const result = results.get(key);
-      if (result) {
-        result.targets.push(target);
-      } else {
-        results.set(key, { kind: 'figure', key, direction, source, targets: [target] });
-      }
+/** Catalog variants shown as choices for a figure, without asserting a SKU-level match. */
+export function listPrototypeVariantsForFigure(figure: CrossReferenceFigure): RsfcEquivalent[] {
+  const variants = new Map<string, RsfcEquivalent>();
+  for (const { equivalents } of COMPETITOR_PARTS) {
+    for (const equivalent of equivalents) {
+      if (figureKey(equivalent) === figureKey(figure)) variants.set(equivalent.sku, equivalent);
     }
   }
-  return [...results.values()];
+  return [...variants.values()];
 }
 
-export function listCrossReferenceResults(
-  direction: CrossReferenceDirection,
-  query: string,
-  category: string,
-  filters: CrossReferenceFilters,
-): CrossReferenceResult[] {
-  const skuResults: SkuMatchResult[] = direction === 'rsfc'
-    ? listRsfcParts(query, category, filters)
-    : listCompetitorParts(query, category, filters);
-  const figureResults = listFigureMatches(direction, query, category, filters);
+const ASC_SUBMITTALS = 'https://www.asc-es.com/resource';
+const FIGURE_SUBMITTALS: Record<string, string | undefined> = {
+  'Gruvlok:7811': `${ASC_SUBMITTALS}/7800%2BCheck%2BValve%2BSubmittal`,
+  'Gruvlok:78FP': `${ASC_SUBMITTALS}/78FP%2BCheck%2BValve%2BSubmittal`,
+  'Gruvlok:7401': 'https://www.asc-es.com/resources-and-downloads/7401-rigid-coupling-submittal',
+  'Gruvlok:7401SS': `${ASC_SUBMITTALS}/7401SS%2BStainless%2BSteel%2BRigid%2BCoupling%2BSubmittal`,
+  'SPF Anvil:C9-CL': `${ASC_SUBMITTALS}/SPF%20Anvil%20Fig.%20C9-CL-SL%20Rigid%20Coupling%20Submittal`,
+};
+
+export function rsfcSubmittal(part: Pick<CrossReferenceFigure, 'brand' | 'figure'>): string | undefined {
+  return FIGURE_SUBMITTALS[figureKey(part)];
+}
+
+export function listCrossReferenceResults(query: string, category: string): CrossReferenceResult[] {
   const term = query.trim().toLowerCase();
-  const unmatched = UNMATCHED_COMPETITOR.part;
-  const canShowUnmatchedExample =
-    direction === 'competitor' &&
-    (category === ALL_CATEGORIES || category === unmatched.category) &&
-    countActiveFilters(filters) === 0;
+  const words = term.split(/\s+/).filter(Boolean);
+  const inCategory = (value: string) => category === ALL_CATEGORIES || category === value;
+  const matches = (text: string) => words.every((word) => text.toLowerCase().includes(word));
 
+  const skuResults = COMPETITOR_PARTS
+    .filter((part) => inCategory(part.category) && part.equivalents.length > 0 && matches(haystack(part)))
+    .map<CompetitorPartResult>((part) => ({ kind: 'competitor-sku', part, equivalents: sortEquivalents(part.equivalents) }));
+  const figureResults = FIGURE_MAPPINGS.flatMap<FigureMatchResult>(({ category, competitor, rsfcFigures, productType }) => {
+    const parts = [competitor, ...rsfcFigures];
+    const text = parts.map((part) => `${crossReferenceFigureLabel(part)} ${part.description}`).join(' ');
+    return inCategory(category) && matches(text)
+      ? [{ kind: 'figure', key: figureKey(competitor), source: competitor, targets: rsfcFigures, productType }]
+      : [];
+  });
   if (term) {
-    if (
-      canShowUnmatchedExample &&
-      term === unmatched.sku.toLowerCase() &&
-      skuResults.length === 0 &&
-      figureResults.length === 0
-    ) {
-      return [UNMATCHED_COMPETITOR];
-    }
-
-    const exactFigure = figureResults.some((result) => result.source.figure.toLowerCase() === term);
+    const exactFigure = figureResults.some(({ source }) => source.figure.toLowerCase() === term);
     return exactFigure ? [...figureResults, ...skuResults] : [...skuResults, ...figureResults];
   }
 
-  // Browse mode previews each source figure before repeating its individual SKUs.
-  const shownFigures = new Set<string>();
-  const firstSkus: SkuMatchResult[] = [];
-  const remainingSkus: SkuMatchResult[] = [];
+  // Introduce each competitor figure before showing additional SKUs from the same figure.
+  const shown = new Set<string>();
+  const first: CompetitorPartResult[] = [];
+  const rest: CompetitorPartResult[] = [];
   for (const result of skuResults) {
     const key = figureKey(result.part);
-    const group = shownFigures.has(key) ? remainingSkus : firstSkus;
-    group.push(result);
-    shownFigures.add(key);
+    (shown.has(key) ? rest : first).push(result);
+    shown.add(key);
   }
-  const unmatchedResults = canShowUnmatchedExample && !skuResults.some(({ part }) => part.sku === unmatched.sku)
-    ? [UNMATCHED_COMPETITOR]
-    : [];
-  const browseResults = [...unmatchedResults, ...firstSkus.slice(0, 2), ...figureResults, ...firstSkus.slice(2), ...remainingSkus];
-  if (direction !== 'rsfc' || category !== ALL_CATEGORIES || countActiveFilters(filters) > 0) {
-    return browseResults;
-  }
+  return [...first, ...figureResults, ...rest];
+}
 
-  // The default reverse preview shows catalog photos plus one placeholder per result kind.
-  const withPhotos: CrossReferenceResult[] = [];
-  const placeholderExamples: CrossReferenceResult[] = [];
-  for (const result of browseResults) {
-    if (result.kind !== 'rsfc-sku' && result.kind !== 'figure') continue;
-    const photo = result.kind === 'rsfc-sku' ? rsfcSkuPhoto(result.part.sku) : result.source.photo;
-    if (photo) {
-      withPhotos.push(result);
-    } else if (!placeholderExamples.some((example) => example.kind === result.kind)) {
-      placeholderExamples.push(result);
+function matchesSelection(selected: readonly string[], value: string): boolean {
+  return selected.length === 0 || selected.includes(value);
+}
+
+export function filterCrossReferenceResults(
+  results: CrossReferenceResult[],
+  filters: CrossReferenceFilters,
+): CrossReferenceResult[] {
+  return results.flatMap<CrossReferenceResult>((result) => {
+    if (result.kind === 'figure') {
+      return matchesSelection(filters.brands, result.source.brand)
+        && matchesSelection(filters.matchTypes, FIGURE_MATCH)
+        && matchesSelection(filters.productTypes, result.productType)
+        && filters.origins.length === 0
+        && filters.sizes.length === 0
+        ? [result]
+        : [];
     }
-  }
-  return [...withPhotos.slice(0, 4), ...placeholderExamples, ...withPhotos.slice(4)];
+
+    if (!matchesSelection(filters.brands, result.part.brand)) return [];
+    const equivalents = result.equivalents.filter((option) =>
+      matchesSelection(filters.matchTypes, option.matchType)
+      && matchesSelection(filters.origins, option.origin)
+      && matchesSelection(filters.productTypes, option.productType)
+      && matchesSelection(filters.sizes, option.size),
+    );
+    return equivalents.length ? [{ ...result, equivalents }] : [];
+  });
 }
 
-function sortedUnique(values: Array<string | undefined>, numeric = false): string[] {
-  const unique = [...new Set(values.filter((v): v is string => Boolean(v)))];
-  const toNumber = (v: string) => {
-    const [whole, frac] = v.split('-');
-    const [n, d] = (frac ?? '0/1').split('/').map(Number);
-    return Number(whole) + n / d;
+export type CrossReferenceFacets = Record<keyof CrossReferenceFilters, string[]>;
+
+export function crossReferenceFacets(results: CrossReferenceResult[]): CrossReferenceFacets {
+  const skuResults = results.filter((result) => result.kind === 'competitor-sku');
+  const equivalents = skuResults.flatMap((result) => result.equivalents);
+  const figures = results.filter((result) => result.kind === 'figure');
+  const unique = (values: string[]) => [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const matchTypes = new Set<string>(equivalents.map((option) => option.matchType));
+  if (figures.length) matchTypes.add(FIGURE_MATCH);
+  return {
+    brands: unique(results.map((result) => result.kind === 'figure' ? result.source.brand : result.part.brand)),
+    matchTypes: CROSS_REFERENCE_MATCH_TYPES.filter((type) => matchTypes.has(type)),
+    origins: unique(equivalents.map((option) => option.origin)),
+    productTypes: unique([...equivalents.map((option) => option.productType), ...figures.map((result) => result.productType)]),
+    sizes: [...new Set(equivalents.map((option) => option.size).filter(Boolean))].sort((a, b) =>
+      sizeInches(a) - sizeInches(b),
+    ),
   };
-  return numeric ? unique.sort((a, b) => toNumber(a) - toNumber(b)) : unique.sort((a, b) => a.localeCompare(b));
 }
 
-/** Filter values present in the data. A facet with no values is hidden (mapping: an empty cell is hidden). */
-export const CROSS_REFERENCE_FACETS = {
-  productTypes: sortedUnique(RSFC_PARTS.map((p) => p.pim.productType)),
-  sizes: sortedUnique(RSFC_PARTS.map((p) => p.size), true),
-  endConnections: sortedUnique(RSFC_PARTS.map((p) => p.pim.endConnection)),
-  materials: sortedUnique(RSFC_PARTS.map((p) => p.pim.material)),
-  certifications: sortedUnique(RSFC_PARTS.flatMap((p) => p.pim.certifications)),
-  brands: sortedUnique(RSFC_PARTS.map((p) => p.brand)),
-};
+function sizeInches(size: string): number {
+  const [whole, fraction = '0/1'] = size.split('-');
+  const [numerator, denominator] = fraction.split('/').map(Number);
+  return Number(whole) + numerator / denominator;
+}
 
-/**
- * Filter version 2 (open groups with counts): how many results there would be if this value were the only one
- * picked in its group, with every other group's selection kept. 0 = the value is disabled.
- */
 export function countForFilterValue(
-  direction: CrossReferenceDirection,
-  query: string,
-  category: string,
+  results: CrossReferenceResult[],
   filters: CrossReferenceFilters,
   key: keyof CrossReferenceFilters,
   value: string,
 ): number {
-  return listCrossReferenceResults(direction, query, category, { ...filters, [key]: [value] }).length;
+  return filterCrossReferenceResults(results, { ...filters, [key]: [value] }).length;
 }

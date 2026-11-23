@@ -1,26 +1,19 @@
 import { RightOutlined } from '@ant-design/icons';
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 
+import { PIM_FILTER_LABELS, sizeLabel } from '../data/pimDisplayMapping';
 import {
-  PIM_FILTER_COLUMNS,
-  PIM_FILTER_LABELS,
-  endConnectionLabel,
-  sizeLabel,
-  type PimFilterAttribute,
-} from '../data/pimDisplayMapping';
-import {
-  CROSS_REFERENCE_FACETS,
-  CROSS_REFERENCE_MATCH_TYPES,
   countActiveFilters,
   crossReferenceMatchTypeLabel,
+  type CrossReferenceFacets,
   type CrossReferenceFilters,
-  type RsfcOrigin,
 } from '../data/partCrossReferenceData';
-import { hydraBaseMedium, hydraSmallNormal, hydraTextStyleToReactCss, hydraTitleHeading5 } from '../../theme/hydraTypography';
+import { hydraBaseMedium, hydraBaseNormal, hydraTextStyleToReactCss, hydraTitleHeading5 } from '../../theme/hydraTypography';
 import { AppSearchInput, Card, Checkbox, Flex, Popover, Typography, theme } from '../../ui/antd';
 
 type Props = {
   value: CrossReferenceFilters;
+  facets: CrossReferenceFacets;
   onChange: (next: CrossReferenceFilters) => void;
   onClear: () => void;
   /** Results if this value were the only one picked in its group. Omit to hide counts (no search yet). */
@@ -42,35 +35,10 @@ type GroupDef = {
   key: keyof CrossReferenceFilters;
   label: string;
   options: readonly string[];
-  /** PIM column(s) shown as a tooltip on the group title. */
-  pim?: string;
   format?: (value: string) => string;
   columns?: 1 | 2;
   searchLabel?: string;
 };
-
-const ORIGINS: RsfcOrigin[] = ['Domestic', 'Import'];
-
-const MATCH_GROUP: GroupDef = {
-  key: 'matchTypes',
-  label: 'Match type',
-  options: CROSS_REFERENCE_MATCH_TYPES,
-  format: crossReferenceMatchTypeLabel,
-};
-const ORIGIN_GROUP: GroupDef = { key: 'origins', label: 'Origin', options: ORIGINS };
-
-/** RSFC attribute groups in panel order (PIM display mapping, CON-347). Groups with no values stay hidden. */
-const PIM_ATTRIBUTES: PimFilterAttribute[] = ['productTypes', 'sizes', 'endConnections', 'materials', 'certifications', 'brands'];
-
-const PIM_GROUPS: GroupDef[] = PIM_ATTRIBUTES.filter((key) => CROSS_REFERENCE_FACETS[key].length > 0).map((key) => ({
-  key,
-  label: PIM_FILTER_LABELS[key],
-  options: CROSS_REFERENCE_FACETS[key],
-  pim: PIM_FILTER_COLUMNS[key],
-  format: key === 'sizes' ? sizeLabel : key === 'endConnections' ? endConnectionLabel : undefined,
-  columns: key === 'sizes' ? 2 : 1,
-  searchLabel: key === 'sizes' ? 'Search sizes' : undefined,
-}));
 
 function toggle(values: string[], item: string): string[] {
   return values.includes(item) ? values.filter((v) => v !== item) : [...values, item];
@@ -97,12 +65,12 @@ function FilterGroup({
   const long = group.options.length > VISIBLE_VALUES;
   const filtered = group.options.filter((option) => format(option).toLowerCase().includes(term.trim().toLowerCase()));
   const shown = long && !showAll && !term ? filtered.slice(0, VISIBLE_VALUES) : filtered;
-  const smallText = hydraTextStyleToReactCss(hydraSmallNormal);
+  const baseText = hydraTextStyleToReactCss(hydraBaseNormal);
 
   return (
     <Flex vertical gap={token.marginXS} role="group" aria-label={group.label}>
       {hideTitle ? null : (
-        <Typography.Text style={hydraTextStyleToReactCss(hydraBaseMedium)} title={group.pim ? `PIM: ${group.pim}` : undefined}>
+        <Typography.Text style={hydraTextStyleToReactCss(hydraBaseMedium)}>
           {group.label}
           {selected.length > 0 ? ` (${selected.length})` : ''}
         </Typography.Text>
@@ -147,7 +115,7 @@ function FilterGroup({
                 {count !== undefined ? (
                   <span
                     style={{
-                      ...smallText,
+                      ...baseText,
                       color: disabled ? token.colorTextDisabled : token.colorTextTertiary,
                       fontVariantNumeric: 'tabular-nums',
                     }}
@@ -172,20 +140,8 @@ function FilterGroup({
   );
 }
 
-/**
- * Filter version 2 (artifact "Cross-Reference Filter Options", chosen 17 Nov 2026): every group open,
- * each value shows how many parts it leaves, values that give 0 are disabled.
- * Placement from Figma A1 (7651:11285). Attributes follow Sofija's PIM display mapping (CON-347).
- *
- * Spacing: card padding 20 (paddingMD); 16 between groups (padding); 8 title → values and value → value (marginXS);
- * 12 between size columns (marginSM). The RSFC part group starts with a divider.
- *
- * Edge case, no inner scroll: the page itself does not scroll (only the cards do), so the panel must fit the row it
- * sits in. When the open version is taller than that row it switches to compact: each RSFC attribute becomes one row (with its selected count) that opens its
- * values in a flyout to the right, so every group stays reachable without scrolling the panel. It switches back when
- * there is room again.
- */
-export function PartCrossReferenceFilters({ value, onChange, onClear, countFor, fitHeight }: Props) {
+/** Filters use the fields available in the current search. Compact mode keeps the sidebar reachable. */
+export function PartCrossReferenceFilters({ value, facets, onChange, onClear, countFor, fitHeight }: Props) {
   const { token } = theme.useToken();
   const active = countActiveFilters(value);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -220,6 +176,17 @@ export function PartCrossReferenceFilters({ value, onChange, onClear, countFor, 
   const toggleValue = (key: keyof CrossReferenceFilters) => (option: string) =>
     onChange({ ...value, [key]: toggle(value[key] as string[], option) });
 
+  const sourceGroups: GroupDef[] = [
+    { key: 'brands', label: 'Brand', options: facets.brands },
+    { key: 'matchTypes', label: 'Match type', options: facets.matchTypes, format: crossReferenceMatchTypeLabel },
+  ];
+  const originGroup: GroupDef = { key: 'origins', label: 'Origin', options: facets.origins };
+  const rsfcGroups: GroupDef[] = [
+    { key: 'productTypes', label: PIM_FILTER_LABELS.productTypes, options: facets.productTypes },
+    { key: 'sizes', label: PIM_FILTER_LABELS.sizes, options: facets.sizes, format: sizeLabel, columns: 2, searchLabel: 'Search sizes' },
+  ];
+  const visibleRsfcGroups = rsfcGroups.filter((group) => group.options.length > 0);
+
   const renderGroup = (group: GroupDef, hideTitle = false) => (
     <FilterGroup
       key={group.key}
@@ -253,70 +220,69 @@ export function PartCrossReferenceFilters({ value, onChange, onClear, countFor, 
           {active > 0 ? <Typography.Link onClick={onClear}>Clear all</Typography.Link> : null}
         </Flex>
 
-        {renderGroup(MATCH_GROUP)}
+        {sourceGroups.filter((group) => group.options.length > 0).map((group) => renderGroup(group))}
 
-        <Flex
-          vertical
-          gap={compact ? token.marginXXS : token.padding}
-          style={{
-            paddingTop: token.padding,
-            borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-          }}
-        >
-          <Flex vertical gap={token.marginXS}>
+        {(facets.origins.length > 0 || visibleRsfcGroups.length > 0) && (
+          <Flex
+            vertical
+            gap={compact ? token.marginXXS : token.padding}
+            style={{
+              paddingTop: token.padding,
+              borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+            }}
+          >
             <Typography.Text style={hydraTextStyleToReactCss(hydraBaseMedium)}>RSFC part</Typography.Text>
-            {renderGroup(ORIGIN_GROUP)}
-          </Flex>
-          {compact ? (
-            PIM_GROUPS.map((group) => {
-              const picked = (value[group.key] as string[]).length;
-              return (
-                <Popover
-                  key={group.key}
-                  trigger="click"
-                  placement="rightTop"
-                  // Always level with its own row. The default overflow adjustment moved the flyout to another row
-                  // when its content changed (for example after a value was checked).
-                  autoAdjustOverflow={false}
-                  arrow={false}
-                  open={openKey === group.key}
-                  onOpenChange={(next) => setOpenKey(next ? group.key : undefined)}
-                  styles={{ container: { width: token.controlHeight * 8, padding: token.paddingSM } }}
-                  content={renderGroup(group, true)}
-                >
-                  <button
-                    type="button"
-                    aria-haspopup="dialog"
-                    aria-expanded={openKey === group.key}
-                    title={group.pim ? `PIM: ${group.pim}` : undefined}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: token.marginXS,
-                      width: '100%',
-                      height: token.controlHeight,
-                      padding: 0,
-                      border: 0,
-                      background: 'transparent',
-                      cursor: 'pointer',
-                      color: openKey === group.key ? token.colorPrimary : token.colorText,
-                      ...hydraTextStyleToReactCss(hydraBaseMedium),
-                    }}
+            {facets.origins.length > 0 && renderGroup(originGroup)}
+            {compact ? (
+              visibleRsfcGroups.map((group) => {
+                const picked = (value[group.key] as string[]).length;
+                return (
+                  <Popover
+                    key={group.key}
+                    trigger="click"
+                    placement="rightTop"
+                    // Always level with its own row. The default overflow adjustment moved the flyout to another row
+                    // when its content changed (for example after a value was checked).
+                    autoAdjustOverflow={false}
+                    arrow={false}
+                    open={openKey === group.key}
+                    onOpenChange={(next) => setOpenKey(next ? group.key : undefined)}
+                    styles={{ container: { width: token.controlHeight * 8, padding: token.paddingSM } }}
+                    content={renderGroup(group, true)}
                   >
-                    <span>
-                      {group.label}
-                      {picked > 0 ? ` (${picked})` : ''}
-                    </span>
-                    <RightOutlined style={{ fontSize: token.fontSizeSM, color: token.colorTextTertiary }} />
-                  </button>
-                </Popover>
-              );
-            })
-          ) : (
-            PIM_GROUPS.map((group) => renderGroup(group))
-          )}
-        </Flex>
+                    <button
+                      type="button"
+                      aria-haspopup="dialog"
+                      aria-expanded={openKey === group.key}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: token.marginXS,
+                        width: '100%',
+                        height: token.controlHeight,
+                        padding: 0,
+                        border: 0,
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        color: openKey === group.key ? token.colorPrimary : token.colorText,
+                        ...hydraTextStyleToReactCss(hydraBaseMedium),
+                      }}
+                    >
+                      <span>
+                        {group.label}
+                        {picked > 0 ? ` (${picked})` : ''}
+                      </span>
+                      <RightOutlined style={{ fontSize: token.fontSizeSM, color: token.colorTextTertiary }} />
+                    </button>
+                  </Popover>
+                );
+              })
+            ) : (
+              visibleRsfcGroups.map((group) => renderGroup(group))
+            )}
+          </Flex>
+        )}
       </Flex>
     </Card>
   );

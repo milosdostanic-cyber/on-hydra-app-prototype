@@ -23,7 +23,7 @@ export function AppliedFilterTag({ label, preset, onRemove }: Props) {
     paddingInlineEnd: token.paddingXS - token.lineWidth,
     transition: `border-color ${token.motionDurationMid}, background ${token.motionDurationMid}`,
     ...(hover && !preset ? { background: token.colorFillTertiary } : {}),
-    ...(hover && preset ? { borderColor: 'currentColor' } : {}),
+    ...(hover && preset ? { background: token[`${preset}2`] } : {}),
   };
   const closeColor = hover ? token.colorText : token.colorTextTertiary;
   const content = (
@@ -45,7 +45,7 @@ export function AppliedFilterTag({ label, preset, onRemove }: Props) {
       style={{ all: 'unset', cursor: 'pointer', borderRadius: token.borderRadiusSM, display: 'inline-flex' }}
     >
       {preset ? (
-        <HydraColorfulTag preset={preset} bordered style={tagStyle}>{content}</HydraColorfulTag>
+        <HydraColorfulTag preset={preset} style={tagStyle}>{content}</HydraColorfulTag>
       ) : (
         <HydraTag style={tagStyle}>{content}</HydraTag>
       )}
