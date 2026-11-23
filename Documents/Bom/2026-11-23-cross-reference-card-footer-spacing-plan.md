@@ -3,7 +3,7 @@
 ## Meta
 - **Date:** 2026-11-23
 - **Request type:** ui-change (BOM)
-- **User request summary:** Add a little more token-based visual space between the “Victaulic · SKU” line and the top of the gray match-status footer.
+- **User request summary:** Make the white content section’s top and bottom spacing equal, using the larger token-based spacing shown around the title and competitor/SKU text.
 - **Status:** approved by direct implementation request
 - **Plan file:** `Documents/Bom/2026-11-23-cross-reference-card-footer-spacing-plan.md`
 
@@ -44,15 +44,15 @@
 ```
 
 ## Scope summary
-Adjust only the bottom padding of the cross-reference card’s upper content block. Do not alter the gap between its description and competitor/SKU lines.
+Align the top and bottom padding of the cross-reference card’s upper content block. Do not alter its horizontal padding or the gap between its description and competitor/SKU lines.
 
 ## Current flow audit
-`PartCrossReferenceCard` uses a white upper content block followed by a bordered gray status footer. The upper block currently has `token.paddingMD` below the competitor/SKU line; the supplied screenshot asks for a slightly larger gap in that same location.
+`PartCrossReferenceCard` uses a white upper content block followed by a bordered gray status footer. Its top padding still comes from `token.paddingSM`, while its bottom padding is `token.paddingLG`, so the two highlighted spaces do not match.
 
 ## Requirements / gap table
 | Requirement | Current | Gap | UX risk | Area |
 |-------------|---------|-----|---------|------|
-| Slightly more space between competitor/SKU text and gray footer | `token.paddingMD` bottom padding | One additional token step requested | Card content still feels close to footer | Cross-reference result card |
+| Equal top and bottom space in the white content section | Top uses `token.paddingSM`; bottom uses `token.paddingLG` | Vertical padding is asymmetric | Content appears vertically unbalanced | Cross-reference result card |
 | Preserve spacing between the two text lines | `token.marginXXS` | None | Changing it would put space in the wrong place | Upper content block |
 
 ## Proposed UX flow
@@ -60,12 +60,12 @@ No flow or interaction changes. The card remains fully clickable and retains the
 
 ## Implementation plan by phase
 
-### Phase 1 — Correct footer separation
-- **Goal:** Increase only the space below the competitor/SKU line.
+### Phase 1 — Balance vertical content padding
+- **Goal:** Make the white section’s top and bottom spacing equal.
 - **Files:** `src/bom/components/PartCrossReferenceCard.tsx`
-- **UI changes:** Replace the upper block’s `paddingBottom: token.paddingMD` with the next larger established spacing step, `paddingBottom: token.paddingLG`.
+- **UI changes:** Use `paddingBlock: token.paddingLG` for equal vertical spacing and retain `paddingInline: token.paddingSM`.
 - **Data/state:** None.
-- **Acceptance criteria:** The gray footer has visibly more separation from the competitor/SKU line; the two text lines retain their existing gap.
+- **Acceptance criteria:** The title’s top spacing matches the competitor/SKU line’s bottom spacing; horizontal and internal text spacing remain unchanged.
 - **Must not change:** Footer padding, typography, colors, card interaction, shared components, or tokens.
 
 #### Phase 1 — invoke for implementation
@@ -90,20 +90,20 @@ Do not change shared components, theme tokens, or the internal text-line gap.
 ## File change plan
 | File | Action | Reason |
 |------|--------|--------|
-| `src/bom/components/PartCrossReferenceCard.tsx` | Edit one spacing token | Put the requested space directly above the gray footer |
+| `src/bom/components/PartCrossReferenceCard.tsx` | Normalize local vertical padding | Give the white content section equal top and bottom spacing |
 
 ## Guardrails
-- **Allowed:** One local token substitution.
+- **Allowed:** One local style normalization using existing spacing tokens.
 - **Forbidden:** Raw pixel values, token changes, shared component edits, unrelated BOM changes.
-- **Assumptions:** `token.paddingLG` is the next established Hydra/Ant Design padding step and matches the request for a slightly larger gap.
+- **Assumptions:** The screenshot’s two callouts indicate that the existing larger bottom spacing should also be applied above the title.
 - **Open questions:** None.
 
 ## Risks
 Minimal; card height increases by one existing token step without changing behavior.
 
 ## Acceptance checklist
-- [ ] Space is below “Victaulic · SKU,” not between the card’s text lines.
-- [ ] Space is increased one established step through `token.paddingLG`.
+- [ ] Top and bottom spacing in the white section both use `token.paddingLG`.
+- [ ] Horizontal padding and the gap between text lines remain unchanged.
 - [ ] Gray footer and card interactions are unchanged.
 - [ ] Hydra UX self-audit finds no P0/P1 issues.
 
