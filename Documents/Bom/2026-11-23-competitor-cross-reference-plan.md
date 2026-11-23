@@ -24,3 +24,5 @@ Show the source part in a compact summary. Lead each replacement with its descri
 Add Cards and Table views over the same paginated results. Show identical identifiers, mapping status and counts. Preserve search, filters and the current page when switching views. Verify opening both types of match details from the table and cards.
 
 Use Hydra segmented view icons with tooltips and accessible names. Set the identifier value in Base/Medium within the Base/Normal metadata row.
+
+Restore the neutral footer background and divider on result cards. Group the mapping status and match count in the footer.
