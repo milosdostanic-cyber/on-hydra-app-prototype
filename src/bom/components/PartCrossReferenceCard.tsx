@@ -94,7 +94,7 @@ export function PartCrossReferenceCard({ result, onOpen }: { result: CrossRefere
   const { brand, description, identifier, identifierLabel, identifierValue, countLabel, matchType } = summarizeCrossReferenceResult(result);
   return (
     <CardShell onOpen={onOpen} label={`View matches for ${brand} ${identifier}`}>
-      <Flex vertical gap={token.marginXXS} style={{ padding: token.paddingSM, paddingBottom: token.paddingXS, minWidth: 0 }}>
+      <Flex vertical gap={token.marginXXS} style={{ padding: token.paddingSM, paddingBottom: token.paddingMD, minWidth: 0 }}>
         <Typography.Text
           style={hydraTextStyleToReactCss(hydraLargeMedium)}
           ellipsis={{ tooltip: description }}
