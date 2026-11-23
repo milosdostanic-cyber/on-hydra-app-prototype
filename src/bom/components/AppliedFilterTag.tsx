@@ -1,11 +1,12 @@
 import { CloseOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 
-import { HydraTag } from '../../ui/HydraTag';
+import { HydraColorfulTag, HydraTag, type HydraColorfulPreset } from '../../ui/HydraTag';
 import { theme } from '../../ui/antd';
 
 type Props = {
   label: string;
+  preset?: HydraColorfulPreset;
   onRemove: () => void;
 };
 
@@ -14,9 +15,23 @@ type Props = {
  * colorBorder stroke, colorText. Hover/focus follows Ant Design's fill steps (colorFillTertiary) and darkens the ×.
  * The whole tag is the remove target, not only the small ×.
  */
-export function AppliedFilterTag({ label, onRemove }: Props) {
+export function AppliedFilterTag({ label, preset, onRemove }: Props) {
   const { token } = theme.useToken();
   const [hover, setHover] = useState(false);
+  const tagStyle = {
+    gap: token.marginXS,
+    paddingInlineEnd: token.paddingXS - token.lineWidth,
+    transition: `border-color ${token.motionDurationMid}, background ${token.motionDurationMid}`,
+    ...(hover && !preset ? { background: token.colorFillTertiary } : {}),
+    ...(hover && preset ? { borderColor: 'currentColor' } : {}),
+  };
+  const closeColor = hover ? token.colorText : token.colorTextTertiary;
+  const content = (
+    <>
+      <span>{label}</span>
+      <CloseOutlined aria-hidden style={{ fontSize: token.fontSizeSM, color: preset ? 'currentColor' : closeColor }} />
+    </>
+  );
 
   return (
     <button
@@ -29,18 +44,11 @@ export function AppliedFilterTag({ label, onRemove }: Props) {
       onBlur={() => setHover(false)}
       style={{ all: 'unset', cursor: 'pointer', borderRadius: token.borderRadiusSM, display: 'inline-flex' }}
     >
-      <HydraTag
-        tone="default"
-        style={{
-          gap: token.marginXS,
-          paddingInlineEnd: token.paddingXS - token.lineWidth,
-          transition: `border-color ${token.motionDurationMid}, background ${token.motionDurationMid}`,
-          ...(hover ? { background: token.colorFillTertiary } : {}),
-        }}
-      >
-        <span>{label}</span>
-        <CloseOutlined aria-hidden style={{ fontSize: token.fontSizeSM, color: hover ? token.colorText : token.colorTextTertiary }} />
-      </HydraTag>
+      {preset ? (
+        <HydraColorfulTag preset={preset} bordered style={tagStyle}>{content}</HydraColorfulTag>
+      ) : (
+        <HydraTag style={tagStyle}>{content}</HydraTag>
+      )}
     </button>
   );
 }

@@ -2,20 +2,28 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { useSearchParams } from 'react-router-dom';
 
 import { AppliedFilterTag } from '../components/AppliedFilterTag';
-import { CompetitorPartCard, RsfcPartCard } from '../components/PartCrossReferenceCard';
+import {
+  CompetitorPartCard,
+  FIGURE_MATCH_TAG_PRESET,
+  FigureMatchCard,
+  RsfcPartCard,
+  UnmatchedCompetitorCard,
+} from '../components/PartCrossReferenceCard';
+import { PartCrossReferenceFigureModal } from '../components/PartCrossReferenceFigureModal';
 import { PartCrossReferenceFilters } from '../components/PartCrossReferenceFilters';
 import { PartCrossReferenceMatchModal } from '../components/PartCrossReferenceMatchModal';
 import {
   ALL_CATEGORIES,
   CROSS_REFERENCE_CATEGORY_GROUPS,
   EMPTY_CROSS_REFERENCE_FILTERS,
+  FIGURE_MATCH,
   countActiveFilters,
   countForFilterValue,
-  listCompetitorParts,
-  listRsfcParts,
-  type CompetitorPart,
+  crossReferenceMatchTypeLabel,
+  listCrossReferenceResults,
   type CrossReferenceDirection,
   type CrossReferenceFilters,
+  type CrossReferenceResult,
 } from '../data/partCrossReferenceData';
 import { PIM_FILTER_LABELS, endConnectionLabel, sizeLabel } from '../data/pimDisplayMapping';
 import { BomPageHeader } from '../layout/BomPageHeader';
@@ -27,6 +35,7 @@ import {
   Empty,
   EmptyStateBlock,
   Flex,
+  Modal,
   Pagination,
   Result,
   Segmented,
@@ -40,8 +49,7 @@ import type { SelectProps } from '../../ui/antd';
 
 type Phase = 'idle' | 'loading' | 'results' | 'error';
 
-/** 3 columns x 4 rows on a wide screen; 12 divides evenly into 2 and 3 columns. */
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 20;
 /** Prototype latency so the searching state is visible. */
 const SEARCH_DELAY_MS = 450;
 
@@ -60,7 +68,7 @@ const CATEGORY_OPTIONS: SelectProps['options'] = [
 ];
 
 const FILTER_LABELS: Array<{ key: keyof CrossReferenceFilters; prefix: string; format?: (value: string) => string }> = [
-  { key: 'matchTypes', prefix: 'Match type' },
+  { key: 'matchTypes', prefix: 'Match type', format: crossReferenceMatchTypeLabel },
   { key: 'origins', prefix: 'Origin' },
   { key: 'productTypes', prefix: PIM_FILTER_LABELS.productTypes },
   { key: 'sizes', prefix: PIM_FILTER_LABELS.sizes, format: sizeLabel },
@@ -92,8 +100,7 @@ export function BomPartCrossReferencePage() {
   const [filters, setFilters] = useState<CrossReferenceFilters>(EMPTY_CROSS_REFERENCE_FILTERS);
   const [phase, setPhase] = useState<Phase>(searchFirst && !params.get('q') ? 'idle' : 'results');
   const [page, setPage] = useState(1);
-  /** The match details modal. `openedSku` is set on the RSFC part → competitor tab (the RSFC card that was clicked). */
-  const [openMatch, setOpenMatch] = useState<{ part: CompetitorPart; openedSku?: string } | null>(null);
+  const [openMatch, setOpenMatch] = useState<CrossReferenceResult | null>(null);
   const timer = useRef<number | undefined>(undefined);
   const rootRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -215,15 +222,11 @@ export function BomPartCrossReferencePage() {
     setPage(1);
   };
 
-  const competitorResults = useMemo(
-    () => (submitted && submitted.direction === 'competitor' ? listCompetitorParts(submitted.q, submitted.category, filters) : []),
+  const results = useMemo(
+    () => submitted ? listCrossReferenceResults(submitted.direction, submitted.q, submitted.category, filters) : [],
     [filters, submitted],
   );
-  const rsfcResults = useMemo(
-    () => (submitted && submitted.direction === 'rsfc' ? listRsfcParts(submitted.q, submitted.category, filters) : []),
-    [filters, submitted],
-  );
-  const total = submitted?.direction === 'rsfc' ? rsfcResults.length : competitorResults.length;
+  const total = results.length;
   const filterCount = countActiveFilters(filters);
   const from = (page - 1) * PAGE_SIZE;
   const to = Math.min(page * PAGE_SIZE, total);
@@ -233,13 +236,13 @@ export function BomPartCrossReferencePage() {
   // filters alone can only empty the list after the search or category changed).
   const filtersCauseEmpty = useMemo(() => {
     if (!submitted || filterCount === 0) return false;
-    const unfiltered =
-      submitted.direction === 'rsfc'
-        ? listRsfcParts(submitted.q, submitted.category, EMPTY_CROSS_REFERENCE_FILTERS)
-        : listCompetitorParts(submitted.q, submitted.category, EMPTY_CROSS_REFERENCE_FILTERS);
-    return unfiltered.length > 0;
+    return listCrossReferenceResults(
+      submitted.direction, submitted.q, submitted.category, EMPTY_CROSS_REFERENCE_FILTERS,
+    ).length > 0;
   }, [filterCount, submitted]);
-  const noun = submitted?.direction === 'rsfc' ? 'RSFC part' : 'competitor part';
+  const noun = results.some((result) => result.kind === 'figure' || result.kind === 'unmatched-competitor')
+    ? 'result'
+    : submitted?.direction === 'rsfc' ? 'RSFC part' : 'competitor part';
 
   const removeFilter = (key: keyof CrossReferenceFilters, value: string) => {
     changeFilters({ ...filters, [key]: (filters[key] as string[]).filter((v) => v !== value) });
@@ -252,20 +255,22 @@ export function BomPartCrossReferencePage() {
         gridTemplateColumns: `repeat(auto-fill, minmax(${token.controlHeight * 8}px, 1fr))`,
         gap: token.padding,
         padding: token.paddingMD,
-        alignItems: 'stretch',
+        alignItems: 'start',
       }}
     >
-      {submitted?.direction === 'rsfc'
-        ? rsfcResults.slice(from, to).map((result) => (
-            <RsfcPartCard
-              key={result.part.sku}
-              result={result}
-              onOpen={() => setOpenMatch({ part: result.competitors[0].part, openedSku: result.part.sku })}
-            />
-          ))
-        : competitorResults.slice(from, to).map((result) => (
-            <CompetitorPartCard key={result.part.sku} result={result} onOpen={() => setOpenMatch({ part: result.part })} />
-          ))}
+      {results.slice(from, to).map((result) => {
+        const onOpen = () => setOpenMatch(result);
+        switch (result.kind) {
+          case 'figure':
+            return <FigureMatchCard key={`figure:${result.key}`} result={result} onOpen={onOpen} />;
+          case 'rsfc-sku':
+            return <RsfcPartCard key={result.part.sku} result={result} onOpen={onOpen} />;
+          case 'competitor-sku':
+            return <CompetitorPartCard key={result.part.sku} result={result} onOpen={onOpen} />;
+          case 'unmatched-competitor':
+            return <UnmatchedCompetitorCard key={result.part.sku} result={result} onOpen={onOpen} />;
+        }
+      })}
     </div>
   );
 
@@ -363,7 +368,7 @@ export function BomPartCrossReferencePage() {
       <PageBackButton to="/bom">Back to BOM</PageBackButton>
 
       <BomPageHeader
-        title="Part Cross-Reference"
+        title="Search RSFC Parts"
         description="Find RSFC equivalents for a competitor part, or see which competitor parts match an RSFC part."
       />
 
@@ -448,13 +453,14 @@ export function BomPartCrossReferencePage() {
                 </Flex>
               </Flex>
 
-              {/* Applied filters only. The result count lives in the footer ("Showing 1–12 of 23 …"). */}
+              {/* Applied filters only. The result count lives in the footer. */}
               {phase === 'results' && submitted && chips.length > 0 ? (
                 <Flex gap={token.marginXS} wrap="wrap" align="center">
                   {chips.map((chip) => (
                     <AppliedFilterTag
                       key={`${chip.key}-${chip.value}`}
                       label={chip.label}
+                      preset={chip.key === 'matchTypes' && chip.value === FIGURE_MATCH ? FIGURE_MATCH_TAG_PRESET : undefined}
                       onRemove={() => removeFilter(chip.key, chip.value)}
                     />
                   ))}
@@ -511,10 +517,30 @@ export function BomPartCrossReferencePage() {
       </Flex>
 
       <PartCrossReferenceMatchModal
-        part={openMatch?.part ?? null}
-        openedSku={openMatch?.openedSku}
+        result={openMatch?.kind === 'competitor-sku' || openMatch?.kind === 'rsfc-sku' ? openMatch : null}
         onClose={() => setOpenMatch(null)}
       />
+      <PartCrossReferenceFigureModal
+        result={openMatch?.kind === 'figure' ? openMatch : null}
+        onClose={() => setOpenMatch(null)}
+      />
+      <Modal
+        title="No verified RSFC replacement"
+        open={openMatch?.kind === 'unmatched-competitor'}
+        onCancel={() => setOpenMatch(null)}
+        destroyOnHidden
+        footer={<Button onClick={() => setOpenMatch(null)}>Close</Button>}
+      >
+        {openMatch?.kind === 'unmatched-competitor' && (
+          <Flex vertical gap={token.marginXS}>
+            <Typography.Text strong>{`${openMatch.part.brand} SKU ${openMatch.part.sku} · Fig. ${openMatch.part.figure}`}</Typography.Text>
+            <Typography.Text>{openMatch.part.description}</Typography.Text>
+            <Typography.Text type="secondary">
+              The prototype recognizes this competitor part. Search using another SKU, figure number or description.
+            </Typography.Text>
+          </Flex>
+        )}
+      </Modal>
     </Flex>
   );
 }

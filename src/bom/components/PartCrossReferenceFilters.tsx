@@ -10,9 +10,10 @@ import {
 } from '../data/pimDisplayMapping';
 import {
   CROSS_REFERENCE_FACETS,
+  CROSS_REFERENCE_MATCH_TYPES,
   countActiveFilters,
+  crossReferenceMatchTypeLabel,
   type CrossReferenceFilters,
-  type RsfcMatchType,
   type RsfcOrigin,
 } from '../data/partCrossReferenceData';
 import { hydraBaseMedium, hydraSmallNormal, hydraTextStyleToReactCss, hydraTitleHeading5 } from '../../theme/hydraTypography';
@@ -48,13 +49,15 @@ type GroupDef = {
   searchLabel?: string;
 };
 
-const MATCH_TYPES: RsfcMatchType[] = ['Exact match', 'Substitute'];
 const ORIGINS: RsfcOrigin[] = ['Domestic', 'Import'];
 
-const BASE_GROUPS: GroupDef[] = [
-  { key: 'matchTypes', label: 'Match type', options: MATCH_TYPES },
-  { key: 'origins', label: 'RSFC origin', options: ORIGINS },
-];
+const MATCH_GROUP: GroupDef = {
+  key: 'matchTypes',
+  label: 'Match type',
+  options: CROSS_REFERENCE_MATCH_TYPES,
+  format: crossReferenceMatchTypeLabel,
+};
+const ORIGIN_GROUP: GroupDef = { key: 'origins', label: 'Origin', options: ORIGINS };
 
 /** RSFC attribute groups in panel order (PIM display mapping, CON-347). Groups with no values stay hidden. */
 const PIM_ATTRIBUTES: PimFilterAttribute[] = ['productTypes', 'sizes', 'endConnections', 'materials', 'certifications', 'brands'];
@@ -175,7 +178,7 @@ function FilterGroup({
  * Placement from Figma A1 (7651:11285). Attributes follow Sofija's PIM display mapping (CON-347).
  *
  * Spacing: card padding 20 (paddingMD); 16 between groups (padding); 8 title → values and value → value (marginXS);
- * 12 between size columns (marginSM); "RSFC attributes" block starts with a split line and 16 above it.
+ * 12 between size columns (marginSM). The RSFC part group starts with a divider.
  *
  * Edge case, no inner scroll: the page itself does not scroll (only the cards do), so the panel must fit the row it
  * sits in. When the open version is taller than that row it switches to compact: each RSFC attribute becomes one row (with its selected count) that opens its
@@ -250,7 +253,7 @@ export function PartCrossReferenceFilters({ value, onChange, onClear, countFor, 
           {active > 0 ? <Typography.Link onClick={onClear}>Clear all</Typography.Link> : null}
         </Flex>
 
-        {BASE_GROUPS.map((group) => renderGroup(group))}
+        {renderGroup(MATCH_GROUP)}
 
         <Flex
           vertical
@@ -260,9 +263,10 @@ export function PartCrossReferenceFilters({ value, onChange, onClear, countFor, 
             borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
           }}
         >
-          <Typography.Text type="secondary" style={hydraTextStyleToReactCss(hydraSmallNormal)}>
-            RSFC attributes
-          </Typography.Text>
+          <Flex vertical gap={token.marginXS}>
+            <Typography.Text style={hydraTextStyleToReactCss(hydraBaseMedium)}>RSFC part</Typography.Text>
+            {renderGroup(ORIGIN_GROUP)}
+          </Flex>
           {compact ? (
             PIM_GROUPS.map((group) => {
               const picked = (value[group.key] as string[]).length;

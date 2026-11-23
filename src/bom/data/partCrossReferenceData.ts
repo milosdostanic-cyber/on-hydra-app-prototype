@@ -79,7 +79,50 @@ export const CROSS_REFERENCE_CATEGORY_COUNT = CROSS_REFERENCE_CATEGORY_GROUPS.re
 );
 
 export type RsfcMatchType = 'Exact match' | 'Substitute';
+
+export const FIGURE_MATCH = 'Figure match';
+export const CROSS_REFERENCE_MATCH_TYPES = ['Exact match', 'Substitute', FIGURE_MATCH] as const;
+type CrossReferenceMatchType = (typeof CROSS_REFERENCE_MATCH_TYPES)[number];
+
+export function crossReferenceMatchTypeLabel(value: string): string {
+  return value === FIGURE_MATCH ? value : `SKU · ${value}`;
+}
 export type RsfcOrigin = 'Domestic' | 'Import';
+
+const PHOTO_DIR = '/assets/catalog/cross-reference';
+const GRUVLOK_7811_PHOTO = `${PHOTO_DIR}/gruvlok-7811.jpg`;
+const GRUVLOK_78FP_PHOTO = `${PHOTO_DIR}/gruvlok-78fp.png`;
+const GRUVLOK_7401_PHOTO = `${PHOTO_DIR}/gruvlok-7401.jpg`;
+
+/** Catalog variant photos and ASC catalog photos of the verified model displayed by the demo SKU. */
+const RSFC_SKU_PHOTOS: Readonly<Record<string, string | undefined>> = {
+  '2200750046': GRUVLOK_7811_PHOTO,
+  '2200750054': GRUVLOK_7811_PHOTO,
+  '2200750062': GRUVLOK_7811_PHOTO,
+  '2200750063': GRUVLOK_7811_PHOTO,
+  '2200750070': GRUVLOK_7811_PHOTO,
+  '2200750088': GRUVLOK_7811_PHOTO,
+  '2200750089': GRUVLOK_7811_PHOTO,
+  '2200750096': GRUVLOK_7811_PHOTO,
+  '2200750097': GRUVLOK_7811_PHOTO,
+  '2200750104': GRUVLOK_7811_PHOTO,
+  '7005010140': GRUVLOK_78FP_PHOTO,
+  '7005010158': GRUVLOK_78FP_PHOTO,
+  '7005010166': GRUVLOK_78FP_PHOTO,
+  '7005010181': GRUVLOK_78FP_PHOTO,
+  '0390003000': GRUVLOK_7401_PHOTO,
+  '0390010000': GRUVLOK_7401_PHOTO,
+  '0390012000': GRUVLOK_7401_PHOTO,
+  '0390003407': GRUVLOK_7401_PHOTO,
+  '0390002007': GRUVLOK_7401_PHOTO,
+  '0390013662': GRUVLOK_7401_PHOTO,
+  '0390065308': `${PHOTO_DIR}/gruvlok-7401ss.png`,
+  '4323000102': `${PHOTO_DIR}/sci-67cve.jpg`,
+};
+
+export function rsfcSkuPhoto(sku: string): string | undefined {
+  return RSFC_SKU_PHOTOS[sku];
+}
 
 export type RsfcEquivalent = {
   sku: string;
@@ -89,9 +132,13 @@ export type RsfcEquivalent = {
   size: string;
   matchType: RsfcMatchType;
   origin: RsfcOrigin;
+  productUrl?: string;
   hasSubmittalPdf: boolean;
   /** Caveat the user must check before using this equivalent (e.g. pressure rating). */
-  note?: string;
+  note?: {
+    title: string;
+    description: string;
+  };
 };
 
 export type CompetitorPart = {
@@ -184,7 +231,76 @@ export const COMPETITOR_PARTS: CompetitorPart[] = [
         matchType: 'Substitute',
         origin: 'Domestic',
         hasSubmittalPdf: true,
-        note: 'Gruvlok max. working pressure is 300 psi. Confirm it meets the job spec.',
+        note: {
+          title: 'Check the working pressure',
+          description: 'Gruvlok max. working pressure is 300 psi. Confirm it meets the job spec.',
+        },
+      },
+    ],
+  },
+  // Equal mappings with a confirmed RSFC SKU and catalog photo.
+  {
+    sku: 'L020007PT0',
+    figure: '7',
+    description: '2 PTD GRV COUP W/T GSKT 07',
+    brand: 'Victaulic',
+    size: '2',
+    material: 'Ductile Iron',
+    category: 'Pipe Connections',
+    equivalents: [
+      {
+        sku: '0390013662',
+        name: '7401 2 PTD T GSKT RGD CPLG',
+        brand: 'Gruvlok',
+        figure: '7401',
+        size: '2',
+        matchType: 'Exact match',
+        origin: 'Domestic',
+        productUrl: 'https://www.asc-es.com/products/7401-rigidlok-coupling',
+        hasSubmittalPdf: false,
+      },
+    ],
+  },
+  {
+    sku: 'L030489XE0',
+    figure: '489',
+    description: '3 SS 316 RGD GRV COUP E 489',
+    brand: 'Victaulic',
+    size: '3',
+    material: 'Stainless Steel',
+    category: 'Pipe Connections',
+    equivalents: [
+      {
+        sku: '0390065308',
+        name: '7401SS 3 IMP 316SS E RIGID GROOVED CPLG',
+        brand: 'Gruvlok',
+        figure: '7401SS',
+        size: '3',
+        matchType: 'Exact match',
+        origin: 'Import',
+        productUrl: 'https://www.asc-es.com/products/7401ss-stainless-steel-rigid-coupling',
+        hasSubmittalPdf: false,
+      },
+    ],
+  },
+  {
+    sku: 'V050717PE0',
+    figure: '717',
+    description: '5 GRV F/LOCK CHK VLV 717',
+    brand: 'Victaulic',
+    size: '5',
+    category: 'Check Valves',
+    equivalents: [
+      {
+        sku: '7005010181',
+        name: '78FP 5 UL/ULC/FM GRVD CHK VLV',
+        brand: 'Gruvlok',
+        figure: '78FP',
+        size: '5',
+        matchType: 'Exact match',
+        origin: 'Domestic',
+        productUrl: 'https://www.asc-es.com/products/78fp-check-valve',
+        hasSubmittalPdf: false,
       },
     ],
   },
@@ -309,9 +425,9 @@ export function searchCompetitorParts(query: string, category: string = ALL_CATE
 
 export type CrossReferenceDirection = 'competitor' | 'rsfc';
 
-/** Match data (Domestic/Import, Exact/Substitute) plus RSFC PIM attributes (see `pimDisplayMapping.ts`). */
+/** Match type, origin and RSFC attributes (see `pimDisplayMapping.ts`). */
 export type CrossReferenceFilters = {
-  matchTypes: RsfcMatchType[];
+  matchTypes: CrossReferenceMatchType[];
   origins: RsfcOrigin[];
   productTypes: string[];
   sizes: string[];
@@ -406,6 +522,7 @@ function queryWords(query: string): string[] {
 }
 
 export type CompetitorPartResult = {
+  kind: 'competitor-sku';
   part: CompetitorPart;
   /** Equivalents that pass the filters, best match first. */
   equivalents: RsfcEquivalent[];
@@ -423,7 +540,8 @@ export function listCompetitorParts(
       (category === ALL_CATEGORIES || part.category === category) &&
       words.every((word) => haystack(part).includes(word)),
   )
-    .map((part) => ({
+    .map<CompetitorPartResult>((part) => ({
+      kind: 'competitor-sku',
       part,
       equivalents: sortEquivalents(part.equivalents.filter((e) => equivalentPasses(part, e, filters))),
     }))
@@ -496,6 +614,7 @@ function rsfcHaystack(part: RsfcPart): string {
 }
 
 export type RsfcPartResult = {
+  kind: 'rsfc-sku';
   part: RsfcPart;
   /** Competitor matches that pass the match type filter. */
   competitors: RsfcCompetitorMatch[];
@@ -510,13 +629,202 @@ export function listRsfcParts(query: string, category: string, filters: CrossRef
       pimPasses(part.pim, part.size, part.brand, filters) &&
       words.every((word) => rsfcHaystack(part).includes(word)),
   )
-    .map((part) => ({
+    .map<RsfcPartResult>((part) => ({
+      kind: 'rsfc-sku',
       part,
       competitors: part.competitors.filter(
         (c) => filters.matchTypes.length === 0 || filters.matchTypes.includes(c.matchType),
       ),
     }))
     .filter((result) => result.competitors.length > 0);
+}
+
+export type CrossReferenceFigure = {
+  brand: string;
+  figure: string;
+  description: string;
+  photo?: string;
+};
+
+export type FigureMatchResult = {
+  kind: 'figure';
+  key: string;
+  direction: CrossReferenceDirection;
+  source: CrossReferenceFigure;
+  targets: CrossReferenceFigure[];
+};
+
+export type SkuMatchResult = CompetitorPartResult | RsfcPartResult;
+
+export type UnmatchedCompetitorResult = {
+  kind: 'unmatched-competitor';
+  part: Pick<CompetitorPart, 'brand' | 'sku' | 'figure' | 'description' | 'category'>;
+};
+
+export type CrossReferenceResult = SkuMatchResult | FigureMatchResult | UnmatchedCompetitorResult;
+
+/** Example competitor SKU with an empty target in the committed Hydra cheat-sheet source. */
+const UNMATCHED_COMPETITOR: UnmatchedCompetitorResult = {
+  kind: 'unmatched-competitor',
+  part: {
+    brand: 'Victaulic',
+    sku: 'L020441XE0',
+    figure: '441',
+    description: '2 in. stainless steel flange adapter',
+    category: 'Fittings',
+  },
+};
+
+type FigureMapping = {
+  competitor: CrossReferenceFigure;
+  rsfcFigures: CrossReferenceFigure[];
+  category: string;
+  productType: string;
+};
+
+/** Demo subset of the Hydra figure-level valve mappings. The source provides figures, not SKU matches. */
+const FIGURE_MAPPINGS: FigureMapping[] = [
+  {
+    competitor: { brand: 'Victaulic', figure: '717', description: 'Spring-assisted grooved check valve' },
+    rsfcFigures: [
+      {
+        brand: 'Gruvlok',
+        figure: '78FP',
+        description: 'Spring-loaded grooved check valve for fire protection',
+        photo: GRUVLOK_78FP_PHOTO,
+      },
+    ],
+    category: 'Check Valves',
+    productType: 'Check Valve',
+  },
+  {
+    competitor: { brand: 'Victaulic', figure: '712', description: 'Grooved-end ductile iron swing check valve' },
+    rsfcFigures: [
+      { brand: 'Gruvlok', figure: '90G', description: 'Grooved swing check valve' },
+      {
+        brand: 'Gruvlok',
+        figure: '7811',
+        description: 'Grooved check valve with a spring-assisted clapper',
+        photo: GRUVLOK_7811_PHOTO,
+      },
+      { brand: 'Gruvlok', figure: '7821', description: 'Grooved check valve with a spring-assisted clapper' },
+    ],
+    category: 'Check Valves',
+    productType: 'Check Valve',
+  },
+];
+
+function figureKey(part: Pick<CrossReferenceFigure, 'brand' | 'figure'>): string {
+  return `${part.brand}:${part.figure}`;
+}
+
+export function crossReferenceFigureLabel(part: CrossReferenceFigure): string {
+  return `${part.brand} Fig. ${part.figure}`;
+}
+
+export function listPrototypeVariantsForFigure(figure: CrossReferenceFigure): RsfcPart[] {
+  return RSFC_PARTS.filter((part) => figureKey(part) === figureKey(figure));
+}
+
+function listFigureMatches(
+  direction: CrossReferenceDirection,
+  query: string,
+  category: string,
+  filters: CrossReferenceFilters,
+): FigureMatchResult[] {
+  // These attributes describe a SKU or its match. Figure-only records do not have those values.
+  if (
+    (filters.matchTypes.length > 0 && !filters.matchTypes.includes(FIGURE_MATCH)) ||
+    filters.origins.length || filters.sizes.length || filters.endConnections.length ||
+    filters.materials.length || filters.certifications.length
+  ) return [];
+
+  const words = queryWords(query);
+  const results = new Map<string, FigureMatchResult>();
+  for (const mapping of FIGURE_MAPPINGS) {
+    if (category !== ALL_CATEGORIES && category !== mapping.category) continue;
+    if (filters.productTypes.length && !filters.productTypes.includes(mapping.productType)) continue;
+
+    for (const rsfc of mapping.rsfcFigures) {
+      if (filters.brands.length && !filters.brands.includes(rsfc.brand)) continue;
+      const [source, target] = direction === 'rsfc' ? [rsfc, mapping.competitor] : [mapping.competitor, rsfc];
+      const text = `${source.brand} ${source.figure} ${source.description}`.toLowerCase();
+      if (!words.every((word) => text.includes(word))) continue;
+
+      const key = figureKey(source);
+      const result = results.get(key);
+      if (result) {
+        result.targets.push(target);
+      } else {
+        results.set(key, { kind: 'figure', key, direction, source, targets: [target] });
+      }
+    }
+  }
+  return [...results.values()];
+}
+
+export function listCrossReferenceResults(
+  direction: CrossReferenceDirection,
+  query: string,
+  category: string,
+  filters: CrossReferenceFilters,
+): CrossReferenceResult[] {
+  const skuResults: SkuMatchResult[] = direction === 'rsfc'
+    ? listRsfcParts(query, category, filters)
+    : listCompetitorParts(query, category, filters);
+  const figureResults = listFigureMatches(direction, query, category, filters);
+  const term = query.trim().toLowerCase();
+  const unmatched = UNMATCHED_COMPETITOR.part;
+  const canShowUnmatchedExample =
+    direction === 'competitor' &&
+    (category === ALL_CATEGORIES || category === unmatched.category) &&
+    countActiveFilters(filters) === 0;
+
+  if (term) {
+    if (
+      canShowUnmatchedExample &&
+      term === unmatched.sku.toLowerCase() &&
+      skuResults.length === 0 &&
+      figureResults.length === 0
+    ) {
+      return [UNMATCHED_COMPETITOR];
+    }
+
+    const exactFigure = figureResults.some((result) => result.source.figure.toLowerCase() === term);
+    return exactFigure ? [...figureResults, ...skuResults] : [...skuResults, ...figureResults];
+  }
+
+  // Browse mode previews each source figure before repeating its individual SKUs.
+  const shownFigures = new Set<string>();
+  const firstSkus: SkuMatchResult[] = [];
+  const remainingSkus: SkuMatchResult[] = [];
+  for (const result of skuResults) {
+    const key = figureKey(result.part);
+    const group = shownFigures.has(key) ? remainingSkus : firstSkus;
+    group.push(result);
+    shownFigures.add(key);
+  }
+  const unmatchedResults = canShowUnmatchedExample && !skuResults.some(({ part }) => part.sku === unmatched.sku)
+    ? [UNMATCHED_COMPETITOR]
+    : [];
+  const browseResults = [...unmatchedResults, ...firstSkus.slice(0, 2), ...figureResults, ...firstSkus.slice(2), ...remainingSkus];
+  if (direction !== 'rsfc' || category !== ALL_CATEGORIES || countActiveFilters(filters) > 0) {
+    return browseResults;
+  }
+
+  // The default reverse preview shows catalog photos plus one placeholder per result kind.
+  const withPhotos: CrossReferenceResult[] = [];
+  const placeholderExamples: CrossReferenceResult[] = [];
+  for (const result of browseResults) {
+    if (result.kind !== 'rsfc-sku' && result.kind !== 'figure') continue;
+    const photo = result.kind === 'rsfc-sku' ? rsfcSkuPhoto(result.part.sku) : result.source.photo;
+    if (photo) {
+      withPhotos.push(result);
+    } else if (!placeholderExamples.some((example) => example.kind === result.kind)) {
+      placeholderExamples.push(result);
+    }
+  }
+  return [...withPhotos.slice(0, 4), ...placeholderExamples, ...withPhotos.slice(4)];
 }
 
 function sortedUnique(values: Array<string | undefined>, numeric = false): string[] {
@@ -551,6 +859,5 @@ export function countForFilterValue(
   key: keyof CrossReferenceFilters,
   value: string,
 ): number {
-  const next = { ...filters, [key]: [value] } as CrossReferenceFilters;
-  return direction === 'rsfc' ? listRsfcParts(query, category, next).length : listCompetitorParts(query, category, next).length;
+  return listCrossReferenceResults(direction, query, category, { ...filters, [key]: [value] }).length;
 }
