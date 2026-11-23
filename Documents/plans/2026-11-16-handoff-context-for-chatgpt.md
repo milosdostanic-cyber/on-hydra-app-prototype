@@ -17,6 +17,12 @@ Prepared by Milos Dostanic on 16 Nov 2026. This document is self-contained: back
 
 Read this first. Details and history are in section 15.
 
+**Valve Configurator / Valve Selection (17 Nov priority update)**
+- [Milos and Lucas, 17 Nov](https://notes.granola.ai/d/1a07b14d-8fb3-42fd-9027-6f43076aaaf9): the meeting summary names Valve Configurator as Milos's focus through midweek. It mentions delivery in the next few weeks. The deliverable was not specified in the summary. [Hydra Design Priorities, Workstreams row 9](https://docs.google.com/spreadsheets/d/1RfdKSuG78b8a_uNrHy9Qc9j9cZ6DiIvxm7R5eeMtHSI/edit#gid=138234091) still lists Discovery and says design scope follows Product discovery. Check the immediate deliverable with Lucas and Micaely.
+- [INTAKE - Valve Configurator](https://ooden.atlassian.net/wiki/x/BACnjw) records two goals. Help customers find a valid valve assembly from their requirements. Help Customer Care price and quote a valid configuration without creating a new SKU every time. Ed Macy owns the ASC requirements. Micaely is reviewing the intake with Matt. The agreed discovery step in the intake is to review the ThomasNet workbooks, draft the high-level process and debrief Ed. A pilot for Customer Care on one or two series is a proposal.
+- The intake lists a current-state Figma flow, annotated PIM examples, a mock UI and a PIM/ConnectED/CPQ/CRM map as discovery visuals. The [current public tool](https://bim-catalog.asc-es.com/configurator/valve-configurator) starts with a required disclaimer. ASC documents component selection and CAD output, and the intake describes quoting as a separate manual path.
+- [ROAD-100](https://ooden.atlassian.net/browse/ROAD-100) and [ROAD-109](https://ooden.atlassian.net/browse/ROAD-109) were both in Parking lot on 17 Nov. ROAD-100 covers the guided build and the ASC configuration, PIM and pricing process. ROAD-109 covers live pricing and availability after M3 integration. Jira lists 1 Dec 2026 as the ROAD-100 start and February 2027 as its target. The [Confluence roadmap](https://ooden.atlassian.net/wiki/spaces/Hydra/pages/2413035539/2027+Roadmap) still shows mid-April 2027. The intake records funding as pending.
+
 **Part Cross-Reference v2 (BOM-431)**
 - **Figma:** concepts A (table), B (part cards) and C (side by side) plus edge-case and state screens are in BOM - RSFC, frame 7651:4917 (section 15.1). Milos preferred the A1 filter placement (filters in a left column). The Figma filter panels still show the older sample attributes, including "Pressure rating".
 - **PIM attributes:** Sofija sent the display mapping by product type (CON-347), saved as `Documents/pim/2026-11-16-pim-column-mapping-by-product-type.md`. Key facts: no pressure or temperature data in PIM; Size is per end (Valve Size on Reliable valves); Material is `Body`; Brand is `Product Brand`; 16 separate certification columns; empty values are hidden (section 15.9).
@@ -809,3 +815,144 @@ Milos asked to merge `main` into `feat/variant-modal-sidebar-layout` locally.
 - Five add/add conflicts (`SKILL.md`, `code-audit.md`, `PartCrossReferenceMatchModal.tsx`, `partCrossReferenceData.ts`, `BomPartCrossReferencePage.tsx`). Resolved by keeping the branch version: `main` (PR #14 UX skill, PR #15 demo sync) held older snapshots, identical to earlier commits of this branch (`5db4b42`, `a977f94`).
 - The merge changes no file content against the branch, so nothing needed re-testing. Not pushed.
 - Still open: push is not done, and PR #16 to the team repo was not re-checked after this merge.
+
+### 15.33 Card Studio artifact: 6 card concepts for Part Cross-Reference (23 Nov 2026)
+
+Milos asked how cross-reference cards should look, because today's card (B1) feels cluttered.
+- Connect Portal (connectportal.asc-es.com, BigCommerce, public) checked read-only: result tiles are photo first, an uppercase name and two outlined buttons ("Add to Pricing Worksheet", "Add to Favorites"), with no SKU, brand or match info. The product page lists ASC item number, figure, source (Domestic), product type, size, finish, series, UPC and a submittal PDF.
+- Artifact "Cross-Reference Card Studio" (private until shared): https://claude.ai/artifact/AMwg7JywgbbhPjmCXwpjD6. Today's B1 card as a baseline, plus 6 concepts (Swap line, Product tile, Side by side, Status row, Options stack, Spec card). Each concept is shown in three states (exact match, substitute with a caveat, no match with "Choose a part"). Hydra tokens, Barlow, and photos from the ConnectED catalog (`angle-hose-valve`, `7000-lr`). "Pick" marks favourites, and "Generate card" asks Claude (the artifact `sample` capability) for another concept in the same class vocabulary. Picks and generated cards are kept in the viewer's browser only.
+- The Mobbin MCP is not connected, so the references are named public patterns (Octopart/Digi-Key, Connect Portal, Grainger/Amazon compare, Linear/Stripe rows, Google Shopping, McMaster-Carr), not Mobbin screens.
+- Verified at 1280 px with a local preview: no overflow, all images load, card heights 102–332 px. "Generate card" was not exercised (it needs the claude.ai viewer).
+- Next: Milos picks a direction, then it goes to Figma (BOM - RSFC, section 15) and the prototype card.
+
+### 15.34 Design canvas: 6 photo tile ideas for Part Cross-Reference (23 Nov 2026)
+
+Milos: today's cards (Figma 7735:15388) need less information and a simpler layout. The card must always have a photo and stay compact, and he only wants photo tiles: 6 different ideas.
+- asc-es.com product results checked: each tile is a photo in a light box, then a small series/figure label and the name. No buttons or meta lines.
+- Design canvas "Cross-Reference Cards · Simplified" (private until shared): https://claude.ai/artifact/3d4qyqdw2guQxR4YEpeASz. "Today" recreates both Figma cards. T1 ASC classic, T2 Status on photo, T3 Replaces footer, T4 Search header, T5 Spec chips, T6 Half tile. Each tile is 264 px wide and shown in three states (exact, substitute with caveat, no match with "Choose a part"). Hydra tokens, Barlow, ConnectED catalog photos.
+- Origin (Domestic/Import), the competitor description and the figure/brand meta lines are off the card on every tile; they stay in the match details modal.
+- Mobbin: no MCP in this session, and mobbin.com search returns 403 without a sign-in, so there are no Mobbin references.
+- The earlier 6 non-tile directions were removed from the canvas at Milos's request. The Card Studio artifact (15.33) is unchanged.
+- Next: Milos picks a tile, then it goes into the Figma components section (7735:15388) and `PartCrossReferenceCard.tsx`.
+
+### 15.35 Photo tiles narrowed: T2, T5, T6 kept, U1–U6 added (23 Nov 2026)
+
+Milos liked T2 (Status on photo), T5 (Spec chips) and T6 (Half tile), asked to remove the rest and add 6 more ideas based on those three.
+- Canvas https://claude.ai/artifact/3d4qyqdw2guQxR4YEpeASz: T1, T3 and T4 were removed. T2, T5 and T6 now sit in one "Picked" row. The new row has U1 Status + chips (T2+T5), U2 Half tile + chips (T6+T5), U3 Half tile + photo badge (T6+T2), U4 Chips on photo (T2 pushed further), U5 Short tile (96 px photo band, specs as text), U6 Half tile + spec row (T6 on top, T5 underneath). All are 264 px wide and shown in exact, substitute and no-match states.
+- Open DS questions: U3 uses a tinted status label, and Badge__Status has no fill. U4's tags on the photo need photos with padding at the bottom.
+- Not checked in a browser after publishing. Next: Milos picks one, then Figma (7735:15388) and `PartCrossReferenceCard.tsx`.
+
+### 15.36 Both tabs rebuilt with the simplified tile (23 Nov 2026)
+
+Milos asked to see the simplified cards in a real screen for both search directions (Figma Variation A, 7732:10353).
+- Added two 1750×970 artboards to the canvas https://claude.ai/artifact/3d4qyqdw2guQxR4YEpeASz, rebuilt from A1 (7723:7179) and A2 (7723:8166): the same sidebar, top bar, breadcrumb, Back to BOM, filters column, toolbar (direction toggle, categories, search) and footer with pagination.
+- Tile: U1 (status + count on the photo, size and material tags). In a list the last line names the other side: "Replaces Victaulic V0…" on competitor → RSFC, "Matches Victaulic V0…" on RSFC → competitor. On the RSFC tab, the photo's top-right corner shows Domestic/Import instead of the count, because origin is a filter there. The grid is 4 per row, not 3; 12 per page is unchanged.
+- Choice made by Claude (Milos did not name a tile). Not checked in a browser after publishing.
+
+### 15.37 Repo: result cards rebuilt in the T2 format (23 Nov 2026)
+
+Milos asked to make the cards in the repo simpler, in the T2 (Status on photo) format.
+- Plan: `Documents/plans/2026-11-23-part-cross-reference-t2-cards-plan.md`.
+- `src/bom/components/PartCrossReferenceCard.tsx`: both cards now share one tile. The photo is on top with a white status label (antd `Badge status`, Badge__Status) top left and "N options" top right when there is more than one. Below are two lines: the name and "For {brand} {competitor SKU}" (competitor → RSFC) or "Matches {brand} {competitor SKU}" (RSFC → competitor). A substitute with a caveat reads "Substitute · check" with the caveat in a tooltip. Removed from the card: the competitor description, the meta lines, the Domestic/Import and match-type tags, and the "Best of N" block (all still in the match modal). `MatchTypeTag`, `OriginTag` and `PartPhoto` are kept for the modal.
+- `src/bom/pages/BomPartCrossReferencePage.tsx`: the grid minimum column went from `controlHeight * 9` to `* 8`, so cards fit 4 per row at 1750 px (card 271×190). 12 per page is unchanged.
+- Verified: `tsc --noEmit` passes. In the browser at 1750×970, both tabs render 12 cards, 4 per row, all the same height. Click and Enter open the match modal, and the substitute tooltip shows. ESLint did not run (no `eslint.config.*` in the repo).
+- Not committed. Not run yet: the `hydra-ux-audit` pass.
+
+### 15.38 UX audit of the new cards, P1 fixed (23 Nov 2026)
+
+Milos asked for the UX audit first, then "Ispravi P1".
+- Audit (hydra-ux-audit + hydra-ux-pattern, read-only) found three P1 issues. BOM-UX013-001: the card showed match quality as a dot badge, but match quality must be a status tag. BOM-UX011-001: "N options" was a grey pill, but a count must be plain text. BOM-UX011-002 (older): `MatchTypeTag` used colourful green and gold tags. It also found two P2 issues, which are not fixed: the `controlHeightSM - 2`, `paddingXS + 2` and `maxWidth: '70%'` offsets, and a substitute caveat that only shows on hover.
+- Fixed in `src/bom/components/PartCrossReferenceCard.tsx`. Top left on the photo is now a `HydraTag` status tag ("Exact match" green, "Substitute · check" yellow with the caveat in a tooltip). "2 options" is plain grey text on the right of the second line. `MatchTypeTag` is now `HydraTag` tone success or warning, so the match details modal changed the same way. Domestic and Import stay colourful.
+- Verified: type check passes. In the browser at 1750×970, 12 cards render, all 190 px high, with no dot badges left. The card and modal tags use the status colours, and the modal opens. Status logs of UX-011 and UX-013 were updated. Not committed.
+
+### 15.39 Option count made easier to see on the cards (23 Nov 2026)
+
+Milos: the number of replacement options was hard to notice on the card.
+- `PartCrossReferenceCard.tsx`: the count is always shown on the right of the second line. With more than one option it is link-coloured Small Medium text with a right chevron ("2 options >"), so it reads as "more inside" and the card opens the match details. With one it is plain grey ("1 option"). The RSFC part → competitor tab says "match" and "matches". It is still text, not a tag (UX-011).
+- Verified: type check passes. In the browser at 1750×970 both tabs render 12 cards at 190 px with no overflow. Competitor tab: eleven "2 options", one "1 option". RSFC tab: all "1 match" in the sample data. Not committed.
+
+### 15.40 Hydra DS check of the cards, two token offsets fixed (23 Nov 2026)
+
+Milos asked whether the cards use Hydra DS correctly, then "Ispravi".
+- Check: components come from `src/ui/antd.ts`, match quality uses `HydraTag` tone (DS `Tag__Status`), text uses Hydra text styles, and colours, border, shadow and radius are tokens (same pattern as `FeaturedPartCard`). Hydra DS has no product card, so the tile is composed from DS parts locally.
+- Fixed in `PartCrossReferenceCard.tsx`: the text padding top went from `paddingXS + 2` to `paddingXS`. The photo now fills its frame inside `paddingSM` / `paddingLG` padding, replacing `height: photoHeight - paddingLG` and `maxWidth: '70%'`.
+- Verified: type check passes. In the browser at 1750×970, 12 cards are 188 px high (was 190), the photo frame is 120 px, nothing overflows, and it looks the same as before. Not committed.
+
+### 15.41 Match details modal: UX check and 6 proposals (23 Nov 2026)
+
+Milos asked whether the modals explain things clearly and have good UX/UI, and for 6 proposals on the design canvas.
+- Checked `PartCrossReferenceMatchModal.tsx` and the modal in the browser on both tabs. Main findings:
+  - P1, RSFC part → competitor: clicking an RSFC card opens the competitor part's modal (`setOpenPart(result.competitors[0].part)`). The clicked part is not marked, and the counts disagree ("1 match" on the card vs "2 RSFC matches" in the modal).
+  - P1: the title "Match details · V0…" does not say what the user is looking at.
+  - P1: the best match is shown only by a blue border, with no label.
+  - P2: "Done" is the only primary and only closes. The main job (copy the SKU) is a small icon.
+  - P2: the Domestic/Import filter shows even for 2 matches. Two tags plus a long meta line per row. "View product" leaves the page. Submittal PDF is a stub message.
+- Canvas https://claude.ai/artifact/3d4qyqdw2guQxR4YEpeASz, new row "Match details modal: six proposals": M1 Answer first, M2 Compare side by side, M3 Best match + others, M4 Drawer (needs a DS decision, UX-014 covers modals), M5 RSFC part → competitor (fixes the P1 on the RSFC tab), M6 Compact table (for 4 or more options; its rows are sample data).
+- Not checked in a browser after publishing. Repo unchanged in this step.
+
+### 15.42 Compare modal: specs side by side, competitor vs RSFC (23 Nov 2026)
+
+Milos: a selected card should show the key specs, compare them clearly with the proposals, and make it obvious which part is the competitor and which is RSFC.
+- Added M7 (competitor part → RSFC) and M8 (RSFC part → competitor) to the canvas https://claude.ai/artifact/3d4qyqdw2guQxR4YEpeASz, in the row "Specs side by side: competitor always left, RSFC always right".
+- Pattern: the competitor is always the left column (grey, "COMPETITOR" label, "No photo for competitor parts"), RSFC is always the right column (blue, "RSFC" label, photo, status tag, SKU with Copy), with an arrow between them. One spec per row: Description, Product type, Size, End connection, Material, Certifications (M7), Origin. A middle column shows a green check when the values match. M7 has a switcher for the RSFC option (Option 1 Gruvlok 7811, Option 2 SCI 67CVE). M8 outlines the RSFC part that was opened ("You opened this") and, for a substitute, warns and links to the exact match.
+- Data honesty: competitor parts only have brand, figure, size, SKU and description (material is always empty, no PIM). Product type and end connection are read from the competitor description and labelled "(from description)". The other competitor values say "Not in data". There is no pressure rating in PIM, so there is no pressure row. Certifications for the 7811 are empty in the sample data ("None listed in PIM").
+- Not checked in a browser after publishing. Repo unchanged.
+
+### 15.43 Compare modal distilled with /impeccable (23 Nov 2026)
+
+Milos asked to run /impeccable to simplify the UI/UX further without losing the important parts, and to add the result below.
+- Ran impeccable distill on M7 and M8. Added M9 (competitor part → RSFC) and M10 (RSFC part → competitor) under the row "M7 + M8 distilled: same compare, half the elements" on the canvas https://claude.ai/artifact/3d4qyqdw2guQxR4YEpeASz. Modal width back to 760.
+- Kept: competitor left (grey, "Competitor"), RSFC right (blue, "RSFC", photo, status tag), the arrow, a one-line verdict ("Type, size and connection match"), the three specs both sides have, the option switch (M9), the one-line substitute warning with a link to the exact match (M10), and one primary "Copy SKU".
+- Removed: the empty competitor photo box, the rows that only said "Not in data" (RSFC-only facts moved to one line under the RSFC name), the legend, the subtitle, the description row and the second footer link.
+- Not checked in a browser after publishing. Repo unchanged.
+
+### 15.44 Which information must show for a part and its equivalent (23 Nov 2026)
+
+Milos asked to check all available sources for which information is required when we show a part and its equivalent.
+- Sources read: Confluence "PRD - Static Matched Part Search (Cheat Sheets)" (2081193998: FR-3, FR-7, FR-8, AC-2), "STORY - Part Match Details Modal" (2160492545: Your Part rows, ASC card content, AC-3, AC-8, AC-9, AC-13), "BOM Template Ferguson Enablement - PRD" (1460928541: match type, origin and warning "to build trust"), Jira BOM-360 (eight approved result columns, search-only), and from this file: section 7 (backend fields), Matt's meeting asks and the personas. Also the Connect Portal product page fields (23 Nov).
+- Must show. Competitor: brand, SKU, figure number, size, description. RSFC: SKU with copy, name/description, brand, figure number, size, photo. Match: match type, origin (Domestic/Import), warning/notes, and how many equivalents there are.
+- Useful (RSFC only, from PIM): material, product type, end connection, certifications, product link, submittal PDF. Secondary: UPC (both sides).
+- Not in the data: competitor material (always empty), competitor photo, competitor attributes beyond the description, pressure rating (not in PIM).
+- Conflicts to decide: the modal story wants a placeholder ("—") for empty competitor values (AC-3), but the prototype hides empty values. The story wants "View Product"/"View PDF" to open without leaving the results (AC-9), but the prototype's "View product" navigates away. The story wants a single "OK" footer action (AC-13). It also mentions a hidden "Recommended" tag and a "Not Installation Ready" warning, which have no backing data.
+- Gaps in M9/M10 compared with this list: no explicit competitor figure number, no match count number, and Submittal PDF is merged into one link.
+
+### 15.45 M9 and M10 filled in with the required fields (23 Nov 2026)
+
+Milos: "Da, dopuni" (fill in the gaps from 15.44).
+- M9 and M10 on the canvas now show the SKU large on each side, then "Brand · Fig. NNN" (competitor: Victaulic · Fig. 716; RSFC: Gruvlok · Fig. 7811 or SCI · Fig. 67CVE), then the description (competitor) or material and origin (RSFC).
+- Count: M9 says "2 equivalents" next to the option switch, M10 says "Replaces 1 competitor part" in the header.
+- Links: "View product" and "Submittal PDF" are separate, each with an open-in-new-tab icon, so the search results stay (modal story AC-9).
+- Still open from 15.44: the "—" placeholder vs hiding empty values (AC-3), and the footer "OK" only (AC-13) vs "Close" + "Copy SKU". Not checked in a browser after publishing. Repo unchanged.
+
+### 15.46 Modal or another container for match details? (23 Nov 2026)
+
+Milos asked whether match details should stay a modal or use another UX, with Mobbin research.
+- Mobbin: still not reachable. Search returns 403 in the built-in browser and there is no Mobbin MCP. Used public sources instead: Smashing Magazine "Modal vs. Separate Page: UX Decision Tree" (2026), SAP master-detail and side panel guidance, Microsoft master-detail guidance, and the Digi-Key, Same Sky and TI cross-reference tools.
+- What they say: a modal is for short, blocking decisions; a page is the default; a side panel or master-detail fits browsing and comparing many items with the list visible. Cross-reference tools label match tiers (Same Sky: exact, close, broad), compare parameters (Digi-Key) and handle "recognised part but no cross" (TI).
+- Our constraints: CSRs do many lookups in a row on live calls; the view is read-only; the CRM iframe is narrow; Matt said "the current match details modal stays" (Discord 12 Nov); the 2027 roadmap has product detail pages.
+- Recommendation (needs Matt's OK because it replaces the modal): a non-modal side panel (master-detail) with the M9/M10 content, Previous/Next through the results, and the open card marked. It becomes a full-width sheet in the CRM iframe and on narrow screens. A `?part=` URL param makes it shareable. A full product detail page later, with the e-commerce work. Not built.
+
+### 15.47 Mobbin research: modal vs side panel, done with the Mobbin MCP (23 Nov 2026)
+
+Milos connected Mobbin (plugin `mobbin@mobbin`, signed in via `/mcp`) and asked to do the research in this session. The Mobbin tools load only in new sessions, so the searches ran through the `claude` CLI on this machine (`claude -p` with `--allowedTools mcp__plugin_mobbin_mobbin`).
+- Six web searches (product compare, details in a side panel, master-detail split view, quick view modal, similar/alternative products, B2B catalog search). Picked 12 references and checked them by looking at the screenshots. 5 side panels (Mercury, Remote, Unify, incident.io, H&M), 4 split views (Quo, Plane x2, Copilot Money), 2 modals (Givingli quick view, Base44 "More like this"), 1 full page (Tripadvisor "Similar").
+- Canvas https://claude.ai/artifact/3d4qyqdw2guQxR4YEpeASz, new row "Modal or side panel? Mobbin references and the recommendation":
+  - R1 is a reference board: 12 screenshots uploaded as canvas assets, each with app, container type, one line on what to borrow and an "Open on Mobbin" link.
+  - P1 is the recommended non-modal side panel in the real screen. T2 tiles 3 per row, the open card is outlined, and a 460 px panel on the right holds the M9 content. Previous/Next ("Part 1 of 23") and Copy link (shareable) are at the top, close is on the right, and "Copy SKU" is the primary action at the bottom with View product and Submittal PDF.
+- Conclusion: modals in the references are only quick previews. Comparing and stepping through items uses a side panel or split view (Mercury is closest: arrows, expand, open in page). Recommendation unchanged from 15.46: a non-modal side panel, full-width in the CRM iframe, a `?part=` link, and a full page later. Needs Matt's OK because he said the modal stays.
+- Not checked in a browser after publishing. Repo unchanged.
+
+### 15.48 Match details modal rebuilt in the M9 / M10 layout (23 Nov 2026)
+
+Milos: do the modal proposal first, with Hydra DS and as few custom parts as possible, in the repo. Plan: `Documents/plans/2026-11-23-part-cross-reference-modal-m9-m10-plan.md`.
+- `src/bom/components/PartCrossReferenceMatchModal.tsx` rebuilt from DS parts only (`Modal`, `Segmented`, `Table` small without header, `Alert`, `Button`, `Typography`, `Flex`, `HydraTag` status tag, `PartPhoto`). Title "RSFC replacement for {SKU}" (competitor tab) or "Competitor part for {brand} {SKU}" (RSFC tab). Count text plus a `Segmented` switch (Option 1/2, or competitor parts on the RSFC tab). Competitor block on the left (grey), RSFC block on the right (blue tint, photo, status tag, SKU, brand and figure, material, origin, certifications), an arrow between. One verdict line and a spec table (product type, size, end connection) with a check or warning per row; rows with no competitor value are hidden. Alert for the equivalent's note; on the RSFC tab a substitute gets an Alert naming the exact match with "Compare it". Footer: "View product" (real link, new tab) and "Submittal PDF" on the left, "Close" and primary "Copy SKU" on the right. Width 760. The old per-row origin filter, copy icon and meta line are gone.
+- `src/bom/pages/BomPartCrossReferencePage.tsx`: the modal state is now `{ part, openedSku? }`, so the RSFC tab opens the modal for the RSFC card that was clicked (it used to open the first competitor part with no marker). 
+- `src/bom/data/partCrossReferenceData.ts`: new small helper `competitorDescriptionAttributes` (product type and end connection from a competitor description, same patterns as `rsfcPimAttributes`).
+- Verified: `tsc --noEmit` passes. In the browser at 1750×970: competitor tab (Option 1 exact match, Option 2 substitute, Copy SKU copies 4323000102 and shows the toast, Close), RSFC tab (substitute card shows "RSFC, you opened this" and the exact-match Alert, "Compare it" switches to the exact match), a part with a note (2 spec rows, note Alert). No console errors. Still open: footer "OK" only vs "Close" + "Copy SKU", and hiding vs a dash for empty competitor values. Not committed. The side panel (P1) stays a proposal for Matt.
+
+### 15.49 Modal: bigger photo and the same label for both sides (23 Nov 2026)
+
+Milos: the product photo in the modal is small, give it the same distance from the block edges as on the left, and make it clear which is the competitor and which is RSFC, in the same way.
+- `PartCrossReferenceMatchModal.tsx`: the RSFC photo went from 60 px to 124 px (`controlHeightLG * 3 + marginXXS`), so the block grew from about 96 to 150 px and the modal about 55 px taller. Measured: 13 px (12 padding + 1 border) between the photo and the block edge on the left, top and bottom. The competitor block stretches to the same height.
+- Both blocks now start with the same neutral `HydraTag`: "Competitor" and "RSFC". The match status tag follows the RSFC tag, and "You opened this" is a separate small line under it (RSFC tab).
+- Verified: type check passes; in the browser the exact-match modal is 511 px tall and the substitute one 569 px, photo 124×124 in both. Not committed.
