@@ -1,4 +1,4 @@
-import { ArrowRightOutlined, CheckCircleFilled, ExclamationCircleFilled, ExportOutlined } from '@ant-design/icons';
+import { ArrowRightOutlined, CheckCircleOutlined, ExclamationCircleFilled, ExportOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
 
 import { MatchTypeTag, PartPhoto } from './PartCrossReferenceCard';
@@ -202,9 +202,7 @@ export function PartCrossReferenceMatchModal({ part, openedSku, onClose }: Props
         {rows.length > 0 ? (
           <Flex vertical gap={token.marginXS}>
             <Flex gap={token.marginXS} align="center">
-              {differing.length === 0 ? (
-                <CheckCircleFilled aria-hidden style={{ color: token.colorSuccess }} />
-              ) : (
+              {differing.length > 0 && (
                 <ExclamationCircleFilled aria-hidden style={{ color: token.colorWarning }} />
               )}
               <Typography.Text style={medium}>{verdict}</Typography.Text>
@@ -228,7 +226,7 @@ export function PartCrossReferenceMatchModal({ part, openedSku, onClose }: Props
                   align: 'center',
                   render: (_: unknown, row: SpecRow) =>
                     row.same ? (
-                      <CheckCircleFilled aria-label="Same" style={{ color: token.colorSuccess }} />
+                      <CheckCircleOutlined aria-label="Same" style={{ color: token.colorSuccess }} />
                     ) : (
                       <ExclamationCircleFilled aria-label="Differs" style={{ color: token.colorWarning }} />
                     ),

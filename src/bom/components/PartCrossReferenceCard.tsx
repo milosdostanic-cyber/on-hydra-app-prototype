@@ -1,5 +1,4 @@
 import { useState, type ReactNode } from 'react';
-import { RightOutlined } from '@ant-design/icons';
 
 import type {
   CompetitorPartResult,
@@ -93,32 +92,28 @@ function CardShell({ children, onOpen, label }: { children: ReactNode; onOpen: (
   );
 }
 
-/**
- * Design canvas "T2 · Status on photo": photo on top with the match quality as a status tag (UX-013) in the
- * top-left corner, then two lines: the part name, and one secondary line with the option count as plain text
- * on the right (UX-011). A substitute's caveat is on the tag ("Substitute · check", full text in a tooltip and
- * in the match details), so the secondary line always stays.
- */
+/** The photo and name represent the RSFC part in both search directions. */
 function PartTile({
-  photoName,
   matchType,
   count,
   countNoun,
+  countScope,
   name,
-  secondary,
+  competitor,
   note,
 }: {
-  photoName: string;
   matchType: RsfcMatchType;
   count: number;
-  /** "option" on competitor part → RSFC (RSFC replacements), "match" on RSFC part → competitor. */
   countNoun: { one: string; plural: string };
+  countScope: string;
   name: string;
-  secondary: ReactNode;
+  competitor: string;
   note?: string;
 }) {
   const { token } = theme.useToken();
   const small = hydraTextStyleToReactCss(hydraSmallNormal);
+  const smallMedium = hydraTextStyleToReactCss(hydraSmallMedium);
+  const noun = count === 1 ? countNoun.one : countNoun.plural;
   const photoHeight = token.controlHeightLG * 3;
 
   return (
@@ -135,7 +130,7 @@ function PartTile({
         }}
       >
         <img
-          src={productImage(photoName)}
+          src={productImage(name)}
           alt=""
           style={{ width: '100%', height: '100%', objectFit: 'contain' }}
         />
@@ -146,35 +141,25 @@ function PartTile({
             </span>
           </Tooltip>
         </span>
+        <span
+          title={`${count} ${countScope} ${noun}`}
+          style={{ position: 'absolute', top: token.paddingXS, right: token.paddingXS, display: 'inline-flex' }}
+        >
+          <HydraTag bordered={false}>{`${count} ${noun}`}</HydraTag>
+        </span>
       </Flex>
       <Flex vertical gap={token.marginXXS} style={{ padding: `${token.paddingXS}px ${token.paddingSM}px ${token.paddingSM}px`, minWidth: 0 }}>
         <Typography.Text style={hydraTextStyleToReactCss(hydraBaseMedium)} ellipsis={{ tooltip: name }}>
           {name}
         </Typography.Text>
-        <Flex justify="space-between" align="baseline" gap={token.marginXS} style={{ minWidth: 0 }}>
-          <Typography.Text type="secondary" ellipsis style={{ ...small, flex: 1, minWidth: 0 }}>
-            {secondary}
-          </Typography.Text>
-          {count > 1 ? (
-            <Typography.Text
-              style={{
-                ...hydraTextStyleToReactCss(hydraSmallMedium),
-                flex: 'none',
-                color: token.colorLink,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: token.marginXXS,
-              }}
-            >
-              {`${count} ${countNoun.plural}`}
-              <RightOutlined aria-hidden style={{ fontSize: token.fontSizeSM }} />
-            </Typography.Text>
-          ) : (
-            <Typography.Text type="secondary" style={{ ...small, flex: 'none' }}>
-              {`1 ${countNoun.one}`}
-            </Typography.Text>
-          )}
-        </Flex>
+        <Typography.Text
+          type="secondary"
+          ellipsis={{ tooltip: `Competitor · ${competitor}` }}
+          style={small}
+        >
+          <Typography.Text type="secondary" style={smallMedium}>Competitor</Typography.Text>
+          {` · ${competitor}`}
+        </Typography.Text>
       </Flex>
     </>
   );
@@ -188,12 +173,12 @@ export function CompetitorPartCard({ result, onOpen }: { result: CompetitorPartR
   return (
     <CardShell onOpen={onOpen} label={`View matches for ${part.sku}`}>
       <PartTile
-        photoName={best.name}
         matchType={best.matchType}
         count={equivalents.length}
         countNoun={{ one: 'option', plural: 'options' }}
+        countScope="RSFC"
         name={best.name}
-        secondary={`For ${part.brand} ${part.sku}`}
+        competitor={`${part.brand} ${part.sku}`}
         note={best.note}
       />
     </CardShell>
@@ -208,12 +193,12 @@ export function RsfcPartCard({ result, onOpen }: { result: RsfcPartResult; onOpe
   return (
     <CardShell onOpen={onOpen} label={`View matches for ${part.sku}`}>
       <PartTile
-        photoName={part.name}
         matchType={first.matchType}
         count={competitors.length}
         countNoun={{ one: 'match', plural: 'matches' }}
+        countScope="competitor"
         name={part.name}
-        secondary={`Matches ${first.part.brand} ${first.part.sku}`}
+        competitor={`${first.part.brand} ${first.part.sku}`}
       />
     </CardShell>
   );
