@@ -111,6 +111,13 @@ const RSFC_SKU_PHOTOS: Readonly<Record<string, string | undefined>> = {
   '0390013662': GRUVLOK_7401_PHOTO,
   '0390065308': `${PHOTO_DIR}/gruvlok-7401ss.png`,
   '4323000102': `${PHOTO_DIR}/sci-67cve.jpg`,
+  // Illustrative demo options (DEMO_EXTRA_OPTIONS): photo of the same product family.
+  '2200750055': GRUVLOK_7811_PHOTO,
+  '2200750064': GRUVLOK_7811_PHOTO,
+  '2200750065': GRUVLOK_7811_PHOTO,
+  '4323000128': `${PHOTO_DIR}/sci-67cve.jpg`,
+  '4323000130': `${PHOTO_DIR}/sci-67cve.jpg`,
+  '4323000131': `${PHOTO_DIR}/sci-67cve.jpg`,
 };
 
 export function rsfcSkuPhoto(sku: string): string | undefined {
@@ -168,6 +175,40 @@ const check716 = (size: string, sku: string, sciSku: string): RsfcEquivalent[] =
   },
 ];
 
+const demoCheckOption = (
+  sku: string,
+  name: string,
+  brand: 'Gruvlok' | 'SCI',
+  figure: string,
+  size: string,
+): RsfcEquivalent => ({
+  sku,
+  name,
+  brand,
+  figure,
+  size,
+  matchType: 'Substitute',
+  origin: brand === 'Gruvlok' ? 'Domestic' : 'Import',
+  productType: 'Check Valve',
+});
+
+/**
+ * Illustrative extra options, not verified against the ASC data. They exist only to show the match details
+ * modal with 3 options (V030716PE0) and the 6 option edge case (V040716PE0), as in Figma BOM - RSFC 05b and 05c.
+ */
+const DEMO_EXTRA_OPTIONS: Readonly<Record<string, RsfcEquivalent[]>> = {
+  V030716PE0: [demoCheckOption('2200750055', '7811 3 NITRILE GROOVED CHECK VALVE', 'Gruvlok', '7811', '3')],
+  V040716PE0: [
+    demoCheckOption('2200750064', '7811 4 NITRILE GROOVED CHECK VALVE', 'Gruvlok', '7811', '4'),
+    demoCheckOption('4323000130', '4 300 CHECK VALVE GROOVED NITRILE', 'SCI', '67CVN', '4'),
+    demoCheckOption('2200750065', '7811 4 FKM GROOVED CHECK VALVE', 'Gruvlok', '7811', '4'),
+    demoCheckOption('4323000131', '4 300 CHECK VALVE GROOVED FKM', 'SCI', '67CVF', '4'),
+  ],
+};
+
+/** Demo options stay out of the figure SKU lists, which show one real SKU per size. */
+const DEMO_EXTRA_SKUS = new Set(Object.values(DEMO_EXTRA_OPTIONS).flat().map((option) => option.sku));
+
 const valve716: Array<[string, string, string, string, string]> = [
   ['V024716PE0', '2-1/2 PTD GRV CHK VLV EPDM 716', '2-1/2', '2200750046', '4323000102'],
   ['V030716PE0', '3 PTD GRV CHK VLV EPDM 716', '3', '2200750054', '4323000110'],
@@ -205,7 +246,7 @@ export const COMPETITOR_PARTS: CompetitorPart[] = [
     brand: 'Victaulic',
     size,
     category: 'Check Valves',
-    equivalents: check716(size, gruvlokSku, sciSku),
+    equivalents: [...check716(size, gruvlokSku, sciSku), ...(DEMO_EXTRA_OPTIONS[sku] ?? [])],
   })),
   {
     sku: 'V020717PHR',
@@ -556,6 +597,7 @@ export function listPrototypeVariantsForFigure(figure: CrossReferenceFigure): Rs
   const variants = new Map<string, RsfcEquivalent>();
   for (const { equivalents } of COMPETITOR_PARTS) {
     for (const equivalent of equivalents) {
+      if (DEMO_EXTRA_SKUS.has(equivalent.sku)) continue;
       if (figureKey(equivalent) === figureKey(figure)) variants.set(equivalent.sku, equivalent);
     }
   }

@@ -1,5 +1,5 @@
 import { CopyOutlined, ExportOutlined, FilePdfOutlined } from '@ant-design/icons';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 
 import { FigureMatchTag, MatchTypeTag, OriginTag, PartPhoto } from './PartCrossReferenceCard';
 import {
@@ -9,66 +9,75 @@ import {
   type CrossReferenceFigure,
   type CrossReferenceResult,
   type RsfcEquivalent,
-  type RsfcOrigin,
 } from '../data/partCrossReferenceData';
 import { sizeLabel } from '../data/pimDisplayMapping';
 import { hydraLargeMedium, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
-import { Alert, Button, Card, Flex, Grid, Modal, Select, Typography, message, theme } from '../../ui/antd';
+import { Alert, Button, Card, Flex, Grid, Modal, Typography, message, theme } from '../../ui/antd';
 
-const ORIGINS = [
-  { label: 'All origins', value: 'all' },
-  { label: 'Domestic', value: 'Domestic' },
-  { label: 'Import', value: 'Import' },
-] satisfies Array<{ label: string; value: RsfcOrigin | 'all' }>;
+/**
+ * Figma BOM - RSFC, "03 · Match details · Modal" (05a, 05b, 05c): Your part 232 + gap 24 + options 496,
+ * plus 24 padding on each side gives an 800 wide modal.
+ */
+const YOUR_PART_WIDTH = 232;
+const MODAL_WIDTH = 800;
 
-function CopySku({ sku, compact = false }: { sku: string; compact?: boolean }) {
-  const { token } = theme.useToken();
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(sku);
-      message.success(`SKU ${sku} copied`);
-    } catch {
-      message.error('Could not copy the SKU. Select it and copy it by hand.');
-    }
+async function copySku(sku: string) {
+  try {
+    await navigator.clipboard.writeText(sku);
+    message.success(`SKU ${sku} copied`);
+  } catch {
+    message.error('Could not copy the SKU. Select it and copy it by hand.');
   }
+}
 
+/** The SKU is the label of its own copy button (Figma "RSFC Option Card"), a small default button per UX-010. */
+function CopySkuButton({ sku }: { sku: string }) {
   return (
-    <Flex align="center" gap={token.marginXS} wrap="wrap">
-      <Typography.Text strong={!compact}>{`SKU ${sku}`}</Typography.Text>
-      <Button
-        type={compact ? 'text' : 'default'}
-        size="small"
-        icon={<CopyOutlined aria-hidden />}
-        aria-label={`Copy SKU ${sku}`}
-        onClick={copy}
-      >
-        {!compact && 'Copy SKU'}
-      </Button>
+    <Button size="small" icon={<CopyOutlined aria-hidden />} aria-label={`Copy SKU ${sku}`} onClick={() => copySku(sku)}>
+      {`SKU ${sku}`}
+    </Button>
+  );
+}
+
+function FigureSkuList({ variants }: { variants: RsfcEquivalent[] }) {
+  const { token } = theme.useToken();
+  return (
+    <Flex vertical gap={token.marginXXS}>
+      <Typography.Text type="secondary">Check the size and specifications before choosing a SKU.</Typography.Text>
+      {variants.map((variant) => (
+        <Flex key={variant.sku} justify="space-between" align="center" gap={token.marginXS} wrap="wrap">
+          <Typography.Text>{sizeLabel(variant.size)}</Typography.Text>
+          <CopySkuButton sku={variant.sku} />
+        </Flex>
+      ))}
     </Flex>
   );
 }
 
-function EquivalentCard({ part, variants }: { part: RsfcEquivalent | CrossReferenceFigure; variants?: RsfcEquivalent[] }) {
+function OptionCard({ part }: { part: RsfcEquivalent | CrossReferenceFigure }) {
   const { token } = theme.useToken();
+  const [showSkus, setShowSkus] = useState(false);
   const skuPart = 'sku' in part ? part : undefined;
-  const description = 'name' in part ? part.name : part.description;
+  const name = 'name' in part ? part.name : part.description;
   const photo = 'sku' in part ? rsfcSkuPhoto(part.sku) : part.photo;
   const submittal = rsfcSubmittal(part);
   const productUrl = skuPart?.productUrl;
+  const variants = 'sku' in part ? [] : listPrototypeVariantsForFigure(part);
+  const meta = [`${part.brand} · Fig. ${part.figure}`, skuPart?.size && sizeLabel(skuPart.size)].filter(Boolean).join(' · ');
 
   return (
     <Card size="small" variant="outlined">
-      <Flex vertical gap={token.marginSM}>
-        <Flex gap={token.marginSM} wrap="wrap" align="start">
+      <Flex vertical gap={token.margin}>
+        <Flex gap={token.marginSM} align="start">
           {photo && <PartPhoto src={photo} size={token.controlHeightLG * 2} />}
-          <Flex vertical gap={token.marginXXS} style={{ flex: '1 1 0', minWidth: `min(100%, ${token.controlHeight * 5}px)` }}>
-            <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraLargeMedium), overflowWrap: 'anywhere' }}>
-              {description}
-            </Typography.Text>
-            <Typography.Text type="secondary">
-              {[`${part.brand} · Fig. ${part.figure}`, skuPart?.size && sizeLabel(skuPart.size)].filter(Boolean).join(' · ')}
-            </Typography.Text>
-            <Flex gap={token.marginXS} wrap="wrap" style={{ marginTop: token.marginXXS }}>
+          <Flex vertical gap={token.marginSM} style={{ flex: '1 1 0', minWidth: 0 }}>
+            <Flex vertical>
+              <Typography.Text style={hydraTextStyleToReactCss(hydraLargeMedium)} ellipsis={{ tooltip: name }}>
+                {name}
+              </Typography.Text>
+              <Typography.Text type="secondary">{meta}</Typography.Text>
+            </Flex>
+            <Flex gap={token.marginXS} wrap="wrap">
               {skuPart ? (
                 <>
                   <MatchTypeTag type={skuPart.matchType} />
@@ -86,81 +95,69 @@ function EquivalentCard({ part, variants }: { part: RsfcEquivalent | CrossRefere
             description={skuPart.note.description}
           />
         )}
-        {(productUrl || submittal || skuPart) && (
-          <Flex gap={token.marginXS} justify="space-between" align="center" wrap="wrap" style={{
-            paddingTop: token.paddingXS,
-            borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-          }}>
-            {skuPart && <CopySku sku={skuPart.sku} />}
-            {(productUrl || submittal) && (
-              <Flex gap={token.marginXXS} wrap="wrap">
-                {productUrl && (
-                  <Button type="link" size="small" href={productUrl} target="_blank" rel="noopener noreferrer" icon={<ExportOutlined aria-hidden />}>
-                    View product
-                  </Button>
-                )}
-                {submittal && (
-                  <Button type="link" size="small" href={submittal} target="_blank" rel="noopener noreferrer" icon={<FilePdfOutlined aria-hidden />}>
-                    View Submittal PDF
-                  </Button>
-                )}
-              </Flex>
-            )}
-          </Flex>
-        )}
-        {variants && (
-          <Flex vertical gap={token.marginXXS}>
-            {variants.length > 0 ? (
-              <>
-                <Typography.Text strong>Available RSFC SKUs</Typography.Text>
-                <Typography.Text type="secondary">Check the size and specifications before choosing a SKU.</Typography.Text>
-                {variants.map((variant) => (
-                  <Flex key={variant.sku} justify="space-between" align="center" gap={token.marginXS} wrap="wrap">
-                    <Typography.Text type="secondary">{sizeLabel(variant.size)}</Typography.Text>
-                    <CopySku sku={variant.sku} compact />
-                  </Flex>
-                ))}
-              </>
-            ) : (
-              <Typography.Text type="secondary">No SKU variants are available for this figure in the prototype.</Typography.Text>
-            )}
-          </Flex>
-        )}
+        <Flex gap={token.marginXS} justify="space-between" align="center" wrap="wrap">
+          {skuPart && <CopySkuButton sku={skuPart.sku} />}
+          {!skuPart && variants.length > 0 && (
+            <Button size="small" aria-expanded={showSkus} onClick={() => setShowSkus((open) => !open)}>
+              {showSkus ? 'Hide SKUs' : `Show ${variants.length} ${variants.length === 1 ? 'SKU' : 'SKUs'}`}
+            </Button>
+          )}
+          {!skuPart && variants.length === 0 && (
+            <Typography.Text type="secondary">No SKUs for this figure in the prototype</Typography.Text>
+          )}
+          {(productUrl || submittal) && (
+            <Flex gap={token.marginXXS} wrap="wrap">
+              {productUrl && (
+                <Button type="link" size="small" href={productUrl} target="_blank" rel="noopener noreferrer" icon={<ExportOutlined aria-hidden />}>
+                  View product
+                </Button>
+              )}
+              {submittal && (
+                <Button type="link" size="small" href={submittal} target="_blank" rel="noopener noreferrer" icon={<FilePdfOutlined aria-hidden />}>
+                  Submittal PDF
+                </Button>
+              )}
+            </Flex>
+          )}
+        </Flex>
+        {showSkus && <FigureSkuList variants={variants} />}
       </Flex>
     </Card>
   );
 }
 
-function MatchDetails({ result }: { result: CrossReferenceResult }) {
+function OptionGroup({ title, children }: { title?: string; children: ReactNode }) {
   const { token } = theme.useToken();
-  const { md: sideBySide } = Grid.useBreakpoint();
-  const [origin, setOrigin] = useState<RsfcOrigin | 'all'>('all');
+  return (
+    <Flex vertical gap={token.marginXXS}>
+      {title && <Typography.Text strong>{title}</Typography.Text>}
+      <Flex vertical gap={token.marginSM}>{children}</Flex>
+    </Flex>
+  );
+}
+
+function MatchDetails({ result, sideBySide }: { result: CrossReferenceResult; sideBySide: boolean }) {
+  const { token } = theme.useToken();
   const source = result.kind === 'figure' ? result.source : result.part;
   const sku = 'sku' in source ? source.sku : undefined;
   const details = [
     ['Brand', source.brand],
     ['SKU', sku],
-    ['Figure Number', source.figure],
+    ['Figure', source.figure],
     ['Size', 'size' in source && source.size ? sizeLabel(source.size) : undefined],
     ['Material', 'material' in source ? source.material : undefined],
   ].filter(([, value]) => Boolean(value));
   const total = result.kind === 'figure' ? result.targets.length : result.equivalents.length;
-  const matches = result.kind === 'competitor-sku'
-    ? result.equivalents.filter((option) => origin === 'all' || option.origin === origin)
-    : [];
-  const canFilterOrigin = result.kind === 'competitor-sku'
-    && new Set(result.equivalents.map((option) => option.origin)).size > 1;
-  const resource = result.kind === 'figure' ? 'RSFC Figures' : 'RSFC Equivalents';
+  const [best, ...others] = result.kind === 'competitor-sku' ? result.equivalents : [];
 
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: sideBySide ? 'minmax(0, 1fr) minmax(0, 2fr)' : 'minmax(0, 1fr)',
+      gridTemplateColumns: sideBySide ? `${YOUR_PART_WIDTH}px minmax(0, 1fr)` : 'minmax(0, 1fr)',
       gap: token.marginLG,
-      borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-      paddingTop: token.paddingMD,
+      alignItems: 'start',
     }}>
-      <section aria-label="Your Part">
+      <section aria-label="Your part">
         <Card size="small" variant="borderless" style={{ background: token.colorFillAlter }}>
           <Flex vertical gap={token.marginSM}>
             <Typography.Title level={5} style={{ margin: 0 }}>Your Part</Typography.Title>
@@ -171,7 +168,7 @@ function MatchDetails({ result }: { result: CrossReferenceResult }) {
               {details.map(([label, value]) => (
                 <div key={label} style={{
                   display: 'grid',
-                  gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.5fr)',
+                  gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
                   gap: token.marginXS,
                   paddingBlock: token.paddingXXS,
                 }}>
@@ -183,22 +180,38 @@ function MatchDetails({ result }: { result: CrossReferenceResult }) {
           </Flex>
         </Card>
       </section>
-      <section aria-label={resource}>
+      <section aria-label="RSFC options">
         <Flex vertical gap={token.marginSM}>
-          <Flex align="start" justify="space-between" gap={token.marginSM} wrap="wrap">
-            <Flex vertical>
-              <Typography.Title level={5} style={{ margin: 0 }}>{`${resource} (${total})`}</Typography.Title>
-              {canFilterOrigin && origin !== 'all' && <Typography.Text type="secondary" aria-live="polite">{`Showing ${matches.length} of ${total} matches`}</Typography.Text>}
-            </Flex>
-            {canFilterOrigin && (
-              <Select aria-label="RSFC origin" options={ORIGINS} value={origin} onChange={setOrigin} />
+          <Typography.Title level={5} style={{ margin: 0 }}>{`${total} RSFC ${total === 1 ? 'option' : 'options'}`}</Typography.Title>
+          {/* Figma 05c: the modal stops 100px from the top and bottom of the screen and only this list scrolls. */}
+          <Flex
+            vertical
+            gap={token.marginSM}
+            tabIndex={sideBySide ? 0 : undefined}
+            aria-label={sideBySide ? 'RSFC options list' : undefined}
+            style={sideBySide ? {
+              maxHeight: `calc(100dvh - ${token.controlHeight * 11}px)`,
+              overflowY: 'auto',
+              paddingInlineEnd: token.paddingXS,
+            } : undefined}
+          >
+            {result.kind === 'figure' ? (
+              <OptionGroup>
+                {result.targets.map((target) => <OptionCard key={`${target.brand}:${target.figure}`} part={target} />)}
+              </OptionGroup>
+            ) : (
+              <>
+                <OptionGroup title="Best match">
+                  <OptionCard part={best} />
+                </OptionGroup>
+                {others.length > 0 && (
+                  <OptionGroup title="Other options">
+                    {others.map((option) => <OptionCard key={option.sku} part={option} />)}
+                  </OptionGroup>
+                )}
+              </>
             )}
           </Flex>
-          {result.kind === 'figure'
-            ? result.targets.map((target) => (
-              <EquivalentCard key={`${target.brand}:${target.figure}`} part={target} variants={listPrototypeVariantsForFigure(target)} />
-            ))
-            : matches.map((match) => <EquivalentCard key={match.sku} part={match} />)}
         </Flex>
       </section>
     </div>
@@ -206,7 +219,8 @@ function MatchDetails({ result }: { result: CrossReferenceResult }) {
 }
 
 export function PartCrossReferenceMatchModal({ result, onClose }: { result: CrossReferenceResult | null; onClose: () => void }) {
-  const { token } = theme.useToken();
+  const { md: sideBySide = false } = Grid.useBreakpoint();
+  const identifier = result === null ? '' : result.kind === 'figure' ? `${result.source.brand} Fig. ${result.source.figure}` : result.part.sku;
 
   return (
     <Modal
@@ -214,12 +228,18 @@ export function PartCrossReferenceMatchModal({ result, onClose }: { result: Cros
       onCancel={onClose}
       centered
       destroyOnHidden
-      width={1032}
-      title={<Typography.Title level={4} style={{ margin: 0 }}>Competitor Part Match</Typography.Title>}
-      styles={{ body: { maxHeight: `min(72dvh, calc(100dvh - ${token.controlHeight * 4}px))`, overflowY: 'auto' } }}
+      width={MODAL_WIDTH}
+      title={`RSFC replacements for ${identifier}`}
+      styles={sideBySide ? undefined : { body: { maxHeight: 'calc(100dvh - 200px)', overflowY: 'auto' } }}
       footer={<Button onClick={onClose}>Close</Button>}
     >
-      {result && <MatchDetails key={result.kind === 'figure' ? result.key : result.part.sku} result={result} />}
+      {result && (
+        <MatchDetails
+          key={result.kind === 'figure' ? result.key : result.part.sku}
+          result={result}
+          sideBySide={sideBySide}
+        />
+      )}
     </Modal>
   );
 }
