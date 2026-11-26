@@ -106,7 +106,7 @@ function isInnerControl(target: EventTarget) {
 /**
  * Figma BOM - RSFC "RSFC Option Card" (8017:11748), variants state=default, hover and selected.
  * - Card: vertical, gap `paddingXS`, padding `paddingSM`, radius `borderRadiusLG`.
- *   default `colorBgContainer` + `colorBorderSecondary`; hover `colorPrimaryBorderHover` + `boxShadowSecondary`;
+ *   default `colorBgContainer` + `colorBorderSecondary`; hover `colorPrimaryBorderHover` + `boxShadowTertiary`;
  *   selected `colorBgElevated` + `colorPrimary`.
  * - Product row: gap `paddingSM`, photo 64, info column gap `paddingXS`, tags gap `paddingXS`.
  * - Name `Large/Medium` `colorTextHeading`, divider (`paddingXXS` above and below), meta `Base/Medium` `colorText`,
@@ -172,7 +172,7 @@ export function RsfcOptionCard({
           state === 'selected' ? token.colorPrimary : state === 'hover' ? token.colorPrimaryBorderHover : token.colorBorderSecondary
         }`,
         borderRadius: token.borderRadiusLG,
-        boxShadow: state === 'hover' ? token.boxShadowSecondary : undefined,
+        boxShadow: state === 'hover' ? token.boxShadowTertiary : undefined,
         cursor: selectable ? 'pointer' : undefined,
         outline: 'none',
         transition: `border-color ${token.motionDurationMid}, box-shadow ${token.motionDurationMid}, background ${token.motionDurationMid}`,
