@@ -1,18 +1,10 @@
-import { CopyOutlined, FilePdfOutlined, LinkOutlined } from '@ant-design/icons';
-import { useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 
-import { FigureMatchTag, MatchTypeTag, OriginTag, PartPhoto } from './PartCrossReferenceCard';
-import {
-  listPrototypeVariantsForFigure,
-  rsfcSkuPhoto,
-  rsfcSubmittal,
-  type CrossReferenceFigure,
-  type CrossReferenceResult,
-  type RsfcEquivalent,
-} from '../data/partCrossReferenceData';
+import { RsfcOptionCard } from './RsfcOptionCard';
+import { type CrossReferenceResult } from '../data/partCrossReferenceData';
 import { sizeLabel } from '../data/pimDisplayMapping';
-import { hydraBaseMedium, hydraLargeMedium, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
-import { Alert, App, Button, Card, Divider, Flex, Grid, Modal, Typography, message, theme } from '../../ui/antd';
+import { hydraLargeMedium, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
+import { App, Button, Card, Flex, Grid, Modal, Typography, theme } from '../../ui/antd';
 
 /**
  * Figma BOM - RSFC, "03 · Match details · Modal" (05a, 05b, 05c): Your part 232 + gap 24 + options 496,
@@ -20,177 +12,6 @@ import { Alert, App, Button, Card, Divider, Flex, Grid, Modal, Typography, messa
  */
 const YOUR_PART_WIDTH = 232;
 const MODAL_WIDTH = 800;
-
-async function copySku(sku: string) {
-  try {
-    await navigator.clipboard.writeText(sku);
-    message.success(`SKU ${sku} copied`);
-  } catch {
-    message.error('Could not copy the SKU. Select it and copy it by hand.');
-  }
-}
-
-/** The SKU is the label of its own copy button (Figma "RSFC Option Card"), a small default button per UX-010. */
-function CopySkuButton({ sku }: { sku: string }) {
-  return (
-    <Button size="small" icon={<CopyOutlined aria-hidden />} aria-label={`Copy SKU ${sku}`} onClick={() => copySku(sku)}>
-      {`SKU ${sku}`}
-    </Button>
-  );
-}
-
-function FigureSkuList({ variants }: { variants: RsfcEquivalent[] }) {
-  const { token } = theme.useToken();
-  return (
-    <Flex vertical gap={token.marginXXS}>
-      <Typography.Text type="secondary">Check the size and specifications before choosing a SKU.</Typography.Text>
-      {variants.map((variant) => (
-        <Flex key={variant.sku} justify="space-between" align="center" gap={token.marginXS} wrap="wrap">
-          <Typography.Text>{sizeLabel(variant.size)}</Typography.Text>
-          <CopySkuButton sku={variant.sku} />
-        </Flex>
-      ))}
-    </Flex>
-  );
-}
-
-/** Clicks on the copy button, the links and "Show N SKUs" must not select the card. */
-function isInnerControl(target: EventTarget) {
-  return target instanceof HTMLElement && target.closest('button, a') !== null;
-}
-
-/**
- * Figma BOM - RSFC "RSFC Option Card" (8017:11748), variants state=default, hover and selected:
- * - default: `colorBgContainer`, 1px `colorBorderSecondary`;
- * - hover: same surface, `colorPrimaryBorderHover` border and `boxShadowSecondary`;
- * - selected: `colorBgElevated`, `colorPrimary` border.
- * Padding `paddingSM`, gap `paddingXS`, radius `borderRadiusLG`, dividers between product, meta and SKU row.
- * When `onSelect` is set the whole card is a radio option (click, Enter or Space).
- */
-function OptionCard({
-  part,
-  selected = false,
-  onSelect,
-}: {
-  part: RsfcEquivalent | CrossReferenceFigure;
-  selected?: boolean;
-  onSelect?: () => void;
-}) {
-  const { token } = theme.useToken();
-  const [showSkus, setShowSkus] = useState(false);
-  const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const skuPart = 'sku' in part ? part : undefined;
-  const name = 'name' in part ? part.name : part.description;
-  const photo = 'sku' in part ? rsfcSkuPhoto(part.sku) : part.photo;
-  const submittal = rsfcSubmittal(part);
-  const productUrl = skuPart?.productUrl;
-  const variants = 'sku' in part ? [] : listPrototypeVariantsForFigure(part);
-  const meta = [`${part.brand} · Fig. ${part.figure}`, skuPart?.size && sizeLabel(skuPart.size)].filter(Boolean).join(' · ');
-  const selectable = Boolean(onSelect);
-  const state = selected ? 'selected' : selectable && (hovered || focused) ? 'hover' : 'default';
-  const divider = <Divider style={{ margin: 0, marginBlock: token.marginXXS }} />;
-
-  const handleClick = (event: MouseEvent<HTMLDivElement>) => {
-    if (!onSelect || isInnerControl(event.target)) return;
-    onSelect();
-  };
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (!onSelect || event.target !== event.currentTarget) return;
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      onSelect();
-    }
-  };
-
-  return (
-    <Flex
-      vertical
-      gap={token.paddingXS}
-      role={selectable ? 'radio' : undefined}
-      aria-checked={selectable ? selected : undefined}
-      aria-label={selectable ? `${name}, ${meta}` : undefined}
-      tabIndex={selectable ? 0 : undefined}
-      onClick={handleClick}
-      onKeyDown={handleKeyDown}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onFocus={(event) => event.target === event.currentTarget && setFocused(true)}
-      onBlur={() => setFocused(false)}
-      style={{
-        boxSizing: 'border-box',
-        padding: token.paddingSM,
-        background: state === 'selected' ? token.colorBgElevated : token.colorBgContainer,
-        border: `${token.lineWidth}px ${token.lineType} ${
-          state === 'selected' ? token.colorPrimary : state === 'hover' ? token.colorPrimaryBorderHover : token.colorBorderSecondary
-        }`,
-        borderRadius: token.borderRadiusLG,
-        boxShadow: state === 'hover' ? token.boxShadowSecondary : undefined,
-        cursor: selectable ? 'pointer' : undefined,
-        outline: 'none',
-        transition: `border-color ${token.motionDurationMid}, box-shadow ${token.motionDurationMid}, background ${token.motionDurationMid}`,
-      }}
-    >
-      <Flex gap={token.paddingSM} align="start">
-        {/* Figma "Photo" frame: 64 × 64. */}
-        {photo && <PartPhoto src={photo} size={token.controlHeight * 2} />}
-        <Flex vertical gap={token.paddingXS} style={{ flex: '1 1 0', minWidth: 0 }}>
-          <Flex gap={token.marginXS} wrap="wrap">
-            {skuPart ? (
-              <>
-                <MatchTypeTag type={skuPart.matchType} />
-                <OriginTag origin={skuPart.origin} />
-              </>
-            ) : <FigureMatchTag />}
-          </Flex>
-          <Flex vertical gap={token.paddingXXS}>
-            <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraLargeMedium), color: token.colorTextHeading, overflowWrap: 'anywhere' }}>
-              {name}
-            </Typography.Text>
-            {divider}
-            <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraBaseMedium), color: token.colorText }}>{meta}</Typography.Text>
-          </Flex>
-        </Flex>
-      </Flex>
-      {skuPart?.note && (
-        <Alert
-          type={skuPart.matchType === 'Substitute' ? 'warning' : 'info'}
-          showIcon
-          title={skuPart.note.title}
-          description={skuPart.note.description}
-        />
-      )}
-      {divider}
-      <Flex gap={token.marginXS} justify="space-between" align="center" wrap="wrap">
-        {skuPart && <CopySkuButton sku={skuPart.sku} />}
-        {!skuPart && variants.length > 0 && (
-          <Button size="small" aria-expanded={showSkus} onClick={() => setShowSkus((open) => !open)}>
-            {showSkus ? 'Hide SKUs' : `Show ${variants.length} ${variants.length === 1 ? 'SKU' : 'SKUs'}`}
-          </Button>
-        )}
-        {!skuPart && variants.length === 0 && (
-          <Typography.Text type="secondary">No SKUs for this figure in the prototype</Typography.Text>
-        )}
-        {/* Each link shows only when the ASC data has it: product URL per SKU, submittal PDF per figure. */}
-        {(productUrl || submittal) && (
-          <Flex gap={token.marginXXS} wrap="wrap">
-            {productUrl && (
-              <Button type="link" size="small" href={productUrl} target="_blank" rel="noopener noreferrer" icon={<LinkOutlined aria-hidden />}>
-                View Product
-              </Button>
-            )}
-            {submittal && (
-              <Button type="link" size="small" href={submittal} target="_blank" rel="noopener noreferrer" icon={<FilePdfOutlined aria-hidden />}>
-                Submittal PDF
-              </Button>
-            )}
-          </Flex>
-        )}
-      </Flex>
-      {showSkus && <FigureSkuList variants={variants} />}
-    </Flex>
-  );
-}
 
 function OptionGroup({ title, children }: { title?: string; children: ReactNode }) {
   const { token } = theme.useToken();
@@ -274,17 +95,17 @@ function MatchDetails({
           >
             {result.kind === 'figure' ? (
               <OptionGroup>
-                {result.targets.map((target) => <OptionCard key={`${target.brand}:${target.figure}`} part={target} />)}
+                {result.targets.map((target) => <RsfcOptionCard key={`${target.brand}:${target.figure}`} part={target} />)}
               </OptionGroup>
             ) : (
               <>
                 <OptionGroup title="Best match">
-                  <OptionCard part={best} selected={selectedSku === best.sku} onSelect={() => onSelect(best.sku)} />
+                  <RsfcOptionCard part={best} selected={selectedSku === best.sku} onSelect={() => onSelect(best.sku)} />
                 </OptionGroup>
                 {others.length > 0 && (
                   <OptionGroup title="Other options">
                     {others.map((option) => (
-                      <OptionCard
+                      <RsfcOptionCard
                         key={option.sku}
                         part={option}
                         selected={selectedSku === option.sku}
