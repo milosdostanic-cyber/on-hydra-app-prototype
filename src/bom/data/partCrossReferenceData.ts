@@ -112,7 +112,6 @@ const RSFC_SKU_PHOTOS: Readonly<Record<string, string | undefined>> = {
   '0390065308': `${PHOTO_DIR}/gruvlok-7401ss.png`,
   '4323000102': `${PHOTO_DIR}/sci-67cve.jpg`,
   // Illustrative demo options (DEMO_EXTRA_OPTIONS): photo of the same product family.
-  '2200750055': GRUVLOK_7811_PHOTO,
   '2200750064': GRUVLOK_7811_PHOTO,
   '2200750065': GRUVLOK_7811_PHOTO,
   '4323000128': `${PHOTO_DIR}/sci-67cve.jpg`,
@@ -194,10 +193,9 @@ const demoCheckOption = (
 
 /**
  * Illustrative extra options, not verified against the ASC data. They exist only to show the match details
- * modal with 3 options (V030716PE0) and the 6 option edge case (V040716PE0), as in Figma BOM - RSFC 05b and 05c.
+ * modal with the 6 option edge case (V040716PE0), as in Figma BOM - RSFC 05c.
  */
 const DEMO_EXTRA_OPTIONS: Readonly<Record<string, RsfcEquivalent[]>> = {
-  V030716PE0: [demoCheckOption('2200750055', '7811 3 NITRILE GROOVED CHECK VALVE', 'Gruvlok', '7811', '3')],
   V040716PE0: [
     demoCheckOption('2200750064', '7811 4 NITRILE GROOVED CHECK VALVE', 'Gruvlok', '7811', '4'),
     demoCheckOption('4323000130', '4 300 CHECK VALVE GROOVED NITRILE', 'SCI', '67CVN', '4'),
@@ -206,8 +204,43 @@ const DEMO_EXTRA_OPTIONS: Readonly<Record<string, RsfcEquivalent[]>> = {
   ],
 };
 
+/**
+ * Long product name edge case (Figma BOM - RSFC, "RSFC Option Card" states, 8017:11748): V030716PE0 shows the
+ * real Gruvlok 7811 exact match (normal name) and two Sharpe options with long PIM descriptions. The two names
+ * are the PIM long descriptions used on the Figma cards; the SKUs and the mapping to this part are illustrative.
+ */
+const DEMO_LONG_NAME_OPTIONS: Readonly<Record<string, RsfcEquivalent[]>> = {
+  V030716PE0: [
+    {
+      ...demoCheckOption(
+        '5500253000',
+        'Sharpe Fig. SERIES 25 flanged ASME check valve is a steel flanged ASME check valve designed for industrial and commercial flow control applications. Spring-loaded disc provides reliable backflow prevention with low cracking pressure.',
+        'SCI',
+        'SERIES 25',
+        '3',
+      ),
+      brand: 'Sharpe',
+      origin: 'Import',
+    },
+    {
+      ...demoCheckOption(
+        '5500353000',
+        'Sharpe Fig. SERIES 35 flanged asme gate valves is a steel flanged asme gate valves designed for industrial and commercial flow control applications. Flanged ends allow installation and removal without disturbing adjacent piping.',
+        'SCI',
+        'SERIES 35',
+        '3',
+      ),
+      brand: 'Sharpe',
+      origin: 'Import',
+      productType: 'Gate Valve',
+    },
+  ],
+};
+
 /** Demo options stay out of the figure SKU lists, which show one real SKU per size. */
-const DEMO_EXTRA_SKUS = new Set(Object.values(DEMO_EXTRA_OPTIONS).flat().map((option) => option.sku));
+const DEMO_EXTRA_SKUS = new Set(
+  [...Object.values(DEMO_EXTRA_OPTIONS), ...Object.values(DEMO_LONG_NAME_OPTIONS)].flat().map((option) => option.sku),
+);
 
 const valve716: Array<[string, string, string, string, string]> = [
   ['V024716PE0', '2-1/2 PTD GRV CHK VLV EPDM 716', '2-1/2', '2200750046', '4323000102'],
@@ -246,7 +279,9 @@ export const COMPETITOR_PARTS: CompetitorPart[] = [
     brand: 'Victaulic',
     size,
     category: 'Check Valves',
-    equivalents: [...check716(size, gruvlokSku, sciSku), ...(DEMO_EXTRA_OPTIONS[sku] ?? [])],
+    equivalents: DEMO_LONG_NAME_OPTIONS[sku]
+      ? [check716(size, gruvlokSku, sciSku)[0], ...DEMO_LONG_NAME_OPTIONS[sku]]
+      : [...check716(size, gruvlokSku, sciSku), ...(DEMO_EXTRA_OPTIONS[sku] ?? [])],
   })),
   {
     sku: 'V020717PHR',
