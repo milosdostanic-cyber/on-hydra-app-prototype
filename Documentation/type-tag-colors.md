@@ -37,6 +37,18 @@ Source: `.cursor/rules/content-file-type-tags.mdc`.
 | TXT | `gold` |
 | PNG | `lime` |
 
+## RSFC Option Card (BOM - RSFC match details)
+
+DS `Tag__Colorful`, `border=false`. Code: `RSFC_OPTION_TAGS` in `src/bom/components/RsfcOptionCard.tsx`. Figma legend: BOM - RSFC, "05 · Components", "Tag colours · RSFC Option Card". Added 2026-11-26.
+
+| Group | Value | Colour |
+| --- | --- | --- |
+| Match type | Exact match | `green` |
+| Match type | Substitute | `gold` |
+| Match type | Figure match | `blue` |
+| Origin | Domestic | `cyan` |
+| Origin | Import | `purple` |
+
 ## Not colourful (do not use `Tag__Colorful`)
 
 | What | Treatment |
