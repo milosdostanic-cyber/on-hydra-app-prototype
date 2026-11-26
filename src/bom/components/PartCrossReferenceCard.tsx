@@ -1,49 +1,23 @@
 import { useState, type ReactNode } from 'react';
 
-import { FIGURE_MATCH, summarizeCrossReferenceResult, type CrossReferenceResult, type RsfcMatchType, type RsfcOrigin } from '../data/partCrossReferenceData';
+import { RSFC_OPTION_TAGS, RsfcOptionTag } from './RsfcOptionCard';
+import { FIGURE_MATCH, summarizeCrossReferenceResult, type CrossReferenceResult, type RsfcMatchType } from '../data/partCrossReferenceData';
 import { hydraBaseMedium, hydraBaseNormal, hydraLargeMedium, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
-import { HydraColorfulTag, HydraTag } from '../../ui/HydraTag';
+import { HydraTag } from '../../ui/HydraTag';
 import { Card, Flex, Typography, theme } from '../../ui/antd';
 
-/** Match quality is a status tag (`Tag__Status`), never a colourful tag or a dot badge (UX-011, UX-013). */
+/**
+ * Results grid and table: match quality is a status tag (`Tag__Status`, UX-013), the same green and gold family as the
+ * RSFC Option Card tags. Figure match uses the RSFC Option Card colour (blue) everywhere.
+ */
 export function MatchTypeTag({ type }: { type: RsfcMatchType }) {
   return <HydraTag tone={type === 'Exact match' ? 'success' : 'warning'} bordered={false}>{type}</HydraTag>;
 }
 
-export const FIGURE_MATCH_TAG_PRESET = 'geekblue';
-
-export function FigureMatchTag() {
-  return <HydraColorfulTag preset={FIGURE_MATCH_TAG_PRESET}>{FIGURE_MATCH}</HydraColorfulTag>;
-}
+export const FIGURE_MATCH_TAG_PRESET = RSFC_OPTION_TAGS[FIGURE_MATCH].preset;
 
 export function CrossReferenceStatusTag({ type }: { type: RsfcMatchType | typeof FIGURE_MATCH }) {
-  return type === FIGURE_MATCH ? <FigureMatchTag /> : <MatchTypeTag type={type} />;
-}
-
-export function OriginTag({ origin }: { origin: RsfcOrigin }) {
-  return <HydraColorfulTag preset={origin === 'Domestic' ? 'blue' : 'purple'}>{origin}</HydraColorfulTag>;
-}
-
-/** Figma photo frame pattern: container fill, secondary border, radius, image set to Fit. Used by the match details modal. */
-export function PartPhoto({ src, size }: { src: string; size: number }) {
-  const { token } = theme.useToken();
-  return (
-    <Flex
-      align="center"
-      justify="center"
-      style={{
-        flex: '0 0 auto',
-        width: size,
-        height: size,
-        background: token.colorBgContainer,
-        border: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
-        borderRadius: token.borderRadius,
-        overflow: 'hidden',
-      }}
-    >
-      <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-    </Flex>
-  );
+  return type === FIGURE_MATCH ? <RsfcOptionTag label={FIGURE_MATCH} /> : <MatchTypeTag type={type} />;
 }
 
 /**
