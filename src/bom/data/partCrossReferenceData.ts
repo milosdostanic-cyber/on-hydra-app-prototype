@@ -111,16 +111,11 @@ const RSFC_SKU_PHOTOS: Readonly<Record<string, string | undefined>> = {
   '0390013662': GRUVLOK_7401_PHOTO,
   '0390065308': `${PHOTO_DIR}/gruvlok-7401ss.png`,
   '4323000102': `${PHOTO_DIR}/sci-67cve.jpg`,
-  // Illustrative demo options (DEMO_EXTRA_OPTIONS): photo of the same product family.
-  '2200750064': GRUVLOK_7811_PHOTO,
-  '2200750065': GRUVLOK_7811_PHOTO,
   '4323000128': `${PHOTO_DIR}/sci-67cve.jpg`,
-  '4323000130': `${PHOTO_DIR}/sci-67cve.jpg`,
-  '4323000131': `${PHOTO_DIR}/sci-67cve.jpg`,
 };
 
 export function rsfcSkuPhoto(sku: string): string | undefined {
-  return RSFC_SKU_PHOTOS[sku];
+  return RSFC_SKU_PHOTOS[sku] ?? REAL_ASC_PHOTOS.get(sku);
 }
 
 export type RsfcEquivalent = {
@@ -191,18 +186,183 @@ const demoCheckOption = (
   productType: 'Check Valve',
 });
 
-/**
- * Illustrative extra options, not verified against the ASC data. They exist only to show the match details
- * modal with the 6 option edge case (V040716PE0), as in Figma BOM - RSFC 05c.
- */
-const DEMO_EXTRA_OPTIONS: Readonly<Record<string, RsfcEquivalent[]>> = {
+/* -------------------------------------------------------------------------------------------------
+ * Real ASC options (26 Nov 2026), taken from ooden-tech/on-hydra-app `develop`:
+ * - matches: `apps/on-hydra-data/bom/1790260800_cheatsheets/cheatsheet_matches.csv` and the FLIP_ID groups in
+ *   `apps/on-hydra-data/bom/1789721654_master_bom_data/master_bom_data.csv`;
+ * - SKU, long display name (`name_display_name`), product URL and image: `content_part_variant` and `content_part`
+ *   in `apps/on-hydra-data/content/1765751921837_seed_content_with_metadata.sql`. Images are copied from the
+ *   image URLs in that seed (ASC S3 and Canto) into `public/assets/catalog/cross-reference`.
+ * Every SKU, name and photo is a real ASC catalog part. `real: true` marks a pair that exists in the source data
+ * (match type and origin from the source). The other options are real ASC parts of the same type and size added to
+ * reach 4 to 6 options per card; their mapping to the competitor part is illustrative.
+ * ----------------------------------------------------------------------------------------------- */
+
+const ASC_PRODUCTS = 'https://www.asc-es.com/products';
+const ASC_FAMILIES = {
+  '7811': { brand: 'Gruvlok', type: 'Check Valve', origin: 'Domestic', photo: GRUVLOK_7811_PHOTO, url: `${ASC_PRODUCTS}/7811-check-valve` },
+  '400G': { brand: 'Gruvlok', type: 'Check Valve', origin: 'Domestic', photo: `${PHOTO_DIR}/gruvlok-400g.jpg`, url: `${ASC_PRODUCTS}/400g-silent-check-valve` },
+  '78FP': { brand: 'Gruvlok', type: 'Check Valve', origin: 'Domestic', photo: GRUVLOK_78FP_PHOTO, url: `${ASC_PRODUCTS}/78fp-check-valve` },
+  '67CVE': { brand: 'SCI', type: 'Check Valve', origin: 'Import', photo: `${PHOTO_DIR}/sci-67cve.jpg`, url: `${ASC_PRODUCTS}/grooved-swing-check-valve` },
+  '67CVN': { brand: 'SCI', type: 'Check Valve', origin: 'Import', photo: `${PHOTO_DIR}/sci-67cve.jpg`, url: `${ASC_PRODUCTS}/grooved-swing-check-valve` },
+  '67CVO': { brand: 'SCI', type: 'Check Valve', origin: 'Import', photo: `${PHOTO_DIR}/sci-67cvo.png`, url: `${ASC_PRODUCTS}/cooplok-grooved-swing-check-valve-with-bonnet` },
+  '7401': { brand: 'Gruvlok', type: 'Rigid Coupling', origin: 'Domestic', photo: GRUVLOK_7401_PHOTO, url: `${ASC_PRODUCTS}/fp7401-rigidlok-coupling` },
+  '65SR': { brand: 'SCI', type: 'Rigid Coupling', origin: 'Import', photo: `${PHOTO_DIR}/sci-65sr.jpg`, url: `${ASC_PRODUCTS}/standard-weight-rigid-coupling` },
+  'C9-CL': { brand: 'SPF Anvil', type: 'Rigid Coupling', origin: 'Import', photo: `${PHOTO_DIR}/spf-c9-cl.png`, url: undefined },
+  'C9-SL': { brand: 'SPF Anvil', type: 'Rigid Coupling', origin: 'Import', photo: `${PHOTO_DIR}/spf-c9-sl.png`, url: undefined },
+  KV5092: { brand: 'Kennedy Valve', type: 'Gate Valve', origin: 'Domestic', photo: `${PHOTO_DIR}/kennedy-kv5092.png`, url: `${ASC_PRODUCTS}/series-5000-ul-fm-resilient-wedge-gate-valves` },
+  KV5093: { brand: 'Kennedy Valve', type: 'Gate Valve', origin: 'Domestic', photo: `${PHOTO_DIR}/kennedy-kv5092.png`, url: `${ASC_PRODUCTS}/series-5000-ul-fm-resilient-wedge-gate-valves` },
+  KV7092: { brand: 'Kennedy Valve', type: 'Gate Valve', origin: 'Domestic', photo: `${PHOTO_DIR}/kennedy-kv7068.png`, url: undefined },
+  KV7093: { brand: 'Kennedy Valve', type: 'Gate Valve', origin: 'Domestic', photo: `${PHOTO_DIR}/kennedy-kv7068.png`, url: `${ASC_PRODUCTS}/series-7000-kennedy-valve-resilient-wedge-gate-valves` },
+  KV7592: { brand: 'Kennedy Valve', type: 'Gate Valve', origin: 'Domestic', photo: `${PHOTO_DIR}/kennedy-kv7068.png`, url: `${ASC_PRODUCTS}/series-7000-kennedy-valve-resilient-wedge-gate-valves` },
+  KV7592P: { brand: 'Kennedy Valve', type: 'Gate Valve', origin: 'Domestic', photo: `${PHOTO_DIR}/kennedy-kv7068.png`, url: `${ASC_PRODUCTS}/series-7000-kennedy-valve-resilient-wedge-gate-valves` },
+  KV7593: { brand: 'Kennedy Valve', type: 'Gate Valve', origin: 'Domestic', photo: `${PHOTO_DIR}/kennedy-kv7068.png`, url: `${ASC_PRODUCTS}/series-7000-kennedy-valve-resilient-wedge-gate-valves` },
+  KV7593P: { brand: 'Kennedy Valve', type: 'Gate Valve', origin: 'Domestic', photo: `${PHOTO_DIR}/kennedy-kv7068.png`, url: `${ASC_PRODUCTS}/series-7000-kennedy-valve-resilient-wedge-gate-valves` },
+} as const satisfies Record<string, { brand: string; type: string; origin: RsfcOrigin; photo: string; url: string | undefined }>;
+
+type AscFigure = keyof typeof ASC_FAMILIES;
+type RealOption = RsfcEquivalent & { photo: string };
+
+/** One real ASC catalog SKU. `source` is the match type and origin from the source data, when the pair exists there. */
+function asc(
+  figure: AscFigure,
+  sku: string,
+  size: string,
+  name: string,
+  source?: { matchType: RsfcMatchType; origin?: RsfcOrigin },
+): RealOption {
+  const family = ASC_FAMILIES[figure];
+  return {
+    sku,
+    name,
+    brand: family.brand,
+    figure,
+    size,
+    matchType: source?.matchType ?? 'Substitute',
+    origin: source?.origin ?? family.origin,
+    productType: family.type,
+    productUrl: family.url,
+    photo: family.photo,
+  };
+}
+
+const EXACT_D = { matchType: 'Exact match', origin: 'Domestic' } as const;
+const EXACT_I = { matchType: 'Exact match', origin: 'Import' } as const;
+const SUB_D = { matchType: 'Substitute', origin: 'Domestic' } as const;
+const SUB_I = { matchType: 'Substitute', origin: 'Import' } as const;
+
+/** Competitor SKU → real ASC options. Half of the original prototype cards, plus two gate valve cards. */
+const REAL_ASC_OPTIONS: Readonly<Record<string, RealOption[]>> = {
+  V024716PE0: [
+    asc('7811', '2200750046', '2-1/2', '7811 21/2 EPDM GROOVED CHECK VALVE', EXACT_D),
+    asc('67CVE', '4323000102', '2-1/2', '2-1/2 300 CHECK VALVE GROOVED EPDM', SUB_I),
+    asc('67CVN', '4323000152', '2-1/2', '2-1/2 300 CHECK VALVE GROOVED NITRIL'),
+    asc('400G', '0766286017', '2-1/2', '400G 21/2 GROOVED SILENT CHECK VALVE'),
+    asc('78FP', '7005010157', '2-1/2', '78FP 21/2 UL/ULC/FM GROOVED CHECK VL'),
+  ],
   V040716PE0: [
-    demoCheckOption('2200750064', '7811 4 NITRILE GROOVED CHECK VALVE', 'Gruvlok', '7811', '4'),
-    demoCheckOption('4323000130', '4 300 CHECK VALVE GROOVED NITRILE', 'SCI', '67CVN', '4'),
-    demoCheckOption('2200750065', '7811 4 FKM GROOVED CHECK VALVE', 'Gruvlok', '7811', '4'),
-    demoCheckOption('4323000131', '4 300 CHECK VALVE GROOVED FKM', 'SCI', '67CVF', '4'),
+    asc('7811', '2200750103', '4', '7811 4 EPDM GROOVEDLK CHECK VALVE', EXACT_D),
+    asc('67CVE', '4323000106', '4', '4 300 CHECK VALVE GROOVED EPDM', EXACT_I),
+    asc('67CVN', '4323000156', '4', '4 300 CHECK VALVE GROOVED NITRILE'),
+    asc('67CVO', '4359001120', '4', '4 CHECK GROOVED BONNET DUCTILE IRON 300'),
+    asc('400G', '0766286033', '4', '400G 4 GROOVED SILENT CHECK VALVE'),
+    asc('78FP', '7005010173', '4', '78FP 4 UL/ULC/FM GROOVED CHECK VALVE'),
+  ],
+  V060716PE0: [
+    asc('7811', '2200750111', '6', '7811 6 EPDM GROOVEDLK CHECK VALVE', EXACT_D),
+    asc('67CVE', '4323000110', '6', '6 300 CHECK VALVE GROOVED EPDM', SUB_I),
+    asc('67CVO', '4359001130', '6', '6 CHECK GROOVED BONNET DUCTILE IRON 300'),
+    asc('400G', '0766286058', '6', '400G 6 GROOVED SILENT CHECK VALVE'),
+  ],
+  V080716PE0: [
+    asc('7811', '2200750129', '8', '7811 8 EPDM GROOVEDLK CHECK VALVE', EXACT_D),
+    asc('67CVE', '4323000112', '8', '8 300 CHECK VALVE GROOVED EPDM', SUB_I),
+    asc('67CVN', '4323000162', '8', '8 300 CHECK VALVE GROOVED NITRILE'),
+    asc('78FP', '7005010207', '8', '78FP 8 UL/ULC/FM GROOVED CHECK VALVE'),
+  ],
+  V100716PE0: [
+    asc('7811', '2200750137', '10', '7811 10 EPDM GROOVED CHECK VALVE', EXACT_D),
+    asc('67CVE', '4323000114', '10', '10 300 CHECK VALVE GROOVED EPDM', EXACT_I),
+    asc('67CVN', '4323000164', '10', '10 300 CHECK VALVE GROOVED NITRILE'),
+    asc('400G', '0766286074', '10', '400G 10 GROOVED SILENT CHECK VALVE'),
+    asc('78FP', '7005010215', '10', '78FP 10 UL/ULC/FM GROOVED CHECK VALVE'),
+  ],
+  V024717PHR: [
+    asc('78FP', '7005010157', '2-1/2', '78FP 21/2 UL/ULC/FM GROOVED CHECK VL', SUB_D),
+    asc('7811', '2200750046', '2-1/2', '7811 21/2 EPDM GROOVED CHECK VALVE'),
+    asc('67CVE', '4323000102', '2-1/2', '2-1/2 300 CHECK VALVE GROOVED EPDM'),
+    asc('400G', '0766286017', '2-1/2', '400G 21/2 GROOVED SILENT CHECK VALVE'),
+  ],
+  V030717PHR: [
+    asc('78FP', '7005010165', '3', '78FP 3 UL/ULC/FM GROOVED CHECK VALVE', SUB_D),
+    asc('7811', '2200750061', '3', '7811 3 EPDM GROOVEDLK CHECK VALVE'),
+    asc('67CVE', '4323000104', '3', '3 300 CHECK VALVE GROOVED EPDM'),
+    asc('67CVO', '4359001110', '3', '3 CHECK GROOVED BONNET DUCTILE IRON 300'),
+  ],
+  V060779PE0: [
+    asc('7811', '2200750111', '6', '7811 6 EPDM GROOVEDLK CHECK VALVE', EXACT_D),
+    asc('67CVE', '4323000110', '6', '6 300 CHECK VALVE GROOVED EPDM', SUB_I),
+    asc('400G', '0766286058', '6', '400G 6 GROOVED SILENT CHECK VALVE'),
+    asc('67CVO', '4359001130', '6', '6 CHECK GROOVED BONNET DUCTILE IRON 300'),
+  ],
+  L020007PT0: [
+    asc('7401', '0390013662', '2', '7401 2 PAINTED T GASKET RIGID COUPLING', EXACT_D),
+    asc('C9-CL', '0890020606', '2', 'SPF C9-CL CENTERLOK 2 INCH E TYPE A GASKET RIGID READY FOR INSTALL FIRE PROTECTION COUPLING'),
+    asc('C9-SL', '0890020656', '2', 'SPF C9-SL SLIDELOK 2 INCH E TYPE A GASKET RIGID READY FOR INSTALL FIRE PROTECTION COUPLING'),
+    asc('65SR', '4329000630', '2', '2 STANDARD WT RIGID COUPLING GROOVED-E'),
+  ],
+  L030007PT0: [
+    asc('7401', '0390013688', '3', '7401 3 PAINTED T GASKET RIGID COUPLING', EXACT_D),
+    asc('C9-CL', '0890020610', '3', 'SPF C9-CL CENTERLOK 3 INCH E TYPE A GASKET RIGID READY FOR INSTALL FIRE PROTECTION COUPLING'),
+    asc('65SR', '4329000650', '3', '3 STANDARD WT RIGID COUPLING GROOVED-E'),
+    asc('C9-SL', '0890020660', '3', 'SPF C9-SL SLIDELOK 3 INCH E TYPE A GASKET RIGID READY FOR INSTALL FIRE PROTECTION COUPLING'),
+  ],
+  L100007PE0: [
+    asc('C9-CL', '0890020620', '10', 'SPF C9-CL CENTERLOK 10 INCH E TYPE A GASKET RIGID READY FOR INSTALL FIRE PROTECTION COUPLING', EXACT_I),
+    asc('7401', '0390013589', '10', '7401 10 PAINTED E GASKET RIGID COUPLING', SUB_D),
+    asc('65SR', '4329000700', '10', '10 STANDARD RIGID COUPLING GROOVED-E', SUB_I),
+    asc('C9-SL', '0890020670', '10', 'SPF C9-SL SLIDELOK 10 INCH E TYPE A GASKET RIGID READY FOR INSTALL FIRE PROTECTION COUPLING'),
+  ],
+  L120007PE0: [
+    asc('65SR', '4329000710', '12', '12 STANDARD RIGID COUPLING GROOVED-E', EXACT_I),
+    asc('C9-CL', '0890020622', '12', 'SPF C9-CL CENTERLOK 12 INCH E TYPE A GASKET RIGID READY FOR INSTALL FIRE PROTECTION COUPLING', EXACT_I),
+    asc('7401', '0390013597', '12', '7401 12 PAINTED E GASKET RIGID COUPLING', SUB_D),
+    asc('C9-SL', '0890020672', '12', 'SPF C9-SL SLIDELOK 12 INCH E TYPE A GASKET RIGID READY FOR INSTALL FIRE PROTECTION COUPLING'),
+  ],
+  L020109PE2: [
+    asc('C9-CL', '0890020606', '2', 'SPF C9-CL CENTERLOK 2 INCH E TYPE A GASKET RIGID READY FOR INSTALL FIRE PROTECTION COUPLING', EXACT_I),
+    asc('7401', '0390013514', '2', '7401 2 PAINTED E GASKET RIGID COUPLING'),
+    asc('C9-SL', '0890020656', '2', 'SPF C9-SL SLIDELOK 2 INCH E TYPE A GASKET RIGID READY FOR INSTALL FIRE PROTECTION COUPLING'),
+    asc('65SR', '4329000630', '2', '2 STANDARD WT RIGID COUPLING GROOVED-E'),
+  ],
+  V060771R01: [
+    asc('KV5093', '7000361046', '6', 'KV5093 6 DUCTILE IRON GROOVED OSY RW GATE VALVE350P', SUB_D),
+    asc('KV7093', '7000361104', '6', 'KV7093 6 DUCTILE IRON GROOVED OSY RW GATE VALVES', SUB_D),
+    asc('KV5092', '7000360946', '6', 'KV5092 6 DUCTILE IRON FLXGROOVED OSY RESILIENT WEDGE GATE VALVE350P'),
+    asc('KV7092', '7000361006', '6', 'KV7092 6 DUCTILE IRON FLXGROOVED OSY RW GATE VALVES'),
+  ],
+  V080772R01: [
+    asc('KV7593', '7000360346', '8', 'KV7593 8 DUCTILE IRON GROOVED NON-RISING STEM RW GATE VALVEHW', EXACT_D),
+    asc('KV7593P', '7000360404', '8', 'KV7593P 8 GROOVED NON-RISING STEM RESILIENT WEDGE GATE VALVE POSTPLATED', SUB_D),
+    asc('KV7592', '7000360266', '8', 'KV7592 8 DUCTILE IRON FLXGROOVED NON-RISING STEM RW GATE VALVEHW'),
+    asc('KV7592P', '7000360304', '8', 'KV7592P 8 FXG NON-RISING STEM RESILIENT WEDGE GATE VALVE POSTPLATED'),
   ],
 };
+
+const REAL_ASC_PHOTOS = new Map(
+  Object.values(REAL_ASC_OPTIONS).flat().map((option) => [option.sku, option.photo] as const),
+);
+
+function withRealOptions(part: CompetitorPart): CompetitorPart {
+  const options = REAL_ASC_OPTIONS[part.sku];
+  return options ? { ...part, equivalents: options.map(({ photo: _photo, ...option }) => option) } : part;
+}
+
+/** Real Victaulic gate valves from the cheat sheet, new in the prototype (Gate Valves category). */
+const REAL_GATE_VALVES: CompetitorPart[] = [
+  { sku: 'V060771R01', figure: '771H', description: '6 GRV UL FM OS&Y GATE VLV 771', brand: 'Victaulic', size: '6', category: 'Gate Valves', equivalents: [] },
+  { sku: 'V080772R01', figure: '772H', description: '8 GRV UL FM NRS GATE VLV 772H', brand: 'Victaulic', size: '8', category: 'Gate Valves', equivalents: [] },
+];
 
 /**
  * Long product name edge case (Figma BOM - RSFC, "RSFC Option Card" states, 8017:11748): V030716PE0 shows the
@@ -241,9 +401,7 @@ const DEMO_LONG_NAME_OPTIONS: Readonly<Record<string, RsfcEquivalent[]>> = {
 };
 
 /** Demo options stay out of the figure SKU lists, which show one real SKU per size. */
-const DEMO_EXTRA_SKUS = new Set(
-  [...Object.values(DEMO_EXTRA_OPTIONS), ...Object.values(DEMO_LONG_NAME_OPTIONS)].flat().map((option) => option.sku),
-);
+const DEMO_EXTRA_SKUS = new Set(Object.values(DEMO_LONG_NAME_OPTIONS).flat().map((option) => option.sku));
 
 const valve716: Array<[string, string, string, string, string]> = [
   ['V024716PE0', '2-1/2 PTD GRV CHK VLV EPDM 716', '2-1/2', '2200750046', '4323000102'],
@@ -274,7 +432,7 @@ const couplings: Array<[string, string, string, string, string]> = [
   ['L060489XT0', '489 6 COUP 489 SS T 168.3MM', '489', '6', 'Stainless Steel'],
 ];
 
-export const COMPETITOR_PARTS: CompetitorPart[] = [
+const PROTOTYPE_PARTS: CompetitorPart[] = [
   ...valve716.map(([sku, description, size, gruvlokSku, sciSku]) => ({
     sku,
     figure: '716',
@@ -284,7 +442,7 @@ export const COMPETITOR_PARTS: CompetitorPart[] = [
     category: 'Check Valves',
     equivalents: DEMO_LONG_NAME_OPTIONS[sku]
       ? [check716(size, gruvlokSku, sciSku)[0], ...DEMO_LONG_NAME_OPTIONS[sku]]
-      : [...check716(size, gruvlokSku, sciSku), ...(DEMO_EXTRA_OPTIONS[sku] ?? [])],
+      : check716(size, gruvlokSku, sciSku),
   })),
   {
     sku: 'V020717PHR',
@@ -489,6 +647,8 @@ export const COMPETITOR_PARTS: CompetitorPart[] = [
   })),
 ];
 
+export const COMPETITOR_PARTS: CompetitorPart[] = [...PROTOTYPE_PARTS, ...REAL_GATE_VALVES].map(withRealOptions);
+
 /** Best match first: exact matches before substitutes, domestic before import. */
 export function sortEquivalents(equivalents: RsfcEquivalent[]): RsfcEquivalent[] {
   const rank = (e: RsfcEquivalent) => (e.matchType === 'Exact match' ? 0 : 2) + (e.origin === 'Domestic' ? 0 : 1);
@@ -648,6 +808,22 @@ const FIGURE_SUBMITTALS: Record<string, string | undefined> = {
   'Gruvlok:78FP': `${ASC_SUBMITTALS}/78FP%2BCheck%2BValve%2BSubmittal`,
   'Gruvlok:7401': 'https://www.asc-es.com/resources-and-downloads/7401-rigid-coupling-submittal',
   'Gruvlok:7401SS': `${ASC_SUBMITTALS}/7401SS%2BStainless%2BSteel%2BRigid%2BCoupling%2BSubmittal`,
+  // Submittal URLs of the real ASC options, from `content_part.submittal_url` in the on-hydra-app content seed.
+  'Gruvlok:400G': 'https://www.asc-es.com/resources-and-downloads/400g-silent-check-valve-submittal',
+  'SPF Anvil:C9-SL': `${ASC_SUBMITTALS}/SPF%20Anvil%20Fig.%20C9-CL-SL%20Rigid%20Coupling%20Submittal`,
+  'SCI:65SR': 'https://www.asc-es.com/resources-and-downloads/cooplok-grooved-submittal-65sr-66sr-standard-rigid-couplings-2017',
+  ...Object.fromEntries(
+    ['KV5092', 'KV5093'].map((figure) => [
+      `Kennedy Valve:${figure}`,
+      'https://www.asc-es.com/resources-and-downloads/kennedy-valves-series-5000-ul-fm-resilient-wedge-gate-valve',
+    ]),
+  ),
+  ...Object.fromEntries(
+    ['KV7092', 'KV7093', 'KV7592', 'KV7592P', 'KV7593', 'KV7593P'].map((figure) => [
+      `Kennedy Valve:${figure}`,
+      'https://www.asc-es.com/resources-and-downloads/kennedy-valve-series-7000-ul-fm-awwa-c515-resilient-wedge-gate-valvesda-datasheet',
+    ]),
+  ),
   'SPF Anvil:C9-CL': `${ASC_SUBMITTALS}/SPF%20Anvil%20Fig.%20C9-CL-SL%20Rigid%20Coupling%20Submittal`,
 };
 
