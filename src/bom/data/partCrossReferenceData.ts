@@ -208,6 +208,7 @@ const DEMO_EXTRA_OPTIONS: Readonly<Record<string, RsfcEquivalent[]>> = {
  * Long product name edge case (Figma BOM - RSFC, "RSFC Option Card" states, 8017:11748): V030716PE0 shows the
  * real Gruvlok 7811 exact match (normal name) and two Sharpe options with long PIM descriptions. The two names
  * are the PIM long descriptions used on the Figma cards; the SKUs and the mapping to this part are illustrative.
+ * The links differ on purpose: 7811 has only a submittal PDF, SERIES 25 only a product link, SERIES 35 neither.
  */
 const DEMO_LONG_NAME_OPTIONS: Readonly<Record<string, RsfcEquivalent[]>> = {
   V030716PE0: [
@@ -221,6 +222,8 @@ const DEMO_LONG_NAME_OPTIONS: Readonly<Record<string, RsfcEquivalent[]>> = {
       ),
       brand: 'Sharpe',
       origin: 'Import',
+      // Illustrative link, shows a card with "View Product" but no submittal PDF.
+      productUrl: 'https://www.asc-es.com/products',
     },
     {
       ...demoCheckOption(

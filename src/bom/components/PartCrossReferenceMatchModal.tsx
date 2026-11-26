@@ -1,4 +1,4 @@
-import { CopyOutlined, ExportOutlined, FilePdfOutlined } from '@ant-design/icons';
+import { CopyOutlined, FilePdfOutlined, LinkOutlined } from '@ant-design/icons';
 import { useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react';
 
 import { FigureMatchTag, MatchTypeTag, OriginTag, PartPhoto } from './PartCrossReferenceCard';
@@ -11,7 +11,7 @@ import {
   type RsfcEquivalent,
 } from '../data/partCrossReferenceData';
 import { sizeLabel } from '../data/pimDisplayMapping';
-import { hydraLargeMedium, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
+import { hydraBaseMedium, hydraLargeMedium, hydraTextStyleToReactCss } from '../../theme/hydraTypography';
 import { Alert, App, Button, Card, Divider, Flex, Grid, Modal, Typography, message, theme } from '../../ui/antd';
 
 /**
@@ -132,7 +132,8 @@ function OptionCard({
       }}
     >
       <Flex gap={token.paddingSM} align="start">
-        {photo && <PartPhoto src={photo} size={token.controlHeightLG * 2} />}
+        {/* Figma "Photo" frame: 64 × 64. */}
+        {photo && <PartPhoto src={photo} size={token.controlHeight * 2} />}
         <Flex vertical gap={token.paddingXS} style={{ flex: '1 1 0', minWidth: 0 }}>
           <Flex gap={token.marginXS} wrap="wrap">
             {skuPart ? (
@@ -147,7 +148,7 @@ function OptionCard({
               {name}
             </Typography.Text>
             {divider}
-            <Typography.Text>{meta}</Typography.Text>
+            <Typography.Text style={{ ...hydraTextStyleToReactCss(hydraBaseMedium), color: token.colorText }}>{meta}</Typography.Text>
           </Flex>
         </Flex>
       </Flex>
@@ -170,11 +171,12 @@ function OptionCard({
         {!skuPart && variants.length === 0 && (
           <Typography.Text type="secondary">No SKUs for this figure in the prototype</Typography.Text>
         )}
+        {/* Each link shows only when the ASC data has it: product URL per SKU, submittal PDF per figure. */}
         {(productUrl || submittal) && (
           <Flex gap={token.marginXXS} wrap="wrap">
             {productUrl && (
-              <Button type="link" size="small" href={productUrl} target="_blank" rel="noopener noreferrer" icon={<ExportOutlined aria-hidden />}>
-                View product
+              <Button type="link" size="small" href={productUrl} target="_blank" rel="noopener noreferrer" icon={<LinkOutlined aria-hidden />}>
+                View Product
               </Button>
             )}
             {submittal && (
@@ -307,13 +309,11 @@ function resultKey(result: CrossReferenceResult) {
 export function PartCrossReferenceMatchModal({ result, onClose }: { result: CrossReferenceResult | null; onClose: () => void }) {
   const { md: sideBySide = false } = Grid.useBreakpoint();
   const { modal, message: toast } = App.useApp();
-  /** The chosen option per opened part; until the user picks one, the best match is selected (Figma 05b). */
+  /** The chosen option per opened part. Nothing is selected when the modal opens, so Add to BOM starts disabled. */
   const [choice, setChoice] = useState<{ key: string; sku: string } | null>(null);
   const identifier = result === null ? '' : result.kind === 'figure' ? `${result.source.brand} Fig. ${result.source.figure}` : result.part.sku;
   const canAdd = result?.kind === 'competitor-sku';
-  const selectedSku = result?.kind === 'competitor-sku'
-    ? (choice?.key === resultKey(result) ? choice.sku : result.equivalents[0]?.sku)
-    : undefined;
+  const selectedSku = result?.kind === 'competitor-sku' && choice?.key === resultKey(result) ? choice.sku : undefined;
 
   const close = () => {
     setChoice(null);
