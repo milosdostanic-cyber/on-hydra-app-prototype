@@ -65,7 +65,7 @@ not a pass.
 | UX-010 | Row actions | `Button` `size="small"` default, `danger` last; at most 2 visible plus ⋯; no links, plain text or `primary` as row actions; one trigger per action |
 | UX-011 | Counts and tags | Counts are plain text, never a `Tag`; match quality uses the status tag; colourful tags only for Type and file type |
 | UX-012 | Sub-page header | Default `Button` with `ArrowLeftOutlined`, label "Back to" plus the parent page name, first in the content, 24 (`paddingLG`) above the title. Entry pages and pages opened from the sidebar: N/A |
-| UX-013 | Tags, badges, colours | Record status = antd `<Badge status text />`, left aligned, never a `Tag`; match quality = status tag; Type and file type = `HydraColorfulTag` with the preset from the rule's tables (file types only through `ContentFileTypeTags` / `contentFileTypeTagPreset`); roles = neutral `HydraTag`; everything else plain text; file type cells max 3 tags plus `+X` with a light `Tooltip` |
+| UX-013 | Tags, badges, colours | Record status = antd `<Badge status text />`, left aligned, never a `Tag`; match quality in tables and result cards = status tag; RSFC Option Card match type and origin = `RsfcOptionTag` (`RSFC_OPTION_TAGS`); Type and file type = `HydraColorfulTag` with the preset from the rule's tables (file types only through `ContentFileTypeTags` / `contentFileTypeTagPreset`); roles = neutral `HydraTag`; everything else plain text; file type cells max 3 tags plus `+X` with a light `Tooltip` |
 | UX-014 | Modals | antd `Modal` from `src/ui/antd`, body in its own component (for example `PartCrossReferenceMatchModal`); width from the body; no hand-built overlay or fixed-position dialog |
 
 Gotchas already hit in this repo:

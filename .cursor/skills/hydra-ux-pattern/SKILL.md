@@ -45,7 +45,7 @@ Only rules in this table are enforceable. Do not invent, infer or enforce other 
 | UX-010 | Tables / Actions           | Row actions are small default buttons with `danger` last. At most 2 are visible and the rest go into the kebab menu. Rows have no links or primary buttons as actions.    | [rules/UX-010.md](rules/UX-010.md) |
 | UX-011 | Tables / Tags              | Counts are plain text and never tags. Match quality uses the status tag. Colourful tags are only for Type and file type.                                                  | [rules/UX-011.md](rules/UX-011.md) |
 | UX-012 | Navigation / Page header   | A sub-page opened from another page in the module starts with a default "Back to" button with a left arrow, 24px above the title.                                         | [rules/UX-012.md](rules/UX-012.md) |
-| UX-013 | Tables / Tags              | A record status is a dot badge, match quality is a status tag, and only Type columns and file types get colourful tags, with one fixed colour per value.                  | [rules/UX-013.md](rules/UX-013.md) |
+| UX-013 | Tables / Tags              | A record status is a dot badge, match quality in tables is a status tag, and only Type columns, file types and RSFC Option Card tags get colourful tags, one fixed colour per value. | [rules/UX-013.md](rules/UX-013.md) |
 | UX-014 | Modals                     | An open modal sits in the DS modal overlay with the DS modal inside. The body is its own component in the modal slot, and the modal width comes from that body.          | [rules/UX-014.md](rules/UX-014.md) |
 
 ## Sources of truth
