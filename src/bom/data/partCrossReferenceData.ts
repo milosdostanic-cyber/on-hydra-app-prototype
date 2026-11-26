@@ -307,7 +307,9 @@ const REAL_ASC_OPTIONS: Readonly<Record<string, RealOption[]>> = {
   ],
   L020007PT0: [
     asc('7401', '0390013662', '2', '7401 2 PAINTED T GASKET RIGID COUPLING', EXACT_D),
-    asc('C9-CL', '0890020606', '2', 'SPF C9-CL CENTERLOK 2 INCH E TYPE A GASKET RIGID READY FOR INSTALL FIRE PROTECTION COUPLING'),
+    // Longest name in the set (3 to 4 lines in the card): the real PIM description, cut after 190 characters
+    // (`content_part.name_description`, 1772539064346_seed_new_PIM_descriptions.sql, id 2391) of the C9-CL / C9-SL part.
+    asc('C9-CL', '0890020606', '2', 'The SPF/Anvil® Figure C9-CL and Figure C9-SL Rigid Couplings for Fire Protection Systems feature proprietary Sabertooth™ Installation Technology that allows you to SEE, FEEL and KNOW…'),
     asc('C9-SL', '0890020656', '2', 'SPF C9-SL SLIDELOK 2 INCH E TYPE A GASKET RIGID READY FOR INSTALL FIRE PROTECTION COUPLING'),
     asc('65SR', '4329000630', '2', '2 STANDARD WT RIGID COUPLING GROOVED-E'),
   ],
